@@ -96,10 +96,17 @@ fn brush_tool_context(input: BrushToolContext) -> BrushToolContext {
     input
 }
 
-/// ➕️ `stroke` followed by `tick`'s points, up to [`BITMAP_STROKE_MAXIMUM_POINTS`]; the colour is the stroke's.
+/// ➕️ `stroke` followed by `tick`'s points, up to [`BITMAP_STROKE_MAXIMUM_POINTS`]; a point repeating the one before
+/// it adds nothing (a pointer resting inside one cell samples it many times); the colour is the stroke's.
 fn extended(mut stroke: PaintInputStroke, tick: &PaintInputStroke) -> PaintInputStroke {
-    let room = BITMAP_STROKE_MAXIMUM_POINTS.saturating_sub(stroke.points.len());
-    stroke.points.extend(tick.points.iter().copied().take(room));
+    for point in &tick.points {
+        if stroke.points.len() >= BITMAP_STROKE_MAXIMUM_POINTS {
+            break;
+        }
+        if stroke.points.last() != Some(point) {
+            stroke.points.push(*point);
+        }
+    }
     stroke
 }
 
@@ -290,6 +297,67 @@ pub fn bitmap_brush_preview(document: &BitmapSnapshot, transient: &BitmapInputWi
     (preview != *document).then_some(preview)
 }
 //#endregion 🛠️BrushTool
+
+//#region 🖱️Pointer
+/// 🖱️ One canvas pointer event on the input surface, in the WORLD coordinates both hosts stamp on it (`worldX` /
+/// `worldY`, a move's `worldSamples`; one world unit is one sample cell), so the brush never needs the host camera.
+#[derive(Clone, Debug, PartialEq)]
+pub enum BitmapBrushPointer {
+    Down { world: Option<[f64; 2]>, button: u32 },
+    Move { samples: Vec<[f64; 2]> },
+    Up { world: Option<[f64; 2]>, cancelled: bool },
+}
+
+/// 🧮️ What one pointer event asks of the brush: the phase and the cells it carries, and whether a stroke a lost
+/// release left open is dropped first (`interrupt`, zero trace) because a fresh press opens a new one.
+#[derive(Clone, Debug, PartialEq)]
+pub struct BitmapBrushPointerStroke {
+    pub phase: BitmapStrokePhase,
+    pub points: Vec<BitmapStrokePoint>,
+    pub interrupt: bool,
+}
+
+/// 📍️ The sample cell under `world`, clamped onto a `width × height` sample so a drag past the edge paints along it
+/// instead of leaving the stroke; `None` for a non-finite sample or an empty bitmap.
+fn pointer_cell(world: [f64; 2], width: u32, height: u32) -> Option<BitmapStrokePoint> {
+    if width == 0 || height == 0 || !world.iter().all(|value| value.is_finite()) {
+        return None;
+    }
+    let clamp = |value: f64, extent: u32| value.floor().clamp(0.0, f64::from(extent - 1)) as u32;
+    Some(BitmapStrokePoint { x: clamp(world[0], width), y: clamp(world[1], height) })
+}
+
+/// 🖱️ Maps one pointer event onto the brush of a `width × height` sample whose window holds an `open` stroke or not:
+/// a primary press opens a stroke (dropping one a lost release left open), a move while open streams its cells
+/// (repeats collapsed), a release commits, a cancelled release aborts with `captureLost`. A hover move, a release
+/// with nothing open and a non-primary press mean nothing (`None`).
+pub fn bitmap_brush_pointer_stroke(pointer: &BitmapBrushPointer, width: u32, height: u32, open: bool) -> Option<BitmapBrushPointerStroke> {
+    let cells = |samples: &[[f64; 2]]| {
+        let mut cells: Vec<BitmapStrokePoint> = Vec::with_capacity(samples.len());
+        for cell in samples.iter().filter_map(|sample| pointer_cell(*sample, width, height)) {
+            if cells.last() != Some(&cell) {
+                cells.push(cell);
+            }
+        }
+        cells
+    };
+    match pointer {
+        BitmapBrushPointer::Down { world, button: 0 } => {
+            let points = cells(world.as_slice());
+            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Stream, points, interrupt: open })
+        }
+        BitmapBrushPointer::Down { .. } => None,
+        BitmapBrushPointer::Move { samples } if open => {
+            let points = cells(samples);
+            (!points.is_empty()).then_some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Stream, points, interrupt: false })
+        }
+        BitmapBrushPointer::Move { .. } => None,
+        BitmapBrushPointer::Up { cancelled: true, .. } if open => Some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Abort(ToolAbortReason::CaptureLost), points: Vec::new(), interrupt: false }),
+        BitmapBrushPointer::Up { world, cancelled: false } if open => Some(BitmapBrushPointerStroke { phase: BitmapStrokePhase::Commit, points: cells(world.as_slice()), interrupt: false }),
+        BitmapBrushPointer::Up { .. } => None,
+    }
+}
+//#endregion 🖱️Pointer
 
 //#region 🧪️Tests
 #[cfg(test)]

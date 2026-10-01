@@ -204,7 +204,7 @@ fn render(scene: &Scene) -> Result<Vec<u8>, quick_xml::Error> {
 
 fn fixture_directory(kind: &str) -> Option<&'static str> {
     match kind {
-        "change-stroke-color" => Some("🖌️change-stroke-color"),
+        "change-stroke-color" => Some("🖌️change-stroke"),
         "change-stroke-width" => Some("📐️change-stroke-width"),
         "create-layer" => Some("🌱️create-layer"),
         "create-node" => Some("➕️create-node"),

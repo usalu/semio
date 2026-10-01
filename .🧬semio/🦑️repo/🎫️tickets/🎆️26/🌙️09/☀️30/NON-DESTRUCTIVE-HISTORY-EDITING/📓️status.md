@@ -193,3 +193,70 @@ other plugins, gates (taxonomy, dependencies, layering, docstrings, warnings), h
 - 07:32 activation #6 aborted immediately: nx plugin load fails (peer restructuring `📚️library/📇️catalog/` — `🚚️deployment/🧬️schema/🔣️.json` missing). Background watcher retries activation when nx loads.
 - 07:36 nx graph back → activation #6 React (retry) started
 - 07:40 activation #6 retry failed in 15 s: taxonomy invalid (peer editing at 07:37: plugin-registry + wgpu-frame-worker inputPatterns unsorted, wgpu browser module paths not byte ordered). Retry loop: re-run activation every 10 min while the failure is taxonomy/nx-plugin load (max 4 h).
+
+## Session 2 — coordinator `⚪552b484af4c447a0bedb61188180e87f` (2026-10-01 11:30)
+
+Previous coordinator session ended; its whole fleet died ~08:05–08:16 (activation #6 retry interrupted, exit 130,
+`🗑️generated/e2e/activate-react-6.log`). Agent ids of session 1 do not resolve here → every in-flight WP gets a fresh
+successor that reconstructs its state from its report + the code on disk (interrupted edits completed compile-atomically
+first). Repo MCP still returns malformed results (`structuredContent` not a record) → bookkeeping stays manual.
+Still alive from session 1: serve supervisor PID 81031 (:6012, activation #4 build), disk guard PID 94966.
+Sub-ticket `PAGED-ARTIFACT-HISTORY-LEDGER` (64-slot ledger ceiling) is owned by another session (`⚪fcf22be5…`, 11:26) — not ours.
+- 11:35 state reconstruction: four Sonnet auditors → `📓️resume-core.md`, `📓️resume-tools.md`, `📓️resume-evidence.md`,
+  `📓️resume-gap.md`.
+- 11:45 activation #6 root causes: (1) peer's strict registry descriptor decode (`📇️registry/🔎️discovery`) rejects the
+  ~54 committed descriptors still at `appChannelVersion` 19 (TS/Rust const is 20 since the 09-30 00:11 commit); (2) all 43
+  plugin staging dirs under `🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/` were owned by pre-move manifest
+  paths (`✏️s/🔌️plugins/<p>/📦️packages/🦀️rust/Cargo.toml` → now `🌎️hub/🧩️compositions/<p>/…`) → `Unowned artifact directory`.
+  Fix: removed the 42 staging dirs whose owner manifest no longer exists (generated output); launched the registered chain
+  `plugin-registry:rebuild-all --from components --to check` detached (PID 51283, log `🗑️generated/act/rebuild-all-1.log`,
+  helper `🚀️detach.py`). Fleet rule addendum 21–24 in `📌️important/📝️.md`.
+- 11:52 session-2 fleet (20 = cap). Auditors (sonnet): resume-core a4af1f73753912b67, resume-tools ae21df8cef5201a05,
+  resume-evidence ab96cede2b124b855, resume-gap a34dbcb57b44c9117. Executors (opus): S2-W2A acb83cd9a7be92119,
+  S2-W2B ab915047c23dbfa52, S2-W2C acd6b6a4a0cead482, S2-W2D a8f72a2aab897c0a5, S2-W1G a64368d73c4098a55,
+  S2-PUZZLE a5c6c25d980ab8580, S2-DRAW a75119eede91f6524, S2-SPATIAL a6af456cdea9f3719, S2-FLOWCAD abf737fbc9166a671,
+  S2-LAYOUT a0603035946500e18, S2-CONTROLS a0a128e99b6696389, S2-TEXT a6aa6af99846fe322, S2-STROKES a456fb78765e10a3b,
+  S2-PROCEDURAL a534bdf13bb25fea8, S2-TAX adc21c8026acfcad0, S2-CODES ad8ea84571715e2de. Queue: norm-2, norm-3, media,
+  stdio cases, GRAPHS, CLOSURE, E2E (after activation), W3-G gates, W3-R audits.
+- 11:59 resume-core + resume-gap done (`📓️resume-core.md`, `📓️resume-gap.md`). No half-written files; never-run code:
+  §15 store half (compiles, no tests), W2-C f5, W2-A Edit.verb law; W2-D last run 9 FAILED + SIGABRT (hostEvent missing in
+  declared actions; puzzle registry lists only `puzzle2d-default` after a peer manifest change). Puzzle dev entry moved to
+  `✏️s/🧑‍💻dev/🎭️variants/🧩️puzzle/🚀️entry/🟦️.ts` → :6012 serve is dead for puzzle 2d (pre-transform error). Decisions §16
+  (G14 blocking rule kept; G7 labels; G8/G12 gates; G3 edit-targets path; G4 introduced warnings; G9 long-history share).
+  Relayed to S2-W2A/W2B/W2C/W2D/W1G. Launching S2-W1E (G6 input-metadata rendering) and S2-AGNOSTIC (G7+G8+G12).
+- 12:02 launched S2-W1E af6635c7903c64d75 (G6 input-metadata rendering: contract + React + wgpu + editor mapping region)
+  and S2-AGNOSTIC a201d31cf789b54c4 (G7 labels default + gate, G8 editable-everything gate, G12 cross-plugin harness;
+  report `📓️s2-agnostic-report.md`). Fleet 20.
+- 12:03 S2-W2B blocker: generated plugin registry (`🤖️generated/🧩️plugins/🟦️.ts`, 05:49) calls the 1-arg
+  `moduleDirectoryName` (peer changed it to 2 args at 08:14) → every React suite importing ShellHost fails at load. Fix =
+  `plugin-registry:generate` = rebuild chain step 5 (after components). Told W2-B to continue; notify on generate.
+- 12:11 resume-tools done (`📓️resume-tools.md`): nothing lost mid-write (all in HEAD 4e36b2b5012), risk = never compiled
+  (shooting, flow, lowpoly, procedural gen2d/3d, wfc 2d/3d, process3d); reds: writer 6/23 typing laws, layout 2, fem stale
+  kinds.len 29→30, wfc-bitmap test compile (`UtilityRef.id`); unconverted: lowpoly, raster, remodel, flow F6, dag, sequence,
+  mathematical, hub space, trinity rewriting, stdio md/html SetSnapshot; `Emit::amend(` 6 sites (remodel 3, dag 2, space 1).
+  Decisions §17. Relayed per WP. Launching S2-GRAPHS (dag, sequence, mathematical, hub space).
+- 12:12 launched S2-GRAPHS a9368c384c7d1b266 (dag, sequence last, mathematical, hub space; report `📓️w3-t2-graphs-report.md`). Fleet 20 (evidence auditor still running).
+- 12:20 S2-FLOWCAD found the shared build-dir poisoned by a peer's scratch clone (`26/08/11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-ts/workspace-membership/physical-without-both/`, 22 units: framework, protocol, base64, ui*, …) and deleted those dep-info files. Installed `🧼️fingerprint-guard.sh` (detached, every 10 min, log `🗑️generated/coord/fingerprint-guard.txt`) so the clone cannot keep poisoning the fleet.
+- 12:35 rebuild chain #1 stopped (SIGTERM to its process group, lease released): 46 min in, components failing on
+  S2-W1E's non-atomic UI-contract change (`SliderProps`/`NumberStepperProps`/`InputProps` new fields → E0063 in every
+  consumer); told W1-E to make it compile-atomic first. Note: draw/dag/cad/block + cad extensions descriptors were already
+  re-described by someone ~08:30–08:48. Plan: re-run `rebuild-all --from components --to check` at the stabilization
+  checkpoint (W2-A, W1-E, W1-G, W2-D compile-clean), then activation 6012 + 6112 + probe.
+- 12:42 resume-evidence done (`📓️resume-evidence.md`): evidence rule on disk (3066/3066 leaves witnessed, 5424/5427 inputs
+  annotated, outcome rule 1 = 0, norm path budget closed); left: verification since ~07:25, din4108 outcome vectors,
+  en1992 anchor identity, 6 layout `warn` fixtures, stdio red cases, media/pdf/docx/semio/energy reruns, missing reports;
+  proposed WP-1 NORM-CLOSE + WP-6 NORM-TS-TWINS now, WP-2..4 after REPO-PATH-BUDGET (peer, 4,366 renames), WP-5 gates last.
+- 12:45 peer-induced repo-wide breaks: root `📜️script.ts` routing (router since 05:33 needs ≥ 2-word owned commands; ~30
+  one-word targets incl. 9 × graph-generate/graph-wire-check), `DslValue::Bytes` non-exhaustive match (✏️s workspace E0004),
+  `bun test` segfault with repo cwd (root package.json workspaces glob 10:27), stale generated plugin registry (1-arg
+  `moduleDirectoryName`). Launched S2-INFRA a17a73f618a0fb375 (report `📓️s2-infra-report.md`). Fleet 20. Queue: NORM
+  (WP-1+WP-6), STDIO (WP-2/3 after REPO-PATH-BUDGET), residuals WP-4, CLOSURE, E2E, GATES, audits.
+- 12:55 REPO-PATH-BUDGET (non-fleet, unreachable) fallout: over-broad text rewrite (`🧩️set-contributions/` → `🧩️set/` in
+  the flow Cargo.toml, restored by S2-FLOWCAD); plugin `🛰️declaration-channels` fixtures deleted while tests still include
+  them → S2-INFRA items 6–7 (dangling-path scan after the rename settles). FLOWCAD: plugin lib compiles (0 errors) incl.
+  §12 time-travel slice + owned-child scrub seam in `🔌️plugin/🛠️tool-machine/🦀️.rs`. For the dev: REPO-PATH-BUDGET's
+  rewrite must only touch path segments in its map.
+- 13:05 S2-INFRA: item 1 done (27 invalid owned commands renamed to 2 words; 0 invalid, 0 duplicates). REPO-PATH-BUDGET is
+  still running (`twins.py`, 12:57: moves schema-side leaf dirs onto the shortened fixture names + rewrites refs) and has
+  made the taxonomy invalid since 12:41 (188 `semanticDirectoryMemberKinds collide for owner "tests"`). Decision: its
+  repo-wide policy wins; we fix only refs still dangling after it settles and report kind/dir identity mismatches.

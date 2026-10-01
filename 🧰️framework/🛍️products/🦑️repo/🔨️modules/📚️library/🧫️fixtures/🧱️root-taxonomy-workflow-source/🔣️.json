@@ -138,12 +138,13 @@
       ]
     },
     {
-      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts",
-      "directoryName": "✅️validation",
+      "path": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+      "directoryName": "✅️validator",
       "parentKindId": "schema",
-      "kindId": "repo-schema-subset-validation",
+      "kindId": "validator",
       "exports": [
-        "validateJsonSchemaSubset"
+        "validateJsonSchemaSubset",
+        "jsonSchemaSubsetValueEquals"
       ]
     }
   ],
@@ -214,9 +215,9 @@
       "kindId": "repo-mutation-structural-reachability"
     },
     {
-      "directoryName": "✅️validation",
+      "directoryName": "✅️validator",
       "parentKindId": "schema",
-      "kindId": "repo-schema-subset-validation"
+      "kindId": "validator"
     }
   ],
   "consumers": [
@@ -224,10 +225,8 @@
       "path": "📜️script.ts",
       "owners": [
         "🧹️normalization/🎮️command-contract/🟦️.ts",
-        "🧹️normalization/📇️inventory/📦️publication/🟦️.ts",
         "🧹️normalization/🧬️mutation/🪪️identity/🟦️.ts",
         "🧹️normalization/🧬️mutation/📸️captured-source/🟦️.ts",
-        "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
         "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts"
       ]
     },
@@ -272,7 +271,14 @@
         "🧹️normalization/🧬️mutation/🧾️evidence/🟦️.ts",
         "🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts",
         "🧹️normalization/🧬️mutation/📐️structural-reachability/🟦️.ts",
-        "🧬️schema/✅️validation/🟦️.ts"
+        "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts"
+      ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts",
+      "owners": [
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/📇️inventory/📦️publication/🟦️.ts",
+        "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🧬️mutation/🔁️workflow/🟦️.ts"
       ]
     }
   ],

@@ -16,7 +16,7 @@ mod tests {
     }
 
     async fn sample_edit(id: &str) -> HistoryEdit {
-        HistoryEdit {
+        HistoryEdit { line: None,
             id: id.to_string(),
             actor: Some("actor-1".to_string()),
             started_at: "2026-07-27T00:00:00Z".to_string(),
@@ -230,6 +230,7 @@ mod tests {
             authors: Vec::new(),
             message: None,
             timestamp: "2026-07-27T00:00:03Z".to_string(),
+            line_id: None,
         });
         let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-1".to_string(), name: "main".to_string(), checkpoint_id: "ck-1".to_string() };
         for (logical, transition) in [commit, branch].iter().enumerate() {

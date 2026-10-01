@@ -41,10 +41,10 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Fixtures
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "create-artifact": (f"{_ROOT}/🌱create-artifact/🧪️appends-artifact-3-to-the-index", "createArtifact"),
-    "delete-artifact": (f"{_ROOT}/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index", "deleteArtifact"),
+    "create-artifact": (f"{_ROOT}/🌱create-artifact/🧪️appends", "createArtifact"),
+    "delete-artifact": (f"{_ROOT}/🗑️delete-artifact/🧪️removes", "deleteArtifact"),
     "rename-artifact": (f"{_ROOT}/🏷️rename-artifact/🧪️renames-artifact-1", "renameArtifact"),
-    "touch-artifact": (f"{_ROOT}/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor", "touchArtifact"),
+    "touch-artifact": (f"{_ROOT}/🕒touch-artifact/🧪️stamps", "touchArtifact"),
 }
 
 

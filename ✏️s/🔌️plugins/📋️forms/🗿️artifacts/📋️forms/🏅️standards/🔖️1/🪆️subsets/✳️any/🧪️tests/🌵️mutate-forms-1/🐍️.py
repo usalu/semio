@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""📋️ An INDEPENDENT second implementation of the `s.forms.form` document, its ten typed mutations and its
+"""📋️ An INDEPENDENT second implementation of the `s.forms.form` document, its eleven typed mutations and its
 `.dsl.semio` text carrier, in Python, serving as this case's differential oracle.
 
 **Why a second implementation and not a third-party library.** A `form` document carries its survey INLINE
@@ -13,7 +13,7 @@ second implementation written from this subset's own schemas is the reference.
 * ``🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`` and ``📝️definition/🔣️.json`` —
   the document's members, the step/question records and which members are optional.
 * ``🚪️io/📸️snapshot/📝️text/📖️.grammar.semio`` — the text carrier's grammar.
-* the ten mutation leaf payload schemas under ``🧬️schema/🧬️mutations`` (camelCase members).
+* the eleven mutation leaf payload schemas under ``🧬️schema/🧬️mutations`` (camelCase members).
 * rules 1, 2 and 3 of
   `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️derivation-rules.md`.
 * the ten committed `(before, mutation, after, outcome)` vectors.
@@ -50,7 +50,7 @@ REQUIRED = ("schema", "id", "version", "structure", "results", "definition", "re
 
 MEMBERS = REQUIRED + ("title",)
 
-KINDS = ("create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-form-title")
+KINDS = ("create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-block-field", "change-form-title")
 """🏷️ Every kind the catalog declares, in its declared order."""
 
 
@@ -65,10 +65,15 @@ TAGS = {kind: tag_of(kind) for kind in KINDS}
 NO_OP = "mutation.no-op"
 TARGET_MISSING = "mutation.target-missing"
 DUPLICATE_ID = "mutation.duplicate-id"
-"""🚨️ The three diagnostic codes this subset's committed vectors raise."""
+INVARIANT = "mutation.invariant"
+"""🚨️ The four diagnostic codes this subset's committed vectors raise."""
 
-REJECTING = (TARGET_MISSING, DUPLICATE_ID)
-"""🚦️ Which of the three refuse the mutation rather than warning about it."""
+REJECTING = (TARGET_MISSING, DUPLICATE_ID, INVARIANT)
+"""🚦️ Which of the four refuse the mutation rather than warning about it."""
+
+TYPED_DEFAULTS = {"number": "number", "slider": "number", "boolean": "boolean", "text": "string", "longText": "string", "date": "string", "color": "string", "single": "string", "multi": "strings"}
+"""🎯️ The answer type a question kind's `default` must have, from `📝️definition/🔣️.json` and the leaf's description; kinds
+not listed answer any value."""
 # endregion 🔖️Vocabulary
 
 
@@ -99,6 +104,56 @@ def numbers_equal(left, right):
     if isinstance(left, (int, float)) and isinstance(right, (int, float)):
         return float(left) == float(right)
     return left == right
+
+
+def located(steps, identity):
+    """🔎️ `(step index, block index)` of a question in whichever step holds it, or `None`."""
+    for at, step in enumerate(steps):
+        held = block_at(step, identity)
+        if held is not None:
+            return at, held
+    return None
+
+
+def with_field(block, field, value):
+    """✏️ A copy of the question with one field set to an absolute value; `null` removes an optional field."""
+    block = copy.deepcopy(block)
+    set_or_clear(block, field, value)
+    return block
+
+
+def fits(kind, value):
+    """🎯️ Whether a question of `kind` can default to `value`."""
+    expected = TYPED_DEFAULTS.get(kind)
+    if expected == "number":
+        return isinstance(value, (int, float)) and not isinstance(value, bool)
+    if expected == "boolean":
+        return isinstance(value, bool)
+    if expected == "string":
+        return isinstance(value, str)
+    if expected == "strings":
+        return isinstance(value, list) and all(isinstance(item, str) for item in value)
+    return True
+
+
+def field_refusal(block, field):
+    """🛡️ The Fatal code the question breaks once `field` is set: an inverted range, a step that is not positive, a
+    default its kind cannot answer, parameters that are no object, an empty or repeated option value / vector key."""
+    if field in ("min", "max") and block.get("min") is not None and block.get("max") is not None and block["min"] > block["max"]:
+        return INVARIANT
+    if field == "step" and "step" in block and not block["step"] > 0:
+        return INVARIANT
+    if field == "default" and "default" in block and not fits(block["kind"], block["default"]):
+        return INVARIANT
+    if field == "params" and "params" in block and not isinstance(block["params"], dict):
+        return INVARIANT
+    if field in ("options", "fields") and field in block:
+        ids = [item["value" if field == "options" else "key"] for item in block[field]]
+        if any(identity == "" for identity in ids):
+            return INVARIANT
+        if len(set(ids)) != len(ids):
+            return DUPLICATE_ID
+    return None
 
 
 def placed(items, index):
@@ -158,6 +213,16 @@ def diagnose(kind, payload, steps):
         if held is None:
             return (TARGET_MISSING, [payload["stepId"], payload["block"]["id"]])
         return (NO_OP, None) if numbers_equal(steps[at]["blocks"][held], payload["block"]) else (None, None)
+    if kind == "change-block-field":
+        where = located(steps, payload["blockId"])
+        if where is None:
+            return (TARGET_MISSING, [payload["blockId"]])
+        block = steps[where[0]]["blocks"][where[1]]
+        changed = with_field(block, payload["field"], payload["value"])
+        if numbers_equal(changed, block):
+            return (NO_OP, None)
+        refused = field_refusal(changed, payload["field"])
+        return (refused, [payload["blockId"]]) if refused is not None else (None, None)
     if kind == "change-form-title":
         return (None, None)
     raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
@@ -203,6 +268,9 @@ def apply_mutation(document, kind, payload):
     elif kind == "replace-block":
         step = steps[step_at(steps, payload["stepId"])]
         step["blocks"][block_at(step, payload["block"]["id"])] = copy.deepcopy(payload["block"])
+    elif kind == "change-block-field":
+        at, held = located(steps, payload["blockId"])
+        steps[at]["blocks"][held] = with_field(steps[at]["blocks"][held], payload["field"], payload["value"])
     elif kind == "change-form-title":
         set_or_clear(document, "title", payload.get("newTitle"))
     return document
@@ -237,6 +305,9 @@ def inverse_mutation(document, kind, payload):
     if kind == "replace-block":
         step = steps[step_at(steps, payload["stepId"])]
         return [("replace-block", {"stepId": payload["stepId"], "block": step["blocks"][block_at(step, payload["block"]["id"])]})]
+    if kind == "change-block-field":
+        at, held = located(steps, payload["blockId"])
+        return [("change-block-field", {"blockId": payload["blockId"], "field": payload["field"], "value": steps[at]["blocks"][held].get(payload["field"])})]
     if kind == "change-form-title":
         return [("change-form-title", {"newTitle": document.get("title")})]
     raise AssertionError("inverse-%s: this implementation declares no verb for that kind" % kind)

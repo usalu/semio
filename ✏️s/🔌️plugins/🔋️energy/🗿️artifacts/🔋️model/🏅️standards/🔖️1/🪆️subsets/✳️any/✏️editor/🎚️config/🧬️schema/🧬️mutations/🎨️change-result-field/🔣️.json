@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result-field",
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result",
   "semanticKind": "change-result-field",
   "displayName": "Change Result Field",
   "emoji": "🎨️",

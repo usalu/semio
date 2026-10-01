@@ -1,4 +1,4 @@
-import { BundleScript, ScriptRouter } from "../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { stagePrintFonts } from "./🟦️.ts";
 
 class BuildScript extends BundleScript {

@@ -89,7 +89,7 @@
           "scenarios": [
             {
               "id": "titles-an-untitled-survey",
-              "directoryName": "🧪️titles-an-untitled-survey"
+              "directoryName": "🧪️titles"
             }
           ]
         },
@@ -100,7 +100,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-clearing-an-already-absent-description",
-              "directoryName": "🧪️no-ops-when-clearing-an-already-absent-description"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -111,7 +111,7 @@
           "scenarios": [
             {
               "id": "rejects-a-block-for-a-step-that-does-not-exist",
-              "directoryName": "🧪️rejects-a-block-for-a-step-that-does-not-exist"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -122,7 +122,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-step-id",
-              "directoryName": "🧪️rejects-a-duplicate-step-id"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -133,7 +133,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-block-missing-from-an-existing-step",
-              "directoryName": "🧪️rejects-deleting-a-block-missing-from-an-existing-step"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -144,7 +144,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-step-the-scene-does-not-hold",
-              "directoryName": "🧪️rejects-deleting-a-step-the-scene-does-not-hold"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -155,7 +155,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-block-stays-at-its-index-in-its-own-step",
-              "directoryName": "🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -166,7 +166,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-already-carries-that-title",
-              "directoryName": "🧪️no-ops-when-the-step-already-carries-that-title"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -177,7 +177,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-already-sits-at-that-index",
-              "directoryName": "🧪️no-ops-when-the-step-already-sits-at-that-index"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -188,7 +188,26 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-replacement-block-is-identical",
-              "directoryName": "🧪️no-ops-when-the-replacement-block-is-identical"
+              "directoryName": "🧪️no"
+            }
+          ]
+        },
+        {
+          "mutationId": "change-block-field",
+          "sourceMutationDirectoryName": "🎛️change-block-field",
+          "mutationDirectoryName": "🎛️change-block-field",
+          "scenarios": [
+            {
+              "id": "rejects-a-field-of-a-question-the-scene-does-not-hold",
+              "directoryName": "🧪️rejects"
+            },
+            {
+              "id": "refuses-a-minimum-above-the-maximum",
+              "directoryName": "🧪️refuses"
+            },
+            {
+              "id": "no-ops-when-the-field-already-holds-the-value",
+              "directoryName": "🧪️no"
             }
           ]
         }
@@ -203,6 +222,7 @@
         "delete-block",
         "move-block-to-step",
         "replace-block",
+        "change-block-field",
         "change-form-title"
       ]
     },
@@ -223,7 +243,7 @@
           "scenarios": [
             {
               "id": "retry-same-response",
-              "directoryName": "🧪️retry-same-response"
+              "directoryName": "🧪️retry"
             }
           ]
         },
@@ -234,7 +254,7 @@
           "scenarios": [
             {
               "id": "reject-missing-response",
-              "directoryName": "🧪️reject-missing-response"
+              "directoryName": "🧪️reject"
             }
           ]
         }
@@ -447,6 +467,27 @@
             "operation": "replace-block",
             "bridgeVersion": 1,
             "variant": "ReplaceBlock"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "forms-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "change-block-field",
+          "capability": "forms-1-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "change-block-field",
+            "bridgeVersion": 1,
+            "variant": "ChangeBlockField"
           },
           "oracleRequirements": [
             {

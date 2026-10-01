@@ -365,6 +365,7 @@ impl RasterOwnedRetirement {
             ChangeLayerTransform(payload)=>RasterMutationFields::String(payload.layer_id),
             ChangeLayerMask(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected.and_then(|mask| mask.image_key), third: payload.mask.and_then(|mask| mask.image_key) },
             ChangeLayerPixels(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: payload.expected_image_key, third: payload.content.image_key },
+            PaintStroke(payload) => RasterMutationFields::Strings { first: payload.layer_id, second: Some(payload.target), third: Some(payload.tool) },
         }
     }
 
@@ -2490,6 +2491,7 @@ impl RasterMutationDigestAuthority {
             RasterMutation::ChangeLayerMask(_) => 14,
             RasterMutation::ChangeLayerTransform(_)=>17,
             RasterMutation::ChangeLayerAdjustmentParameter(_) => 15,
+            RasterMutation::PaintStroke(_) => 18,
         }
     }
 
@@ -2750,6 +2752,45 @@ impl RasterMutationDigestAuthority {
                 1 => string_phase!(&value.asset_id, 2),
                 _ => Ok(self.finish(digest, cx)),
             },
+            RasterMutation::PaintStroke(value) => match self.phase {
+                1 => string_phase!(&value.layer_id, 2),
+                2 => string_phase!(&value.target, 3),
+                3 => string_phase!(&value.tool, 4),
+                4 => {
+                    let brush = &value.brush;
+                    let mut fields = Vec::with_capacity(32 + brush.color.len() * 8);
+                    for number in [brush.size, brush.hardness, brush.opacity, brush.color.len() as f64].into_iter().chain(brush.color.iter().copied()) {
+                        fields.extend_from_slice(&number.to_bits().to_be_bytes());
+                    }
+                    scalar_phase!(&fields, 5)
+                }
+                5 => {
+                    let end = self.offset.saturating_add(16).min(value.points.len());
+                    if self.offset < end {
+                        let mut fields = Vec::with_capacity((end - self.offset) * 16);
+                        for point in &value.points[self.offset..end] {
+                            fields.extend_from_slice(&point.x.to_bits().to_be_bytes());
+                            fields.extend_from_slice(&point.y.to_bits().to_be_bytes());
+                        }
+                        if !Self::observe_scalar(digest, &fields, cx) {
+                            return Ok(false);
+                        }
+                        self.offset = end;
+                        return Ok(false);
+                    }
+                    scalar_phase!(&(value.points.len() as u64).to_be_bytes(), 6)
+                }
+                6 => {
+                    let mut fields = vec![u8::from(value.selection.is_some())];
+                    for span in value.selection.iter().flatten() {
+                        for number in [span.start, span.length, span.coverage] {
+                            fields.extend_from_slice(&number.to_be_bytes());
+                        }
+                    }
+                    scalar_phase!(&fields, 7)
+                }
+                _ => Ok(self.finish(digest, cx)),
+            },
         }
     }
 
@@ -3003,6 +3044,7 @@ impl RasterMutationCandidateAuthority {
             RasterMutation::ChangeLayerTransform(value)=>Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentParameter(value) => Some(&value.layer_id),
             RasterMutation::ChangeLayerAdjustmentKind(value) => Some(&value.layer_id),
+            RasterMutation::PaintStroke(value) => Some(&value.layer_id),
             RasterMutation::AddLayerAsset(_) | RasterMutation::RemoveLayerAsset(_) => None,
         }
     }
@@ -3328,6 +3370,18 @@ impl RasterMutationCandidateAuthority {
                         let mut removed = snapshot.assets.remove_entry(&value.asset_id).ok_or("raster-store.mutation-asset-missing")?;
                         let (key, child) = removed.take();
                         *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::AssetEntry { key, child: Some(child) })));
+                    }
+                    RasterMutation::PaintStroke(value) => {
+                        if !raster_reserve_unit(cx) {
+                            return Ok(false);
+                        }
+                        let outcome = crate::mutations::paint_stroke::diff(value, snapshot);
+                        let refused = outcome.messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal));
+                        let (diff, _) = outcome.into_parts();
+                        let painted = if refused { Err("raster-store.mutation-paint-refused") } else { protocol::MutationDiff::apply(&diff, snapshot).map_err(|_| "raster-store.mutation-paint-apply") };
+                        protocol::MutationDiff::retire_cold(diff);
+                        let previous = std::mem::replace(snapshot, painted?);
+                        *self.retirement = Some(Box::new(RasterOwnedRetirement::new(RasterRetirementOwner::Snapshot(previous))));
                     }
                 }
                 self.phase = RasterMutationCandidatePhase::Drain;

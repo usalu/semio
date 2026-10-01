@@ -1,7 +1,7 @@
 import contract from "./🔣️.json";
 import identity from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
 import { parseInstallationDirectoryV1, type InstallationDirectoryV1 } from "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 export type PluginHostMetadata = { readonly landingAppId: string; readonly hostAppId: string };
 export type PluginDescriptorHashes = { readonly wasmSha256: string; readonly coreWasmSha256: string; readonly descriptorSha256: string };

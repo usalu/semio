@@ -7,3 +7,4 @@ document = "stdio.pdf" "schema" "=" text "pages" "{" "[" page* "]" "}"
 page = "width" "=" number "height" "=" number "text" "=" text
 text = STRING / IDENT
 number = INT / FLOAT / IDENT
+bytes = "bytes64" "(" STRING ")"

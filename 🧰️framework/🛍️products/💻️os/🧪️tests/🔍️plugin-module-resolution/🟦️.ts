@@ -18,7 +18,7 @@ import {
   parseHubProgramIdV1,
   resolvePluginModuleSourceV1,
 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🔍️resolution/🟦️.ts";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🔍️resolution/🔣️.json");

@@ -1,0 +1,1678 @@
+{
+  "tolerance": 1e-09,
+  "cases": [
+    {
+      "name": "a live x drag streams every move as its increment and commits the release tail",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 570,
+          "y": 350
+        },
+        {
+          "kind": "move",
+          "x": 580,
+          "y": 360
+        },
+        {
+          "kind": "release",
+          "x": 590,
+          "y": 355
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 14.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 10.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 10.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live y drag on a zoomed, panned camera divides the screen motion by the zoom",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 5,
+        "y": 7,
+        "zoom": 2
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            -20,
+            10
+          ],
+          "selectionIds": [
+            "frame-1",
+            "frame-2"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 350,
+        "y": 250
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 350,
+          "y": 230
+        },
+        {
+          "kind": "move",
+          "x": 352,
+          "y": 210
+        },
+        {
+          "kind": "release",
+          "x": 352,
+          "y": 190
+        }
+      ],
+      "expect": {
+        "handle": "moveY",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1",
+                "frame-2"
+              ],
+              "dx": 0.0,
+              "dy": -10.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1",
+                "frame-2"
+              ],
+              "dx": 0.0,
+              "dy": -10.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1",
+                "frame-2"
+              ],
+              "dx": 0.0,
+              "dy": -10.0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live drag through a scaled, flipped model map reports model units",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            80,
+            120
+          ],
+          "selectionIds": [
+            "n1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          },
+          "modelToLayer": {
+            "scale": [
+              20,
+              -20
+            ],
+            "offset": [
+              40,
+              40
+            ]
+          }
+        }
+      },
+      "press": {
+        "x": 536,
+        "y": 420
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 556,
+          "y": 420
+        },
+        {
+          "kind": "release",
+          "x": 576,
+          "y": 420
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "n1"
+              ],
+              "dx": 1.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "n1"
+              ],
+              "dx": 1.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live turn streams angle increments about the pivot",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 544,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 540,
+          "y": 368
+        },
+        {
+          "kind": "move",
+          "x": 520,
+          "y": 389
+        },
+        {
+          "kind": "release",
+          "x": 500,
+          "y": 394
+        }
+      ],
+      "expect": {
+        "handle": "rotate",
+        "dispatches": [
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.4228539261329407,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.6740910641671956,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.4738513364947603,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live turn past the far side keeps its angle continuous instead of jumping a full turn",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 544,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 500,
+          "y": 306
+        },
+        {
+          "kind": "move",
+          "x": 456,
+          "y": 349
+        },
+        {
+          "kind": "move",
+          "x": 456,
+          "y": 351
+        },
+        {
+          "kind": "move",
+          "x": 500,
+          "y": 394
+        },
+        {
+          "kind": "release",
+          "x": 530,
+          "y": 382
+        }
+      ],
+      "expect": {
+        "handle": "rotate",
+        "dispatches": [
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -1.5707963267948966,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -1.5480729659532555,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -0.04544672168328212,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -1.5480729659532555,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -0.7531512809621947,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live uniform scaling multiplies its increments to the release factor",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 530.8,
+        "y": 319.2
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 545,
+          "y": 305
+        },
+        {
+          "kind": "move",
+          "x": 561.6,
+          "y": 288.4
+        },
+        {
+          "kind": "release",
+          "x": 515.4,
+          "y": 334.6
+        }
+      ],
+      "expect": {
+        "handle": "scaleUniform",
+        "dispatches": [
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 1.4610389610389618,
+              "sy": 1.4610389610389618,
+              "sz": 1,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 1.3688888888888895,
+              "sy": 1.3688888888888895,
+              "sz": 1,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 0.24999999999999953,
+              "sy": 0.24999999999999953,
+              "sz": 1,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live x scaling changes only sx",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 542,
+        "y": 392
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 584,
+          "y": 434
+        },
+        {
+          "kind": "release",
+          "x": 563,
+          "y": 413
+        }
+      ],
+      "expect": {
+        "handle": "scaleX",
+        "dispatches": [
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 2.0,
+              "sy": 1.0,
+              "sz": 1,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 0.75,
+              "sy": 1.0,
+              "sz": 1,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live y scaling changes only sy",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 458,
+        "y": 392
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 479,
+          "y": 371
+        },
+        {
+          "kind": "release",
+          "x": 479,
+          "y": 371
+        }
+      ],
+      "expect": {
+        "handle": "scaleY",
+        "dispatches": [
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 1.0,
+              "sy": 0.5,
+              "sz": 1,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "scaleSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "sx": 1.0,
+              "sy": 1.0,
+              "sz": 1,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live press released where it began dispatches nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "release",
+          "x": 556,
+          "y": 350
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a live release without a streamed move commits its whole motion as the tail",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "release",
+          "x": 576,
+          "y": 359
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 20.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live drag returning to its press point streams nothing for that move and commits the identity",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 566,
+          "y": 350
+        },
+        {
+          "kind": "move",
+          "x": 556,
+          "y": 350
+        },
+        {
+          "kind": "move",
+          "x": 561,
+          "y": 350
+        },
+        {
+          "kind": "release",
+          "x": 561,
+          "y": 350
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 10.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": -5.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 0.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "commit"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live cancel after a streamed move aborts the open transaction",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 570,
+          "y": 350
+        },
+        {
+          "kind": "cancel",
+          "reason": "captureLost"
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 14.0,
+              "dy": 0.0,
+              "dz": 0,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "phase": "abort",
+              "reason": "captureLost"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live window blur after a streamed turn aborts with its reason",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 544,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 530,
+          "y": 382
+        },
+        {
+          "kind": "cancel",
+          "reason": "blur"
+        }
+      ],
+      "expect": {
+        "handle": "rotate",
+        "dispatches": [
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": 0.8176450458327023,
+              "phase": "stream"
+            }
+          },
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "phase": "abort",
+              "reason": "blur"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a live cancel before any streamed move dispatches nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "cancel",
+          "reason": "captureLost"
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a non-live drag previews locally and dispatches ONE one-shot pose delta on release",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": false,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 570,
+          "y": 350
+        },
+        {
+          "kind": "move",
+          "x": 580,
+          "y": 360
+        },
+        {
+          "kind": "release",
+          "x": 590,
+          "y": 355
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": [
+          {
+            "action": "translateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "dx": 34.0,
+              "dy": 0.0,
+              "dz": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a non-live turn past the far side releases one continuous angle",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": false,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 544,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 500,
+          "y": 306
+        },
+        {
+          "kind": "move",
+          "x": 456,
+          "y": 349
+        },
+        {
+          "kind": "move",
+          "x": 456,
+          "y": 351
+        },
+        {
+          "kind": "release",
+          "x": 500,
+          "y": 394
+        }
+      ],
+      "expect": {
+        "handle": "rotate",
+        "dispatches": [
+          {
+            "action": "rotateSelection",
+            "args": {
+              "ids": [
+                "frame-1"
+              ],
+              "ax": 0,
+              "ay": 0,
+              "az": 1,
+              "angle": -4.71238898038469
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "a non-live cancel dispatches nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": false,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 542,
+        "y": 392
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 584,
+          "y": 434
+        },
+        {
+          "kind": "cancel",
+          "reason": "captureLost"
+        }
+      ],
+      "expect": {
+        "handle": "scaleX",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a non-live release where the press began dispatches nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": false,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 580,
+          "y": 350
+        },
+        {
+          "kind": "release",
+          "x": 556,
+          "y": 350
+        }
+      ],
+      "expect": {
+        "handle": "moveX",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "the uniform knob sits on the turn ring and wins the press",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 531,
+        "y": 320
+      },
+      "events": [
+        {
+          "kind": "release",
+          "x": 531,
+          "y": 320
+        }
+      ],
+      "expect": {
+        "handle": "scaleUniform",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a press on the ring band between knobs turns",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 480,
+        "y": 310
+      },
+      "events": [
+        {
+          "kind": "release",
+          "x": 480,
+          "y": 310
+        }
+      ],
+      "expect": {
+        "handle": "rotate",
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a press beside every handle hits nothing and dispatches nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 520,
+        "y": 355
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 560,
+          "y": 355
+        },
+        {
+          "kind": "release",
+          "x": 580,
+          "y": 355
+        }
+      ],
+      "expect": {
+        "handle": null,
+        "dispatches": []
+      }
+    },
+    {
+      "name": "a disabled turn ring hits nothing",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": true,
+            "rotate": false,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 500,
+        "y": 394
+      },
+      "events": [
+        {
+          "kind": "move",
+          "x": 544,
+          "y": 350
+        },
+        {
+          "kind": "release",
+          "x": 544,
+          "y": 350
+        }
+      ],
+      "expect": {
+        "handle": null,
+        "dispatches": []
+      }
+    },
+    {
+      "name": "disabled move axes leave their knobs dead",
+      "viewport": {
+        "width": 800,
+        "height": 600
+      },
+      "camera": {
+        "x": 0,
+        "y": 0,
+        "zoom": 1
+      },
+      "layer": {
+        "id": "meta:gumball",
+        "role": "meta",
+        "gumball": {
+          "active": true,
+          "liveDispatch": true,
+          "pivotLayer": [
+            100,
+            50
+          ],
+          "selectionIds": [
+            "frame-1"
+          ],
+          "config": {
+            "moveAxes": false,
+            "rotate": true,
+            "scaleAxes": true,
+            "scaleUniform": true
+          }
+        }
+      },
+      "press": {
+        "x": 556,
+        "y": 350
+      },
+      "events": [
+        {
+          "kind": "release",
+          "x": 580,
+          "y": 350
+        }
+      ],
+      "expect": {
+        "handle": null,
+        "dispatches": []
+      }
+    }
+  ]
+}

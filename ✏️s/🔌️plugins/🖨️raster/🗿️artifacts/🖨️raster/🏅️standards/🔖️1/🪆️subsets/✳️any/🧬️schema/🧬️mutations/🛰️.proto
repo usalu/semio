@@ -85,6 +85,11 @@ message ChangeLayerMask {
 }
 message ChangeLayerAdjustmentParameter { string layer_id = 1; string parameter = 2; optional double expected = 3; optional double value = 4; }
 message ChangeLayerTransform {string layer_id = 1; semio.s.raster.raster.artifact.RasterTransform expected = 2; semio.s.raster.raster.artifact.RasterTransform transform = 3;}
+message RasterStrokePoint { double x = 1; double y = 2; }
+message RasterBrush { double size = 1; double hardness = 2; double opacity = 3; repeated double color = 4; }
+message RasterSelectionSpan { uint32 start = 1; uint32 length = 2; uint32 coverage = 3; }
+message RasterSelection { repeated RasterSelectionSpan spans = 1; }
+message PaintStroke { string layer_id = 1; string target = 2; string tool = 3; RasterBrush brush = 4; repeated RasterStrokePoint points = 5; optional RasterSelection selection = 6; }
 message RasterMutation {
   oneof mutation {
     CreateLayer create_layer = 1;
@@ -104,5 +109,6 @@ message RasterMutation {
     ChangeLayerMask change_layer_mask = 14;
     ChangeLayerTransform change_layer_transform = 17;
     ChangeLayerAdjustmentParameter change_layer_adjustment_parameter = 15;
+    PaintStroke paint_stroke = 18;
   }
 }

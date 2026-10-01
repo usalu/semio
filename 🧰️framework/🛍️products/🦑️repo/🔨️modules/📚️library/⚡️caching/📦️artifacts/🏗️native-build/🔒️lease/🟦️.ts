@@ -27,7 +27,9 @@ export function cargoBuildLeaseIdentityV1(buildDirectory: string, args: readonly
   while (!existsSync(existing)) { const parent = dirname(existing); if (parent === existing) throw Error("Cargo build directory has no physical ancestor"); suffix.unshift(basename(existing)); existing = parent; }
   const canonical = join(realpathSync(existing), ...suffix).replaceAll("\\", "/").normalize("NFC");
   if (canonical.length > schema.properties.buildDirectory.maxLength || canonical.includes("\0")) throw Error("Invalid Cargo build directory");
-  return { buildDirectory: canonical, profile, mode: schema.properties.mode.const };
+  const mode = schema.properties.mode.const;
+  if (mode !== "exclusive") throw Error("Cargo build lease requires exclusive compiler ownership");
+  return { buildDirectory: canonical, profile, mode };
 }
 
 /** 🔒️ Queues one compiler process while keeping different profile caches independent. */

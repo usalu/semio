@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "cases"],
+  "properties": {
+    "schema": {"const": "semio.framework.sqlite-native-decoding-admission/v1"},
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "bufferBytes", "emptyBuffers", "maximumBytes", "decoded"],
+        "properties": {
+          "id": {"type": "string"},
+          "bufferBytes": {"type": "array", "items": {"type": "integer", "minimum": 0}},
+          "emptyBuffers": {"type": "integer", "minimum": 0},
+          "maximumBytes": {"type": "integer", "minimum": 0},
+          "decoded": {"type": "boolean"}
+        }
+      }
+    }
+  }
+}

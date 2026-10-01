@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ply::editor::ply::PlyAnyEditor",
       "factory": "semio_s_artifact_stdio_ply::editor::ply::create_ply_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ply_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ply_any_editor"
+      }
     },
     {
       "owner": "stdio-mesh",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ply::viewer::ply::PlyAnyViewer",
       "factory": "semio_s_artifact_stdio_ply::viewer::ply::create_ply_any_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "ply",
-      "factory_id": "stdio.native.ply.v1",
-      "descriptor_codec_id": "s.stdio.ply.standard.1-0.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.ply.standard.1-0.codec.codec-stdio-ply-extension-ply.v1",
-      "artifact_kind": "s.stdio.ply",
-      "artifact_schema": "stdio.ply",
-      "extension": "ply",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "39e80b87806df5e3fd8d14d88429087482b47150ad186eafb877c439ec61ecab",
-      "protocol_source_sha256": "d819de2699732fcc95c03a0a84b79f60b96f1c9ae3d61f8830bb3d0b93cb35c8",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6254,
         "wgpu": 6354
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "PlyMutation",
+      "snapshot": "semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::snapshot::PlySnapshot",
+      "mutation": "semio_s_artifact_stdio_ply::standards::v1_0::subsets::any::schema::mutations::PlyMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.ply",
+      "standard": "1.0",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.ply.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🏅️standards/🔖️1.0/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

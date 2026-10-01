@@ -120,10 +120,10 @@ async fn history_encode_decode_identity_handles_empty_edits_and_history() {
 async fn ops_protocol_bidirectional_on_a_hand_written_sample() {
     assert_ops_protocol_bidirectional(
         "doc \"doc-1\" schema=\"schema-1\"\n\
-             edit \"e0\" started=\"2026-07-27T00:00:00Z\" actor=\"actor-1\" description=\"first edit\"\n\
+             edit \"e0\" line=[] started=\"2026-07-27T00:00:00Z\" actor=\"actor-1\" description=\"first edit\"\n\
              \x20\x20set foo = 1\n\
              \x20\x20set bar = 2\n\
-             edit \"e1\" started=\"2026-07-27T00:00:01Z\" finished=\"2026-07-27T00:00:05Z\"\n\
+             edit \"e1\" line=[] started=\"2026-07-27T00:00:01Z\" finished=\"2026-07-27T00:00:05Z\"\n\
              \x20\x20noop\n",
     )
     .await;

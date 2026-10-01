@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-surface-rs` router: `bun ./📜️script.ts <wasm|test>` — one wasm-bindgen crate for the paint/terrain/node-graph/tiled-map surface family (puzzle's `board-2d` surface now lives in the puzzle plugin crate itself). */
 import { join } from "node:path";
-import { BROWSER_CANVAS_HOT_CRATES, BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BROWSER_CANVAS_HOT_CRATES, runCargoTestBudgeted, runCmd, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -34,4 +36,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+await runScriptMain(router, { defaultCommand: "wasm" });

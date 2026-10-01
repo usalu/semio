@@ -1,0 +1,14 @@
+{
+  "MoveSelection": {
+    "objectId": "obj-plane",
+    "offset": [
+      1.0,
+      0.0,
+      0.0
+    ],
+    "vertexIds": [
+      1,
+      1
+    ]
+  }
+}

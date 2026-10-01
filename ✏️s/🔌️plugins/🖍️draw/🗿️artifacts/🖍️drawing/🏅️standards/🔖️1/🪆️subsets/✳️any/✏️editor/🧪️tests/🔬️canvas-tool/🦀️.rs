@@ -83,7 +83,7 @@ fn long_lasso_decimates_within_fixed_capacity() {
 
 #[test]
 fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
-    let operation = semio_framework_plugin::AppOperationContext {
+    let operation = AppOperationContext {
         app_instance_id: 7,
         parent_document_id: "drawing-document".into(),
         operation_id: 11,
@@ -94,7 +94,7 @@ fn shape_identity_is_replay_stable_and_scoped_to_the_durable_app_operation() {
     let geometry = [10.0, 20.0, 30.0, 40.0];
     let first = shape_drag_id("shapeRect", geometry, 3, Some(&operation));
     assert_eq!(first, shape_drag_id("shapeRect", geometry, 3, Some(&operation)), "replaying the same admitted operation is deterministic");
-    assert_ne!(first, shape_drag_id("shapeRect", geometry, 3, Some(&semio_framework_plugin::AppOperationContext { app_instance_id: 8, ..operation.clone() })), "a different live app instance cannot collide at the same document revision and local operation ordinal");
+    assert_ne!(first, shape_drag_id("shapeRect", geometry, 3, Some(&AppOperationContext { app_instance_id: 8, ..operation.clone() })), "a different live app instance cannot collide at the same document revision and local operation ordinal");
     assert_ne!(first, shape_drag_id("shapeRect", geometry, 4, Some(&operation)), "a second same-geometry creation in the same document uses its document-local ordinal");
 }
 

@@ -38,13 +38,13 @@ Feature: Apply every registered glTF 2.0 scene mutation to a real-world document
       | bind-node-mesh | 🏗️node-mesh/🔗️bind/⬅️before.gltf | {"node": 6, "mesh": 0} |
       | bind-node-skin | 🩻️node-skin/🔗️bind/⬅️before.gltf | {"node": 6, "skin": 0} |
       | bind-scene-root-node | 🌲️scene-root/🔗️bind/⬅️before.gltf | {"scene": 1, "node": 6, "position": 0} |
-      | change-node-extension-data | 🌳️node/🧩️change-extensions/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} |
-      | change-node-extra-data | 🌳️node/📝️change-extras/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture", "state": "mutated"}}} |
-      | change-node-morph-weights | 🌳️node/⚖️change-weights/⬅️before.gltf | {"node": 1, "weights": [0.9]} |
+      | change-node-extension-data | 🌳️node/🧩️change/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} |
+      | change-node-extra-data | 🌳️node/📝️change/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture", "state": "mutated"}}} |
+      | change-node-morph-weights | 🌳️node/⚖️change/⬅️before.gltf | {"node": 1, "weights": [0.9]} |
       | change-node-name | 🌳️node/🏷️rename/⬅️before.gltf | {"node": 6, "value": "renamedEmptyNode"} |
       | change-node-transform | 🌳️node/📐️transform/⬅️before.gltf | {"node": 6, "transform": {"kind": "trs", "translation": [2, 3, 4], "rotation": null, "scale": null}} |
-      | change-scene-extension-data | 🎬️scene/🧩️change-extensions/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} |
-      | change-scene-extra-data | 🎬️scene/📝️change-extras/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture", "state": "mutated"}}} |
+      | change-scene-extension-data | 🎬️scene/🧩️change/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} |
+      | change-scene-extra-data | 🎬️scene/📝️change/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture", "state": "mutated"}}} |
       | change-scene-name | 🎬️scene/🏷️rename/⬅️before.gltf | {"scene": 1, "value": "renamedSceneB"} |
       | create-node | 🌳️node/🌱️create/⬅️before.gltf | {"position": 1} |
       | create-scene | 🎬️scene/🌱️create/⬅️before.gltf | {"position": 1} |
@@ -85,13 +85,13 @@ Feature: Apply every registered glTF 2.0 scene mutation to a real-world document
       | bind-node-mesh | 🏗️node-mesh/🔗️bind/⬅️before.gltf | {"node": 6, "mesh": 0} | [{"kind": "unbind-node-mesh", "params": {"node": 6}}] | null |
       | bind-node-skin | 🩻️node-skin/🔗️bind/⬅️before.gltf | {"node": 6, "skin": 0} | [{"kind": "unbind-node-skin", "params": {"node": 6}}] | null |
       | bind-scene-root-node | 🌲️scene-root/🔗️bind/⬅️before.gltf | {"scene": 1, "node": 6, "position": 0} | [{"kind": "unbind-scene-root-node", "params": {"scene": 1, "node": 6}}] | null |
-      | change-node-extension-data | 🌳️node/🧩️change-extensions/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} | [{"kind": "change-node-extension-data", "params": {"node": 6, "data": {"state": "absent"}}}] | null |
-      | change-node-extra-data | 🌳️node/📝️change-extras/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture", "state": "mutated"}}} | [{"kind": "change-node-extra-data", "params": {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture"}}}}] | null |
-      | change-node-morph-weights | 🌳️node/⚖️change-weights/⬅️before.gltf | {"node": 1, "weights": [0.9]} | null | ["nodes"] |
+      | change-node-extension-data | 🌳️node/🧩️change/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} | [{"kind": "change-node-extension-data", "params": {"node": 6, "data": {"state": "absent"}}}] | null |
+      | change-node-extra-data | 🌳️node/📝️change/⬅️before.gltf | {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture", "state": "mutated"}}} | [{"kind": "change-node-extra-data", "params": {"node": 6, "data": {"state": "present", "value": {"nodeKind": "fixture"}}}}] | null |
+      | change-node-morph-weights | 🌳️node/⚖️change/⬅️before.gltf | {"node": 1, "weights": [0.9]} | null | ["nodes"] |
       | change-node-name | 🌳️node/🏷️rename/⬅️before.gltf | {"node": 6, "value": "renamedEmptyNode"} | [{"kind": "change-node-name", "params": {"node": 6, "value": "emptyNode"}}] | null |
       | change-node-transform | 🌳️node/📐️transform/⬅️before.gltf | {"node": 6, "transform": {"kind": "trs", "translation": [2, 3, 4], "rotation": null, "scale": null}} | [{"kind": "change-node-transform", "params": {"node": 6, "transform": {"kind": "trs", "translation": null, "rotation": null, "scale": null}}}] | null |
-      | change-scene-extension-data | 🎬️scene/🧩️change-extensions/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} | [{"kind": "change-scene-extension-data", "params": {"scene": 1, "data": {"state": "absent"}}}] | null |
-      | change-scene-extra-data | 🎬️scene/📝️change-extras/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture", "state": "mutated"}}} | [{"kind": "change-scene-extra-data", "params": {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture"}}}}] | null |
+      | change-scene-extension-data | 🎬️scene/🧩️change/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"ACME_marker": {"on": true}}}} | [{"kind": "change-scene-extension-data", "params": {"scene": 1, "data": {"state": "absent"}}}] | null |
+      | change-scene-extra-data | 🎬️scene/📝️change/⬅️before.gltf | {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture", "state": "mutated"}}} | [{"kind": "change-scene-extra-data", "params": {"scene": 1, "data": {"state": "present", "value": {"sceneKind": "fixture"}}}}] | null |
       | change-scene-name | 🎬️scene/🏷️rename/⬅️before.gltf | {"scene": 1, "value": "renamedSceneB"} | [{"kind": "change-scene-name", "params": {"scene": 1, "value": "sceneB"}}] | null |
       | create-node | 🌳️node/🌱️create/⬅️before.gltf | {"position": 1} | [{"kind": "delete-node", "params": {"index": 1}}] | null |
       | create-scene | 🎬️scene/🌱️create/⬅️before.gltf | {"position": 1} | [{"kind": "delete-scene", "params": {"index": 1}}] | null |

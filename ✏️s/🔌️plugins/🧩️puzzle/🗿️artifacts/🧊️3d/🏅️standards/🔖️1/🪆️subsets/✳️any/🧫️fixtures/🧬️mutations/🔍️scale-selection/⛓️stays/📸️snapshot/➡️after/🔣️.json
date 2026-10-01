@@ -1,0 +1,256 @@
+{
+  "attractions": [
+    {
+      "attracted": "object-b:vortex-2",
+      "attracting": "object-a:vortex-1",
+      "gap": 0.0,
+      "id": "attraction-ab",
+      "rise": 0.0,
+      "rotation": -90.0,
+      "shift": 0.0,
+      "tilt": -0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "attracted": "object-c:vortex-4",
+      "attracting": "object-b:vortex-3",
+      "gap": 0.0,
+      "id": "attraction-bc",
+      "rise": 0.0,
+      "rotation": -90.0,
+      "shift": 0.0,
+      "tilt": -0.0,
+      "turn": 0.0,
+      "x": 0.0,
+      "y": 0.0
+    },
+    {
+      "attracted": "object-d:vortex-5",
+      "attracting": "object-b:vortex-3",
+      "gap": -0.9999999999999998,
+      "id": "attraction-bd",
+      "rise": 0.0,
+      "rotation": -0.0,
+      "shift": -0.9999999999999998,
+      "tilt": -0.0,
+      "turn": 90.0,
+      "x": 0.0,
+      "y": 0.0
+    }
+  ],
+  "domain": "architecture",
+  "meta": {
+    "kindCompatibility": [
+      {
+        "bidirectional": true,
+        "important": false,
+        "source": "vortex-kind-a",
+        "specificity": "vortex",
+        "target": "vortex-kind-b"
+      }
+    ]
+  },
+  "objects": [
+    {
+      "anchor": "fixed",
+      "hidden": false,
+      "id": "object-a",
+      "locked": false,
+      "objectKind": "object-kind-a",
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.0,
+        2.0,
+        2.0
+      ],
+      "vortices": [
+        {
+          "direction": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "id": "vortex-1",
+          "locked": false,
+          "position": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "vortexKind": "vortex-kind-a"
+        }
+      ]
+    },
+    {
+      "anchor": "fixed",
+      "hidden": false,
+      "id": "object-b",
+      "locked": false,
+      "objectKind": "object-kind-b",
+      "origin": [
+        2.0,
+        0.0,
+        0.0
+      ],
+      "vortices": [
+        {
+          "direction": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "id": "vortex-2",
+          "locked": false,
+          "position": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "vortexKind": "vortex-kind-a"
+        },
+        {
+          "direction": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "id": "vortex-3",
+          "locked": false,
+          "position": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "vortexKind": "vortex-kind-a"
+        }
+      ]
+    },
+    {
+      "anchor": "fixed",
+      "hidden": false,
+      "id": "object-c",
+      "locked": true,
+      "objectKind": "object-kind-b",
+      "origin": [
+        4.0,
+        0.0,
+        0.0
+      ],
+      "vortices": [
+        {
+          "direction": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "hidden": false,
+          "id": "vortex-4",
+          "locked": false,
+          "position": [
+            -1.0,
+            0.0,
+            0.0
+          ],
+          "vortexKind": "vortex-kind-a"
+        }
+      ]
+    },
+    {
+      "anchor": "fixed",
+      "hidden": false,
+      "id": "object-d",
+      "locked": false,
+      "objectKind": "object-kind-b",
+      "origin": [
+        2.0,
+        2.0,
+        0.0
+      ],
+      "vortices": [
+        {
+          "direction": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "hidden": false,
+          "id": "vortex-5",
+          "locked": false,
+          "position": [
+            0.0,
+            -1.0,
+            0.0
+          ],
+          "vortexKind": "vortex-kind-a"
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "hidden": false,
+      "id": "reference-1",
+      "locked": false,
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "source": {
+        "mediaKind": "image",
+        "url": "asset://plan.png"
+      },
+      "widthWorld": 10.0
+    }
+  ],
+  "schema": "puzzle.3d",
+  "targetVolumes": [
+    {
+      "hidden": false,
+      "id": "volume-1",
+      "locked": false,
+      "orientation": [
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "origin": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "scale": [
+        2.0,
+        2.0,
+        2.0
+      ]
+    },
+    {
+      "hidden": false,
+      "id": "volume-2",
+      "locked": true,
+      "origin": [
+        5.0,
+        0.0,
+        0.0
+      ],
+      "scale": 1.5
+    }
+  ]
+}

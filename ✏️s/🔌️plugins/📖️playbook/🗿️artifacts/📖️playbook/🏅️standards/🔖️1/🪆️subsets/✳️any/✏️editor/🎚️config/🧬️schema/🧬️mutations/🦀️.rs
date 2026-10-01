@@ -1,10 +1,10 @@
 //! 🧬️ Playbook configuration mutation collection.
 
 use super::PlaybookConfig;
-#[path = "📸️replace-config/🦀️.rs"]
+#[path = "📸️replace/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "🧩️set-contributions/🦀️.rs"]
+#[path = "🧩️set/🦀️.rs"]
 mod set_contributions;
 pub use set_contributions::SetContributions;
 

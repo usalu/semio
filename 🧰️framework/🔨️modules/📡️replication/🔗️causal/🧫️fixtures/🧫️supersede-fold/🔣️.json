@@ -323,7 +323,11 @@
               "payloadHex": "0b"
             }
           }
-        ]
+        ],
+        "head": {
+          "lineId": "alt-1",
+          "checkpointId": null
+        }
       }
     },
     {
@@ -577,7 +581,11 @@
               "payloadHex": "1b"
             }
           }
-        ]
+        ],
+        "head": {
+          "lineId": "alt-1",
+          "checkpointId": null
+        }
       }
     },
     {

@@ -42,7 +42,7 @@ export interface DrawingTransform {
   rotation: number;
 }
 
-/** 🔄️ Mirrors Rust `UpdateLayerTransform` (`🔄️update-layer-transform/🦠️mutation/🦀️.rs`). */
+/** 🔄️ Mirrors Rust `UpdateLayerTransform` (`🔄️update-layer/🦠️mutation/🦀️.rs`). */
 export interface UpdateLayerTransform {
   layerId: string;
   transform: DrawingTransform;
@@ -81,7 +81,7 @@ export interface ReplaceLayerStroke {
   stroke?: StrokeStyle;
 }
 
-/** 🔀 Mirrors Rust `SetLayerBooleanOperation` (`🔀set-layer-boolean-operation/🦠️mutation/🦀️.rs`). */
+/** 🔀 Mirrors Rust `SetLayerBooleanOperation` (`🔀set-layer-boolean/🦠️mutation/🦀️.rs`). */
 export interface SetLayerBooleanOperation {
   layerId: string;
   booleanOperation: string;
@@ -93,7 +93,7 @@ export interface DrawingTraceParams {
   simplifyEpsilon: number;
 }
 
-/** 🔧 Mirrors Rust `UpdateLayerTraceParams` (`🔍️update-layer-trace-params/🦠️mutation/🦀️.rs`). */
+/** 🔧 Mirrors Rust `UpdateLayerTraceParams` (`🔍️update-layer/🦠️mutation/🦀️.rs`). */
 export interface UpdateLayerTraceParams {
   layerId: string;
   params: DrawingTraceParams;

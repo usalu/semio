@@ -99,3 +99,33 @@ fn the_transform_tool_is_a_one_state_statechart_that_commits_per_event() {
         assert!(runner.at_rest() && runner.transaction().is_none_or(|transaction| transaction.state() != semio_framework_tool_machine::ToolTransactionState::Open), "nothing stays open between gestures");
     }
 }
+
+/// 📄️ Paging changes WHEN a drop's proximity scan runs, never WHAT it finds: for every page size the paged scan
+/// reports monotone progress, needs exactly `ceil(objects / page)` steps and ends on the very record the one-call
+/// scan finds — the same attracted pairs in the same order — and an already attracted pair stays excluded.
+#[test]
+fn a_paged_relocate_scan_finds_exactly_what_the_one_call_scan_finds() {
+    let mut base = scene();
+    let vortex = |x: f64| Puzzle3dVortex { id: "v".into(), vortex_kind: None, label: None, position: [x, 0.0, 0.0], direction: Some([1.0, 0.0, 0.0]), radius: None, hidden: false, locked: false };
+    for (index, y) in [0.2, -0.3, 0.6, 2.0, 0.1].into_iter().enumerate() {
+        base.objects.push(Puzzle3dObject { id: format!("n{index}"), label: None, object_kind: None, anchor: Default::default(), origin: [1.5, y, 0.0], orientation: None, scale: None, mesh_url: None, vortices: vec![vortex(0.0)], hidden: false, locked: false });
+    }
+    base.attractions.push(crate::Puzzle3dAttraction { id: "held".into(), attracting: "n4:v".into(), attracted: "b:v".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    let whole = puzzle3d_relocate_record(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
+    assert_eq!(whole.attractions, vec![("a:v".to_string(), "b:v".to_string()), ("n0:v".to_string(), "b:v".to_string()), ("n1:v".to_string(), "b:v".to_string()), ("n2:v".to_string(), "b:v".to_string())], "every free vortex within the radius, in document order; `n4` is already attracted and `n3` is out of reach");
+    for page in 1..=base.objects.len() + 1 {
+        let mut scan = Puzzle3dRelocateScan::begin(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
+        let (mut steps, mut measured) = (0, 0);
+        while !scan.step(&base, page) {
+            steps += 1;
+            let (done, total) = scan.progress(&base);
+            assert!(done > measured && done < total, "page {page}: progress is monotone and never claims the end early");
+            measured = done;
+        }
+        assert_eq!(steps + 1, base.objects.len().div_ceil(page), "page {page}: one step per page");
+        assert_eq!(scan.progress(&base), (base.objects.len(), base.objects.len()));
+        assert_eq!(scan.finish(), whole, "page {page}: the paged scan ends on the one-call record");
+    }
+    let lonely = Puzzle3dRelocateScan::begin(&base, "pin", [0.0; 3], 0.75).expect("pin is in the scene");
+    assert_eq!(lonely.progress(&base), (base.objects.len(), base.objects.len()), "an object without a vortex attracts nothing, so its scan starts done");
+}

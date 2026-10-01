@@ -51,11 +51,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-coefficient" => Vector {
-            before: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-leading-coefficient-three/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-leading-coefficient-three/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-leading-coefficient-three/📸️snapshot/➡️after/🔣️.json"),
-            diff: Some(include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-leading-coefficient-three/🔺️diff/🔣️.json")),
-            outcome: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change-coefficient/🧪️raises-leading-coefficient-three/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/📸️snapshot/➡️after/🔣️.json"),
+            diff: Some(include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🔺️diff/🔣️.json")),
+            outcome: include_str!("../../../➗️equation/🧫️fixtures/🧬️mutations/🎚️change/🧪️raises/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-equation-1-equation: no committed specification vector is registered for kind {other:?}"),
     }

@@ -1861,7 +1861,9 @@ pub struct HistoryMutationMessage {
 /// its localized kind label, its outcome (the time-travel replay's while a session holds a report, else the durable
 /// one) and its editing state. `editable` = the op has an input schema and emits no foreign steps; `pending` = it is
 /// downstream of the mutation being edited and not applied in the preview; `edited` = the session holds a draft for it;
-/// `store` = the composed member store that holds it (`<slot>/<childId>`, design §12), absent for the document's own.
+/// `introduced` = the session's replay outcome carries a message (level and code) its pre-edit durable outcome does not,
+/// so a host marks what the edit made new (design §16.5); `store` = the composed member store that holds it
+/// (`<slot>/<childId>`, design §12), absent for the document's own.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -1891,6 +1893,9 @@ pub struct HistoryMutationEntry {
     #[serde(default)]
     #[value(default)]
     pub edited: bool,
+    #[serde(default)]
+    #[value(default)]
+    pub introduced: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub store: Option<String>,

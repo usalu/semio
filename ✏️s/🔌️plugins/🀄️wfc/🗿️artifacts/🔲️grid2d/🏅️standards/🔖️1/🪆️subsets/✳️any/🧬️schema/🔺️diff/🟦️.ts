@@ -1,14 +1,15 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🔺️ Grid2dDiff schema — real facet mirror of the Rust `🦀️.rs` sibling: a sparse, key-addressed
  * structural delta, never a whole-snapshot capture. Cell lanes are keyed `"<x>,<y>"`. */
 import type { Grid2dSnapshot, WfcAdjacencyRule2d, WfcCell2d, WfcPinnedCell2d, WfcTile2d } from "../📸️snapshot/🟦️.ts";
 
 export interface Grid2dDiff {
   /** @state artifact */ schema?: string;
-  /** @state artifact */ seed?: number;
+  /** @state artifact */ seed?: bigint;
   /** @state artifact */ width?: number;
   /** @state artifact */ height?: number;
-  /** @state artifact */ cellWidth?: number;
-  /** @state artifact */ cellHeight?: number;
+  /** @state artifact */ cellWidth?: Binary64;
+  /** @state artifact */ cellHeight?: Binary64;
   /** @state artifact */ periodicX?: boolean;
   /** @state artifact */ periodicY?: boolean;
   /** @state artifact */ tilesRemoved: string[];

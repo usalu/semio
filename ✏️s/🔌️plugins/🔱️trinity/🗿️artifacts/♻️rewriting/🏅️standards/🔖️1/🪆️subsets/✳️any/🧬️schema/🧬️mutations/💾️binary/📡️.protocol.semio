@@ -25,3 +25,11 @@ record change-rule-layout-point tag=5
 field payload bytes
 record remove-rule-layout-point tag=6
 field payload bytes
+record drag-working-nodes tag=7
+field payload bytes
+record patch-working-nodes tag=8
+field payload bytes
+record drag-rule-nodes tag=9
+field payload bytes
+record set-rule-layout-points tag=10
+field payload bytes

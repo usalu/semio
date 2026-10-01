@@ -2,7 +2,9 @@
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { bundleFlowBrowserModule, previewFlowBrowserPackage, publishFlowBrowserDeclarations, publishFlowBrowserPackage } from "../../../🕸️wasm/🌐️browser/📦️publication/🟦️.ts";
 
 const FAMILY_RS_DIR = join(import.meta.dir, "../../../📦️packages/🦀️rust");
@@ -95,4 +97,4 @@ class BrowserClockTestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("test", TestScript).register("test-source", SourceTestScript).register("test-browser", BrowserTestScript).register("test-browser-clock", BrowserClockTestScript).register("test-browser-ownership", BrowserOwnershipScript).register("declarations", BrowserDeclarationsScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+await runScriptMain(router, { defaultCommand: "wasm" });

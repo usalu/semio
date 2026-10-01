@@ -287,6 +287,7 @@ fn project_shape<S: ToValue>(snapshot: &S, path: &[semio_framework_schema::Schem
             ValueShape::Bool => SchemaFragmentValueShape::Bool,
             ValueShape::Number => SchemaFragmentValueShape::Number,
             ValueShape::String => SchemaFragmentValueShape::String,
+            ValueShape::Bytes { len } => SchemaFragmentValueShape::Array { len },
             ValueShape::Array { len } => SchemaFragmentValueShape::Array { len },
             ValueShape::Object { len } => SchemaFragmentValueShape::Object { len },
         })

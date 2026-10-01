@@ -2045,29 +2045,16 @@ pub fn resolve_command_audience(command: &CommandDefinition) -> CapabilityAudien
     command.semantics.audience.unwrap_or_else(|| derive_audience(command.kind, command.in_palette))
 }
 
-/// 🖐️ The verbs the framework's World3d gumball dispatches ITSELF around one drag —
-/// `transformBegin` when a handle is grabbed and `transformEnd` when it is released
-/// (`World3dHost`'s `handleGumballDragStart`/`handleGumballDragEnd`). They bracket the pose deltas
-/// (`translateSelection`/`rotateSelection`/`scaleSelection`, each a self-contained verb that commits on
-/// its own outside a bracket) and mean nothing outside a live pointer gesture.
-pub const GUMBALL_GESTURE_BRACKET_ACTION_IDS: [&str; 2] = ["transformBegin", "transformEnd"];
-
 /// 🎛️ The gumball's handle toggle — which move/rotate/scale handles one window shows.
 pub const GUMBALL_CHROME_ACTION_IDS: [&str; 1] = ["setTransformGumballFlag"];
 
-/// 🧭️ The one classification rule for the framework-owned gumball verbs, stated once for every
-/// app that uses the gumball (lowpoly, puzzle, fem, block, …): the drag brackets are
-/// [`CapabilityAudience::Input`], the handle toggle is [`CapabilityAudience::Chrome`]. `None` for every
-/// other id. An app declaring one of these ids must resolve to exactly this audience — enforced when its
-/// definition is built, held against `🧫️fixtures/🖐️gumball-verb-audience.json`.
+/// 🧭️ The one classification rule for the framework-owned gumball verbs, stated once for every app that uses the
+/// gumball (lowpoly, puzzle, fem, block, …): the handle toggle is [`CapabilityAudience::Chrome`]. `None` for every other
+/// id — a gumball gesture is ONE self-contained pose delta (a one-shot tool transaction, or `phase`-streamed ticks of
+/// one), so no bracket verb exists to classify. An app declaring the toggle must resolve to exactly this audience —
+/// enforced when its definition is built, held against `🧫️fixtures/🖐️gumball-verb-audience.json`.
 pub fn framework_fixed_audience(action_id: &str) -> Option<CapabilityAudience> {
-    if GUMBALL_GESTURE_BRACKET_ACTION_IDS.contains(&action_id) {
-        Some(CapabilityAudience::Input)
-    } else if GUMBALL_CHROME_ACTION_IDS.contains(&action_id) {
-        Some(CapabilityAudience::Chrome)
-    } else {
-        None
-    }
+    GUMBALL_CHROME_ACTION_IDS.contains(&action_id).then_some(CapabilityAudience::Chrome)
 }
 
 /// ⚖️ The audience a framework-owned verb requires when `action` resolves to a different one.
@@ -2407,19 +2394,19 @@ fn history_lane_action_definitions() -> Vec<ActionDefinition> {
             .describe(LocalizedLabel::native("Writes a named checkpoint into the artifact's history so a later edit can be reverted back to exactly this state.", "Schreibt einen benannten Checkpoint in die Historie des Artefakts, auf den später zurückgesetzt werden kann."))
             .use_when(["save a checkpoint", "mark this state"]),
         ActionDefinition::resumable_framework("createAlternative", LocalizedLabel::native("Create Alternative", "Alternative erstellen"), ActionKind::History, "git-branch")
-            .describe(LocalizedLabel::native("Branches the artifact's history into a new named alternative that can be edited without disturbing the current one.", "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die unabhängig bearbeitet werden kann."))
+            .describe(LocalizedLabel::native("Branches the artifact's history into a new named alternative that can be edited without disturbing the current one. Only this viewer's head moves; every collaborator stays on theirs.", "Verzweigt die Historie des Artefakts in eine neue benannte Alternative, die bearbeitet werden kann, ohne die aktuelle zu stören. Nur der Kopf dieses Betrachters wechselt; jeder Mitarbeiter bleibt auf seinem."))
             .use_when(["try a variant", "branch this design"]),
         ActionDefinition::resumable_framework(SWITCH_ALTERNATIVE_ACTION_ID, LocalizedLabel::native("Switch Alternative", "Alternative wechseln"), ActionKind::History, "git-branch")
             .describe(LocalizedLabel::native(
-                "Moves the artifact head onto another existing alternative: the artifact shows that alternative's history, including the history edits kept as that alternative, and leaves those of the alternative it left.",
-                "Setzt den Kopf des Artefakts auf eine andere vorhandene Alternative: Das Artefakt zeigt deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und lässt die der verlassenen Alternative weg.",
+                "Moves this viewer's head onto another existing alternative. Collaborators stay on theirs. This viewer sees that alternative's history, including the history edits kept as that alternative, and not those of the alternative they left.",
+                "Setzt den Kopf dieses Betrachters auf eine andere vorhandene Alternative. Mitarbeiter bleiben auf ihrem. Dieser Betrachter sieht deren Verlauf einschließlich der als diese Alternative behaltenen Verlaufsbearbeitungen und nicht den der verlassenen Alternative.",
             ))
             .use_when(["switch to the other variant", "go back to the original history", "compare the edited history with the original"])
             .with_args([ActionArgDef::text(SWITCH_ALTERNATIVE_ARG_ALTERNATIVE_ID, LocalizedLabel::native("Alternative", "Alternative"))
                 .describe(LocalizedLabel::native("Id of an existing alternative of this artifact, as the history lists it.", "Kennung einer vorhandenen Alternative dieses Artefakts, wie der Verlauf sie auflistet."))
                 .required()]),
         ActionDefinition::resumable_framework("checkoutCheckpoint", LocalizedLabel::native("Checkout Checkpoint", "Checkpoint auschecken"), ActionKind::History, "git-branch")
-            .describe(LocalizedLabel::native("Restores the artifact to a previously committed checkpoint by id.", "Stellt das Artefakt auf einen zuvor festgeschriebenen Checkpoint zurück."))
+            .describe(LocalizedLabel::native("Restores this viewer's view of the artifact to a previously committed checkpoint by id. Collaborators stay where they are.", "Setzt die Ansicht dieses Betrachters auf einen zuvor festgeschriebenen Checkpoint zurück. Mitarbeiter bleiben, wo sie sind."))
             .use_when(["go back to that checkpoint"]),
         ActionDefinition { in_palette: false, ..ActionDefinition::resumable_framework(REVERT_TO_COMMAND_ACTION_ID, LocalizedLabel::native("Revert to Command", "Auf Befehl zurücksetzen"), ActionKind::History, "clock") }
             .describe(LocalizedLabel::native("Rewinds the artifact to the state it had just after one numbered entry of the session command log.", "Setzt das Artefakt auf den Zustand direkt nach einem nummerierten Eintrag des Sitzungsprotokolls zurück."))

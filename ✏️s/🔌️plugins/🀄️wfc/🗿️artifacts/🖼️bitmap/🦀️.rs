@@ -292,7 +292,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
                             mod tests_reseeds_the_solve_from_7_to_99;
                         }
                         #[path = "."]
@@ -305,7 +305,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🧪️tests/📐️grows-the-sample-to-6-by-4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-input/🧪️tests/📐️grows/🦀️.rs"]
                             mod tests_grows_the_sample_to_6_by_4;
                         }
                         #[path = "."]
@@ -318,7 +318,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🧪️tests/🖌️paints-a-2-by-2-block-of-colour-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️set-input-pixels/🧪️tests/🖌️paints/🦀️.rs"]
                             mod tests_paints_a_2_by_2_block_of_colour_1;
                         }
                         #[path = "."]
@@ -331,7 +331,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🧪️tests/🎨️appends-a-third-colour/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️add-palette-color/🧪️tests/🎨️appends/🦀️.rs"]
                             mod tests_appends_a_third_colour;
                         }
                         #[path = "."]
@@ -344,7 +344,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🧪️tests/🖍️recolours-the-second-entry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖍️change-palette-color/🧪️tests/🖍️recolours/🦀️.rs"]
                             mod tests_recolours_the_second_entry;
                         }
                         #[path = "."]
@@ -357,7 +357,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🧪️tests/🧽️drops-the-unused-third-colour/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧽️remove-palette-color/🧪️tests/🧽️drops/🦀️.rs"]
                             mod tests_drops_the_unused_third_colour;
                         }
                         #[path = "."]
@@ -370,7 +370,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧪️tests/🖼️shrinks-the-output-and-cascades-a-pin/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️resize-output/🧪️tests/🖼️shrinks/🦀️.rs"]
                             mod tests_shrinks_the_output_and_cascades_a_pin;
                         }
                         #[path = "."]
@@ -383,7 +383,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🧪️tests/⚙️widens-the-window-to-three/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️change-model/🧪️tests/⚙️widens/🦀️.rs"]
                             mod tests_widens_the_window_to_three;
                         }
                         #[path = "."]
@@ -396,7 +396,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🧪️tests/📌️pins-the-origin-cell-to-colour-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-pixel/🧪️tests/📌️pins/🦀️.rs"]
                             mod tests_pins_the_origin_cell_to_colour_1;
                         }
                         #[path = "."]
@@ -409,7 +409,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🧪️tests/📍️releases-the-pinned-origin-cell/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-pixel/🧪️tests/📍️releases/🦀️.rs"]
                             mod tests_releases_the_pinned_origin_cell;
                         }
                         #[path = "."]
@@ -422,10 +422,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/✍️paints-a-diagonal-stroke-in-colour-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/✍️paints/🦀️.rs"]
                             mod tests_paints_a_diagonal_stroke_in_colour_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/⚠️clips-a-stroke-leaving-the-sample/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/⚠️clips/🦀️.rs"]
                             mod tests_clips_a_stroke_leaving_the_sample;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✍️paint-input-stroke/🧪️tests/🔬️unit/🦀️.rs"]

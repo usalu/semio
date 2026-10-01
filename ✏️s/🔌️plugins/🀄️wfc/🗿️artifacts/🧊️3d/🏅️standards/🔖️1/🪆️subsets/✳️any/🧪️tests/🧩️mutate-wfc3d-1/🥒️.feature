@@ -52,24 +52,24 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                 | vector                                                     |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
+      | change-seed        | 🎲️change-seed/🎲️reseeds             |
       | drag-slots         | ✋️drag-slots/✋️lifts-both-rooms-two-storeys                |
-      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-corridor-lacks             |
-      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-the-corridor-and-room-b        |
-      | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
-      | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |
+      | drag-slots         | ✋️drag-slots/⚠️skips             |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets        |
+      | create-slot        | 🧩️create-slot/🧩️inserts      |
+      | delete-slot        | 🕳️delete-slot/🕳️removes       |
       | move-slot          | 🚚️move-slot/🚚️lifts-room-b-one-storey                      |
-      | resize-slot        | 📐️resize-slot/📐️widens-room-a-to-a-double-bay              |
-      | connect-slots      | 🔗️connect-slots/🔗️joins-room-a-to-room-b-beside            |
-      | disconnect-slots   | ✂️disconnect-slots/✂️severs-the-corridor-b-edge            |
+      | resize-slot        | 📐️resize-slot/📐️widens              |
+      | connect-slots      | 🔗️connect-slots/🔗️joins            |
+      | disconnect-slots   | ✂️disconnect-slots/✂️severs            |
       | pin-slot           | 📌️pin-slot/📌️pins-room-a-to-the-room-tile                  |
       | unpin-slot         | 📍️unpin-slot/📍️releases-the-pin-on-room-a                  |
-      | create-tile        | 🀄️create-tile/🀄️adds-a-stair-tile-to-the-catalogue         |
-      | delete-tile        | 🗑️delete-tile/🗑️drops-the-corridor-tile-and-its-rule       |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-room-tile-selection-bias |
-      | change-tile-media  | 🖼️change-tile-media/🖼️swaps-the-corridor-box-for-a-wedge   |
-      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side             |
-      | delete-rule        | 🚫️delete-rule/🚫️drops-the-room-corridor-pairing            |
+      | create-tile        | 🀄️create-tile/🀄️adds         |
+      | delete-tile        | 🗑️delete-tile/🗑️drops       |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises |
+      | change-tile-media  | 🖼️change-tile-media/🖼️swaps   |
+      | create-rule        | 🚦️create-rule/🚦️forbids             |
+      | delete-rule        | 🚫️delete-rule/🚫️drops            |
 
   @id-inverse
   @level-exhaustive
@@ -91,29 +91,29 @@ Feature: Apply every typed wfc3d mutation twice — once in Rust, once in Python
     And the reference's own inverse of the committed mutation restores the before-snapshot exactly
     Examples:
       | id                 | vector                                                     |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99             |
+      | change-seed        | 🎲️change-seed/🎲️reseeds             |
       | drag-slots         | ✋️drag-slots/✋️lifts-both-rooms-two-storeys                |
-      | drag-slots         | ✋️drag-slots/⚠️skips-a-slot-the-corridor-lacks             |
-      | set-slot-positions | 🎯️set-slot-positions/🎯️sets-the-corridor-and-room-b        |
-      | create-slot        | 🧩️create-slot/🧩️inserts-room-c-at-the-sorted-position      |
-      | delete-slot        | 🕳️delete-slot/🕳️removes-room-a-and-cascades-its-edge       |
+      | drag-slots         | ✋️drag-slots/⚠️skips             |
+      | set-slot-positions | 🎯️set-slot-positions/🎯️sets        |
+      | create-slot        | 🧩️create-slot/🧩️inserts      |
+      | delete-slot        | 🕳️delete-slot/🕳️removes       |
       | move-slot          | 🚚️move-slot/🚚️lifts-room-b-one-storey                      |
-      | resize-slot        | 📐️resize-slot/📐️widens-room-a-to-a-double-bay              |
-      | connect-slots      | 🔗️connect-slots/🔗️joins-room-a-to-room-b-beside            |
-      | disconnect-slots   | ✂️disconnect-slots/✂️severs-the-corridor-b-edge            |
+      | resize-slot        | 📐️resize-slot/📐️widens              |
+      | connect-slots      | 🔗️connect-slots/🔗️joins            |
+      | disconnect-slots   | ✂️disconnect-slots/✂️severs            |
       | pin-slot           | 📌️pin-slot/📌️pins-room-a-to-the-room-tile                  |
       | unpin-slot         | 📍️unpin-slot/📍️releases-the-pin-on-room-a                  |
-      | create-tile        | 🀄️create-tile/🀄️adds-a-stair-tile-to-the-catalogue         |
-      | delete-tile        | 🗑️delete-tile/🗑️drops-the-corridor-tile-and-its-rule       |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-room-tile-selection-bias |
-      | change-tile-media  | 🖼️change-tile-media/🖼️swaps-the-corridor-box-for-a-wedge   |
-      | create-rule        | 🚦️create-rule/🚦️forbids-two-rooms-side-by-side             |
-      | delete-rule        | 🚫️delete-rule/🚫️drops-the-room-corridor-pairing            |
+      | create-tile        | 🀄️create-tile/🀄️adds         |
+      | delete-tile        | 🗑️delete-tile/🗑️drops       |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises |
+      | change-tile-media  | 🖼️change-tile-media/🖼️swaps   |
+      | create-rule        | 🚦️create-rule/🚦️forbids             |
+      | delete-rule        | 🚫️delete-rule/🚫️drops            |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the three-slot corridor problem
-    Given the committed before-snapshot shared://🧬️mutations/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🎲️change-seed/🎲️reseeds/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and every tile keeps its inline mesh buffers

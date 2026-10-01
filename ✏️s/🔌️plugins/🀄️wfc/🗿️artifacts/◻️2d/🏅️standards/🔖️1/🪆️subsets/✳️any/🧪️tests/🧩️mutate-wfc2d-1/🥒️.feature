@@ -48,9 +48,9 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                 | vector                                                            |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                    |
-      | create-slot        | 🧩️create-slot/🧩️inserts-slot-d-in-canonical-order                 |
-      | delete-slot        | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab               |
+      | change-seed        | 🎲️change-seed/🎲️reseeds                    |
+      | create-slot        | 🧩️create-slot/🧩️inserts                 |
+      | delete-slot        | 🕳️delete-slot/🚫️removes               |
       | move-slot          | ↔️move-slot/↔️drags-slot-b-down                                   |
       | resize-slot        | 📐️resize-slot/📐️widens-slot-b                                     |
       | connect-slots      | 🔗️connect-slots/🔗️joins-slot-a-to-slot-c                          |
@@ -58,9 +58,9 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
       | pin-slot           | 📌️pin-slot/📌️pins-slot-a-to-the-roof-tile                         |
       | unpin-slot         | 🔓️unpin-slot/🔓️releases-the-slot-c-pin                            |
       | create-tile        | 🀄️create-tile/🀄️adds-the-window-tile                              |
-      | delete-tile        | 🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias                  |
-      | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
+      | delete-tile        | 🗑️delete-tile/🚫️removes |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises                  |
+      | change-tile-media  | 🎨️change-tile-media/🎨️repaints          |
       | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
       | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |
       | drag-slots         | ✋️drag-slots/✋️drags-slots-a-and-b-together                       |
@@ -87,9 +87,9 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
     And the reference's own inverse of the committed mutation restores the before-snapshot exactly
     Examples:
       | id                 | vector                                                            |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                    |
-      | create-slot        | 🧩️create-slot/🧩️inserts-slot-d-in-canonical-order                 |
-      | delete-slot        | 🕳️delete-slot/🚫️removes-slot-a-and-cascades-edge-ab               |
+      | change-seed        | 🎲️change-seed/🎲️reseeds                    |
+      | create-slot        | 🧩️create-slot/🧩️inserts                 |
+      | delete-slot        | 🕳️delete-slot/🚫️removes               |
       | move-slot          | ↔️move-slot/↔️drags-slot-b-down                                   |
       | resize-slot        | 📐️resize-slot/📐️widens-slot-b                                     |
       | connect-slots      | 🔗️connect-slots/🔗️joins-slot-a-to-slot-c                          |
@@ -97,9 +97,9 @@ Feature: Apply every typed wfc2d mutation twice — once in Rust, once in Python
       | pin-slot           | 📌️pin-slot/📌️pins-slot-a-to-the-roof-tile                         |
       | unpin-slot         | 🔓️unpin-slot/🔓️releases-the-slot-c-pin                            |
       | create-tile        | 🀄️create-tile/🀄️adds-the-window-tile                              |
-      | delete-tile        | 🗑️delete-tile/🚫️removes-the-wall-tile-and-cascades-rules-and-pins |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias                  |
-      | change-tile-media  | 🎨️change-tile-media/🎨️repaints-the-roof-tile-as-a-raster          |
+      | delete-tile        | 🗑️delete-tile/🚫️removes |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises                  |
+      | change-tile-media  | 🎨️change-tile-media/🎨️repaints          |
       | create-rule        | 🚦️create-rule/⛔️forbids-roof-over-roof                            |
       | delete-rule        | ❌delete-rule/🚫️removes-the-wall-wall-rule                         |
       | drag-slots         | ✋️drag-slots/✋️drags-slots-a-and-b-together                       |

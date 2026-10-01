@@ -18,7 +18,7 @@ function PixelEditingOverlay(props:Omit<ComponentProps<typeof ControlledPixelEdi
     apply(result);
   }}/>;
 }
-const editCalls=(dispatch:{mock:{calls:any[][]}})=>dispatch.mock.calls.filter(call=>["editPixels","editMask","maskFromSelection"].includes(call[0]));
+const editCalls=(dispatch:{mock:{calls:any[][]}})=>dispatch.mock.calls.filter(call=>["editPixels","editMask","maskFromSelection","paintStroke"].includes(call[0]));
 import fixture from "../../🧫️fixtures/🖱️selection-focus/🔣️.json";
 
 vi.mock("@semio-tech/ui-react",async original=>({...await original<typeof import("@semio-tech/ui-react")>(),useTranslation:()=>({i18n:{resolvedLanguage:"en"}})}));
@@ -97,18 +97,17 @@ for(const kind of ["pixel","group"]) test(kind+" mask target sends coverage stro
     canvas.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));
     canvas.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:1,button:0,clientX:50,clientY:50}));
   });
-  await waitFor(()=>expect(dispatch.mock.calls.some(call=>call[0]==="editMask")).toBe(true),10_000);
-  const payload=dispatch.mock.calls.find(call=>call[0]==="editMask")![1];
-  expect(payload.layerId).toBe("p");expect(JSON.parse(payload.expectedMask).imageKey).toBe("mask");expect(payload.selection).toBe(null);
-  expect(JSON.parse(payload.operation)).toEqual({kind:"alphaStroke",points:[[1.5,0.5],[1.5,0.5]],size:1,opacity:0.5,hardness:1,alpha:0});
-  expect(dispatch.mock.calls.some(call=>call[0]==="editPixels")).toBe(false);
+  await waitFor(()=>expect(dispatch.mock.calls.some(call=>call[0]==="paintStroke")).toBe(true),10_000);
+  const payload=dispatch.mock.calls.find(call=>call[0]==="paintStroke")![1];
+  expect(payload).toEqual({layerId:"p",tool:"eraser",xs:[1.5,1.5],ys:[0.5,0.5]});
+  expect(dispatch.mock.calls.some(call=>call[0]==="editPixels"||call[0]==="editMask")).toBe(false);
   await waitFor(()=>expect((view.getByRole("button",{name:"Select all pixels"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.click(view.getByRole("button",{name:"Select all pixels"}));
   await waitFor(()=>expect((view.getByRole("button",{name:"Select all pixels"}) as HTMLButtonElement).disabled).toBe(false));
   fireEvent.change(view.getByRole("spinbutton",{name:"Mask value"}),{target:{value:"64"}});
   fireEvent.click(view.getByRole("button",{name:"Fill mask",exact:true}));
-  await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="editMask").length).toBe(2),10_000);
-  const fill=dispatch.mock.calls.filter(call=>call[0]==="editMask")[1]![1];
+  await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="editMask").length).toBe(1),10_000);
+  const fill=dispatch.mock.calls.filter(call=>call[0]==="editMask")[0]![1];
   expect(JSON.parse(fill.operation)).toEqual({kind:"alphaFill",alpha:64,opacity:0.5});
   expect(JSON.parse(fill.selection)).toEqual([[0,3,255]]);
   expect(JSON.parse(fill.expectedMask).imageKey).toBe("mask");
@@ -278,8 +277,8 @@ for(const kind of ["pixel","group"])for(const sample of fixture.affineMaskTarget
   act(()=>{for(const type of ["pointerdown","pointerup"])canvas.dispatchEvent(new PointerEvent(type,{bubbles:true,pointerId:1,button:0,clientX:sample.client[0],clientY:sample.client[1]}));});
   await waitFor(()=>expect(editCalls(dispatch)).toHaveLength(1));
   const [command,payload]=editCalls(dispatch)[0]!;
-  expect(command).toBe("editMask");expect(JSON.parse(payload.expectedMask)).toEqual(mask);
-  expect(JSON.parse(payload.operation).points).toEqual([sample.point,sample.point]);
+  expect(command).toBe("paintStroke");
+  expect(payload).toEqual({layerId:"p",tool:"brush",xs:[sample.point[0],sample.point[0]],ys:[sample.point[1],sample.point[1]]});
 });
 
 import patch,{type Operation} from "fast-json-patch";
@@ -295,8 +294,8 @@ for(const row of revisions.cases)test("active stroke handles target revision "+r
   const changed=patch.applyPatch(revisions.document,row.patch as Operation[],true,false).newDocument;
   view.rerender(<PixelEditingOverlay {...props} documentJson={JSON.stringify(changed)} selectionJson={JSON.stringify(row.selected)} activeUtility={row.utility}/>);
   fireEvent.pointerUp(canvas,{pointerId:1,button:0,clientX:50,clientY:50});
-  if(row.cancel){await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20));});expect(dispatch.mock.calls.filter(call=>call[0]==="editPixels")).toEqual([]);}
-  else await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="editPixels")).toHaveLength(1));
+  if(row.cancel){await act(async()=>{await new Promise(resolve=>setTimeout(resolve,20));});expect(dispatch.mock.calls.filter(call=>call[0]==="paintStroke")).toEqual([]);}
+  else await waitFor(()=>expect(dispatch.mock.calls.filter(call=>call[0]==="paintStroke")).toHaveLength(1));
 });
 
 for(const spans of ["[]","[[1,2,128]]"])test("restores shared selection "+spans+" across image content updates",async()=>{

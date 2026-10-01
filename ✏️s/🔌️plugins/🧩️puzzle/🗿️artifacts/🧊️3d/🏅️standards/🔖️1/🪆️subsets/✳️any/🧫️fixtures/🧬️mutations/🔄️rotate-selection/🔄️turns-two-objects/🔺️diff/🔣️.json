@@ -1,6 +1,30 @@
 {
   "artifact": null,
-  "attractions": null,
+  "attractions": {
+    "added": [],
+    "patched": [
+      {
+        "id": "attraction-1",
+        "patch": {
+          "replacement": {
+            "attracted": "object-b:vortex-2",
+            "attracting": "object-a:vortex-1",
+            "gap": 0.0,
+            "id": "attraction-1",
+            "rise": 0.0,
+            "rotation": -0.0,
+            "shift": 1.9999999999999996,
+            "tilt": -0.0,
+            "turn": -180.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        }
+      }
+    ],
+    "removed": [],
+    "reordered": null
+  },
   "domain": null,
   "meta": null,
   "objects": {

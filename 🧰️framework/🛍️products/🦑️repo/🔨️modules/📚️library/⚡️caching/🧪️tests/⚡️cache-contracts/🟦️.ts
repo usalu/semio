@@ -32,6 +32,23 @@ import { testDevcontainerLifecycle } from "../../📦️artifacts/🐳️contain
 import { testBinaryenToolchain } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🛠️binaryen-toolchain/🟦️.ts";
 import { testWasmToolFingerprint } from "../../🚀️bootstrap/🛠️tools/🕸️wasm/🧪️tests/🔏️tool-fingerprint/🟦️.ts";
 
+/** 🛡️ Proves explicit owner cache refusal against the portable policy corpus and installed Nx task semantics. */
+export function proveCachePolicy(workspace: string, internals: { targetPolicy(name: string, target: object, policy: object): { cache: boolean; continuous?: boolean } }): void {
+  const root = resolve(import.meta.dir, "../.."), require = createRequire(join(workspace, "package.json"));
+  const vectors = JSON.parse(readFileSync(join(root, "🧫️fixtures/nx-contract/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(root, "🧫️fixtures/nx-contract/🛂️schema/🔣️.json"), "utf8"));
+  assert.equal(require("jsonschema").validate(vectors, schema).valid, true);
+  const policy = JSON.parse(readFileSync(join(root, "🔣️policy.json"), "utf8"));
+  const { isCacheableTask } = require("nx/src/tasks-runner/utils");
+  for (const row of vectors.policies) for (const authored of [true, false]) {
+    const target = internals.targetPolicy(row.target, { cache: authored, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
+    const expected = authored ? row.cache : row.disabledCache;
+    assert.deepEqual({ cache: target.cache, continuous: target.continuous ?? false }, { cache: expected, continuous: row.continuous }, `${row.target}: authored cache ${authored}`);
+    assert.equal(isCacheableTask({ cache: target.cache, continuous: target.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), expected, `${row.target}: installed Nx cache semantics`);
+  }
+  console.log(`[cache-policy] ${vectors.policies.length} portable owner-cache laws agree with installed Nx`);
+}
+
 /** 🧪️ Verifies native source and command ownership against compiler and bundler input oracles. */
 export async function testCommandInputs(workspace: string, output: string): Promise<void> {
   await testGraphRevision(workspace, output);
@@ -714,14 +731,14 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.equal(cacheInternals.mutatingName("cache-prune"), true);
     assert.equal(cacheInternals.mutatingName("stdio-fuzz"), true);
     assert.equal(cacheInternals.liveName("hub-live-catalog-check"), true, "the name heuristic stays domain-neutral");
-    assert.equal(cacheInternals.targetPolicy("hub-live-catalog-check", { cache: false }, policy).cache, true, "policy cachedExact overrides a name that only collides with the live heuristic");
+    assert.equal(cacheInternals.targetPolicy("hub-live-catalog-check", { cache: false }, policy).cache, false, "owner cache refusal precedes cachedExact");
     assert.equal(cacheInternals.liveName("admin-live-journey-check"), true, "a genuine live-browser/live-server journey stays uncached");
     assert.equal(cacheInternals.liveName("collab-e2e"), true);
     for (const row of vectors.policies) {
-      const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
-      const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: `bun ./📜️script.ts ${row.target}` } }, policy);
+      const enabled = cacheInternals.targetPolicy(row.target, { cache: true, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
+      const disabled = cacheInternals.targetPolicy(row.target, { cache: false, options: { command: row.command ?? `bun ./📜️script.ts ${row.target}` } }, policy);
       assert.deepEqual({ cache: enabled.cache, continuous: enabled.continuous ?? false }, { cache: row.cache, continuous: row.continuous }, row.target);
-      assert.equal(disabled.cache, row.authored ? false : row.cache, row.authored ? `${row.target}: an unclassified name honors its owner's authored cache: false` : `${row.target} must not keep authored cache when policy is authoritative`);
+      assert.equal(disabled.cache, row.disabledCache, `${row.target}: owner cache refusal precedes automatic cache families`);
       assert.equal(isCacheableTask({ cache: enabled.cache, continuous: enabled.continuous === true, target: { project: "probe", target: row.target }, overrides: {} }), row.cache, `${row.target}: nx isCacheableTask`);
     }
     const selectionApi = await import("../../../🎮️playground/🧭️selection/🟦️.ts");

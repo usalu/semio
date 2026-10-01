@@ -427,6 +427,7 @@ pub mod wire {
             dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
             dsl_core::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
             dsl_core::DslValue::String(s) => PropertyValue::String(s.clone()),
+            dsl_core::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
             dsl_core::DslValue::Array(items) => {
                 let mut out = Vec::with_capacity(items.len());
                 for item in items {

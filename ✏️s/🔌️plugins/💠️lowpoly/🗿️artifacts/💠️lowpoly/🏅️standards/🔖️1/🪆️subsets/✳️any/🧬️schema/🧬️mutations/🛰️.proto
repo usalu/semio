@@ -120,6 +120,27 @@ message ApplyPaintStroke {
   repeated StrokePoint points = 8;
 }
 
+message MoveSelection {
+  string object_id = 1;
+  repeated uint32 vertex_ids = 2;
+  repeated float offset = 3;
+}
+
+message RotateSelection {
+  string object_id = 1;
+  repeated uint32 vertex_ids = 2;
+  repeated float pivot = 3;
+  repeated float axis = 4;
+  float angle = 5;
+}
+
+message ScaleSelection {
+  string object_id = 1;
+  repeated uint32 vertex_ids = 2;
+  repeated float pivot = 3;
+  repeated float factor = 4;
+}
+
 // 🎛️ Dispatch envelope — exactly one payload set, matching the Rust `LowpolyMutation` enum's
 // declaration order and spelling (`🦀️.rs`'s `KINDS`).
 message LowpolyMutation {
@@ -142,5 +163,8 @@ message LowpolyMutation {
     ChangePaintLayerBlendMode change_paint_layer_blend_mode = 16;
     EditPaintLayer edit_paint_layer = 17;
     ApplyPaintStroke apply_paint_stroke = 18;
+    MoveSelection move_selection = 19;
+    RotateSelection rotate_selection = 20;
+    ScaleSelection scale_selection = 21;
   }
 }

@@ -8,13 +8,13 @@ use super::{Generation3dViewCamera, Generation3dViewConfig};
 
 #[path = "👁️set-show-mode/🦀️.rs"]
 mod set_show_mode;
-#[path = "🔬️set-lod-mode/🦀️.rs"]
+#[path = "🔬️set-lod/🦀️.rs"]
 mod set_lod_mode;
 #[path = "📷️set-preview-camera/🦀️.rs"]
 mod set_preview_camera;
 #[path = "🌞️set-sun/🦀️.rs"]
 mod set_sun;
-#[path = "🎨️set-active-example/🦀️.rs"]
+#[path = "🎨️set/🦀️.rs"]
 mod set_active_example;
 
 pub use set_active_example::SetActiveExample;

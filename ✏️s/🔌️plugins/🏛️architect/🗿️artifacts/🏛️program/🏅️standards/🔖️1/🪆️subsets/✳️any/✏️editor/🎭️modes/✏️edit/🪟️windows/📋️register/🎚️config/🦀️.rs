@@ -176,5 +176,5 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, active_register: Stri
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod window_ownership_tests;

@@ -335,8 +335,27 @@ fn text_limits_hold_at_their_edges() {
     assert!(is_time_travel_fault_code("vcs\u{feff}rejected"), "U+FEFF is not White_Space");
     assert!(is_time_travel_alternative_name(&"ä".repeat(max / 2)) && !is_time_travel_alternative_name(&"ä".repeat(max / 2 + 1)));
     assert!(!is_time_travel_alternative_name("") && !is_time_travel_alternative_name("\u{a0}\u{85}\u{2003}\t") && is_time_travel_alternative_name(" Edited history "));
-    assert_eq!(TimeTravelLabel::for_fault(TIME_TRAVEL_CANCELLED_CODE), Some(TimeTravelLabel::ReplayCancelled));
-    assert_eq!(TimeTravelLabel::for_fault("vcs.rejected"), None);
+    assert_eq!(TimeTravelLabel::for_code(TIME_TRAVEL_CANCELLED_CODE), Some(TimeTravelLabel::ReplayCancelled));
+    assert_eq!(TimeTravelLabel::for_code("vcs.rejected"), None);
+}
+
+/// 🗂️ Every `timeTravel.*` code a host can be handed — the session refusals, the frozen and cancelled codes, the hosting
+/// runtime's refusals and the driver faults — names exactly the fixture's label, and every one is a well-formed fault code.
+#[test]
+fn every_time_travel_code_names_the_fixture_label() {
+    let law = law();
+    let rows: Vec<(&str, &str)> = law["codeLabels"].as_array().expect("codeLabels").iter().map(|row| (text(&row["code"]), text(&row["key"]))).collect();
+    assert_eq!(rows, TIME_TRAVEL_CODE_LABELS.map(|(code, label)| (code, label.key())));
+    for (code, label) in TIME_TRAVEL_CODE_LABELS {
+        assert!(is_time_travel_fault_code(code) && code.starts_with("timeTravel."), "{code}");
+        assert_eq!(TimeTravelLabel::for_code(code), Some(label), "{code}");
+    }
+    for refusal in TimeTravelRefusal::ALL {
+        assert_eq!(TimeTravelLabel::for_code(refusal.code()), Some(refusal.label()), "{refusal}");
+    }
+    assert_eq!(TimeTravelLabel::for_code(TIME_TRAVEL_FROZEN_CODE), Some(TimeTravelLabel::Frozen));
+    let codes: std::collections::BTreeSet<&str> = TIME_TRAVEL_CODE_LABELS.iter().map(|(code, _)| *code).collect();
+    assert_eq!(codes.len(), TIME_TRAVEL_CODE_LABELS.len(), "every code is listed once");
 }
 
 #[test]

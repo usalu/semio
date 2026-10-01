@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::Ifc2x3AnyEditor",
       "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_any::create_ifc2x3_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ifc2x3_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc2x3_any_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::Ifc2x3AnyViewer",
       "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_any::create_ifc2x3_any_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-bim",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::Ifc2x3CobieEditor",
       "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cobie::create_ifc2x3_cobie_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ifc2x3_cobie_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc2x3_cobie_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -41,7 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::Ifc2x3CobieViewer",
       "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cobie::create_ifc2x3_cobie_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-bim",
@@ -50,7 +60,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::Ifc2x3Cv20Editor",
       "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_cv20::create_ifc2x3_cv20_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ifc2x3_cv20_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc2x3_cv20_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -59,7 +73,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::Ifc2x3Cv20Viewer",
       "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_cv20::create_ifc2x3_cv20_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-bim",
@@ -68,7 +83,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::Ifc2x3SavEditor",
       "factory": "semio_s_artifact_stdio_ifc::editor::ifc2x3_sav::create_ifc2x3_sav_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ifc2x3_sav_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc2x3_sav_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -77,7 +96,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::Ifc2x3SavViewer",
       "factory": "semio_s_artifact_stdio_ifc::viewer::ifc2x3_sav::create_ifc2x3_sav_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-bim",
@@ -86,7 +106,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_ifc::editor::ifc4_any::Ifc4AnyEditor",
       "factory": "semio_s_artifact_stdio_ifc::editor::ifc4_any::create_ifc4_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "ifc4_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_ifc4_any_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -95,10 +119,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::Ifc4AnyViewer",
       "factory": "semio_s_artifact_stdio_ifc::viewer::ifc4_any::create_ifc4_any_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -162,5 +186,75 @@
         "wgpu": 6349
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "Ifc2x3Mutation",
+      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::mutations::Ifc2x3Mutation"
+    },
+    {
+      "name": "Ifc2x3CobieMutation",
+      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3CobieMutation"
+    },
+    {
+      "name": "Ifc2x3Cv20Mutation",
+      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::cv20::schema::mutations::Ifc2x3Cv20Mutation"
+    },
+    {
+      "name": "Ifc2x3SavMutation",
+      "snapshot": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot",
+      "mutation": "semio_s_artifact_stdio_ifc::standards::v2x3::subsets::sav::schema::mutations::Ifc2x3SavMutation"
+    },
+    {
+      "name": "IfcMutation",
+      "snapshot": "semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::snapshot::IfcSnapshot",
+      "mutation": "semio_s_artifact_stdio_ifc::standards::v4::subsets::any::schema::mutations::IfcMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cobie",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🏢️cobie",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "cv20",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🤝️cv20",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.ifc",
+      "standard": "2x3",
+      "subset": "sav",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️2x3/🪆️subsets/🧮️sav",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.ifc",
+      "standard": "4",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

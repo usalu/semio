@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🛡️ `@semio-tech/hub-admin` (nx `os-hub-admin`) router: `bun ./📜️script.ts <dev|build|test> [args…]`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runViteBuild, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runViteBuild, runViteBunxDev, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🩺️ Warns that the standalone Vite surface has no administrator authority; authenticated use is
  * exclusively owned by the loopback relay started by `os-hub:dev-secure-admin`. */
@@ -50,4 +52,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
+await runScriptMain(router, { defaultCommand: "build" });

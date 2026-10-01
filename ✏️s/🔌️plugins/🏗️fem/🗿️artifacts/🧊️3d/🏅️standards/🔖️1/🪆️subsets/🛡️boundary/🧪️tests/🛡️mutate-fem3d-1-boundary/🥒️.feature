@@ -87,9 +87,9 @@ Feature: Apply every typed fem3d boundary mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id              | dir               | fixture                    |
-    | create-support  | 🛡️create-support  | 🔒️clamps-the-column-f801c9 |
-    | delete-support  | 🗑️delete-support  | 🔓️releases-the-b3ebb0      |
-    | replace-support | 🔁️replace-support | 🔄️frees-the-three-7783c9   |
+    | create-support  | 🛡️create-support  | 🔒️clamps |
+    | delete-support  | 🗑️delete-support  | 🔓️releases      |
+    | replace-support | 🔁️replace-support | 🔄️frees   |
 
   @id-hall-vector
   @level-exhaustive
@@ -102,9 +102,9 @@ Feature: Apply every typed fem3d boundary mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id              | dir               | fixture                  |
-    | replace-support | 🔁️replace-support | 🏗️hall-fixes-base-b5aa1b |
-    | delete-support  | 🗑️delete-support  | 🏗️hall-cut-pin-66d795    |
-    | create-support  | 🛡️create-support  | 🏗️hall-new-pin-c033f2    |
+    | replace-support | 🔁️replace-support | 🏗️hall |
+    | delete-support  | 🗑️delete-support  | 🏗️hall    |
+    | create-support  | 🛡️create-support  | 🏗️hall    |
 
   @id-reject
   @level-exhaustive
@@ -117,8 +117,8 @@ Feature: Apply every typed fem3d boundary mutation twice — once in Rust, once 
     Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
     Examples:
     | id                     | dir               | fixture                  |
-    | same-support-bff8b3    | 🔁️replace-support | ⏸️same-support-bff8b3    |
-    | dangling-node-d44469   | 🔁️replace-support | 🚨️dangling-node-d44469   |
-    | renames-pin-29f41a     | 🔁️replace-support | 🪪️renames-pin-29f41a     |
-    | no-such-support-edd22a | 🗑️delete-support  | 🚨️no-such-support-edd22a |
-    | dangling-node-af37e2   | 🛡️create-support  | 🚨️dangling-node-af37e2   |
+    | same-support-bff8b3    | 🔁️replace-support | ⏸️same    |
+    | dangling-node-d44469   | 🔁️replace-support | 🚨️dangling   |
+    | renames-pin-29f41a     | 🔁️replace-support | 🪪️renames     |
+    | no-such-support-edd22a | 🗑️delete-support  | 🚨️no |
+    | dangling-node-af37e2   | 🛡️create-support  | 🚨️dangling   |

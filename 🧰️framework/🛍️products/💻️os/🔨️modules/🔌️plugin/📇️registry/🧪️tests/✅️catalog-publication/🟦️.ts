@@ -10,7 +10,7 @@ import { renderOwnerPublications } from "../../../../../../🦑️repo/🔨️mo
 import { APP_CHANNEL_VERSION } from "../../../../../🟦️.ts";
 import { readDescriptorJson } from "../../🔎️discovery/🟦️.ts";
 import { declaredComponentKind } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 const manifestSchema = JSON.parse(readFileSync(join(import.meta.dirname, "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🧬️schema/🔣️.json"), "utf8"));
 const fixture = JSON.parse(readFileSync(join(import.meta.dirname, "../../🧫️fixtures/🧬️catalog-publication/🔣️.json"), "utf8")) as { executionProtocol: { appChannelVersion: number }; vectors: { id: string; change: string; valid: boolean }[]; componentKinds: { id: string; manifest: string; kind?: "plugin" | "extension" | null; invalid?: boolean }[]; descriptorInputs: { id: string; change: string; appChannelVersion?: number; valid: boolean }[]; stringLengths: { id: string; value: string; schema: object; valid: boolean }[] };

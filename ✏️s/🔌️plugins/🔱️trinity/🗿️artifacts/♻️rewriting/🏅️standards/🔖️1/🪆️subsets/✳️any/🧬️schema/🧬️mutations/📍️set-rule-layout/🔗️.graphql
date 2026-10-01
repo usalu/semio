@@ -1,0 +1,3 @@
+# 📍️ Relative set-rule-layout-points / SetRuleLayoutPoints payload.
+input RuleLayoutPlacementInput { key: String!, x: Float!, y: Float! }
+input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]!, cleared: [String!]! }

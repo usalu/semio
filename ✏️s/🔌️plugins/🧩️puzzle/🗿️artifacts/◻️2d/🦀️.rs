@@ -823,13 +823,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🧱️zero-width-node/🦀️.rs"]
                             mod tests_zero_width_node;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-a-capsule-to-the-tower/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends/🦀️.rs"]
                             mod tests_appends_a_capsule_to_the_tower;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🌱️appends-node-c/🦀️.rs"]
                             mod tests_appends_node_c;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects-a-capsule-id-the-tower-already-holds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_capsule_id_the_tower_already_holds;
                         }
                         #[path = "."]
@@ -842,13 +842,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️deletes-the-tambour-and-severs-its-ten-edges/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️deletes/🦀️.rs"]
                             mod tests_deletes_the_tambour_and_severs_its_ten_edges;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects-deleting-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes-node-a-and-severs-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_node_a_and_severs_edge;
                         }
                         #[path = "."]
@@ -861,13 +861,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves-a-capsule-across-the-shaft/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves/🦀️.rs"]
                             mod tests_moves_a_capsule_across_the_shaft;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/📍️moves-node-a/🦀️.rs"]
                             mod tests_moves_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/🚫️rejects-moving-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_moving_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -883,13 +883,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🧱️negative-radius/🦀️.rs"]
                             mod tests_negative_radius;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️circle-to-rectangle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️circle/🦀️.rs"]
                             mod tests_circle_to_rectangle;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🚫️rejects-reshaping-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reshaping_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️squares-the-concrete-forest-seed/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-node-geometry/🧪️tests/🔳️squares/🦀️.rs"]
                             mod tests_squares_the_concrete_forest_seed;
                         }
                         #[path = "."]
@@ -902,13 +902,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏷️reassigns-node-a-kind/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
                             mod tests_reassigns_node_a_kind;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🚫️rejects-rekinding-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_rekinding_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏗️rekinds-a-capsule-j-as-a-capsule-l/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-node-kind/🧪️tests/🏗️rekinds/🦀️.rs"]
                             mod tests_rekinds_a_capsule_j_as_a_capsule_l;
                         }
                         #[path = "."]
@@ -921,10 +921,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️recodes-a-capsule-id-code/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️recodes/🦀️.rs"]
                             mod tests_recodes_a_capsule_id_code;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🚫️rejects-recoding-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_recoding_a_capsule_the_board_never_held;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-node-text/🧪️tests/✏️retitles-node-a/🦀️.rs"]
@@ -940,7 +940,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🚫️rejects-reiconing-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reiconing_a_capsule_the_board_never_held;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-node-icon/🧪️tests/🎨️swaps-a-capsule-icon/🦀️.rs"]
@@ -965,10 +965,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️doubles-node-a/🦀️.rs"]
                             mod tests_doubles_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🚫️rejects-scaling-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_scaling_a_capsule_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️scales-a-capsule-by-three-halves/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏scale-node/🧪️tests/📏️scales/🦀️.rs"]
                             mod tests_scales_a_capsule_by_three_halves;
                         }
                         #[path = "."]
@@ -987,7 +987,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🙈️hides-node-a/🦀️.rs"]
                             mod tests_hides_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🚫️rejects-hiding-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-node-visible/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -1003,10 +1003,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks-node-a/🦀️.rs"]
                             mod tests_locks_node_a;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks-the-first-storey-tambour/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_the_first_storey_tambour;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🚫️rejects-locking-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-node-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -1022,10 +1022,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes-node-a-to-root/🦀️.rs"]
                             mod tests_promotes_node_a_to_root;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes-the-base-to-root/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🌳️promotes/🦀️.rs"]
                             mod tests_promotes_the_base_to_root;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🚫️rejects-rooting-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟change-node-root/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_rooting_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -1038,13 +1038,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️derives-a-capsule-pose-from-its-door-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️derives/🦀️.rs"]
                             mod tests_derives_a_capsule_pose_from_its_door_edge;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/⚓️fixed-to-derived/🦀️.rs"]
                             mod tests_fixed_to_derived;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/🚫️rejects-anchoring-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚓change-node-anchor/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_anchoring_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -1060,13 +1060,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🧱️zero-radius-handle/🦀️.rs"]
                             mod tests_zero_radius_handle;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️adds-a-third-slot-door-to-the-tambour/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️adds/🦀️.rs"]
                             mod tests_adds_a_third_slot_door_to_the_tambour;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/➕️appends-handle-3-to-node-b/🦀️.rs"]
                             mod tests_appends_handle_3_to_node_b;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_adding_a_door_to_a_capsule_the_board_never_held;
                         }
                         #[path = "."]
@@ -1079,13 +1079,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️rejects-removing-a-door-the-tambour-never-had/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_removing_a_door_the_tambour_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_a_tambour_door_and_severs_its_capsule_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes-handle-2-and-severs-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-node-handle/🧪️tests/🚫️removes2/🦀️.rs"]
                             mod tests_removes_handle_2_and_severs_edge;
                         }
                         #[path = "."]
@@ -1101,10 +1101,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🧱️negative-scale/🦀️.rs"]
                             mod tests_negative_scale;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🚫️rejects-replacing-a-door-the-tambour-never-had/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_door_the_tambour_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🔌️rekinds-an-unconnected-tambour-door/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-node-handle/🧪️tests/🔌️rekinds/🦀️.rs"]
                             mod tests_rekinds_an_unconnected_tambour_door;
                         }
                         #[path = "."]
@@ -1120,10 +1120,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️adds-second-edge/🦀️.rs"]
                             mod tests_adds_second_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/⏸️keeps-an-edge-the-tower-already-holds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/⏸️keeps/🦀️.rs"]
                             mod tests_keeps_an_edge_the_tower_already_holds;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️rewires-the-capsule-the-subgraph-left-loose/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-handles/🧪️tests/🪢️rewires/🦀️.rs"]
                             mod tests_rewires_the_capsule_the_subgraph_left_loose;
                         }
                         #[path = "."]
@@ -1136,13 +1136,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️rejects-severing-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_severing_an_edge_the_board_never_held;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/🚫️removes-edge-1/🦀️.rs"]
                             mod tests_removes_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs-a-capsule-from-the-first-storey-tambour/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-handles/🧪️tests/✂️severs/🦀️.rs"]
                             mod tests_severs_a_capsule_from_the_first_storey_tambour;
                         }
                         #[path = "."]
@@ -1155,10 +1155,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🚫️rejects-reposing-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_reposing_an_edge_the_board_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🧮️reposes-a-capsule-door-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/🧮️reposes/🦀️.rs"]
                             mod tests_reposes_a_capsule_door_edge;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-edge-geometry/🧪️tests/📍️repositions-edge-1/🦀️.rs"]
@@ -1174,10 +1174,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️kinds-a-capsule-door-edge-as-a-link/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️kinds/🦀️.rs"]
                             mod tests_kinds_a_capsule_door_edge_as_a_link;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🚫️rejects-kinding-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_kinding_an_edge_the_board_never_held;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-edge-kind/🧪️tests/🏷️rekinds-edge-1/🦀️.rs"]
@@ -1193,13 +1193,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🚫️rejects-tipping-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_tipping_an_edge_the_board_never_held;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🔀️swaps-edge-1-tips/🦀️.rs"]
                             mod tests_swaps_edge_1_tips;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🖇️tips-a-capsule-door-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️change-edge-tips/🧪️tests/🖇️tips/🦀️.rs"]
                             mod tests_tips_a_capsule_door_edge;
                         }
                         #[path = "."]
@@ -1212,13 +1212,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides-a-capsule-door-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_a_capsule_door_edge;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🙈️hides-edge-1/🦀️.rs"]
                             mod tests_hides_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🚫️rejects-hiding-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-edge-visible/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_an_edge_the_board_never_held;
                         }
                         #[path = "."]
@@ -1234,10 +1234,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks-edge-1/🦀️.rs"]
                             mod tests_locks_edge_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks-the-base-to-tambour-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_the_base_to_tambour_edge;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🚫️rejects-locking-an-edge-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-edge-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_an_edge_the_board_never_held;
                         }
                         #[path = "."]
@@ -1253,7 +1253,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints-manifest/🦀️.rs"]
                             mod tests_repoints_manifest;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints-the-tower-at-its-example-manifest/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆔change-manifest-id/🧪️tests/📦️repoints/🦀️.rs"]
                             mod tests_repoints_the_tower_at_its_example_manifest;
                         }
                         #[path = "."]
@@ -1266,10 +1266,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-handle-kind-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
                             mod tests_adds_handle_kind_pair;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️admits-the-reverse-tambour-circular-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️admits/🦀️.rs"]
                             mod tests_admits_the_reverse_tambour_circular_pair;
                         }
                         #[path = "."]
@@ -1282,13 +1282,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️rejects-withdrawing-a-pair-the-relation-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_withdrawing_a_pair_the_relation_never_held;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-handle-kind-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_handle_kind_pair;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws-the-tambour-rectangular-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/💔️withdraws/🦀️.rs"]
                             mod tests_withdraws_the_tambour_rectangular_pair;
                         }
                         #[path = "."]
@@ -1304,13 +1304,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🧱️off-rim-template/🦀️.rs"]
                             mod tests_off_rim_template;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🗑️clears-the-installed-handle-catalog/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/🗑️clears/🦀️.rs"]
                             mod tests_clears_the_installed_handle_catalog;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-handle-kind-catalog/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
                             mod tests_installs_handle_kind_catalog;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-the-tower-handle-catalog/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs2/🦀️.rs"]
                             mod tests_installs_the_tower_handle_catalog;
                         }
                         #[path = "."]
@@ -1326,10 +1326,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️appends-region-2/🦀️.rs"]
                             mod tests_appends_region_2;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️paints-a-tower-footprint/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🌍️paints/🦀️.rs"]
                             mod tests_paints_a_tower_footprint;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🚫️rejects-a-region-id-the-board-already-holds/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_region_id_the_board_already_holds;
                         }
                         #[path = "."]
@@ -1345,7 +1345,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🪦️removes-region-1/🦀️.rs"]
                             mod tests_removes_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🚫️rejects-deleting-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_region_the_board_never_held;
                         }
                         #[path = "."]
@@ -1361,7 +1361,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚀️slides-region-1/🦀️.rs"]
                             mod tests_slides_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚫️rejects-moving-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_moving_a_region_the_board_never_held;
                         }
                         #[path = "."]
@@ -1377,7 +1377,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/📐️widens-region-1/🦀️.rs"]
                             mod tests_widens_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/🚫️rejects-resizing-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐resize-target-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_resizing_a_region_the_board_never_held;
                         }
                         #[path = "."]
@@ -1390,10 +1390,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🖋️renames-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🖋️renames/🦀️.rs"]
                             mod tests_renames_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🚫️rejects-renaming-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️edit-target-region-label/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_renaming_a_region_the_board_never_held;
                         }
                         #[path = "."]
@@ -1406,10 +1406,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🙈️hides-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🚫️rejects-hiding-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-region-hidden/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_hiding_a_region_the_board_never_held;
                         }
                         #[path = "."]
@@ -1422,10 +1422,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🔏️locks-region-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🔏️locks/🦀️.rs"]
                             mod tests_locks_region_1;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🚫️rejects-locking-a-region-the-board-never-held/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔏change-target-region-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_locking_a_region_the_board_never_held;
                         }
                         #[path = "."]

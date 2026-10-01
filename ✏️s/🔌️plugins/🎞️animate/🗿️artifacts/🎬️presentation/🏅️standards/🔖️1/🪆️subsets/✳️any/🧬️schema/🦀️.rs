@@ -288,5 +288,5 @@ mod tests;
 //#endregion 🧪️Tests
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;

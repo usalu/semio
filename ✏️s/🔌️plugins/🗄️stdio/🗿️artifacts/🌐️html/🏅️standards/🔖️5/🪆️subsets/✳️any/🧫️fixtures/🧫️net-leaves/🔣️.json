@@ -1,0 +1,18 @@
+{
+  "schema": "semio.stdio.html.net-leaves.v1",
+  "note": "One explicit Apply of the HTML window is ONE edit of these net node leaves, in application order (design §13.2 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). `at` is the node path from the root element: the addressed node for set-*, the parent path plus the child index for insert-node / remove-node, [] for set-doctype.",
+  "cases": [
+    { "id": "unchanged", "before": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "leaves": [] },
+    { "id": "edits-a-text", "before": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "after": "<html><head><title>T</title></head><body><p>Uno</p><p>Two</p></body></html>", "leaves": [{ "kind": "set-text", "at": [1, 0, 0] }] },
+    { "id": "adds-an-attribute", "before": "<html><head><title>T</title></head><body><p>One</p></body></html>", "after": "<html><head><title>T</title></head><body><p class=\"lead\">One</p></body></html>", "leaves": [{ "kind": "set-attribute", "at": [1, 0] }] },
+    { "id": "removes-an-attribute", "before": "<html><head><title>T</title></head><body><p id=\"a\">One</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p></body></html>", "leaves": [{ "kind": "set-attribute", "at": [1, 0] }] },
+    { "id": "renames-an-element", "before": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p><div>Two</div></body></html>", "leaves": [{ "kind": "set-element-name", "at": [1, 1] }] },
+    { "id": "inserts-a-paragraph", "before": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p><p>New</p><p>Two</p></body></html>", "leaves": [{ "kind": "insert-node", "at": [1, 1] }] },
+    { "id": "removes-a-paragraph", "before": "<html><head><title>T</title></head><body><p>One</p><p>Two</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p></body></html>", "leaves": [{ "kind": "remove-node", "at": [1, 1] }] },
+    { "id": "wraps-a-text-in-an-element", "before": "<html><head><title>T</title></head><body><p>One</p></body></html>", "after": "<html><head><title>T</title></head><body><p><b>One</b></p></body></html>", "leaves": [{ "kind": "remove-node", "at": [1, 0, 0] }, { "kind": "insert-node", "at": [1, 0, 0] }] },
+    { "id": "drops-the-doctype", "before": "<!DOCTYPE html><html><head><title>T</title></head><body><p>One</p></body></html>", "after": "<html><head><title>T</title></head><body><p>One</p></body></html>", "leaves": [{ "kind": "set-doctype", "at": [] }] },
+    { "id": "edits-a-comment", "before": "<html><head><title>T</title></head><body><!--a--><p>One</p></body></html>", "after": "<html><head><title>T</title></head><body><!--b--><p>One</p></body></html>", "leaves": [{ "kind": "set-comment", "at": [1, 0] }] },
+    { "id": "reorders-attributes", "before": "<html><head><title>T</title></head><body><p a=\"1\" b=\"2\">One</p></body></html>", "after": "<html><head><title>T</title></head><body><p b=\"2\" a=\"1\">One</p></body></html>", "leaves": [{ "kind": "remove-node", "at": [1, 0] }, { "kind": "insert-node", "at": [1, 0] }] },
+    { "id": "edits-a-script", "before": "<html><head><title>T</title><script>a()</script></head><body><p>One</p></body></html>", "after": "<html><head><title>T</title><script>b()</script></head><body><p>One</p></body></html>", "leaves": [{ "kind": "set-raw-text", "at": [0, 1, 0] }] }
+  ]
+}

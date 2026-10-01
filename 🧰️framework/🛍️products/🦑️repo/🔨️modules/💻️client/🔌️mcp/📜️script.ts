@@ -4,7 +4,9 @@
  * Go projection rather than calling `go` on the tree directly. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveMcpBin, resolveTestLevel, runBundleScriptMain, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveMcpBin, resolveTestLevel, runCanonicalGoBuild, runCanonicalGoTests } from "../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const MODULE_DIR = import.meta.dir;
 
@@ -29,4 +31,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

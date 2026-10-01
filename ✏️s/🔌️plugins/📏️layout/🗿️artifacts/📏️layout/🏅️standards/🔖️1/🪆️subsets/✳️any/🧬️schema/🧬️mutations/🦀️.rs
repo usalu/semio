@@ -140,6 +140,19 @@ pub fn layout_frame_selection_inverse(base: &LayoutSnapshot, page_id: &str, outc
     steps
 }
 
+/// 🧺️ The most rows `Mutation::inverse` yields for `mutation` on ANY base — the bound its one-item fold footprint declares,
+/// since `preflight` never sees the base: a frame-selection leaf restores one absolute row per changed bound of every
+/// target (`drag-frames` the origin; `rotate-frames` origin and rotation; `scale-frames` origin and extent), every other
+/// leaf is point-invertible.
+pub fn layout_mutation_inverse_rows(mutation: &LayoutMutation) -> usize {
+    match mutation {
+        LayoutMutation::DragFrames(leaf) => leaf.targets.len(),
+        LayoutMutation::RotateFrames(leaf) => 2 * leaf.targets.len(),
+        LayoutMutation::ScaleFrames(leaf) => 2 * leaf.targets.len(),
+        _ => 1,
+    }
+}
+
 /// 🚨️ A frame-selection target set names at least one frame and no frame twice — the schema's `minItems`/`uniqueItems`.
 pub fn layout_frame_targets_invariant(targets: &[String]) -> Result<(), String> {
     if targets.is_empty() {

@@ -60,7 +60,7 @@ mod tests {
         include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/➕️add-counter/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/✌️add-counter-twice/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/4️⃣add-counter-four-times/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
-        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify-foreign/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
+        include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🌐️add-counter-then-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
         include_str!("../../🧫️fixtures/🧬️mutation-laws/🧬️mutations/🔢️add-counter-sequence/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"),
     ];
 

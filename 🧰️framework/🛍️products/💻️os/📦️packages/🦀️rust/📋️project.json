@@ -400,6 +400,14 @@
         "forwardAllArgs": true
       }
     },
+    "test-snapshot-native-admission": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-native-admission",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
     "test-scalar-wire-source": {
       "executor": "nx:run-commands",
       "options": {
@@ -471,6 +479,33 @@
       "options": {
         "command": "bun ./📜️script.ts test-ieee-payload-source",
         "cwd": "{projectRoot}"
+      }
+    },
+    "paged-history-stack-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts paged-history-stack-check",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "paged-history-stack-check"
+        ]
+      }
+    },
+    "paged-history-stack-native-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts paged-history-stack-check --native",
+        "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "paged-history-stack-check",
+          "--native"
+        ]
       }
     }
   },

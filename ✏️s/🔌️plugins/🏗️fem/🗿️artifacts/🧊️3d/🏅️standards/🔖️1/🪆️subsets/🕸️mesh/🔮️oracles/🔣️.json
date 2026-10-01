@@ -24,7 +24,7 @@
             },
             {
               "id": "appends-a-diagonal-bracing-bar",
-              "directoryName": "➖️appends-a-diagonal-bracing-bar"
+              "directoryName": "➖️appends"
             }
           ]
         },
@@ -43,7 +43,7 @@
             },
             {
               "id": "appends-the-column-head-node-n3",
-              "directoryName": "📍️appends-the-column-head-node-n3"
+              "directoryName": "📍️appends"
             }
           ]
         },
@@ -66,7 +66,7 @@
             },
             {
               "id": "appends-a-square-bd0e4e",
-              "directoryName": "🔳️appends-a-square-bd0e4e"
+              "directoryName": "🔳️appends"
             }
           ]
         },
@@ -89,7 +89,7 @@
             },
             {
               "id": "appends-an-extruded-roof-slab",
-              "directoryName": "🏠️appends-an-extruded-roof-slab"
+              "directoryName": "🏠️appends"
             }
           ]
         },
@@ -112,7 +112,7 @@
             },
             {
               "id": "removes-the-bracing-be89d2",
-              "directoryName": "🚫️removes-the-bracing-be89d2"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -131,7 +131,7 @@
             },
             {
               "id": "removes-the-column-head-056295",
-              "directoryName": "🚫️removes-the-column-head-056295"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -154,7 +154,7 @@
             },
             {
               "id": "removes-the-spare-30ecfb",
-              "directoryName": "🚫️removes-the-spare-30ecfb"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -177,7 +177,7 @@
             },
             {
               "id": "removes-the-roof-slab-f0fb64",
-              "directoryName": "🚫️removes-the-roof-slab-f0fb64"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -204,7 +204,7 @@
             },
             {
               "id": "rolls-the-column-50f732",
-              "directoryName": "🔄️rolls-the-column-50f732"
+              "directoryName": "🔄️rolls"
             }
           ]
         },
@@ -227,11 +227,11 @@
             },
             {
               "id": "hall-deep-purlin-176fd0",
-              "directoryName": "🏗️hall-deep-purlin-176fd0"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "raises-the-torsion-296ef0",
-              "directoryName": "🌀️raises-the-torsion-296ef0"
+              "directoryName": "🌀️raises"
             }
           ]
         },
@@ -262,7 +262,7 @@
             },
             {
               "id": "thickens-the-slab-and-b51ef0",
-              "directoryName": "📚️thickens-the-slab-and-b51ef0"
+              "directoryName": "📚️thickens"
             }
           ]
         },
@@ -281,7 +281,7 @@
             },
             {
               "id": "lifts-the-column-head-34351d",
-              "directoryName": "📍️lifts-the-column-head-34351d"
+              "directoryName": "📍️lifts"
             },
             {
               "id": "no-such-node-166880",
@@ -304,15 +304,15 @@
             },
             {
               "id": "turns-about-nothing-f2d529",
-              "directoryName": "🌀️turns-about-nothing-f2d529"
+              "directoryName": "🌀️turns"
             },
             {
               "id": "hall-stretches-the-apron-305c23",
-              "directoryName": "🏗️hall-stretches-the-apron-305c23"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "names-a-node-twice-61d178",
-              "directoryName": "🔁️names-a-node-twice-61d178"
+              "directoryName": "🔁️names"
             },
             {
               "id": "no-such-targets-f9c98d",
@@ -320,11 +320,11 @@
             },
             {
               "id": "lifts-the-column-head-b9d084",
-              "directoryName": "🧭️lifts-the-column-head-b9d084"
+              "directoryName": "🧭️lifts"
             },
             {
               "id": "flattens-the-raft-775486",
-              "directoryName": "🫓️flattens-the-raft-775486"
+              "directoryName": "🫓️flattens"
             }
           ]
         }

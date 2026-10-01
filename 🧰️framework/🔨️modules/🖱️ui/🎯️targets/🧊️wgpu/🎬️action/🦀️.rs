@@ -221,6 +221,7 @@ enum FlatValue {
     Bool(bool),
     Number(Number),
     String(TextSpan),
+    Bytes(TextSpan),
     Array,
     Object,
 }
@@ -384,6 +385,11 @@ impl BoundedAction {
             FlatValue::Bool(value) => Ok(DslValue::Bool(value)),
             FlatValue::Number(value) => Ok(DslValue::Number(value)),
             FlatValue::String(span) => Ok(DslValue::String(self.text(span)?.to_owned())),
+            FlatValue::Bytes(span) => {
+                let start = usize::from(span.start);
+                let end = start.checked_add(usize::from(span.len)).ok_or(BoundedActionFault::Structure)?;
+                Ok(DslValue::Bytes(self.bytes.get(start..end).ok_or(BoundedActionFault::Structure)?.to_vec()))
+            }
             FlatValue::Array => {
                 let mut values = Vec::with_capacity(self.child_count(node)?);
                 let mut child = node.first_child;
@@ -519,6 +525,16 @@ impl BoundedActionBuilder {
         self.push_node(key, FlatValue::String(span)).map(|_| ())
     }
 
+    /// 🧬️ Retains intrinsic octets using the action's reserved byte credits and one value node.
+    pub fn bytes(&mut self, key: Option<&str>, value: &[u8]) -> Result<(), BoundedActionFault> {
+        self.live()?;
+        let span = match self.copy_octets(value) {
+            Ok(span) => span,
+            Err(fault) => return self.poison(fault),
+        };
+        self.push_node(key, FlatValue::Bytes(span)).map(|_| ())
+    }
+
     pub fn string_joined(&mut self, key: Option<&str>, parts: &[&str]) -> Result<(), BoundedActionFault> {
         self.live()?;
         let mut len = 0usize;
@@ -578,6 +594,7 @@ impl BoundedActionBuilder {
             DslValue::Bool(value) => self.boolean(key, *value),
             DslValue::Number(value) => self.push_leaf(key, FlatValue::Number(*value)),
             DslValue::String(value) => self.string(key, value),
+            DslValue::Bytes(value) => self.bytes(key, value),
             DslValue::Array(values) => {
                 self.begin_array(key)?;
                 for value in values {
@@ -634,12 +651,16 @@ impl BoundedActionBuilder {
     }
 
     fn copy_text(&mut self, value: &str) -> Result<TextSpan, BoundedActionFault> {
+        self.copy_octets(value.as_bytes())
+    }
+
+    fn copy_octets(&mut self, value: &[u8]) -> Result<TextSpan, BoundedActionFault> {
         let end = self.action.byte_len.checked_add(value.len()).ok_or(BoundedActionFault::ByteCredits)?;
         if end > self.reserved_bytes || end > ACTION_ITEM_BYTE_CAPACITY {
             return Err(BoundedActionFault::ByteCredits);
         }
         let start = self.action.byte_len;
-        self.action.bytes[start..end].copy_from_slice(value.as_bytes());
+        self.action.bytes[start..end].copy_from_slice(value);
         self.action.byte_len = end;
         Ok(TextSpan { start: start as u16, len: value.len() as u16 })
     }

@@ -16,7 +16,7 @@ Feature: Apply the playground artifact's whole one-kind mutation vocabulary agai
 
   Both implementations now read the SAME committed bytes: `(before, mutation, after, diff, outcome)`
   under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/`
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📅️retags/`
   is a declared `asset://` fixture rather than an `include_str!`-only literal, so the plan pins its
   digest and a Python reference can resolve it.
 
@@ -27,7 +27,7 @@ Feature: Apply the playground artifact's whole one-kind mutation vocabulary agai
   `rename_all`, so alone among the artifacts in this repository it encodes EXTERNALLY tagged with a
   snake_case field — `{"ChangeSchema": {"new_schema": …}}` — where every sibling encodes internally
   tagged and camelCase. The committed vector under
-  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/`
+  `../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📅️retags/`
   is the pin on exactly that, and this case re-reads those same bytes end-to-end through
   `apply_playground_mutation_json`/`undo_playground_mutation_json`, so a serde attribute added to that
   enum in passing breaks a scenario rather than silently changing the wire format.
@@ -56,7 +56,7 @@ Feature: Apply the playground artifact's whole one-kind mutation vocabulary agai
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id            | dir             | fixture                                    |
-      | change-schema | ✒️change-schema | 📅️retags-the-playground-document-schema      |
+      | change-schema | ✒️change-schema | 📅️retags      |
 
   @id-inverse
   @level-exhaustive
@@ -70,7 +70,7 @@ Feature: Apply the playground artifact's whole one-kind mutation vocabulary agai
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id            | dir             | fixture                                    |
-      | change-schema | ✒️change-schema | 📅️retags-the-playground-document-schema      |
+      | change-schema | ✒️change-schema | 📅️retags      |
 
   @id-identity-round-trip
   @level-long

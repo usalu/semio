@@ -7,6 +7,7 @@
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
     ],
     "runtimeModules": [
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
@@ -71,6 +72,279 @@
     "standardVersion": "1",
     "subsetId": "any",
     "commandDirectoryName": "🖱️canvas-pointer-down"
+  },
+  "commandBundle": {
+    "directoryKinds": {
+      "fsm": {
+        "emoji": "🔄️",
+        "slugPattern": "^fsm$",
+        "allowEmojiOnly": false
+      }
+    },
+    "descendantContract": {
+      "rootDirectoryKindId": "projected-editor-command",
+      "requiredNodes": [
+        {
+          "pathSegments": [],
+          "nodeType": "directory",
+          "kindId": "projected-editor-command"
+        },
+        {
+          "pathSegments": [],
+          "nodeType": "file",
+          "kindId": "rust-source",
+          "sourceFilename": "🦀️.rs"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "fsm"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "rust-source",
+          "sourceFilename": "🦀️.rs"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "packages"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "rust-language"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "cargo-manifest"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "nx-project-manifest"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "root-script"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "macros"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            }
+          ],
+          "nodeType": "file",
+          "kindId": "rust-source",
+          "sourceFilename": "🦀️.rs"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "packages"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "directory",
+          "kindId": "rust-language"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "cargo-manifest"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "nx-project-manifest"
+        },
+        {
+          "pathSegments": [
+            {
+              "kindId": "fsm",
+              "literal": "🔄️fsm"
+            },
+            {
+              "kindId": "macros",
+              "literal": "✨️macros"
+            },
+            {
+              "kindId": "packages",
+              "literal": "📦️packages"
+            },
+            {
+              "kindId": "rust-language",
+              "literal": "🦀️rust"
+            }
+          ],
+          "nodeType": "file",
+          "fixedFilenameContractId": "root-script"
+        }
+      ],
+      "exclusiveAlternatives": [],
+      "realizedNodeCount": 16,
+      "pathBudgetReserve": {
+        "derivation": "longest-canonical-descendant-suffix",
+        "bytes": 72
+      }
+    }
   },
   "members": [
     {

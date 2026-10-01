@@ -53,7 +53,7 @@ pub enum EquationMutation {
     RemovePoint(remove_point::RemovePoint),
     MovePoint(move_point::MovePoint),
     // 🚚 Wave M3a (26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS): first
-    // mutation over the new `equation` field — see `🎚️change-coefficient/`.
+    // mutation over the new `equation` field — see `🎚️change/`.
     ChangeCoefficient(change_coefficient::ChangeCoefficient),
 }
 //#endregion 🔖️Mutations

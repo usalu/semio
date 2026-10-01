@@ -1,3 +1,4 @@
+import { TEST_LEVELS, TEST_LEVEL_BUDGET_MS, type TestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 //#region 🧲️Header
 // 2025-2026 Ueli Saluz <ueli@semio-tech.com>
 // AGPL-3.0 — @semio-tech/repo-lib/js: bundle scripts, policy runner, linters, dependency-boundary lint.
@@ -899,11 +900,10 @@ export async function dispatchPolicyArgv(segments: string[], scriptUrl: string):
 
 //#region 🔖️bundle-script
 //#region 🔖️Script
-import { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand } from "./🏃️process/🧭️routing/🟦️.ts";
-export { Script, BundleScript, ScriptRouter, findRepoRoot, type ScriptCommand };
+import { Script, BundleScript, ScriptRouter, findWorkspaceRoot, type ScriptCommand } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 export { ownedScriptRoutes, resolveOwnedScriptRoute, dispatchOwnedScriptRoute, type OwnedScriptRoute } from "./🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 
-export { runBundleScriptMain, type RunBundleScriptMainOptions } from "./🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
+export { runRepoScriptMain, type RunRepoScriptMainOptions } from "./🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🚪️Policy-only bundle entry when no other subcommands are registered. */
 export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
@@ -936,16 +936,11 @@ export function dispatchSubcommand(segments: string[], handlers: Record<string, 
 
 //#region ⏱️Budget
 /** ⏱️Ordered test levels — every test belongs to exactly one; running level L runs all levels ≤ L, budgeted at L's limit. */
-export const TEST_LEVELS = ["fundamental", "quick", "long", "exhaustive"] as const;
-export type TestLevel = (typeof TEST_LEVELS)[number];
+
+
 
 /** ⏱️Hard wall-clock budget (ms) per test level — authoritative values live in `fixtures/test-level-budgets` (schema-validated). */
-export const TEST_LEVEL_BUDGET_MS: Record<TestLevel, number> = {
-  fundamental: 15_000,
-  quick: 300_000,
-  long: 900_000,
-  exhaustive: 1_800_000,
-};
+
 
 /** ⏱️Per-package quick/long/exhaustive floors for plugin crates whose suites exceed the level default. */
 export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, number>>> = {
@@ -1680,7 +1675,7 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
       onTimeoutHint: budgetTimeoutHint("cargo"),
     });
     await runTestBudgeted("cargo", ["llvm-cov", covArgs[1], "--no-clean", ...covArgs.slice(2)], { cwd, env, budgetMs: testBudgetMs });
-    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(resolvedPackages.join("_"))}.lcov`);
+    const lcovPath = join(coverageDir(findWorkspaceRoot(cwd), "rust"), `${coverageSlug(resolvedPackages.join("_"))}.lcov`);
     await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
       cwd,
       env,
@@ -2495,7 +2490,7 @@ function bunArgsForVite(args: readonly string[]): string[] {
 /** 🧭️ The workspace's own Vite CLI entry (`vite/bin/vite.js`), resolved through the package instead of `node_modules/.bin`,
  * whose extensionless `vite` is a POSIX shell shim on Windows whenever another package manager wrote it. */
 function viteCliEntry(cwd: string): string {
-  return join(dirname(createRequire(join(findRepoRoot(cwd), "package.json")).resolve("vite/package.json")), "bin/vite.js");
+  return join(dirname(createRequire(join(findWorkspaceRoot(cwd), "package.json")).resolve("vite/package.json")), "bin/vite.js");
 }
 
 function bunxCmdArgs(args: readonly string[], cwd: string): string[] {
@@ -2597,8 +2592,8 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
  * never collected the kernel's in-source suites. Resolving here keeps the relative literals at the call
  * sites and makes the launched cwd authoritative again. */
 export function vitestRunArguments(bundleRoot: string, segments: string[], config: string, collectingCoverage = coverageEnabled()): string[] {
-  const coverageArgs = collectingCoverage ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`] : [];
-  const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
+  const coverageArgs = collectingCoverage ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findWorkspaceRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`] : [];
+  const vitestBin = join(findWorkspaceRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
   return [vitestBin, "run", "--config", isAbsolute(config) ? config : resolve(bundleRoot, config), ...vitestLevelArgs(), ...coverageArgs, ...segments];
 }
 
@@ -2686,7 +2681,7 @@ export function consumePlaygroundExampleArgv(segments: string[], resolveExampleI
 
 /** ▶️Playwright test run in bundle directory; browsers land in the shared cache root. */
 export function runPlaywright(bundleRoot: string, config: string, segments: string[] = []): void {
-  runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, repoToolCacheEnv(findRepoRoot(bundleRoot), playPollingEnv()));
+  runBunx(["playwright", "test", "--config", config, ...segments], bundleRoot, repoToolCacheEnv(findWorkspaceRoot(bundleRoot), playPollingEnv()));
 }
 
 /** 🔌️ True when host:port already accepts TCP (existing dev server). */

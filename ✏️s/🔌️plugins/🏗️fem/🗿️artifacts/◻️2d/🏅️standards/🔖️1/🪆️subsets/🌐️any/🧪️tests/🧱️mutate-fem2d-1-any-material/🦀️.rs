@@ -55,11 +55,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-material" => Vector {
-            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends-concrete-c30/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends-concrete-c30/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends-concrete-c30/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends-concrete-c30/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends-concrete-c30/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🌱️create-material/🧱️appends/🎯️outcome/🔣️.json"),
         },
         "delete-material" => Vector {
             before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-30f7a2/📸️snapshot/⬅️before/🔣️.json"),
@@ -69,11 +69,11 @@ fn vector(kind: &str) -> Vector {
             outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🗑️delete-material/🚫️removes-the-30f7a2/🎯️outcome/🔣️.json"),
         },
         "replace-material" => Vector {
-            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates-steel-7c22bc/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates-steel-7c22bc/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates-steel-7c22bc/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates-steel-7c22bc/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates-steel-7c22bc/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🧱️material/🧫️fixtures/🧬️mutations/🔁️replace-material/🏗️restates/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem2d-1-material: no committed specification vector is registered for kind {other:?}"),
     }

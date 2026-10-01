@@ -2,19 +2,13 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schema", "levels", "packages"],
+  "required": [
+    "schema",
+    "packages"
+  ],
   "properties": {
-    "schema": { "const": "semio.repo.library.test-level-budgets/v1" },
-    "levels": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["fundamental", "quick", "long", "exhaustive"],
-      "properties": {
-        "fundamental": { "type": "integer", "minimum": 1 },
-        "quick": { "type": "integer", "minimum": 1 },
-        "long": { "type": "integer", "minimum": 1 },
-        "exhaustive": { "type": "integer", "minimum": 1 }
-      }
+    "schema": {
+      "const": "semio.repo.library.test-level-budgets/v1"
     },
     "packages": {
       "type": "object",
@@ -22,10 +16,22 @@
         "type": "object",
         "additionalProperties": false,
         "properties": {
-          "fundamental": { "type": "integer", "minimum": 1 },
-          "quick": { "type": "integer", "minimum": 1 },
-          "long": { "type": "integer", "minimum": 1 },
-          "exhaustive": { "type": "integer", "minimum": 1 }
+          "fundamental": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "quick": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "long": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "exhaustive": {
+            "type": "integer",
+            "minimum": 1
+          }
         },
         "minProperties": 1
       }

@@ -50,8 +50,8 @@ pub fn contribute(base: &TiffSnapshot, index: usize, ifd: TiffIfd) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed insert-ifd payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-ifd/🎯️direct/🦠️mutation/🔣️.json")).expect("committed insert-ifd payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

@@ -4,7 +4,7 @@ import { type GltfCameraProjection, gltfWireIndex, gltfWireObject, gltfWireRequi
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateCameraPayload {
-  position: number;
+  position: bigint;
   projection: GltfCameraProjection;
 }
 

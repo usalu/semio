@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "swaps-the-saw-icon",
-              "directoryName": "🪚️swaps-the-saw-icon"
+              "directoryName": "🪚️swaps"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "accepts-a-disable-flag-and-applies-it",
-              "directoryName": "⏸️accepts-a-disable-flag-and-applies-it"
+              "directoryName": "⏸️accepts"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "accepts-a-machine-provenance-and-applies-it",
-              "directoryName": "🏭️accepts-a-machine-provenance-and-applies-it"
+              "directoryName": "🏭️accepts"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "relabels-the-oak-beam-as-planed",
-              "directoryName": "🔤️relabels-the-oak-beam-as-planed"
+              "directoryName": "🔤️relabels"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "adds-a-drill-press-to-the-workshop",
-              "directoryName": "🪛️adds-a-drill-press-to-the-workshop"
+              "directoryName": "🪛️adds"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "accepts-a-rip-cut-step-and-inserts-it",
-              "directoryName": "🪚️accepts-a-rip-cut-step-and-inserts-it"
+              "directoryName": "🪚️accepts"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "empties-the-workshop-of-the-saw",
-              "directoryName": "➖️empties-the-workshop-of-the-saw"
+              "directoryName": "➖️empties"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "accepts-a-step-id-and-removes-it",
-              "directoryName": "🚫️accepts-a-step-id-and-removes-it"
+              "directoryName": "🚫️accepts"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "lifts-and-tilts-the-stock",
-              "directoryName": "🎈️lifts-and-tilts-the-stock"
+              "directoryName": "🎈️lifts"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "accepts-a-new-label-and-applies-it",
-              "directoryName": "🔤️accepts-a-new-label-and-applies-it"
+              "directoryName": "🔤️accepts"
             }
           ]
         },
@@ -186,18 +186,18 @@
           "scenarios": [
             {
               "id": "accepts-a-target-index-and-reorders-them",
-              "directoryName": "🔀️accepts-a-target-index-and-reorders-them"
+              "directoryName": "🔀️accepts"
             }
           ]
         },
         {
           "mutationId": "replace-machine-capabilities",
-          "sourceMutationDirectoryName": "🔁replace-machine-capabilities",
-          "mutationDirectoryName": "🔁replace-machine-capabilities",
+          "sourceMutationDirectoryName": "🔁replace-machine",
+          "mutationDirectoryName": "🔁replace-machine",
           "scenarios": [
             {
               "id": "trades-the-blade-cut-for-a-gated-pocket-cut",
-              "directoryName": "🕳️trades-the-blade-cut-for-a-gated-pocket-cut"
+              "directoryName": "🕳️trades"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "accepts-a-bore-measure-and-replaces-it",
-              "directoryName": "🕳️accepts-a-bore-measure-and-replaces-it"
+              "directoryName": "🕳️accepts"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "reissues-the-stock-brep-child-handle",
-              "directoryName": "🧊️reissues-the-stock-brep-child-handle"
+              "directoryName": "🧊️reissues"
             }
           ]
         }

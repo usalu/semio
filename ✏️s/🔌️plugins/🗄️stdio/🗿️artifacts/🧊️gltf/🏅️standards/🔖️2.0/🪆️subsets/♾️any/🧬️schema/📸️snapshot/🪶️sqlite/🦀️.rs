@@ -13,6 +13,7 @@ use std::collections::{BTreeMap,BTreeSet};
 #[path="🎬️animation/🦀️.rs"]mod animation;
 #[path="🎥️camera/🦀️.rs"]mod camera;
 #[path="🧩️extras/🦀️.rs"]mod extras;
+#[path="📏️encoding/🦀️.rs"]mod encoding;
 
 pub const SQLITE_SCHEMA:&str=concat!(include_str!("📄️document/🗄️.sql"),"\n",include_str!("🧩️extras/🗄️.sql"),"\n",include_str!("🌳️node/🗄️.sql"),"\n",include_str!("🏔️mesh/🗄️.sql"),"\n",include_str!("📦️buffer/🗄️.sql"),"\n",include_str!("🖌️material/🗄️.sql"),"\n",include_str!("🖼️texture/🗄️.sql"),"\n",include_str!("🦴️skin/🗄️.sql"),"\n",include_str!("🎬️animation/🗄️.sql"),"\n",include_str!("🎥️camera/🗄️.sql"));
 
@@ -86,6 +87,7 @@ impl<'a,'c,'p> Read<'a,'c,'p>{
 
 impl ArtifactSqliteSnapshot for GltfSnapshot{
  const SQLITE_SCHEMA:&'static str=SQLITE_SCHEMA;
+ fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),String>{encoding::check(self,control)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{let mut write=Write::new(control)?;document::project(&mut write,self)?;node::project(&mut write,&self.document.nodes)?;mesh::project(&mut write,&self.document.meshes)?;buffer::project(&mut write,&self.document)?;material::project(&mut write,&self.document.materials)?;texture::project(&mut write,&self.document)?;skin::project(&mut write,&self.document.skins)?;animation::project(&mut write,&self.document.animations)?;camera::project(&mut write,&self.document.cameras)?;write.finish()}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{let mut read=Read::new(database,control)?;let mut snapshot=document::reconstruct(&mut read)?;snapshot.document.nodes=node::reconstruct(&mut read)?;snapshot.document.meshes=mesh::reconstruct(&mut read)?;buffer::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.materials=material::reconstruct(&mut read)?;texture::reconstruct(&mut read,&mut snapshot.document)?;snapshot.document.skins=skin::reconstruct(&mut read)?;snapshot.document.animations=animation::reconstruct(&mut read)?;snapshot.document.cameras=camera::reconstruct(&mut read)?;read.finish()?;Ok(snapshot)}
  fn validate_sqlite_snapshot_subset(&self,dialect:&ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<IoOutcome<()>,IoError>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.gltf"||dialect.standard!="2.0"||dialect.subset!="*"{return Err(String::from("GLTF owned SQLite dialect differs").into());}let row=database.table("gltf_document")?.single_row()?;if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err(String::from("GLTF document identity differs from its semantic projection").into());}Ok(IoOutcome::clean(()))}

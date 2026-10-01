@@ -1,8 +1,8 @@
-#[path = "📝️set-transaction-count/🦀️.rs"]
+#[path = "📝️set-transaction/🦀️.rs"]
 pub mod set_transaction_count;
-#[path = "📣️set-transaction-count-and-notify/🦀️.rs"]
+#[path = "📣️set-transaction/🦀️.rs"]
 pub mod set_transaction_count_and_notify;
-#[path = "⏩️set-transaction-count-without-preflight/🦀️.rs"]
+#[path = "⏩️set-transaction/🦀️.rs"]
 pub mod set_transaction_count_without_preflight;
 pub(crate) use set_transaction_count::SetTransactionCount;
 pub(crate) use set_transaction_count_and_notify::SetTransactionCountAndNotify;

@@ -23,6 +23,18 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/remove-rule-layout-point/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/drag-working-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/patch-working-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/drag-rule-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/set-rule-layout-points/schema.json"
     }
   ]
 }

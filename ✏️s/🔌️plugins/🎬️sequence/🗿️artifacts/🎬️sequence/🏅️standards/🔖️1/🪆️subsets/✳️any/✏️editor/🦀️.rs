@@ -1269,7 +1269,7 @@ fn prepare_sequence_artifact(base: &SequenceSnapshot, mutation: SequenceMutation
 
 fn sequence_artifact_store_edit(forward: SequenceMutation, inverse: Vec<SequenceMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SequenceMutation> {
     let id = format!("sequence-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

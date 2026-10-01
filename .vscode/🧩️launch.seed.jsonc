@@ -1,6 +1,124 @@
 {
   "version": "0.2.0",
   "configurations": [
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🧪️all","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.387}},
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🦀️native","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-native","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.388}},
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🟦️source","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-source","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.389}},
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🧪️all",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.381
+      }
+    },
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.382
+      }
+    },
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🟦️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.383
+      }
+    },
+    {
+      "name": "⚖️build📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.384
+      }
+    },
+    {
+      "name": "⚖️check📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.385
+      }
+    },
+    {
+      "name": "⚖️test📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.386
+      }
+    },
+    {
+      "name": "⚖️check↔️paged-history-stack🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:paged-history-stack-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 900.1814 }
+    },
+    {
+      "name": "⚖️check↔️paged-history-stack🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:paged-history-stack-native-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_gate", "order": 900.1815 }
+    },
+    {
+      "name": "⚖️check🔐️hub-auth-client🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-auth-client-rs:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1811
+      }
+    },
+    {
+      "name": "⚖️test🔐️hub-auth-client🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-auth-client-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1812
+      }
+    },
+    {
+      "name": "⚖️test-source🔐️hub-auth-client🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/hub-auth-client-rs:test-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.1813
+      }
+    },
     {
       "name": "⚖️check👁️source-watch🟦️",
       "type": "node-terminal",
@@ -6151,6 +6269,50 @@
       }
     },
     {
+      "name": "🎥️video container providers",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/remodel-remodeling-rs:verify-video-container-providers",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05677
+      }
+    },
+    {
+      "name": "🗒️note artifact document contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/note-note-js:canonical-architecture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05678
+      }
+    },
+    {
+      "name": "🧰️framework modules 🛍️product dependency direction",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:lint-framework-module-product-direction",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05679
+      }
+    },
+    {
+      "name": "🧰️framework 🦑️repo ⚡️cache owner policy",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-cache-policy",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.056795
+      }
+    },
+    {
       "name": "🧰️framework 🦑️repo 🦀️workspace 🧪️contract",
       "type": "node-terminal",
       "request": "launch",
@@ -6225,6 +6387,122 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.0568599999999
+      }
+    },
+    {
+      "name": "🧰️framework 🦑️repo 🦀️workspace 📥️runtime 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/cargo-workspaces:runtime-contract-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05687
+      }
+    },
+    {
+      "name": "🧰️framework 🦑️repo 🦀️workspace 🧩️capability 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/cargo-workspaces:capability-contract-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05688
+      }
+    },
+    {
+      "name": "✏️s 🧿️semio 🧩️composition 🛠️prepare",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:composition-prepare",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05689
+      }
+    },
+    {
+      "name": "✏️s 🔊️wav 🧩️architecture 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-wav-rs:canonical-architecture",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0569
+      }
+    },
+    {
+      "name": "🎭️styling color primitives",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/ui-styling-tokens:test-color-primitives",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05696
+      }
+    },
+    {
+      "name": "🌎️hub 🗄️stdio 📼️artifact 🧪️removal",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-plugin:parent-removal-check -- \"${workspaceFolder}/${input:stdioRemovalSnapshot}\"",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/${input:stdioRemovalArtifacts}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05691
+      }
+    },
+    {
+      "name": "🌎️hub 🗄️stdio 📼️artifact 🧪️tests-removal",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-plugin:parent-removal-test-check -- \"${workspaceFolder}/${input:stdioRemovalSnapshot}\"",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/${input:stdioRemovalArtifacts}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05692
+      }
+    },
+    {
+      "name": "🧹clean🧬️schema🧩️subset-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-schema:test-subset-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05693
+      }
+    },
+    {
+      "name": "🧹clean🥽️mesh🛡️transport-contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/assets:test-mesh-contract",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05694
+      }
+    },
+    {
+      "name": "🧹clean🧩️taxonomy🧪️root-taxonomy-workflow-source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-lib:test-root-taxonomy-workflow-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🧹clean🛡️gates",
+        "order": 900.05695
       }
     }
   ],
@@ -6603,7 +6881,20 @@
         "group": "4_gate",
         "order": 900.1803
       }
-    }  ],
+    },
+    {
+      "id": "stdioRemovalArtifacts",
+      "type": "promptString",
+      "description": "Ticket output directory containing the retained copied workspace",
+      "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-stdio"
+    },
+    {
+      "id": "stdioRemovalSnapshot",
+      "type": "promptString",
+      "description": "Retained workspace copy with only AVI absent, relative to the workspace",
+      "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-stdio/parent-avi-removal"
+    }
+  ],
 
   // 🎮️devLaunchers — per-playground-variant dev-launcher metadata (not part of the generated
   // output); see 🚀️launch/🟦️.ts readSeed() for the exact split contract this marker line supports.
@@ -6977,6 +7268,3 @@
     ]
   }
 }
-
-
-

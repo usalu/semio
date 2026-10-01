@@ -5,19 +5,9 @@ import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import { createHash } from "node:crypto";
 import Ajv from "ajv";
-import {
-  BundleScript,
-  ScriptRouter,
-  buildBudgetMs,
-  daemonBudgetOpts,
-  orchestratorBudgetOpts,
-  resolveTestLevel,
-  runBundleScriptMain,
-  runCargo,
-  runCargoTestBudgeted,
-  runCmd,
-  runProbe,
-} from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveTestLevel, runCargo, runCargoTestBudgeted, runCmd, runProbe } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { type McpBuildProfile, MCP_BINARY_NAME, MCP_BINARY_SOURCES_FILE, MCP_CARGO_PACKAGE, resolveBuiltMcpBinaryPath, resolveStagedReleaseMcpBinaryPath, requireMcpBinary } from "../../🟦️.ts";
 import { capabilityDescriptionCensus } from "../../🗂️catalog/🟦️.ts";
@@ -603,4 +593,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("schema-mirror", SchemaMirrorScript)
   .register("dev", DevScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });

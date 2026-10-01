@@ -11056,8 +11056,8 @@
     },
     {
       "key": "reportBlocking",
-      "en": "Errors in later mutations block finalizing",
-      "de": "Fehler in späteren Mutationen verhindern den Abschluss"
+      "en": "Errors must be fixed or withdrawn before finalizing",
+      "de": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden"
     },
     {
       "key": "readyToFinalize",
@@ -11078,6 +11078,136 @@
       "key": "replayProgressValueText",
       "en": "Replaying {done} of {total} mutations",
       "de": "{done} von {total} Mutationen werden neu angewendet"
+    },
+    {
+      "key": "refusalBusy",
+      "en": "History editing is busy: finish the running tool or the other history edit first",
+      "de": "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"
+    },
+    {
+      "key": "refusalUnknownMutation",
+      "en": "This mutation is no longer in the history",
+      "de": "Diese Mutation ist nicht mehr im Verlauf"
+    },
+    {
+      "key": "refusalNotEditable",
+      "en": "The inputs of this mutation cannot be edited",
+      "de": "Die Eingaben dieser Mutation können nicht bearbeitet werden"
+    },
+    {
+      "key": "refusalUnknownInput",
+      "en": "This input does not exist in the mutation",
+      "de": "Diese Eingabe gibt es in der Mutation nicht"
+    },
+    {
+      "key": "refusalInvalidInput",
+      "en": "Invalid value: the input keeps its previous value",
+      "de": "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"
+    },
+    {
+      "key": "refusalNoSelection",
+      "en": "Nothing suitable is selected for this input",
+      "de": "Für diese Eingabe ist nichts Passendes ausgewählt"
+    },
+    {
+      "key": "refusalNameRequired",
+      "en": "Name the new alternative",
+      "de": "Einen Namen für die neue Alternative eingeben"
+    },
+    {
+      "key": "refusalNameInvalid",
+      "en": "Invalid alternative name: use 1 to 256 characters",
+      "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
+    },
+    {
+      "key": "refusalSchemaUnavailable",
+      "en": "The input schema of this mutation is unavailable",
+      "de": "Das Eingabeschema dieser Mutation ist nicht verfügbar"
+    },
+    {
+      "key": "replayFaulted",
+      "en": "Replay failed: later mutations could not be checked",
+      "de": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"
+    },
+    {
+      "key": "commitFailed",
+      "en": "Finalizing failed: the history is unchanged",
+      "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
+    },
+    {
+      "key": "outcomeIntroduced",
+      "en": "New since this edit",
+      "de": "Neu durch diese Bearbeitung"
+    }
+  ],
+  "codeLabels": [
+    {
+      "code": "timeTravel.frozen",
+      "key": "frozen"
+    },
+    {
+      "code": "timeTravel.illegal",
+      "key": "refusalIllegal"
+    },
+    {
+      "code": "timeTravel.stale",
+      "key": "refusalStale"
+    },
+    {
+      "code": "timeTravel.blocked",
+      "key": "refusalBlocked"
+    },
+    {
+      "code": "timeTravel.empty",
+      "key": "refusalEmpty"
+    },
+    {
+      "code": "timeTravel.cancelled",
+      "key": "replayCancelled"
+    },
+    {
+      "code": "timeTravel.busy",
+      "key": "refusalBusy"
+    },
+    {
+      "code": "timeTravel.unknown-mutation",
+      "key": "refusalUnknownMutation"
+    },
+    {
+      "code": "timeTravel.not-editable",
+      "key": "refusalNotEditable"
+    },
+    {
+      "code": "timeTravel.unknown-input",
+      "key": "refusalUnknownInput"
+    },
+    {
+      "code": "timeTravel.invalid-input",
+      "key": "refusalInvalidInput"
+    },
+    {
+      "code": "timeTravel.no-selection",
+      "key": "refusalNoSelection"
+    },
+    {
+      "code": "timeTravel.name-required",
+      "key": "refusalNameRequired"
+    },
+    {
+      "code": "timeTravel.name-invalid",
+      "key": "refusalNameInvalid"
+    },
+    {
+      "code": "timeTravel.schema-unavailable",
+      "key": "refusalSchemaUnavailable"
+    },
+    {
+      "code": "timeTravel.replay-faulted",
+      "key": "replayFaulted"
+    },
+    {
+      "code": "timeTravel.commit-failed",
+      "key": "commitFailed"
     }
   ]
 }

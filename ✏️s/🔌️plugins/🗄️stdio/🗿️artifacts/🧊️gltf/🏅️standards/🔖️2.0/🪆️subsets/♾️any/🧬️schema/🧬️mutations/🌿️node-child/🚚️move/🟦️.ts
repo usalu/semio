@@ -4,9 +4,9 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfMoveNodeChildPayload {
-  parent: number;
-  child: number;
-  position: number;
+  parent: bigint;
+  child: bigint;
+  position: bigint;
 }
 
 export type MoveNodeChildMutation = GltfPhase<GltfMoveNodeChildPayload, GltfDiff>;

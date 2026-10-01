@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/s-2d-js` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runVitest } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runVitest } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -11,4 +13,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

@@ -3,7 +3,7 @@ import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:ch
 import { existsSync, readFileSync, rmSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
 import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";

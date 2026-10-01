@@ -5,7 +5,7 @@
     {
       "kind": "change-jfif-header",
       "variant": "ChangeJfifHeader",
-      "directory": "🪪️change-jfif-header",
+      "directory": "🪪️change-jfif",
       "textOpcode": "change-jfif-header",
       "binaryTag": 2,
       "requiredFiles": [
@@ -23,7 +23,7 @@
     {
       "kind": "replace-quant-table",
       "variant": "ReplaceQuantTable",
-      "directory": "📊️replace-quant-table",
+      "directory": "📊️replace-quant",
       "textOpcode": "replace-quant-table",
       "binaryTag": 3,
       "requiredFiles": [
@@ -41,7 +41,7 @@
     {
       "kind": "remove-quant-table",
       "variant": "RemoveQuantTable",
-      "directory": "🧹️remove-quant-table",
+      "directory": "🧹️remove-quant",
       "textOpcode": "remove-quant-table",
       "binaryTag": 4,
       "requiredFiles": [
@@ -59,7 +59,7 @@
     {
       "kind": "replace-huffman-table",
       "variant": "ReplaceHuffmanTable",
-      "directory": "🌳️replace-huffman-table",
+      "directory": "🌳️replace-huffman",
       "textOpcode": "replace-huffman-table",
       "binaryTag": 5,
       "requiredFiles": [
@@ -77,7 +77,7 @@
     {
       "kind": "remove-huffman-table",
       "variant": "RemoveHuffmanTable",
-      "directory": "🪓️remove-huffman-table",
+      "directory": "🪓️remove-huffman",
       "textOpcode": "remove-huffman-table",
       "binaryTag": 6,
       "requiredFiles": [
@@ -95,7 +95,7 @@
     {
       "kind": "change-restart-interval",
       "variant": "ChangeRestartInterval",
-      "directory": "🔁️change-restart-interval",
+      "directory": "🔁️change-restart",
       "textOpcode": "change-restart-interval",
       "binaryTag": 7,
       "requiredFiles": [
@@ -113,7 +113,7 @@
     {
       "kind": "insert-other-segment",
       "variant": "InsertOtherSegment",
-      "directory": "📥️insert-other-segment",
+      "directory": "📥️insert-other",
       "textOpcode": "insert-other-segment",
       "binaryTag": 8,
       "requiredFiles": [
@@ -131,7 +131,7 @@
     {
       "kind": "remove-other-segment",
       "variant": "RemoveOtherSegment",
-      "directory": "🗑️remove-other-segment",
+      "directory": "🗑️remove-other",
       "textOpcode": "remove-other-segment",
       "binaryTag": 9,
       "requiredFiles": [
@@ -167,7 +167,7 @@
     {
       "kind": "change-re-encode-quality",
       "variant": "ChangeReEncodeQuality",
-      "directory": "🎚️change-re-encode-quality",
+      "directory": "🎚️change-re",
       "textOpcode": "change-re-encode-quality",
       "binaryTag": 11,
       "requiredFiles": [

@@ -1291,6 +1291,31 @@ fn world_gumball_fixed_gesture_projects_preview_without_mutating_source_draw() {
     assert_eq!(unmatched.cols, source.cols);
 }
 
+/// 🎚️ A turn or a scale previews IN PLACE, exactly as the release commits it (every 3D gumball leaf turns and
+/// scales each target about its own origin): an instance far from the gumball pivot keeps its translation while its
+/// basis turns about the handle axis, and a scale stretches only its own local axis — the selection never orbits
+/// the pivot, so a multi-object preview equals the committed state.
+#[test]
+fn world_gumball_turn_and_scale_preview_each_instance_in_place() {
+    let (mut state, mut gesture) = world_gumball_commit_host_snapshot();
+    let mut source = Mat4::identity();
+    source.cols[3] = [5.0, 0.0, 0.0, 1.0];
+    gesture.translate = Vec3::ZERO;
+    gesture.handle = GumballHandle::RotateZ;
+    gesture.angle = std::f32::consts::FRAC_PI_2;
+    state.interaction_authority.as_mut().unwrap().gumball = Some(gesture);
+    let turned = retained_gumball_preview_model(&state, 0, 0, source);
+    assert_eq!(turned.cols[3], [5.0, 0.0, 0.0, 1.0], "a turned instance keeps its own origin; it never orbits the pivot at the world origin");
+    let near = |column: [f32; 4], expected: [f32; 3]| (0..3).all(|axis| (column[axis] - expected[axis]).abs() < 1e-6);
+    assert!(near(turned.cols[0], [0.0, 1.0, 0.0]) && near(turned.cols[1], [-1.0, 0.0, 0.0]) && near(turned.cols[2], [0.0, 0.0, 1.0]), "the basis turns a quarter about +z: {:?}", turned.cols);
+    let gesture = state.interaction_authority.as_mut().unwrap().gumball.as_mut().unwrap();
+    gesture.handle = GumballHandle::ScaleY;
+    gesture.angle = 0.0;
+    gesture.scale = Vec3::new(1.0, 3.0, 1.0);
+    let scaled = retained_gumball_preview_model(&state, 0, 0, source);
+    assert_eq!((scaled.cols[0], scaled.cols[1], scaled.cols[2], scaled.cols[3]), ([1.0, 0.0, 0.0, 0.0], [0.0, 3.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [5.0, 0.0, 0.0, 1.0]), "a scale stretches the instance's own y axis and keeps its origin");
+}
+
 fn world_brush_commit_host_snapshot(target: String) -> World3dState {
     let mut state = World3dState::new("surface".into(), "controller".into());
     state.interaction_revision = 4;
@@ -1428,16 +1453,21 @@ fn world_drag_and_paint_plans_reserve_before_exact_mutation() {
     assert!(take_actions(&mut input).is_empty(), "a pan step moves the orbit and owes the settle, it never publishes per move");
 
     state.interaction_mode = "paint".into();
-    let mut begin = plan_world3d_paint_stroke(&state, 4, true, 0).expect("paint begin plan");
-    let zero = with_world_step_context(0, |context| publish_world3d_plan_step(&mut state, &mut begin, 4, &mut input, context)).unwrap();
+    assert!(plan_world3d_paint_release(&state, 4, 0).is_none(), "a release without an open paint gesture commits nothing");
+    state.paint_stroke_active = true;
+    let mut release = plan_world3d_paint_release(&state, 4, 0).expect("paint release plan");
+    let zero = with_world_step_context(0, |context| publish_world3d_plan_step(&mut state, &mut release, 4, &mut input, context)).unwrap();
     assert_eq!(zero, WorldInteractionStep::Pending);
-    assert!(!state.paint_stroke_active);
-    let published = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut begin, 4, &mut input, context)).unwrap();
+    assert!(state.paint_stroke_active, "the gesture stays open until the commit is reserved");
+    let published = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut release, 4, &mut input, context)).unwrap();
     assert_eq!(published, WorldInteractionStep::Pending);
-    assert!(state.paint_stroke_active);
-    assert_eq!(take_actions(&mut input).into_iter().map(|action| action.action).collect::<Vec<_>>(), vec!["paintStrokeBegin"]);
+    assert!(!state.paint_stroke_active);
+    let actions = take_actions(&mut input);
+    assert_eq!(actions.iter().map(|action| action.action.as_str()).collect::<Vec<_>>(), vec!["paintAt"]);
+    assert_eq!(actions[0].args.as_ref().and_then(|args| args.get("phase")).and_then(dsl::DslValue::as_str), Some("commit"), "the release commits the app's open paint transaction");
 
-    let mut end = plan_world3d_paint_stroke(&state, 5, false, 0).expect("paint end plan");
+    state.paint_stroke_active = true;
+    let mut end = plan_world3d_paint_release(&state, 5, 0).expect("paint release plan");
     state.interaction_revision = state.interaction_revision.wrapping_add(1);
     let stale = with_world_step_context(1, |context| publish_world3d_plan_step(&mut state, &mut end, 5, &mut input, context)).unwrap();
     assert_eq!(stale, WorldInteractionStep::Stale);

@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain, runExactCargoLaws, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runExactCargoLaws, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runOwnedCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildCargoArtifacts } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { NativeScript } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts";
@@ -114,4 +116,4 @@ class CanonicalPairCompositionScript extends BundleScript {
 }
 
 const router=new ScriptRouter(import.meta.dir).register("source-check",SourceScript).register("native-check",TestScript).register("native",NativeScript).register("build",BuildScript).register("live-agent-loop-check",OsMcpLiveAgentLoopScript).register("hub-agent-participant-check",OsMcpHubAgentParticipantScript).register("plugin-coverage-check",OsMcpPluginCoverageScript).register("user-path-check",OsMcpUserPathScript).register("inference-quartet-check",OsMcpInferenceQuartetScript).register("security-check",OsMcpSecurityScript).register("hub-edit-durability-check",OsMcpHubEditDurabilityScript).register("agent-reply-check",OsMcpAgentReplyScript).register("untrusted-content-check",UntrustedContentScript).register("mcp-composition-source-check",McpCompositionSourceScript).register("fixture-ownership-check",FixtureOwnershipCompositionScript).register("canonical-pair-composition-check",CanonicalPairCompositionScript);
-if(import.meta.main) await runBundleScriptMain(router,import.meta.url,{defaultCommand:"source-check"});
+if(import.meta.main) await runScriptMain(router,{defaultCommand:"source-check"});

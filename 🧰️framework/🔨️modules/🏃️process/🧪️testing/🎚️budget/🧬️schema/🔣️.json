@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "levels"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.process.test-level-budgets/v1"
+    },
+    "levels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ],
+      "properties": {
+        "fundamental": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "quick": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "long": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "exhaustive": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    }
+  }
+}

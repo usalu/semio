@@ -196,6 +196,16 @@ impl PixelOperation {
 
     fn filtered(&self, image: &RasterImage, x: u32, y: u32, selection_coverage: f64, stroke_segments: &[usize]) -> PixelColor {
         let original = sample(image, x.into(), y.into());
+        if self.stroke().is_some() {
+            return self.stroke_pixel(original, x, y, selection_coverage, stroke_segments);
+        }
+        self.filtered_color(image, original, x, y, selection_coverage)
+    }
+
+    /// 🖌️ One pixel under a brush or alpha brush: the strongest coverage any of `stroke_segments` (the segments whose
+    /// band holds the pixel's row) lays at its centre, scaled by opacity and selection coverage. The one brush law
+    /// both the whole-image job and the in-place painter use.
+    fn stroke_pixel(&self, original: PixelColor, x: u32, y: u32, selection_coverage: f64, stroke_segments: &[usize]) -> PixelColor {
         if let Some((points,size,opacity,hardness)) = self.stroke() {
             let radius = size / 2.0;
             let mut coverage = 0.0_f64;
@@ -226,6 +236,11 @@ impl PixelOperation {
             }
             return source_over(original, brush.color, opacity);
         }
+        original
+    }
+
+    /// 🎨️ One pixel under every operation that is not a brush: fills, geometry, resampling, kernels and tone maps.
+    fn filtered_color(&self, image: &RasterImage, original: PixelColor, x: u32, y: u32, selection_coverage: f64) -> PixelColor {
         match *self {
             Self::Clear => return [0; 4],
             Self::AlphaFill {alpha,opacity} => return [original[0],original[1],original[2],byte(f64::from(original[3])+(f64::from(alpha)-f64::from(original[3]))*opacity*selection_coverage)],
@@ -284,6 +299,79 @@ impl PixelOperation {
         }
         result
     }
+}
+
+/// 🔲️ A pixel-aligned rectangle of an image.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PixelRect {
+    pub x: u32,
+    pub y: u32,
+    pub width: u32,
+    pub height: u32,
+}
+
+/// 🔲️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's
+/// box widened by the radius and clipped to the image — the walk the TypeScript twin's `paintStroke` takes. `None`
+/// when the stroke lies wholly outside the image.
+pub fn stroke_bounds(points: &[[f64; 2]], size: f64, width: u32, height: u32) -> Option<PixelRect> {
+    if width == 0 || height == 0 {
+        return None;
+    }
+    let radius = size / 2.0;
+    let (last_x, last_y) = (f64::from(width - 1), f64::from(height - 1));
+    let mut bounds: Option<(f64, f64, f64, f64)> = None;
+    for (index, to) in points.iter().enumerate() {
+        let from = points[index.saturating_sub(1)];
+        let left = (from[0].min(to[0]) - radius).floor().max(0.0);
+        let right = (from[0].max(to[0]) + radius).ceil().min(last_x);
+        let top = (from[1].min(to[1]) - radius).floor().max(0.0);
+        let bottom = (from[1].max(to[1]) + radius).ceil().min(last_y);
+        if left > right || top > bottom {
+            continue;
+        }
+        bounds = Some(match bounds {
+            None => (left, top, right, bottom),
+            Some((l, t, r, b)) => (l.min(left), t.min(top), r.max(right), b.max(bottom)),
+        });
+    }
+    bounds.map(|(left, top, right, bottom)| PixelRect { x: left as u32, y: top as u32, width: (right - left) as u32 + 1, height: (bottom - top) as u32 + 1 })
+}
+
+/// 🖌️ Paints a `Stroke` or `AlphaStroke` into `image` in place over [`stroke_bounds`] only, clipped by an optional
+/// per-pixel `selection` coverage: byte-identical to a whole-image [`PixelEditJob`] of the same operation and selection,
+/// at a cost bounded by the stroke instead of the image — the deterministic rasterizer a replayed stroke leaf runs.
+/// Answers the rectangle walked (`None`: the stroke reaches no pixel).
+pub fn paint_stroke_in_place(image: &mut RasterImage, operation: &PixelOperation, selection: Option<&[u8]>) -> Result<Option<PixelRect>, PixelEditError> {
+    validate_image(image)?;
+    let Some((points, size, ..)) = operation.stroke() else { return Err(PixelEditError::Invalid("Only a brush stroke paints in place")) };
+    if selection.is_some_and(|mask| mask.len() != image.pixels.len() / 4) {
+        return Err(PixelEditError::Invalid("Selection extent does not match image"));
+    }
+    operation.validate(image, false)?;
+    let Some(rect) = stroke_bounds(points, size, image.width, image.height) else { return Ok(None) };
+    let mut segments = Vec::with_capacity(points.len());
+    for y in rect.y..rect.y + rect.height {
+        segments.clear();
+        let py = f64::from(y) + 0.5;
+        for (index, to) in points.iter().enumerate() {
+            let from = points[index.saturating_sub(1)];
+            if py >= from[1].min(to[1]) - size / 2.0 && py <= from[1].max(to[1]) + size / 2.0 {
+                segments.push(index);
+            }
+        }
+        for x in rect.x..rect.x + rect.width {
+            let index = y as usize * image.width as usize + x as usize;
+            let coverage = f64::from(selection.map_or(255, |mask| mask[index])) / 255.0;
+            if coverage == 0.0 {
+                continue;
+            }
+            let offset = index * 4;
+            let before = [image.pixels[offset], image.pixels[offset + 1], image.pixels[offset + 2], image.pixels[offset + 3]];
+            let after = operation.stroke_pixel(before, x, y, coverage, &segments);
+            image.pixels[offset..offset + 4].copy_from_slice(&after);
+        }
+    }
+    Ok(Some(rect))
 }
 
 /// 🧵️ An unpublished result whose work is bounded by an explicit pixel grant.

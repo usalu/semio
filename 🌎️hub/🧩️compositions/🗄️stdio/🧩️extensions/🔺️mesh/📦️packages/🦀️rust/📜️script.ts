@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🔺️ `@semio-tech/stdio-mesh-plugin` router: `bun ./📜️script.ts test [quick|long|exhaustive]`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargoTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -11,4 +13,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

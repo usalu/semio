@@ -23,7 +23,7 @@ test("selects exact Bun arguments across all supported hosts and rejects install
     await prepareJavascriptDependencies(operation.mode, platform, signal, async (args, cwd, actualSignal) => { calls.push({ args, cwd, identicalSignal: actualSignal === signal }); });
     expect(calls).toEqual([{ args: operation.arguments, cwd: platform, identicalSignal: true }]);
   }
-  for (const args of fixture.rejections) for (const Constructor of [SyncScript, RefreshLockScript]) await expect(new Constructor(owner, owner).run(args)).rejects.toThrow("accepts no installer overrides");
+  for (const args of fixture.rejections) for (const Constructor of [SyncScript, RefreshLockScript]) await expect(new Constructor(owner, owner).run(args)).rejects.toThrow("accepts --all or --scope <owner>");
   const aborted = new AbortController(); aborted.abort();
   let called = false;
   await expect(prepareJavascriptDependencies("lock", owner, aborted.signal, async () => { called = true; })).rejects.toThrow();

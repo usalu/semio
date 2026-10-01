@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -154,4 +155,4 @@ if (segments[0] === "fem2d-window-config-contract" || segments[0] === "fem3d-win
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

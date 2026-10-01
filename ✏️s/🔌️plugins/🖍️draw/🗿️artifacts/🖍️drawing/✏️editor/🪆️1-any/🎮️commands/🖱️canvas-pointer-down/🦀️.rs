@@ -876,7 +876,7 @@ impl TracePointerJob {
         }
     }
 
-    fn new_operation(operation: &semio_framework_plugin::AppOperationContext, document: &DrawingSnapshot, world: [f64; 2]) -> Self {
+    fn new_operation(operation: &AppOperationContext, document: &DrawingSnapshot, world: [f64; 2]) -> Self {
         let mut job = Self::new_bound(operation.generation, document, world, operation.canonical_base_revision_hex());
         job.app_instance_id = operation.app_instance_id;
         job.document_id = operation.parent_document_id.clone();

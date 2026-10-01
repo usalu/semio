@@ -13,28 +13,22 @@ use crate::editor::puzzle2d::unit_tests::context::*;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::InvocationResult;
 
-/// 🧱️ Three circle nodes on one line — `left`, `mid` and a locked `pin` — whose `v0` handles are compatible.
+/// 🧱️ The select-tool corpus board (`🧫️fixtures/🧫️select-tool-history`): three circle nodes on one line — `left`, `mid`
+/// and a locked `pin` — whose `v0` handles are compatible.
 fn board_app() -> Puzzle2dApp {
-    let mut app = app_with_registry();
-    let board = json!({
-        "schema": "puzzle.2d.fixture",
-        "meta": { "kindCompatibility": [{ "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }] },
-        "nodes": [
-            { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
-            { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "mid:v0", "handleKind": "a", "angle": std::f64::consts::PI }] },
-            { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "locked": true, "handles": [] }
-        ],
-        "edges": []
-    });
-    dispatch(&mut app, "importFixture", Some(&json!({ "json": board })), None).expect("seed the board");
-    app
+    super::select_tool_history_tests::seeded_app(&super::select_tool_history_tests::corpus()["board"])
 }
 
 /// 🎲️ A board host painted from the app's current document, camera at the origin, zoom 1, rotate ring off.
 fn painted_host(app: &Puzzle2dApp) -> BoardHost {
+    painted_host_of(&fixture_of(app))
+}
+
+/// 🎨️ A board host painted from `fixture` — the document a window paints, a time-travel preview included.
+pub(super) fn painted_host_of(fixture: &Value) -> BoardHost {
     let mut host = puzzle_board_host();
     host.set_size(800, 600, 1.0);
-    assert!(host.parse_fixture_json(&fixture_of(app).to_string()), "the engine paints the app's document");
+    assert!(host.parse_fixture_json(&fixture.to_string()), "the engine paints the document");
     host.set_camera_silent(0.0, 0.0, 1.0);
     host.set_transform_flags(true, false);
     let _ = drain_board_events_json(&mut host);
@@ -42,27 +36,27 @@ fn painted_host(app: &Puzzle2dApp) -> BoardHost {
 }
 
 /// 📬️ The rows a host dispatches after draining: every transient row dropped (live-preview frames, chrome, hover).
-fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
+pub(super) fn dispatched_rows(host: &mut BoardHost) -> Vec<Value> {
     let rows: Vec<Value> = serde_json::from_str(&drain_board_events_json(host)).expect("drained rows parse");
     rows.into_iter().filter(|row| !matches!(row["name"].as_str(), Some("nodeMove" | "transformPreview" | "preselect" | "hover" | "brushPreview" | "linkCompatibleNodes" | "linkTargetRing"))).collect()
 }
 
-fn press(host: &mut BoardHost, x: f64, y: f64) {
+pub(super) fn press(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.world_to_screen(Point::new(x, y));
     host.pointer_down_screen(screen.x, screen.y, 0, false, false);
 }
 
-fn move_to(host: &mut BoardHost, x: f64, y: f64) {
+pub(super) fn move_to(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.world_to_screen(Point::new(x, y));
     host.pointer_move_screen(screen.x, screen.y, false, false, false);
 }
 
-fn release(host: &mut BoardHost, x: f64, y: f64) {
+pub(super) fn release(host: &mut BoardHost, x: f64, y: f64) {
     let screen = host.world_to_screen(Point::new(x, y));
     host.pointer_up_screen(screen.x, screen.y, false, false, false);
 }
 
-fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
+pub(super) fn flush(app: &mut Puzzle2dApp, rows: &[Value]) -> InvocationResult {
     dispatch(app, "applyBoardEvents", Some(&json!({ "eventsJson": serde_json::to_string(rows).expect("rows serialize") })), Some(overview::WINDOW_KIND_ID)).expect("applyBoardEvents")
 }
 
@@ -77,11 +71,11 @@ fn edit_rows(result: &InvocationResult) -> Vec<HistoryEntry> {
     result.history_patch.as_ref().map(|patch| patch.upserts.iter().filter(|entry| entry.applied && !entry.op_lines.is_empty()).cloned().collect()).unwrap_or_default()
 }
 
-fn english(entry: &HistoryEntry) -> String {
+pub(super) fn english(entry: &HistoryEntry) -> String {
     entry.label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string()
 }
 
-fn german(entry: &HistoryEntry) -> String {
+pub(super) fn german(entry: &HistoryEntry) -> String {
     entry.label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string()
 }
 

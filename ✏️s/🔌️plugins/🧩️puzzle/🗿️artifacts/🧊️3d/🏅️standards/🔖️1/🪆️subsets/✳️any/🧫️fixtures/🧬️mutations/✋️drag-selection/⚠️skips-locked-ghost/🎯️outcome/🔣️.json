@@ -14,6 +14,13 @@
         "object-c",
         "volume-2"
       ]
+    },
+    {
+      "code": "mutation.cascade",
+      "level": "info",
+      "target": [
+        "attraction-1"
+      ]
     }
   ],
   "status": "applied"

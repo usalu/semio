@@ -1055,7 +1055,7 @@ pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::Pa
 /// two literals every one of the fifteen hand-written impls previously hardcoded independently.
 #[macro_export]
 macro_rules! impl_norm_artifact_record {
-    ($Snapshot:ty, extension = $extension:literal, envelope_id = $envelope_id:literal) => {
+    ($Snapshot:ty, extension = $extension:literal, envelope_id = $envelope_id:literal $(, sqlite = $sqlite:path)?) => {
         impl $crate::document::NormArtifactRecord for $Snapshot {
             const EXTENSION: &'static str = $extension;
             const ENVELOPE_ID: &'static str = $envelope_id;
@@ -1091,8 +1091,13 @@ macro_rules! impl_norm_artifact_record {
             fn record_spec() -> Option<dsl::RecordSpec> {
                 Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
             }
+            fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+                $crate::impl_norm_artifact_record!(@sqlite $( $sqlite )?)
+            }
         }
     };
+    (@sqlite) => { None };
+    (@sqlite $sqlite:path) => { Some($sqlite()) };
 }
 //#endregion 🔖️SnapshotDslPackCodec
 

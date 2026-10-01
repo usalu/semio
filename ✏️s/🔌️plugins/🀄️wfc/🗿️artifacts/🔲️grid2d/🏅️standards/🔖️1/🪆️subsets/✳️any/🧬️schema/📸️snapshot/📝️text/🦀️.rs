@@ -251,6 +251,7 @@ impl store::ArtifactDsl for Grid2dSnapshot {
 }
 
 impl store::ArtifactPack for Grid2dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <Grid2dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&grid2d_document_to_dsl(self), options)
     }

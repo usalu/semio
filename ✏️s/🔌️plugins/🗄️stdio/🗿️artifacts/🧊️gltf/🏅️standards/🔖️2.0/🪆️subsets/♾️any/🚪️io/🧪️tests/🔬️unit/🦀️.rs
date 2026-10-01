@@ -12,17 +12,12 @@ async fn codec_round_trip() {
     let text = store::ArtifactDsl::print_dsl(&snap);
     let parsed = <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    // P2-FG3: `ArtifactPack::encode_pack`/`decode_pack` now route through the REAL `.glb`
-    // binary container (`encode_glb`/`decode_glb`), not the prior JSON-as-"binary" shortcut —
-    // decoding real GLB bytes always reports `source_form: Glb` (the byte form genuinely IS a
-    // glb container now), which is the one field expected to legitimately differ from `snap`'s
-    // own `Json` provenance; document/buffers/schema stay byte-for-byte lossless.
     let bytes = store::ArtifactPack::encode_pack(&snap);
     let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded.schema, snap.schema);
     assert_eq!(decoded.document, snap.document);
     assert_eq!(decoded.buffers, snap.buffers);
-    assert_eq!(decoded.source_form, GltfSourceForm::Glb);
+    assert_eq!(decoded.source_form, snap.source_form);
 }
 
 //#region 🔖️Base64Tests
@@ -470,15 +465,11 @@ mod conformance_laws {
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_gltf_snapshot()");
         assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_gltf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        // P2-FG3: `decode_pack` routes through the real `.glb` container (`decode_glb`),
-        // which always reports `source_form: Glb` (the byte form genuinely IS a glb container
-        // now) — the one field expected to legitimately differ from `demo`'s own `Json`
-        // provenance, same treatment `codec_round_trip` gives.
         let decoded = <GltfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded.schema, demo.schema, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s schema");
         assert_eq!(decoded.document, demo.document, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s document");
         assert_eq!(decoded.buffers, demo.buffers, "shipped .pack.semio fixture does not decode back to demo_gltf_snapshot()'s buffers");
-        assert_eq!(decoded.source_form, GltfSourceForm::Glb, "decode_pack must report source_form: Glb");
+        assert_eq!(decoded.source_form, demo.source_form, "owned pack must preserve source form");
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_gltf_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }

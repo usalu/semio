@@ -1,0 +1,387 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/paint-stroke/schema.json",
+  "title": "PaintStroke",
+  "description": "One brush or eraser stroke on a layer's pixels or on its mask, stated as its intent: the layer, the target, the tool, the brush and the points in the target image's pixels, in drawing order. Every application rasterizes it afresh on its base and files the painted image as a new content-addressed asset; a stroke that changes no pixel is `mutation.no-op`, a missing layer or image is `mutation.target-missing`, a locked layer, a layer without pixels or a mask target without a mask is `mutation.target-mismatch`.",
+  "x-semio-invariant": [
+    {
+      "id": "ordered-selection-runs",
+      "description": {
+        "en": "Selection runs are ordered by their first pixel and do not overlap.",
+        "de": "Auswahlläufe sind nach ihrem ersten Pixel geordnet und überlappen nicht."
+      }
+    }
+  ],
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "layerId",
+    "target",
+    "tool",
+    "brush",
+    "points",
+    "selection"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "paintStroke"
+    },
+    "layerId": {
+      "type": "string",
+      "minLength": 1,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Layer",
+          "de": "Ebene"
+        },
+        "description": {
+          "en": "The layer the stroke paints on.",
+          "de": "Die Ebene, auf die der Strich malt."
+        },
+        "ref": {
+          "kind": "layer",
+          "domain": "layers",
+          "granularity": "layer"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "target": {
+      "type": "string",
+      "enum": [
+        "pixels",
+        "mask"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Paint target",
+          "de": "Malziel"
+        },
+        "description": {
+          "en": "Whether the stroke paints the layer's own pixels or the coverage of its mask.",
+          "de": "Ob der Strich die eigenen Pixel der Ebene oder die Deckung ihrer Maske malt."
+        },
+        "options": {
+          "pixels": {
+            "en": "Layer pixels",
+            "de": "Ebenenpixel"
+          },
+          "mask": {
+            "en": "Mask",
+            "de": "Maske"
+          }
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "tool": {
+      "type": "string",
+      "enum": [
+        "brush",
+        "eraser"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "value",
+        "label": {
+          "en": "Tool",
+          "de": "Werkzeug"
+        },
+        "description": {
+          "en": "The brush lays its colour down; the eraser takes alpha away (on a mask: coverage).",
+          "de": "Der Pinsel trägt seine Farbe auf; der Radiergummi nimmt Alpha weg (auf einer Maske: Deckung)."
+        },
+        "options": {
+          "brush": {
+            "en": "Brush",
+            "de": "Pinsel"
+          },
+          "eraser": {
+            "en": "Eraser",
+            "de": "Radiergummi"
+          }
+        },
+        "group": "brush",
+        "order": 10
+      }
+    },
+    "brush": {
+      "title": "RasterBrush",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "hardness",
+        "opacity",
+        "color"
+      ],
+      "properties": {
+        "size": {
+          "type": "number",
+          "minimum": 0.1,
+          "maximum": 4096,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Size",
+              "de": "Größe"
+            },
+            "description": {
+              "en": "Diameter of the brush tip.",
+              "de": "Durchmesser der Pinselspitze."
+            },
+            "unit": "px",
+            "step": 0.5,
+            "precision": 1,
+            "softMin": 1,
+            "softMax": 256,
+            "scale": "log",
+            "group": "brush",
+            "order": 20
+          }
+        },
+        "hardness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Hardness",
+              "de": "Härte"
+            },
+            "description": {
+              "en": "Fraction of the radius painted at full strength; the rest fades out.",
+              "de": "Anteil des Radius, der mit voller Stärke gemalt wird; der Rest blendet aus."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "group": "brush",
+            "order": 30
+          }
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "x-semio-ui": {
+            "widget": "slider",
+            "role": "value",
+            "label": {
+              "en": "Opacity",
+              "de": "Deckkraft"
+            },
+            "description": {
+              "en": "Strength of the stroke where the brush covers fully.",
+              "de": "Stärke des Strichs, wo der Pinsel voll deckt."
+            },
+            "step": 0.01,
+            "precision": 2,
+            "displayUnit": "%",
+            "displayFactor": 100,
+            "group": "brush",
+            "order": 40
+          }
+        },
+        "color": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "x-semio-ui": {
+            "widget": "color",
+            "role": "value",
+            "label": {
+              "en": "Colour",
+              "de": "Farbe"
+            },
+            "description": {
+              "en": "Straight-alpha sRGB colour the brush lays down; on a mask its grey level is the coverage painted. The eraser ignores it.",
+              "de": "sRGB-Farbe mit nicht vormultipliziertem Alpha, die der Pinsel aufträgt; auf einer Maske ist ihre Graustufe die gemalte Deckung. Der Radiergummi ignoriert sie."
+            },
+            "group": "brush",
+            "order": 50
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Brush",
+          "de": "Pinsel"
+        },
+        "description": {
+          "en": "Size, hardness, opacity and colour of the brush.",
+          "de": "Größe, Härte, Deckkraft und Farbe des Pinsels."
+        },
+        "group": "brush",
+        "order": 20
+      }
+    },
+    "points": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2048,
+      "items": {
+        "title": "RasterStrokePoint",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "x",
+          "y"
+        ],
+        "properties": {
+          "x": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "number",
+              "role": "value",
+              "label": {
+                "en": "X",
+                "de": "X"
+              },
+              "unit": "px",
+              "step": 0.5,
+              "precision": 3,
+              "order": 10
+            }
+          },
+          "y": {
+            "type": "number",
+            "x-semio-ui": {
+              "widget": "number",
+              "role": "value",
+              "label": {
+                "en": "Y",
+                "de": "Y"
+              },
+              "unit": "px",
+              "step": 0.5,
+              "precision": 3,
+              "order": 20
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Stroke points",
+          "de": "Strichpunkte"
+        },
+        "description": {
+          "en": "The brush centre in the target image's pixels, in drawing order; consecutive points are joined by a straight segment.",
+          "de": "Die Pinselmitte in Pixeln des Zielbilds, in Zeichenreihenfolge; aufeinanderfolgende Punkte werden durch eine gerade Strecke verbunden."
+        },
+        "group": "stroke",
+        "order": 30
+      }
+    },
+    "selection": {
+      "type": [
+        "array",
+        "null"
+      ],
+      "items": {
+        "title": "RasterSelectionSpan",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "length",
+          "coverage"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 16777215,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "First pixel",
+                "de": "Erstes Pixel"
+              },
+              "description": {
+                "en": "Row-major index of the run's first pixel.",
+                "de": "Zeilenweiser Index des ersten Pixels des Laufs."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 10
+            }
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 16777216,
+            "x-semio-ui": {
+              "widget": "stepper",
+              "role": "value",
+              "label": {
+                "en": "Pixels",
+                "de": "Pixel"
+              },
+              "description": {
+                "en": "How many consecutive pixels the run covers.",
+                "de": "Wie viele aufeinanderfolgende Pixel der Lauf abdeckt."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 20
+            }
+          },
+          "coverage": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255,
+            "x-semio-ui": {
+              "widget": "slider",
+              "role": "value",
+              "label": {
+                "en": "Coverage",
+                "de": "Abdeckung"
+              },
+              "description": {
+                "en": "How strongly the run is selected, out of 255.",
+                "de": "Wie stark der Lauf ausgewählt ist, von 255."
+              },
+              "step": 1,
+              "precision": 0,
+              "order": 30
+            }
+          }
+        }
+      },
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Selection",
+          "de": "Auswahl"
+        },
+        "description": {
+          "en": "The pixel selection the stroke is clipped to, as ordered disjoint runs; none paints wherever the brush reaches.",
+          "de": "Die Pixelauswahl, auf die der Strich beschränkt ist, als geordnete disjunkte Läufe; ohne Auswahl malt er überall, wohin der Pinsel reicht."
+        },
+        "group": "stroke",
+        "order": 40
+      }
+    }
+  }
+}

@@ -4,7 +4,7 @@
 @mutations-forms-1-any
 Feature: Apply every typed form document mutation twice — once in Rust, once in Python — and require the same answer
   This case is a CROSS-LANGUAGE DIFFERENTIAL. The reference is `🐍️.py` in this directory: a second
-  implementation of the `s.forms.form` document, its ten typed mutations and its `.dsl.semio` text
+  implementation of the `s.forms.form` document, its eleven typed mutations and its `.dsl.semio` text
   carrier, written in Python from `🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🔣️.json`,
   `📝️definition/🔣️.json`, the carrier grammar `🚪️io/📸️snapshot/📝️text/📖️.grammar.semio`, the ten mutation
   leaf payload schemas, rules 1, 2 and 3 of
@@ -17,7 +17,7 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
 
   📌️ WHAT THIS CASE'S EVIDENCE ACTUALLY COVERS, stated plainly rather than left to be inferred from a
   green row. The document carries its survey INLINE (`definition.steps[].blocks[]`) beside `responses`
-  and two composed child handles. Nine of the ten committed vectors pin a DIAGNOSTIC and leave the
+  and two composed child handles. Ten of the eleven committed vectors pin a DIAGNOSTIC and leave the
   document byte-identical, and the reference DERIVES each diagnostic — status, code and path — from the
   before-document's own steps rather than reading it off the committed outcome. The `scene` cell of each
   row is that same step list, and the reference requires it to equal the committed before-document's
@@ -50,16 +50,17 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                      | vector                                                                               | scene                                                                                                                                                              |
-      | create-step             | 🌱create-step/🧪️rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | delete-step             | 🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | reorder-step            | 🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
-      | rename-step             | ✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | change-step-description | 📝change-step-description/🧪️no-ops-when-clearing-already-absent  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | create-block            | ➕create-block/🧪️rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
-      | delete-block            | ➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | move-block-to-step      | 📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
-      | replace-block           | 🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
-      | change-form-title       | 🏷️change-form-title/🧪️titles-an-untitled-survey                                | []                                                                                                                                                                 |
+      | create-step             | 🌱create-step/🧪️rejects                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | delete-step             | 🗑️delete-step/🧪️rejects                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | reorder-step            | 🔀reorder-step/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
+      | rename-step             | ✏️rename-step/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | change-step-description | 📝change-step-description/🧪️no  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | create-block            | ➕create-block/🧪️rejects                 | []                                                                                                                                                                 |
+      | delete-block            | ➖delete-block/🧪️rejects         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | move-block-to-step      | 📦move-block-to-step/🧪️no | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
+      | replace-block           | 🔁replace-block/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
+      | change-block-field      | 🎛️change-block-field/🧪️refuses     | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-area","label":"Area","kind":"number","min":0.0,"max":100.0,"step":1.0}]}]                                  |
+      | change-form-title       | 🏷️change-form-title/🧪️titles                                | []                                                                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
@@ -74,16 +75,17 @@ Feature: Apply every typed form document mutation twice — once in Rust, once i
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                      | vector                                                                               | scene                                                                                                                                                              |
-      | create-step             | 🌱create-step/🧪️rejects-a-duplicate-step-id                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | delete-step             | 🗑️delete-step/🧪️rejects-deleting-a-step-the-scene-does-not-hold                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | reorder-step            | 🔀reorder-step/🧪️no-ops-when-the-step-already-sits-at-that-index                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
-      | rename-step             | ✏️rename-step/🧪️no-ops-when-the-step-already-carries-that-title                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | change-step-description | 📝change-step-description/🧪️no-ops-when-clearing-already-absent  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | create-block            | ➕create-block/🧪️rejects-a-block-for-a-step-that-does-not-exist                 | []                                                                                                                                                                 |
-      | delete-block            | ➖delete-block/🧪️rejects-deleting-a-block-missing-from-an-existing-step         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
-      | move-block-to-step      | 📦move-block-to-step/🧪️no-ops-when-block-stays-index-own-step | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
-      | replace-block           | 🔁replace-block/🧪️no-ops-when-the-replacement-block-is-identical                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
-      | change-form-title       | 🏷️change-form-title/🧪️titles-an-untitled-survey                                | []                                                                                                                                                                 |
+      | create-step             | 🌱create-step/🧪️rejects                                     | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | delete-step             | 🗑️delete-step/🧪️rejects                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | reorder-step            | 🔀reorder-step/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[]},{"id":"step-photos","title":"Photos","blocks":[]},{"id":"step-summary","title":"Summary","blocks":[]}]          |
+      | rename-step             | ✏️rename-step/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | change-step-description | 📝change-step-description/🧪️no  | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | create-block            | ➕create-block/🧪️rejects                 | []                                                                                                                                                                 |
+      | delete-block            | ➖delete-block/🧪️rejects         | [{"id":"step-basics","title":"Basics","blocks":[]}]                                                                                                                |
+      | move-block-to-step      | 📦move-block-to-step/🧪️no | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text"},{"id":"q-visit-date","label":"Visit date","kind":"text"}]}] |
+      | replace-block           | 🔁replace-block/🧪️no                | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-site-name","label":"Site name","kind":"text","required":true}]}]                                          |
+      | change-block-field      | 🎛️change-block-field/🧪️refuses     | [{"id":"step-basics","title":"Basics","blocks":[{"id":"q-area","label":"Area","kind":"number","min":0.0,"max":100.0,"step":1.0}]}]                                  |
+      | change-form-title       | 🏷️change-form-title/🧪️titles                                | []                                                                                                                                                                 |
 
   @id-identity-round-trip
   @level-long

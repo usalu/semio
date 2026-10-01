@@ -148,32 +148,32 @@ Feature: Apply every typed block2d node-kind mutation twice — once in Rust, on
     Then each implementation lands on the committed after-document in role, only the member this verb writes moved, and the two agree
     Examples:
       | id                                   | dir                                    | fixture                        |
-      | rename-node-kind                     | ✏️rename-node-kind                     | 🧪️renames-node-kind-to-gate      |
-      | change-node-kind-label               | 🏷️change-node-kind-label               | 🧪️relabels-node-kind             |
-      | change-node-kind-variant             | 🔀️change-node-kind-variant             | 🧪️switches-variant-to-b          |
-      | change-node-kind-description         | 📃️change-node-kind-description         | 🧪️rewrites-node-kind-description |
-      | change-node-kind-icon                | 🖼️change-node-kind-icon                | 🧪️repoints-node-kind-icon        |
-      | change-node-kind-unit                | 📐️change-node-kind-unit                | 🧪️switches-unit-to-metre         |
-      | update-presentation                  | 🖌️update-presentation                  | 🧪️circle-to-rectangle            |
-      | create-handle-kind                   | 🌱️create-handle-kind                   | 🧪️appends-ground-handle-kind     |
-      | delete-handle-kind                   | 🗑️delete-handle-kind                   | 🧪️removes-power-handle-kind      |
-      | rename-handle-kind                   | ✒️rename-handle-kind                   | 🧪️renames-power-to-mains         |
-      | change-handle-kind-label             | 🔖️change-handle-kind-label             | 🧪️relabels-power-handle-kind     |
-      | change-handle-kind-color             | 🎨️change-handle-kind-color             | 🧪️recolors-power-handle-kind     |
-      | change-handle-kind-default-wire-kind | 🔌️change-handle-kind-default-wire-kind | 🧪️swaps-power-default-wire-kind  |
+      | rename-node-kind                     | ✏️rename-node-kind                     | 🧪️renames      |
+      | change-node-kind-label               | 🏷️change-node-kind-label               | 🧪️relabels             |
+      | change-node-kind-variant             | 🔀️change-node-kind-variant             | 🧪️switches          |
+      | change-node-kind-description         | 📃️change-node-kind-description         | 🧪️rewrites |
+      | change-node-kind-icon                | 🖼️change-node-kind-icon                | 🧪️repoints        |
+      | change-node-kind-unit                | 📐️change-node-kind-unit                | 🧪️switches         |
+      | update-presentation                  | 🖌️update-presentation                  | 🧪️circle            |
+      | create-handle-kind                   | 🌱️create-handle-kind                   | 🧪️appends     |
+      | delete-handle-kind                   | 🗑️delete-handle-kind                   | 🧪️removes      |
+      | rename-handle-kind                   | ✒️rename-handle-kind                   | 🧪️renames         |
+      | change-handle-kind-label             | 🔖️change-handle-kind-label             | 🧪️relabels     |
+      | change-handle-kind-color             | 🎨️change-handle-kind-color             | 🧪️recolors     |
+      | change-handle-kind-default-wire-kind | 🔌️change-handle-kind-default-wire | 🧪️swaps  |
       | create-handle                        | 🌿️create-handle                        | 🧪️appends-out-handle             |
       | delete-handle                        | ❌️delete-handle                        | 🧪️removes-in-handle              |
-      | move-handle                          | 📍️move-handle                          | 🧪️swings-in-handle-along-the-rim |
-      | change-handle-handle-kind            | 🧷️change-handle-handle-kind            | 🧪️rekinds-in-handle-as-power     |
-      | add-compatibility-rule               | ➕️add-compatibility-rule               | 🧪️allows-signal-to-power         |
-      | remove-compatibility-rule            | ➖️remove-compatibility-rule            | 🧪️revokes-signal-to-signal       |
+      | move-handle                          | 📍️move-handle                          | 🧪️swings |
+      | change-handle-handle-kind            | 🧷️change-handle-handle-kind            | 🧪️rekinds     |
+      | add-compatibility-rule               | ➕️add-compatibility-rule               | 🧪️allows         |
+      | remove-compatibility-rule            | ➖️remove-compatibility-rule            | 🧪️revokes       |
       | add-attribute                        | 🧩️add-attribute                        | 🧪️adds-pressure-attribute        |
-      | remove-attribute                     | 🚫️remove-attribute                     | 🧪️drops-material-attribute       |
+      | remove-attribute                     | 🚫️remove-attribute                     | 🧪️drops       |
       | add-author                           | 👤️add-author                           | 🧪️credits-bo                     |
       | remove-author                        | 🚷️remove-author                        | 🧪️uncredits-ada                  |
       | move-camera2d                        | 🎥️move-camera2d                        | 🧪️pans-camera                    |
       | scale-camera2d                       | 🔍️scale-camera2d                       | 🧪️zooms-camera-in                |
-      | change-meta-description              | 💬️change-meta-description              | 🧪️rewrites-session-notes         |
+      | change-meta-description              | 💬️change-meta-description              | 🧪️rewrites         |
 
   @id-identity-round-trip
   @level-long

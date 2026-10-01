@@ -41,7 +41,7 @@ fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
 fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
     let level = |text: &str| match text {
         "info" => protocol::Severity::Info,
-        "warn" => protocol::Severity::Warning,
+        "warning" => protocol::Severity::Warning,
         "error" => protocol::Severity::Error,
         "fatal" => protocol::Severity::Fatal,
         other => panic!("rotate-frames/keeps-a-zero-angle: unknown message level {other:?}"),
@@ -49,8 +49,8 @@ fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {
     let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
     let outcome = outcome();
     if outcome["status"].as_str() == Some("rejected") {
-        let fatal = outcome["code"].as_str() == Some("mutation.invariant");
-        return vec![(if fatal { protocol::Severity::Fatal } else { protocol::Severity::Error }, outcome["code"].as_str().expect("a code").to_string(), strings(&outcome["path"]))];
+        let code = outcome["code"].as_str().expect("a code");
+        return vec![(protocol::outcome_code_level(code).expect("a vocabulary code"), code.to_string(), strings(&outcome["path"]))];
     }
     outcome.get("messages").and_then(serde_json::Value::as_array).map_or_else(Vec::new, |messages| {
         messages.iter().map(|message| (level(message["level"].as_str().expect("a level")), message["code"].as_str().expect("a code").to_string(), strings(&message["target"]))).collect()

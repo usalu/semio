@@ -1,6 +1,6 @@
 /** 🧬️ LowpolyMutation dispatch — real facet mirror of the Rust `🦀️.rs` sibling's
- * `LowpolyMutation` enum (`dsl::Mutations`-derived, eighteen variants: nine object-lane verbs, a
- * create/delete pair for the `mesh` CHILD slot, six paint-layer verbs, one pixel edit and one paint stroke).
+ * `LowpolyMutation` enum (`dsl::Mutations`-derived, twenty-one variants: nine object-lane verbs, a
+ * create/delete pair for the `mesh` CHILD slot, six paint-layer verbs, one pixel edit, one paint stroke and three selection motions).
  * Untagged-by-variant-name on the wire (`serde`'s default externally-tagged enum representation —
  * `{ "MoveObject": { … } }`, confirmed against the committed `🧪️tests/…/🦠️mutation/🔣️.json`
  * fixtures across every mutation family), never a `{ mutation, payload }` envelope. */
@@ -32,7 +32,10 @@ export type LowpolyMutation =
   | { ChangePaintLayerOpacity: { objectId: string; index: number; newOpacity: number } }
   | { ChangePaintLayerBlendMode: { objectId: string; index: number; newBlendMode: string } }
   | { EditPaintLayer: { objectId: string; layerIndex: number; runs: PixelRun[] } }
-  | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } };
+  | { ApplyPaintStroke: { objectId: string; layerIndex: number; eraser: boolean; color: [number, number, number, number]; radius: number; hardness: number; opacity: number; points: [number, number][] } }
+  | { MoveSelection: { objectId: string; vertexIds: number[]; offset: [number, number, number] } }
+  | { RotateSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; axis: [number, number, number]; angle: number } }
+  | { ScaleSelection: { objectId: string; vertexIds: number[]; pivot: [number, number, number]; factor: [number, number, number] } };
 
 /** 🏷️ The exact wire tag (Rust enum variant name / `dsl::Mutations` `aggregateVariant`) of every
  * [`LowpolyMutation`] member, in declaration order — mirrors `🦀️.rs`'s `KINDS` intent one
@@ -56,4 +59,7 @@ export const LOWPOLY_MUTATION_TAGS = [
   "ChangePaintLayerBlendMode",
   "EditPaintLayer",
   "ApplyPaintStroke",
+  "MoveSelection",
+  "RotateSelection",
+  "ScaleSelection",
 ] as const;

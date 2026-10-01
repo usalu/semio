@@ -194,7 +194,7 @@ impl Mutation<Process3dConfig> for Process3dConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set-engagement-input",
+            owner: "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⌨️set",
             semantic_kind: "set-engagement-input",
             display_name: "Set Engagement Input",
             emoji: "⌨️",

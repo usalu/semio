@@ -9,7 +9,9 @@ import { basename, dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws, runCmd, runCmdStatus } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws, runCmd, runCmdStatus } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { testBuiltTreeRetirementFixture } from "../../♻️retirement/🌲️built/🧪️tests/🔬️built-tree-retirement/🟦️.ts";
 import { fixedListStorageSelfTests } from "../../🧪️tests/🔬️fixed-list-storage/🟦️.ts";
 import { conformanceCorpusSelfTests } from "../../🧪️tests/🔬️conformance-corpus/🟦️.ts";
@@ -148,5 +150,5 @@ if (import.meta.main) {
     .register("generate", GenerateScript)
     .register("preview-generated", PreviewGeneratedScript)
     .register("check", CheckScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

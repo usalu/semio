@@ -4,6 +4,7 @@ use super as workflow;
 use store::os_store::retirement::{leaf, sequence, RetireOwned, RetirementCursor};
 use store::{artifact_retire_struct as retire_struct, artifact_retirement_sequence as seq};
 
+retire_struct!(workflow::WorkflowNodePosition { node_id, x, y });
 retire_struct!(workflow::WorkflowNode { id, plugin_id, app_id, label, yields, artifact_ref, config_ref, x, y, width, height, inputs, outputs });
 retire_struct!(workflow::WorkflowEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract });
 retire_struct!(workflow::Workflow { schema, nodes, edges });
@@ -69,6 +70,8 @@ impl RetireOwned for workflow::WorkflowMutation {
             Self::BindInput(workflow::BindInput { binding }) => binding.retirement(),
             Self::BindOutput(workflow::BindOutput { binding }) => binding.retirement(),
             Self::UnbindOutput(workflow::UnbindOutput { node_id, port_id }) => seq![node_id, port_id],
+            Self::MoveNodes(workflow::MoveNodes { node_ids, dx, dy }) => seq![node_ids, dx, dy],
+            Self::SetNodePositions(workflow::SetNodePositions { positions }) => positions.retirement(),
         }
     }
 }

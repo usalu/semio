@@ -418,7 +418,7 @@ impl ArtifactOwnedToolJobFactory for Block3dRetainedCommandJobFactory {
 /// differ only in `M` and their id prefix, so one generic helper replaces two copies of the same body.
 fn block3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

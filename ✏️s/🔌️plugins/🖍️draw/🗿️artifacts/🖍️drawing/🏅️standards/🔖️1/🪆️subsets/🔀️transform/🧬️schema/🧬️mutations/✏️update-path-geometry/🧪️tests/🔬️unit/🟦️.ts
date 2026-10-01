@@ -1,6 +1,6 @@
 /** 🧪️ Ajv and Immer independently validate and apply the shared path edit fixture. */
 import { expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { produce } from "immer";
 import { applyPathGeometry } from "../../🦠️mutation/🟦️.ts";
 import { parseDrawingArtifact, type DrawingArtifact, type PathSegment } from "../../../../../../✳️any/🧬️schema/🟦️.ts";
@@ -8,9 +8,9 @@ import artifactSchema from "../../../../../../✳️any/🧬️schema/🔣️.js
 import { parseDrawingLayerPatch } from "../../../../../../✳️any/🧬️schema/🔺️diff/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import fixture from "../../🧫️fixtures/🔣️.json";
-import scenarioBefore from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/📸️snapshot/⬅️before/🔣️.json";
-import scenarioAfter from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/📸️snapshot/➡️after/🔣️.json";
-import scenarioMutation from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/🦠️mutation/🔣️.json";
+import scenarioBefore from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json";
+import scenarioAfter from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json";
+import scenarioMutation from "../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json";
 
 test("canonical geometry scenario agrees with Immer", () => {
   const before = parseDrawingArtifact(scenarioBefore);

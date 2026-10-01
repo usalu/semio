@@ -23,11 +23,13 @@ fn descriptors_follow_the_canonical_workflow_roster() {
             "bind-input",
             "unbind-input",
             "bind-output",
-            "unbind-output"
+            "unbind-output",
+            "move-nodes",
+            "set-node-positions"
         ]
     );
     assert_eq!(
         <WorkflowMutation as Mutation<WorkflowSnapshot>>::DESCRIPTORS.iter().map(|value| value.binary_tag).collect::<Vec<_>>(),
-        vec![Some(0), Some(1), Some(2), Some(3), Some(4), Some(5), Some(6), Some(7), Some(8), Some(9), Some(10), Some(11), Some(12), Some(13), Some(14), Some(15), Some(16), Some(17)]
+        vec![Some(0), Some(1), Some(2), Some(3), Some(4), Some(5), Some(6), Some(7), Some(8), Some(9), Some(10), Some(11), Some(12), Some(13), Some(14), Some(15), Some(16), Some(17), Some(18), Some(19)]
     );
 }

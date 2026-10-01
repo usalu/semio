@@ -2,7 +2,7 @@
 # `FormMutation` (sibling `🦀️.rs`), same declaration order as the sibling `🟦️.ts`
 # this file matches field-for-field.
 
-# import FormStep, FormQuestion from "../📝️definition/🔗️.graphql"
+# import FormStep, FormQuestion, DslValue from "../📝️definition/🔗️.graphql"
 # import FormsResponse from "../📨️response/🔗️.graphql"
 
 type CreateStep {
@@ -52,6 +52,12 @@ type ReplaceBlock {
   block: FormQuestion!
 }
 
+type ChangeBlockField {
+  blockId: String!
+  field: String!
+  value: DslValue
+}
+
 type ChangeFormTitle {
   newTitle: String
 }
@@ -75,6 +81,7 @@ union FormsMutation =
   | DeleteBlock
   | MoveBlockToStep
   | ReplaceBlock
+  | ChangeBlockField
   | ChangeFormTitle
   | CommitResponse
   | DiscardResponse

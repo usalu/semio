@@ -46,125 +46,125 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
     Examples:
       | id | dir | fixture |
       | rename-model-renames-the-model | 🏷️rename-model | ✅️renames-the-model |
-      | rename-model-refuses-a-blank-name | 🏷️rename-model | ⛔️refuses-a-blank-name |
-      | change-model-version-bumps-the-version | 🔢️change-model-version | ✅️bumps-the-version |
-      | change-model-version-refuses-a-blank-version | 🔢️change-model-version | ⛔️refuses-a-blank-version |
+      | rename-model-refuses-a-blank-name | 🏷️rename-model | ⛔️refuses |
+      | change-model-version-bumps-the-version | 🔢️change-model-version | ✅️bumps |
+      | change-model-version-refuses-a-blank-version | 🔢️change-model-version | ⛔️refuses |
       | update-site-relocates-to-denver | 🌍️update-site | ✅️relocates-to-denver |
       | update-site-refuses-a-bad-latitude | 🌍️update-site | ⛔️refuses-a-bad-latitude |
-      | update-ground-temperature-sets-denver-ground | 🌡️update-ground-temperature | ✅️sets-denver-ground |
-      | update-ground-temperature-refuses-a-short-year | 🌡️update-ground-temperature | ⛔️refuses-a-short-year |
-      | update-run-period-shortens-to-january | 📅️update-run-period | ✅️shortens-to-january |
+      | update-ground-temperature-sets-denver-ground | 🌡️update-ground-temperature | ✅️sets |
+      | update-ground-temperature-refuses-a-short-year | 🌡️update-ground-temperature | ⛔️refuses |
+      | update-run-period-shortens-to-january | 📅️update-run-period | ✅️shortens |
       | update-run-period-refuses-month-13 | 📅️update-run-period | ⛔️refuses-month-13 |
-      | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches-a-network |
-      | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses-unpaired-nodes |
-      | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds-zone-air-temp |
-      | add-output-variable-refuses-a-duplicate | 📊️add-output-variable | ⛔️refuses-a-duplicate |
-      | remove-output-variable-drops-zone-air-temp | 📉️remove-output-variable | ✅️drops-zone-air-temp |
-      | remove-output-variable-refuses-an-absent-one | 📉️remove-output-variable | ⛔️refuses-an-absent-one |
-      | bind-weather-file-binds-hannover-epw | 🌦️bind-weather-file | ✅️binds-hannover-epw |
-      | bind-weather-file-refuses-a-bad-uri | 🌦️bind-weather-file | ⛔️refuses-a-bad-uri |
-      | unbind-weather-file-unbinds-the-weather | 🌤️unbind-weather-file | ✅️unbinds-the-weather |
-      | unbind-weather-file-refuses-when-unbound | 🌤️unbind-weather-file | ⛔️refuses-when-unbound |
-      | connect-referenced-model-connects-the-geometry | 🪢️connect-referenced-model | ✅️connects-the-geometry |
-      | connect-referenced-model-refuses-a-bad-uri | 🪢️connect-referenced-model | ⛔️refuses-a-bad-uri |
-      | disconnect-referenced-model-disconnects-the-geometry | ✂️disconnect-referenced-model | ✅️disconnects-the-geometry |
-      | disconnect-referenced-model-refuses-when-absent | ✂️disconnect-referenced-model | ⛔️refuses-when-absent |
+      | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches |
+      | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses |
+      | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds |
+      | add-output-variable-refuses-a-duplicate | 📊️add-output-variable | ⛔️refuses |
+      | remove-output-variable-drops-zone-air-temp | 📉️remove-output-variable | ✅️drops |
+      | remove-output-variable-refuses-an-absent-one | 📉️remove-output-variable | ⛔️refuses |
+      | bind-weather-file-binds-hannover-epw | 🌦️bind-weather-file | ✅️binds |
+      | bind-weather-file-refuses-a-bad-uri | 🌦️bind-weather-file | ⛔️refuses |
+      | unbind-weather-file-unbinds-the-weather | 🌤️unbind-weather-file | ✅️unbinds |
+      | unbind-weather-file-refuses-when-unbound | 🌤️unbind-weather-file | ⛔️refuses |
+      | connect-referenced-model-connects-the-geometry | 🪢️connect-referenced-model | ✅️connects |
+      | connect-referenced-model-refuses-a-bad-uri | 🪢️connect-referenced-model | ⛔️refuses |
+      | disconnect-referenced-model-disconnects-the-geometry | ✂️disconnect-referenced | ✅️disconnects |
+      | disconnect-referenced-model-refuses-when-absent | ✂️disconnect-referenced | ⛔️refuses |
       | rename-zone-renames-zone-one | 🏠️rename-zone | ✅️renames-zone-one |
-      | rename-zone-refuses-a-missing-zone | 🏠️rename-zone | ⛔️refuses-a-missing-zone |
-      | change-zone-volume-resizes-zone-one | 📦️change-zone-volume | ✅️resizes-zone-one |
-      | change-zone-volume-refuses-zero-volume | 📦️change-zone-volume | ⛔️refuses-zero-volume |
-      | change-zone-multiplier-stacks-four-storeys | ✖️change-zone-multiplier | ✅️stacks-four-storeys |
-      | change-zone-multiplier-refuses-zero-instances | ✖️change-zone-multiplier | ⛔️refuses-zero-instances |
-      | change-zone-conditioned-frees-the-zone | 🌬️change-zone-conditioned | ✅️frees-the-zone |
-      | change-zone-conditioned-refuses-a-missing-zone | 🌬️change-zone-conditioned | ⛔️refuses-a-missing-zone |
-      | change-zone-floor-area-participation-excludes-the-zone | 📐️change-zone-floor-area-participation | ✅️excludes-the-zone |
-      | change-zone-floor-area-participation-refuses-a-missing-zone | 📐️change-zone-floor-area-participation | ⛔️refuses-a-missing-zone |
+      | rename-zone-refuses-a-missing-zone | 🏠️rename-zone | ⛔️refuses |
+      | change-zone-volume-resizes-zone-one | 📦️change-zone-volume | ✅️resizes |
+      | change-zone-volume-refuses-zero-volume | 📦️change-zone-volume | ⛔️refuses |
+      | change-zone-multiplier-stacks-four-storeys | ✖️change-zone-multiplier | ✅️stacks |
+      | change-zone-multiplier-refuses-zero-instances | ✖️change-zone-multiplier | ⛔️refuses |
+      | change-zone-conditioned-frees-the-zone | 🌬️change-zone-conditioned | ✅️frees |
+      | change-zone-conditioned-refuses-a-missing-zone | 🌬️change-zone-conditioned | ⛔️refuses |
+      | change-zone-floor-area-participation-excludes-the-zone | 📐️change-zone-floor-area | ✅️excludes |
+      | change-zone-floor-area-participation-refuses-a-missing-zone | 📐️change-zone-floor-area | ⛔️refuses |
       | create-zone-adds-a-second-zone | 🏘️create-zone | ✅️adds-a-second-zone |
       | create-zone-refuses-a-taken-id | 🏘️create-zone | ⛔️refuses-a-taken-id |
       | delete-zone-deletes-a-free-zone | 🏚️delete-zone | ✅️deletes-a-free-zone |
       | delete-zone-refuses-a-used-zone | 🏚️delete-zone | ⛔️refuses-a-used-zone |
       | create-space-adds-a-space | 🪑️create-space | ✅️adds-a-space |
-      | create-space-refuses-a-missing-zone | 🪑️create-space | ⛔️refuses-a-missing-zone |
+      | create-space-refuses-a-missing-zone | 🪑️create-space | ⛔️refuses |
       | delete-space-deletes-a-free-space | 🧹️delete-space | ✅️deletes-a-free-space |
-      | delete-space-refuses-a-missing-space | 🧹️delete-space | ⛔️refuses-a-missing-space |
+      | delete-space-refuses-a-missing-space | 🧹️delete-space | ⛔️refuses |
       | rename-space-renames-a-space | 🔤️rename-space | ✅️renames-a-space |
-      | rename-space-refuses-a-blank-name | 🔤️rename-space | ⛔️refuses-a-blank-name |
-      | change-space-floor-area-resizes-a-space | 🧮️change-space-floor-area | ✅️resizes-a-space |
-      | change-space-floor-area-refuses-negative-area | 🧮️change-space-floor-area | ⛔️refuses-negative-area |
+      | rename-space-refuses-a-blank-name | 🔤️rename-space | ⛔️refuses |
+      | change-space-floor-area-resizes-a-space | 🧮️change-space-floor-area | ✅️resizes |
+      | change-space-floor-area-refuses-negative-area | 🧮️change-space-floor-area | ⛔️refuses |
       | change-space-zone-moves-a-space | 🚚️change-space-zone | ✅️moves-a-space |
-      | change-space-zone-refuses-a-missing-zone | 🚚️change-space-zone | ⛔️refuses-a-missing-zone |
+      | change-space-zone-refuses-a-missing-zone | 🚚️change-space-zone | ⛔️refuses |
       | create-surface-adds-a-south-wall | 🟫️create-surface | ✅️adds-a-south-wall |
-      | create-surface-refuses-two-vertices | 🟫️create-surface | ⛔️refuses-two-vertices |
+      | create-surface-refuses-two-vertices | 🟫️create-surface | ⛔️refuses |
       | delete-surface-cascades-a-window | 🪚️delete-surface | ✅️cascades-a-window |
       | delete-surface-refuses-a-partner | 🪚️delete-surface | ⛔️refuses-a-partner |
       | rename-surface-renames-a-wall | 🏳️rename-surface | ✅️renames-a-wall |
-      | rename-surface-refuses-a-taken-name | 🏳️rename-surface | ⛔️refuses-a-taken-name |
+      | rename-surface-refuses-a-taken-name | 🏳️rename-surface | ⛔️refuses |
       | change-surface-zone-moves-a-wall | 🗜️change-surface-zone | ✅️moves-a-wall |
-      | change-surface-zone-refuses-a-missing-zone | 🗜️change-surface-zone | ⛔️refuses-a-missing-zone |
-      | change-surface-class-turns-a-wall-to-roof | 🧩️change-surface-class | ✅️turns-a-wall-to-roof |
-      | change-surface-class-refuses-a-missing-one | 🧩️change-surface-class | ⛔️refuses-a-missing-one |
-      | replace-surface-vertices-narrows-a-wall | 🔺️replace-surface-vertices | ✅️narrows-a-wall |
-      | replace-surface-vertices-refuses-a-line | 🔺️replace-surface-vertices | ⛔️refuses-a-line |
-      | change-surface-construction-swaps-the-wall-stack | 🧰️change-surface-construction | ✅️swaps-the-wall-stack |
-      | change-surface-construction-refuses-a-missing-one | 🧰️change-surface-construction | ⛔️refuses-a-missing-one |
-      | change-surface-boundary-condition-grounds-a-floor | 🚧️change-surface-boundary-condition | ✅️grounds-a-floor |
-      | change-surface-boundary-condition-refuses-half-a-union | 🚧️change-surface-boundary-condition | ⛔️refuses-half-a-union |
-      | change-surface-sun-exposed-shades-a-wall | 🌅️change-surface-sun-exposed | ✅️shades-a-wall |
-      | change-surface-sun-exposed-refuses-a-missing-one | 🌅️change-surface-sun-exposed | ⛔️refuses-a-missing-one |
-      | change-surface-wind-exposed-shelters-a-wall | 🍃️change-surface-wind-exposed | ✅️shelters-a-wall |
-      | change-surface-wind-exposed-refuses-a-missing-one | 🍃️change-surface-wind-exposed | ⛔️refuses-a-missing-one |
-      | change-surface-multiplier-repeats-a-wall | 🔁️change-surface-multiplier | ✅️repeats-a-wall |
-      | change-surface-multiplier-refuses-zero | 🔁️change-surface-multiplier | ⛔️refuses-zero |
-      | create-fenestration-adds-a-south-window | 🪟️create-fenestration | ✅️adds-a-south-window |
-      | create-fenestration-refuses-a-missing-host | 🪟️create-fenestration | ⛔️refuses-a-missing-host |
-      | delete-fenestration-removes-a-window | 🚪️delete-fenestration | ✅️removes-a-window |
-      | delete-fenestration-refuses-a-missing-one | 🚪️delete-fenestration | ⛔️refuses-a-missing-one |
-      | rename-fenestration-renames-a-window | 🏁️rename-fenestration | ✅️renames-a-window |
-      | rename-fenestration-refuses-a-blank-name | 🏁️rename-fenestration | ⛔️refuses-a-blank-name |
-      | change-fenestration-surface-rehosts-a-window | 🧲️change-fenestration-surface | ✅️rehosts-a-window |
-      | change-fenestration-surface-refuses-a-missing-host | 🧲️change-fenestration-surface | ⛔️refuses-a-missing-host |
-      | change-fenestration-u-value-swaps-the-glazing | 🌐️change-fenestration-u-value | ✅️swaps-the-glazing |
-      | change-fenestration-u-value-refuses-zero-u | 🌐️change-fenestration-u-value | ⛔️refuses-zero-u |
-      | change-fenestration-shgc-dims-the-solar-gain | 🌇️change-fenestration-shgc | ✅️dims-the-solar-gain |
-      | change-fenestration-shgc-refuses-shgc-above-one | 🌇️change-fenestration-shgc | ⛔️refuses-shgc-above-one |
-      | change-fenestration-vlt-dims-the-daylight | 🌈️change-fenestration-vlt | ✅️dims-the-daylight |
-      | change-fenestration-vlt-refuses-negative-vlt | 🌈️change-fenestration-vlt | ⛔️refuses-negative-vlt |
-      | change-fenestration-area-doubles-the-glazing | 🟥️change-fenestration-area | ✅️doubles-the-glazing |
-      | change-fenestration-area-refuses-zero-area | 🟥️change-fenestration-area | ⛔️refuses-zero-area |
-      | change-fenestration-frame-conductance-adds-a-frame | 🖼️change-fenestration-frame-conductance | ✅️adds-a-frame |
-      | change-fenestration-frame-conductance-refuses-negative-frame | 🖼️change-fenestration-frame-conductance | ⛔️refuses-negative-frame |
-      | change-fenestration-divider-conductance-adds-dividers | 🧷️change-fenestration-divider-conductance | ✅️adds-dividers |
-      | change-fenestration-divider-conductance-refuses-a-negative | 🧷️change-fenestration-divider-conductance | ⛔️refuses-a-negative |
-      | create-shading-surface-adds-an-awning | 🌳️create-shading-surface | ✅️adds-an-awning |
-      | create-shading-surface-refuses-a-line | 🌳️create-shading-surface | ⛔️refuses-a-line |
-      | delete-shading-surface-removes-an-awning | 🪵️delete-shading-surface | ✅️removes-an-awning |
-      | delete-shading-surface-refuses-a-missing-one | 🪵️delete-shading-surface | ⛔️refuses-a-missing-one |
-      | rename-shading-surface-renames-an-awning | 🏕️rename-shading-surface | ✅️renames-an-awning |
-      | rename-shading-surface-refuses-a-blank-name | 🏕️rename-shading-surface | ⛔️refuses-a-blank-name |
-      | replace-shading-surface-vertices-deepens-an-awning | 🗺️replace-shading-surface-vertices | ✅️deepens-an-awning |
-      | replace-shading-surface-vertices-refuses-a-line | 🗺️replace-shading-surface-vertices | ⛔️refuses-a-line |
-      | change-shading-surface-transmittance-schedule-lets-light-in | ⛱️change-shading-surface-transmittance-schedule | ✅️lets-light-in |
-      | change-shading-surface-transmittance-schedule-refuses-a-ghost | ⛱️change-shading-surface-transmittance-schedule | ⛔️refuses-a-ghost |
+      | change-surface-zone-refuses-a-missing-zone | 🗜️change-surface-zone | ⛔️refuses |
+      | change-surface-class-turns-a-wall-to-roof | 🧩️change-surface-class | ✅️turns |
+      | change-surface-class-refuses-a-missing-one | 🧩️change-surface-class | ⛔️refuses |
+      | replace-surface-vertices-narrows-a-wall | 🔺️replace-surface-vertices | ✅️narrows |
+      | replace-surface-vertices-refuses-a-line | 🔺️replace-surface-vertices | ⛔️refuses |
+      | change-surface-construction-swaps-the-wall-stack | 🧰️change-surface | ✅️swaps |
+      | change-surface-construction-refuses-a-missing-one | 🧰️change-surface | ⛔️refuses |
+      | change-surface-boundary-condition-grounds-a-floor | 🚧️change-surface-boundary | ✅️grounds |
+      | change-surface-boundary-condition-refuses-half-a-union | 🚧️change-surface-boundary | ⛔️refuses |
+      | change-surface-sun-exposed-shades-a-wall | 🌅️change-surface-sun-exposed | ✅️shades |
+      | change-surface-sun-exposed-refuses-a-missing-one | 🌅️change-surface-sun-exposed | ⛔️refuses |
+      | change-surface-wind-exposed-shelters-a-wall | 🍃️change-surface-wind | ✅️shelters |
+      | change-surface-wind-exposed-refuses-a-missing-one | 🍃️change-surface-wind | ⛔️refuses |
+      | change-surface-multiplier-repeats-a-wall | 🔁️change-surface-multiplier | ✅️repeats |
+      | change-surface-multiplier-refuses-zero | 🔁️change-surface-multiplier | ⛔️refuses |
+      | create-fenestration-adds-a-south-window | 🪟️create-fenestration | ✅️adds |
+      | create-fenestration-refuses-a-missing-host | 🪟️create-fenestration | ⛔️refuses |
+      | delete-fenestration-removes-a-window | 🚪️delete-fenestration | ✅️removes |
+      | delete-fenestration-refuses-a-missing-one | 🚪️delete-fenestration | ⛔️refuses |
+      | rename-fenestration-renames-a-window | 🏁️rename-fenestration | ✅️renames |
+      | rename-fenestration-refuses-a-blank-name | 🏁️rename-fenestration | ⛔️refuses |
+      | change-fenestration-surface-rehosts-a-window | 🧲️change-fenestration | ✅️rehosts |
+      | change-fenestration-surface-refuses-a-missing-host | 🧲️change-fenestration | ⛔️refuses |
+      | change-fenestration-u-value-swaps-the-glazing | 🌐️change-fenestration-u | ✅️swaps |
+      | change-fenestration-u-value-refuses-zero-u | 🌐️change-fenestration-u | ⛔️refuses |
+      | change-fenestration-shgc-dims-the-solar-gain | 🌇️change-fenestration-shgc | ✅️dims |
+      | change-fenestration-shgc-refuses-shgc-above-one | 🌇️change-fenestration-shgc | ⛔️refuses |
+      | change-fenestration-vlt-dims-the-daylight | 🌈️change-fenestration-vlt | ✅️dims |
+      | change-fenestration-vlt-refuses-negative-vlt | 🌈️change-fenestration-vlt | ⛔️refuses |
+      | change-fenestration-area-doubles-the-glazing | 🟥️change-fenestration-area | ✅️doubles |
+      | change-fenestration-area-refuses-zero-area | 🟥️change-fenestration-area | ⛔️refuses |
+      | change-fenestration-frame-conductance-adds-a-frame | 🖼️change-fenestration-frame | ✅️adds-a |
+      | change-fenestration-frame-conductance-refuses-negative-frame | 🖼️change-fenestration-frame | ⛔️refuses |
+      | change-fenestration-divider-conductance-adds-dividers | 🧷️change-fenestration | ✅️adds |
+      | change-fenestration-divider-conductance-refuses-a-negative | 🧷️change-fenestration | ⛔️refuses |
+      | create-shading-surface-adds-an-awning | 🌳️create-shading-surface | ✅️adds |
+      | create-shading-surface-refuses-a-line | 🌳️create-shading-surface | ⛔️refuses |
+      | delete-shading-surface-removes-an-awning | 🪵️delete-shading-surface | ✅️removes |
+      | delete-shading-surface-refuses-a-missing-one | 🪵️delete-shading-surface | ⛔️refuses |
+      | rename-shading-surface-renames-an-awning | 🏕️rename-shading-surface | ✅️renames |
+      | rename-shading-surface-refuses-a-blank-name | 🏕️rename-shading-surface | ⛔️refuses |
+      | replace-shading-surface-vertices-deepens-an-awning | 🗺️replace-shading-surface | ✅️deepens |
+      | replace-shading-surface-vertices-refuses-a-line | 🗺️replace-shading-surface | ⛔️refuses |
+      | change-shading-surface-transmittance-schedule-lets-light-in | ⛱️change-shading-surface | ✅️lets |
+      | change-shading-surface-transmittance-schedule-refuses-a-ghost | ⛱️change-shading-surface | ⛔️refuses |
       | connect-surfaces-joins-two-walls | 🤝️connect-surfaces | ✅️joins-two-walls |
-      | connect-surfaces-refuses-a-self-pair | 🤝️connect-surfaces | ⛔️refuses-a-self-pair |
-      | disconnect-surfaces-parts-two-walls | 💔️disconnect-surfaces | ✅️parts-two-walls |
-      | disconnect-surfaces-refuses-a-missing-pair | 💔️disconnect-surfaces | ⛔️refuses-a-missing-pair |
-      | bind-fenestration-glazing-construction-glazes-a-window | 🧊️bind-fenestration-glazing-construction | ✅️glazes-a-window |
-      | bind-fenestration-glazing-construction-refuses-no-stack | 🧊️bind-fenestration-glazing-construction | ⛔️refuses-no-stack |
-      | clear-fenestration-glazing-construction-ungazes-a-window | 🫗️clear-fenestration-glazing-construction | ✅️ungazes-a-window |
-      | clear-fenestration-glazing-construction-refuses-empty | 🫗️clear-fenestration-glazing-construction | ⛔️refuses-empty |
-      | change-fenestration-height-raises-the-head | ⬆️change-fenestration-height | ✅️raises-the-head |
-      | change-fenestration-height-refuses-zero-height | ⬆️change-fenestration-height | ⛔️refuses-zero-height |
-      | change-fenestration-sill-height-raises-the-sill | ⬇️change-fenestration-sill-height | ✅️raises-the-sill |
-      | change-fenestration-sill-height-refuses-negative-sill | ⬇️change-fenestration-sill-height | ⛔️refuses-negative-sill |
-      | change-fenestration-overhang-depth-adds-case-610-shade | 🧢️change-fenestration-overhang-depth | ✅️adds-case-610-shade |
-      | change-fenestration-overhang-depth-refuses-negative-depth | 🧢️change-fenestration-overhang-depth | ⛔️refuses-negative-depth |
-      | change-fenestration-overhang-offset-lifts-the-overhang | 🎩️change-fenestration-overhang-offset | ✅️lifts-the-overhang |
-      | change-fenestration-overhang-offset-refuses-negative-offset | 🎩️change-fenestration-overhang-offset | ⛔️refuses-negative-offset |
-      | change-fenestration-fin-depth-adds-case-630-fins | 🐬️change-fenestration-fin-depth | ✅️adds-case-630-fins |
-      | change-fenestration-fin-depth-refuses-negative-fin | 🐬️change-fenestration-fin-depth | ⛔️refuses-negative-fin |
-      | change-fenestration-fin-offset-spreads-the-fins | 🐋️change-fenestration-fin-offset | ✅️spreads-the-fins |
-      | change-fenestration-fin-offset-refuses-negative-offset | 🐋️change-fenestration-fin-offset | ⛔️refuses-negative-offset |
+      | connect-surfaces-refuses-a-self-pair | 🤝️connect-surfaces | ⛔️refuses |
+      | disconnect-surfaces-parts-two-walls | 💔️disconnect-surfaces | ✅️parts |
+      | disconnect-surfaces-refuses-a-missing-pair | 💔️disconnect-surfaces | ⛔️refuses |
+      | bind-fenestration-glazing-construction-glazes-a-window | 🧊️bind-fenestration-glazing | ✅️glazes |
+      | bind-fenestration-glazing-construction-refuses-no-stack | 🧊️bind-fenestration-glazing | ⛔️refuses |
+      | clear-fenestration-glazing-construction-ungazes-a-window | 🫗️clear-fenestration-glazing | ✅️ungazes |
+      | clear-fenestration-glazing-construction-refuses-empty | 🫗️clear-fenestration-glazing | ⛔️refuses |
+      | change-fenestration-height-raises-the-head | ⬆️change-fenestration-height | ✅️raises |
+      | change-fenestration-height-refuses-zero-height | ⬆️change-fenestration-height | ⛔️refuses |
+      | change-fenestration-sill-height-raises-the-sill | ⬇️change-fenestration-sill | ✅️raises |
+      | change-fenestration-sill-height-refuses-negative-sill | ⬇️change-fenestration-sill | ⛔️refuses |
+      | change-fenestration-overhang-depth-adds-case-610-shade | 🧢️change-fenestration | ✅️adds |
+      | change-fenestration-overhang-depth-refuses-negative-depth | 🧢️change-fenestration | ⛔️refuses |
+      | change-fenestration-overhang-offset-lifts-the-overhang | 🎩️change-fenestration | ✅️lifts |
+      | change-fenestration-overhang-offset-refuses-negative-offset | 🎩️change-fenestration | ⛔️refuses |
+      | change-fenestration-fin-depth-adds-case-630-fins | 🐬️change-fenestration-fin | ✅️adds |
+      | change-fenestration-fin-depth-refuses-negative-fin | 🐬️change-fenestration-fin | ⛔️refuses |
+      | change-fenestration-fin-offset-spreads-the-fins | 🐋️change-fenestration-fin | ✅️spreads |
+      | change-fenestration-fin-offset-refuses-negative-offset | 🐋️change-fenestration-fin | ⛔️refuses |
       | create-material-applies | 🧱️create-material | ✅️applies |
       | create-material-refuses | 🧱️create-material | ⛔️refuses |
       | delete-material-applies | 🪨️delete-material | ✅️applies |
@@ -173,18 +173,18 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | rename-material-refuses | 🪧️rename-material | ⛔️refuses |
       | change-material-thickness-applies | 📏️change-material-thickness | ✅️applies |
       | change-material-thickness-refuses | 📏️change-material-thickness | ⛔️refuses |
-      | change-material-conductivity-applies | 🔥️change-material-conductivity | ✅️applies |
-      | change-material-conductivity-refuses | 🔥️change-material-conductivity | ⛔️refuses |
+      | change-material-conductivity-applies | 🔥️change-material | ✅️applies |
+      | change-material-conductivity-refuses | 🔥️change-material | ⛔️refuses |
       | change-material-density-applies | ⚖️change-material-density | ✅️applies |
       | change-material-density-refuses | ⚖️change-material-density | ⛔️refuses |
-      | change-material-specific-heat-applies | ♨️change-material-specific-heat | ✅️applies |
-      | change-material-specific-heat-refuses | ♨️change-material-specific-heat | ⛔️refuses |
-      | change-material-thermal-absorptance-applies | 🔆️change-material-thermal-absorptance | ✅️applies |
-      | change-material-thermal-absorptance-refuses | 🔆️change-material-thermal-absorptance | ⛔️refuses |
-      | change-material-solar-absorptance-applies | ☀️change-material-solar-absorptance | ✅️applies |
-      | change-material-solar-absorptance-refuses | ☀️change-material-solar-absorptance | ⛔️refuses |
-      | change-material-visible-absorptance-applies | 👁️change-material-visible-absorptance | ✅️applies |
-      | change-material-visible-absorptance-refuses | 👁️change-material-visible-absorptance | ⛔️refuses |
+      | change-material-specific-heat-applies | ♨️change-material-specific | ✅️applies |
+      | change-material-specific-heat-refuses | ♨️change-material-specific | ⛔️refuses |
+      | change-material-thermal-absorptance-applies | 🔆️change-material-thermal | ✅️applies |
+      | change-material-thermal-absorptance-refuses | 🔆️change-material-thermal | ⛔️refuses |
+      | change-material-solar-absorptance-applies | ☀️change-material-solar | ✅️applies |
+      | change-material-solar-absorptance-refuses | ☀️change-material-solar | ⛔️refuses |
+      | change-material-visible-absorptance-applies | 👁️change-material-visible | ✅️applies |
+      | change-material-visible-absorptance-refuses | 👁️change-material-visible | ⛔️refuses |
       | create-construction-applies | 🏗️create-construction | ✅️applies |
       | create-construction-refuses | 🏗️create-construction | ⛔️refuses |
       | delete-construction-applies | 🧨️delete-construction | ✅️applies |
@@ -195,8 +195,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | add-construction-layer-refuses | ➕️add-construction-layer | ⛔️refuses |
       | remove-construction-layer-applies | ➖️remove-construction-layer | ✅️applies |
       | remove-construction-layer-refuses | ➖️remove-construction-layer | ⛔️refuses |
-      | reorder-construction-layers-applies | 🔀️reorder-construction-layers | ✅️applies |
-      | reorder-construction-layers-refuses | 🔀️reorder-construction-layers | ⛔️refuses |
+      | reorder-construction-layers-applies | 🔀️reorder-construction | ✅️applies |
+      | reorder-construction-layers-refuses | 🔀️reorder-construction | ⛔️refuses |
       | create-people-gain-applies | 👤️create-people-gain | ✅️applies |
       | create-people-gain-refuses | 👤️create-people-gain | ⛔️refuses |
       | delete-people-gain-applies | 🚷️delete-people-gain | ✅️applies |
@@ -205,260 +205,260 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-people-gain-zone-refuses | 🚶️change-people-gain-zone | ⛔️refuses |
       | change-people-gain-schedule-applies | ⏰️change-people-gain-schedule | ✅️applies |
       | change-people-gain-schedule-refuses | ⏰️change-people-gain-schedule | ⛔️refuses |
-      | change-people-gain-activity-schedule-applies | 🏃️change-people-gain-activity-schedule | ✅️applies |
-      | change-people-gain-activity-schedule-refuses | 🏃️change-people-gain-activity-schedule | ⛔️refuses |
-      | change-people-gain-people-per-area-applies | 👥️change-people-gain-people-per-area | ✅️applies |
-      | change-people-gain-people-per-area-refuses | 👥️change-people-gain-people-per-area | ⛔️refuses |
-      | change-people-gain-sensible-fraction-applies | 🌞️change-people-gain-sensible-fraction | ✅️applies |
-      | change-people-gain-sensible-fraction-refuses | 🌞️change-people-gain-sensible-fraction | ⛔️refuses |
-      | change-people-gain-latent-fraction-applies | 💧️change-people-gain-latent-fraction | ✅️applies |
-      | change-people-gain-latent-fraction-refuses | 💧️change-people-gain-latent-fraction | ⛔️refuses |
-      | change-people-gain-radiant-fraction-applies | 📡️change-people-gain-radiant-fraction | ✅️applies |
-      | change-people-gain-radiant-fraction-refuses | 📡️change-people-gain-radiant-fraction | ⛔️refuses |
+      | change-people-gain-activity-schedule-applies | 🏃️change-people-gain | ✅️applies |
+      | change-people-gain-activity-schedule-refuses | 🏃️change-people-gain | ⛔️refuses |
+      | change-people-gain-people-per-area-applies | 👥️change-people-gain-people | ✅️applies |
+      | change-people-gain-people-per-area-refuses | 👥️change-people-gain-people | ⛔️refuses |
+      | change-people-gain-sensible-fraction-applies | 🌞️change-people-gain | ✅️applies |
+      | change-people-gain-sensible-fraction-refuses | 🌞️change-people-gain | ⛔️refuses |
+      | change-people-gain-latent-fraction-applies | 💧️change-people-gain-latent | ✅️applies |
+      | change-people-gain-latent-fraction-refuses | 💧️change-people-gain-latent | ⛔️refuses |
+      | change-people-gain-radiant-fraction-applies | 📡️change-people-gain-radiant | ✅️applies |
+      | change-people-gain-radiant-fraction-refuses | 📡️change-people-gain-radiant | ⛔️refuses |
       | create-lighting-gain-applies | 💡️create-lighting-gain | ✅️applies |
       | create-lighting-gain-refuses | 💡️create-lighting-gain | ⛔️refuses |
       | delete-lighting-gain-applies | 🕯️delete-lighting-gain | ✅️applies |
       | delete-lighting-gain-refuses | 🕯️delete-lighting-gain | ⛔️refuses |
       | change-lighting-gain-zone-applies | 🔦️change-lighting-gain-zone | ✅️applies |
       | change-lighting-gain-zone-refuses | 🔦️change-lighting-gain-zone | ⛔️refuses |
-      | change-lighting-gain-schedule-applies | ⏱️change-lighting-gain-schedule | ✅️applies |
-      | change-lighting-gain-schedule-refuses | ⏱️change-lighting-gain-schedule | ⛔️refuses |
-      | change-lighting-gain-watts-per-area-applies | 🔌️change-lighting-gain-watts-per-area | ✅️applies |
-      | change-lighting-gain-watts-per-area-refuses | 🔌️change-lighting-gain-watts-per-area | ⛔️refuses |
-      | change-lighting-gain-radiant-fraction-applies | 🌟️change-lighting-gain-radiant-fraction | ✅️applies |
-      | change-lighting-gain-radiant-fraction-refuses | 🌟️change-lighting-gain-radiant-fraction | ⛔️refuses |
-      | change-lighting-gain-visible-fraction-applies | 🔅️change-lighting-gain-visible-fraction | ✅️applies |
-      | change-lighting-gain-visible-fraction-refuses | 🔅️change-lighting-gain-visible-fraction | ⛔️refuses |
-      | change-lighting-gain-return-air-fraction-applies | 🎐️change-lighting-gain-return-air-fraction | ✅️applies |
-      | change-lighting-gain-return-air-fraction-refuses | 🎐️change-lighting-gain-return-air-fraction | ⛔️refuses |
+      | change-lighting-gain-schedule-applies | ⏱️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-schedule-refuses | ⏱️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-watts-per-area-applies | 🔌️change-lighting-gain-watts | ✅️applies |
+      | change-lighting-gain-watts-per-area-refuses | 🔌️change-lighting-gain-watts | ⛔️refuses |
+      | change-lighting-gain-radiant-fraction-applies | 🌟️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-radiant-fraction-refuses | 🌟️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-visible-fraction-applies | 🔅️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-visible-fraction-refuses | 🔅️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-return-air-fraction-applies | 🎐️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-return-air-fraction-refuses | 🎐️change-lighting-gain | ⛔️refuses |
       | create-equipment-gain-applies | 🖥️create-equipment-gain | ✅️applies |
       | create-equipment-gain-refuses | 🖥️create-equipment-gain | ⛔️refuses |
       | delete-equipment-gain-applies | 🧯️delete-equipment-gain | ✅️applies |
       | delete-equipment-gain-refuses | 🧯️delete-equipment-gain | ⛔️refuses |
       | change-equipment-gain-zone-applies | 🖨️change-equipment-gain-zone | ✅️applies |
       | change-equipment-gain-zone-refuses | 🖨️change-equipment-gain-zone | ⛔️refuses |
-      | change-equipment-gain-schedule-applies | ⌛️change-equipment-gain-schedule | ✅️applies |
-      | change-equipment-gain-schedule-refuses | ⌛️change-equipment-gain-schedule | ⛔️refuses |
-      | change-equipment-gain-watts-per-area-applies | ⚡️change-equipment-gain-watts-per-area | ✅️applies |
-      | change-equipment-gain-watts-per-area-refuses | ⚡️change-equipment-gain-watts-per-area | ⛔️refuses |
-      | change-equipment-gain-radiant-fraction-applies | 🌠️change-equipment-gain-radiant-fraction | ✅️applies |
-      | change-equipment-gain-radiant-fraction-refuses | 🌠️change-equipment-gain-radiant-fraction | ⛔️refuses |
-      | change-equipment-gain-latent-fraction-applies | 💦️change-equipment-gain-latent-fraction | ✅️applies |
-      | change-equipment-gain-latent-fraction-refuses | 💦️change-equipment-gain-latent-fraction | ⛔️refuses |
+      | change-equipment-gain-schedule-applies | ⌛️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-schedule-refuses | ⌛️change-equipment-gain | ⛔️refuses |
+      | change-equipment-gain-watts-per-area-applies | ⚡️change-equipment-gain-watts | ✅️applies |
+      | change-equipment-gain-watts-per-area-refuses | ⚡️change-equipment-gain-watts | ⛔️refuses |
+      | change-equipment-gain-radiant-fraction-applies | 🌠️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-radiant-fraction-refuses | 🌠️change-equipment-gain | ⛔️refuses |
+      | change-equipment-gain-latent-fraction-applies | 💦️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-latent-fraction-refuses | 💦️change-equipment-gain | ⛔️refuses |
       | create-infiltration-applies | 💨️create-infiltration | ✅️applies |
       | create-infiltration-refuses | 💨️create-infiltration | ⛔️refuses |
       | delete-infiltration-applies | 🧽️delete-infiltration | ✅️applies |
       | delete-infiltration-refuses | 🧽️delete-infiltration | ⛔️refuses |
       | change-infiltration-zone-applies | 🌀️change-infiltration-zone | ✅️applies |
       | change-infiltration-zone-refuses | 🌀️change-infiltration-zone | ⛔️refuses |
-      | change-infiltration-schedule-applies | ⏳️change-infiltration-schedule | ✅️applies |
-      | change-infiltration-schedule-refuses | ⏳️change-infiltration-schedule | ⛔️refuses |
-      | change-infiltration-flow-per-exterior-area-applies | 🌫️change-infiltration-flow-per-exterior-area | ✅️applies |
-      | change-infiltration-flow-per-exterior-area-refuses | 🌫️change-infiltration-flow-per-exterior-area | ⛔️refuses |
-      | change-infiltration-constant-term-coefficient-applies | 🅰️change-infiltration-constant-term-coefficient | ✅️applies |
-      | change-infiltration-constant-term-coefficient-refuses | 🅰️change-infiltration-constant-term-coefficient | ⛔️refuses |
+      | change-infiltration-schedule-applies | ⏳️change-infiltration | ✅️applies |
+      | change-infiltration-schedule-refuses | ⏳️change-infiltration | ⛔️refuses |
+      | change-infiltration-flow-per-exterior-area-applies | 🌫️change-infiltration-flow | ✅️applies |
+      | change-infiltration-flow-per-exterior-area-refuses | 🌫️change-infiltration-flow | ⛔️refuses |
+      | change-infiltration-constant-term-coefficient-applies | 🅰️change-infiltration | ✅️applies |
+      | change-infiltration-constant-term-coefficient-refuses | 🅰️change-infiltration | ⛔️refuses |
       | change-infiltration-temperature-term-coefficient-applies | 🅱️change-infiltration-temperature-term-coefficient | ✅️applies |
       | change-infiltration-temperature-term-coefficient-refuses | 🅱️change-infiltration-temperature-term-coefficient | ⛔️refuses |
-      | change-infiltration-velocity-term-coefficient-applies | 🆎️change-infiltration-velocity-term-coefficient | ✅️applies |
-      | change-infiltration-velocity-term-coefficient-refuses | 🆎️change-infiltration-velocity-term-coefficient | ⛔️refuses |
+      | change-infiltration-velocity-term-coefficient-applies | 🆎️change-infiltration | ✅️applies |
+      | change-infiltration-velocity-term-coefficient-refuses | 🆎️change-infiltration | ⛔️refuses |
       | change-infiltration-velocity-squared-term-coefficient-applies | 🆑️change-infiltration-velocity-squared-term-coefficient | ✅️applies |
       | change-infiltration-velocity-squared-term-coefficient-refuses | 🆑️change-infiltration-velocity-squared-term-coefficient | ⛔️refuses |
-      | create-mechanical-ventilation-applies | 🌪️create-mechanical-ventilation | ✅️applies |
-      | create-mechanical-ventilation-refuses | 🌪️create-mechanical-ventilation | ⛔️refuses |
-      | delete-mechanical-ventilation-applies | 🚫️delete-mechanical-ventilation | ✅️applies |
-      | delete-mechanical-ventilation-refuses | 🚫️delete-mechanical-ventilation | ⛔️refuses |
-      | change-mechanical-ventilation-zone-applies | 🧭️change-mechanical-ventilation-zone | ✅️applies |
-      | change-mechanical-ventilation-zone-refuses | 🧭️change-mechanical-ventilation-zone | ⛔️refuses |
-      | change-mechanical-ventilation-schedule-applies | 📆️change-mechanical-ventilation-schedule | ✅️applies |
-      | change-mechanical-ventilation-schedule-refuses | 📆️change-mechanical-ventilation-schedule | ⛔️refuses |
-      | change-mechanical-ventilation-design-flow-applies | 🚿️change-mechanical-ventilation-design-flow | ✅️applies |
-      | change-mechanical-ventilation-design-flow-refuses | 🚿️change-mechanical-ventilation-design-flow | ⛔️refuses |
+      | create-mechanical-ventilation-applies | 🌪️create-mechanical | ✅️applies |
+      | create-mechanical-ventilation-refuses | 🌪️create-mechanical | ⛔️refuses |
+      | delete-mechanical-ventilation-applies | 🚫️delete-mechanical | ✅️applies |
+      | delete-mechanical-ventilation-refuses | 🚫️delete-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-zone-applies | 🧭️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-zone-refuses | 🧭️change-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-schedule-applies | 📆️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-schedule-refuses | 📆️change-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-design-flow-applies | 🚿️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-design-flow-refuses | 🚿️change-mechanical | ⛔️refuses |
       | change-mechanical-ventilation-fan-total-efficiency-applies | 💠️change-mechanical-ventilation-fan-total-efficiency | ✅️applies |
       | change-mechanical-ventilation-fan-total-efficiency-refuses | 💠️change-mechanical-ventilation-fan-total-efficiency | ⛔️refuses |
       | change-mechanical-ventilation-fan-delta-pressure-applies | 🎈️change-mechanical-ventilation-fan-delta-pressure | ✅️applies |
       | change-mechanical-ventilation-fan-delta-pressure-refuses | 🎈️change-mechanical-ventilation-fan-delta-pressure | ⛔️refuses |
       | change-infiltration-method-applies | 🔬️change-infiltration-method | ✅️applies |
       | change-infiltration-method-refuses | 🔬️change-infiltration-method | ⛔️refuses |
-      | change-infiltration-design-flow-ach-applies | 🔄️change-infiltration-design-flow-ach | ✅️applies |
-      | change-infiltration-design-flow-ach-refuses | 🔄️change-infiltration-design-flow-ach | ⛔️refuses |
-      | change-infiltration-effective-leakage-area-applies | 🕳️change-infiltration-effective-leakage-area | ✅️applies |
-      | change-infiltration-effective-leakage-area-refuses | 🕳️change-infiltration-effective-leakage-area | ⛔️refuses |
-      | change-infiltration-discharge-coefficient-applies | 🚰️change-infiltration-discharge-coefficient | ✅️applies |
-      | change-infiltration-discharge-coefficient-refuses | 🚰️change-infiltration-discharge-coefficient | ⛔️refuses |
-      | change-infiltration-stack-height-applies | 🏭️change-infiltration-stack-height | ✅️applies |
-      | change-infiltration-stack-height-refuses | 🏭️change-infiltration-stack-height | ⛔️refuses |
-      | create-thermostat-controls-zone-one | 🩺️create-thermostat | ✅️controls-zone-one |
-      | create-thermostat-refuses-an-absent-zone | 🩺️create-thermostat | ⛔️refuses-an-absent-zone |
+      | change-infiltration-design-flow-ach-applies | 🔄️change-infiltration-design | ✅️applies |
+      | change-infiltration-design-flow-ach-refuses | 🔄️change-infiltration-design | ⛔️refuses |
+      | change-infiltration-effective-leakage-area-applies | 🕳️change-infiltration | ✅️applies |
+      | change-infiltration-effective-leakage-area-refuses | 🕳️change-infiltration | ⛔️refuses |
+      | change-infiltration-discharge-coefficient-applies | 🚰️change-infiltration | ✅️applies |
+      | change-infiltration-discharge-coefficient-refuses | 🚰️change-infiltration | ⛔️refuses |
+      | change-infiltration-stack-height-applies | 🏭️change-infiltration-stack | ✅️applies |
+      | change-infiltration-stack-height-refuses | 🏭️change-infiltration-stack | ⛔️refuses |
+      | create-thermostat-controls-zone-one | 🩺️create-thermostat | ✅️controls |
+      | create-thermostat-refuses-an-absent-zone | 🩺️create-thermostat | ⛔️refuses |
       | delete-thermostat-frees-zone-one | 🛑️delete-thermostat | ✅️frees-zone-one |
-      | delete-thermostat-refuses-an-absent-one | 🛑️delete-thermostat | ⛔️refuses-an-absent-one |
-      | change-thermostat-zone-moves-to-zone-two | 🛖️change-thermostat-zone | ✅️moves-to-zone-two |
-      | change-thermostat-zone-refuses-an-absent-zone | 🛖️change-thermostat-zone | ⛔️refuses-an-absent-zone |
-      | change-thermostat-heating-setpoint-schedule-repoints-heating | 🥵️change-thermostat-heating-setpoint-schedule | ✅️repoints-heating |
-      | change-thermostat-heating-setpoint-schedule-refuses-an-absent-one | 🥵️change-thermostat-heating-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-thermostat-cooling-setpoint-schedule-repoints-cooling | 🐧️change-thermostat-cooling-setpoint-schedule | ✅️repoints-cooling |
-      | change-thermostat-cooling-setpoint-schedule-refuses-an-absent-one | 🐧️change-thermostat-cooling-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-thermostat-heating-throttle-range-widens-heating-band | 🎚️change-thermostat-heating-throttle-range | ✅️widens-heating-band |
-      | change-thermostat-heating-throttle-range-refuses-a-zero-band | 🎚️change-thermostat-heating-throttle-range | ⛔️refuses-a-zero-band |
-      | change-thermostat-cooling-throttle-range-widens-cooling-band | 🎛️change-thermostat-cooling-throttle-range | ✅️widens-cooling-band |
-      | change-thermostat-cooling-throttle-range-refuses-a-negative-band | 🎛️change-thermostat-cooling-throttle-range | ⛔️refuses-a-negative-band |
-      | create-humidistat-controls-zone-one | 🌂️create-humidistat | ✅️controls-zone-one |
-      | create-humidistat-refuses-an-absent-one | 🌂️create-humidistat | ⛔️refuses-an-absent-one |
-      | delete-humidistat-drops-the-control | 🏜️delete-humidistat | ✅️drops-the-control |
-      | delete-humidistat-refuses-an-absent-one | 🏜️delete-humidistat | ⛔️refuses-an-absent-one |
-      | change-humidistat-zone-moves-to-zone-two | 🏙️change-humidistat-zone | ✅️moves-to-zone-two |
-      | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses-an-absent-zone |
-      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints-humidifying |
-      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint | ✅️repoints-drying |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint | ⛔️refuses-an-absent-one |
-      | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat-humidifying-throttle-range | ✅️widens-the-band |
-      | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat-humidifying-throttle-range | ⛔️refuses-a-zero-band |
-      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle | ✅️widens-the-band |
-      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle | ⛔️refuses-a-negative-band |
-      | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves-zone-one |
-      | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses-an-absent-zone |
-      | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops-the-system |
-      | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses-an-absent-one |
-      | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system-zone | ✅️moves-to-zone-two |
-      | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system-zone | ⛔️refuses-an-absent-zone |
-      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply | ✅️cools-the-supply |
-      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply | ⛔️refuses-a-hot-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ✅️lowers-the-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ⛔️refuses-a-cold-supply |
-      | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system-max-heating-capacity | ✅️caps-the-heating |
-      | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system-max-heating-capacity | ⛔️refuses-a-stray-value |
-      | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system-max-cooling-capacity | ✅️caps-the-cooling |
-      | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 🟧️change-ideal-loads-system-max-cooling-capacity | ⛔️refuses-a-stray-value |
-      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates-per-head |
-      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses-a-negative |
-      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates-per-area |
-      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses-a-negative |
-      | create-zone-equipment-adds-a-baseboard | 🛠️create-zone-equipment | ✅️adds-a-baseboard |
-      | create-zone-equipment-refuses-rank-zero | 🛠️create-zone-equipment | ⛔️refuses-rank-zero |
-      | delete-zone-equipment-drops-the-baseboard | 🗑️delete-zone-equipment | ✅️drops-the-baseboard |
-      | delete-zone-equipment-refuses-an-absent-one | 🗑️delete-zone-equipment | ⛔️refuses-an-absent-one |
-      | change-zone-equipment-zone-moves-to-zone-two | 🏬️change-zone-equipment-zone | ✅️moves-to-zone-two |
-      | change-zone-equipment-zone-refuses-an-absent-zone | 🏬️change-zone-equipment-zone | ⛔️refuses-an-absent-zone |
-      | change-zone-equipment-type-swaps-to-a-fan-coil | 🔧️change-zone-equipment-type | ✅️swaps-to-a-fan-coil |
-      | change-zone-equipment-type-refuses-an-absent-row | 🔧️change-zone-equipment-type | ⛔️refuses-an-absent-row |
-      | change-zone-equipment-priority-demotes-it | 🎗️change-zone-equipment-priority | ✅️demotes-it |
-      | change-zone-equipment-priority-refuses-rank-zero | 🎗️change-zone-equipment-priority | ⛔️refuses-rank-zero |
-      | change-zone-equipment-heating-capacity-uprates-heating | 🧇️change-zone-equipment-heating-capacity | ✅️uprates-heating |
-      | change-zone-equipment-heating-capacity-refuses-a-negative | 🧇️change-zone-equipment-heating-capacity | ⛔️refuses-a-negative |
-      | change-zone-equipment-cooling-capacity-uprates-cooling | 🍧️change-zone-equipment-cooling-capacity | ✅️uprates-cooling |
-      | change-zone-equipment-cooling-capacity-refuses-a-negative | 🍧️change-zone-equipment-cooling-capacity | ⛔️refuses-a-negative |
-      | create-daylight-zone-lights-zone-one | 🔭️create-daylight-zone | ✅️lights-zone-one |
-      | create-daylight-zone-refuses-a-bad-tau | 🔭️create-daylight-zone | ⛔️refuses-a-bad-tau |
-      | delete-daylight-zone-darkens-the-zone | 🌗️delete-daylight-zone | ✅️darkens-the-zone |
-      | delete-daylight-zone-refuses-an-absent-one | 🌗️delete-daylight-zone | ⛔️refuses-an-absent-one |
-      | change-daylight-zone-zone-moves-to-zone-two | 🏫️change-daylight-zone-zone | ✅️moves-to-zone-two |
-      | change-daylight-zone-zone-refuses-an-absent-zone | 🏫️change-daylight-zone-zone | ⛔️refuses-an-absent-zone |
-      | change-daylight-zone-illuminance-target-dims-the-target | 🪔️change-daylight-zone-illuminance-target | ✅️dims-the-target |
-      | change-daylight-zone-illuminance-target-refuses-a-dark-target | 🪔️change-daylight-zone-illuminance-target | ⛔️refuses-a-dark-target |
-      | change-daylight-zone-glare-limit-tightens-glare | 🕶️change-daylight-zone-glare-limit | ✅️tightens-glare |
-      | change-daylight-zone-glare-limit-refuses-a-negative | 🕶️change-daylight-zone-glare-limit | ⛔️refuses-a-negative |
-      | change-daylight-zone-window-transmittance-darkens-the-glass | 🥃️change-daylight-zone-window-transmittance | ✅️darkens-the-glass |
-      | change-daylight-zone-window-transmittance-refuses-a-bad-tau | 🥃️change-daylight-zone-window-transmittance | ⛔️refuses-a-bad-tau |
-      | create-sizing-object-sizes-zone-one | 📶️create-sizing-object | ✅️sizes-zone-one |
-      | create-sizing-object-refuses-an-absent-zone | 📶️create-sizing-object | ⛔️refuses-an-absent-zone |
-      | delete-sizing-object-drops-the-sizing | 🪒️delete-sizing-object | ✅️drops-the-sizing |
-      | delete-sizing-object-refuses-an-absent-one | 🪒️delete-sizing-object | ⛔️refuses-an-absent-one |
-      | change-sizing-object-zone-moves-to-zone-two | 🏨️change-sizing-object-zone | ✅️moves-to-zone-two |
-      | change-sizing-object-zone-refuses-an-absent-zone | 🏨️change-sizing-object-zone | ⛔️refuses-an-absent-zone |
-      | change-sizing-object-sizing-type-sizes-for-cooling | 🧾️change-sizing-object-sizing-type | ✅️sizes-for-cooling |
-      | change-sizing-object-sizing-type-refuses-an-absent-row | 🧾️change-sizing-object-sizing-type | ⛔️refuses-an-absent-row |
-      | change-sizing-object-design-day-type-reads-a-hot-day | 🌥️change-sizing-object-design-day-type | ✅️reads-a-hot-day |
-      | change-sizing-object-design-day-type-refuses-an-absent-row | 🌥️change-sizing-object-design-day-type | ⛔️refuses-an-absent-row |
-      | create-room-air-model-assignment-stratifies-zone-two | 🛏️create-room-air-model-assignment | ✅️stratifies-zone-two |
-      | create-room-air-model-assignment-refuses-a-second-one | 🛏️create-room-air-model-assignment | ⛔️refuses-a-second-one |
-      | delete-room-air-model-assignment-falls-back | 🧺️delete-room-air-model-assignment | ✅️falls-back |
-      | delete-room-air-model-assignment-refuses-an-absent-one | 🧺️delete-room-air-model-assignment | ⛔️refuses-an-absent-one |
-      | change-room-air-model-stratifies-the-air | 🪭️change-room-air-model | ✅️stratifies-the-air |
-      | change-room-air-model-refuses-an-absent-row | 🪭️change-room-air-model | ⛔️refuses-an-absent-row |
-      | create-setpoint-manager-adds-a-scheduled-spm | 📌️create-setpoint-manager | ✅️adds-a-scheduled-spm |
-      | create-setpoint-manager-refuses-a-bad-kind | 📌️create-setpoint-manager | ⛔️refuses-a-bad-kind |
-      | delete-setpoint-manager-drops-the-spm | 🍄️delete-setpoint-manager | ✅️drops-the-spm |
-      | delete-setpoint-manager-refuses-an-absent-one | 🍄️delete-setpoint-manager | ⛔️refuses-an-absent-one |
-      | rename-setpoint-manager-renames-the-spm | 🖇️rename-setpoint-manager | ✅️renames-the-spm |
-      | rename-setpoint-manager-refuses-a-blank-name | 🖇️rename-setpoint-manager | ⛔️refuses-a-blank-name |
-      | replace-setpoint-manager-kind-resets-on-outdoor-air | 🔃️replace-setpoint-manager-kind | ✅️resets-on-outdoor-air |
-      | replace-setpoint-manager-kind-refuses-stray-limits | 🔃️replace-setpoint-manager-kind | ⛔️refuses-stray-limits |
-      | change-setpoint-manager-schedule-repoints-the-spm | 🎼️change-setpoint-manager-schedule | ✅️repoints-the-spm |
-      | change-setpoint-manager-schedule-refuses-an-absent-one | 🎼️change-setpoint-manager-schedule | ⛔️refuses-an-absent-one |
+      | delete-thermostat-refuses-an-absent-one | 🛑️delete-thermostat | ⛔️refuses |
+      | change-thermostat-zone-moves-to-zone-two | 🛖️change-thermostat-zone | ✅️moves |
+      | change-thermostat-zone-refuses-an-absent-zone | 🛖️change-thermostat-zone | ⛔️refuses |
+      | change-thermostat-heating-setpoint-schedule-repoints-heating | 🥵️change-thermostat-heating | ✅️repoints |
+      | change-thermostat-heating-setpoint-schedule-refuses-an-absent-one | 🥵️change-thermostat-heating | ⛔️refuses |
+      | change-thermostat-cooling-setpoint-schedule-repoints-cooling | 🐧️change-thermostat-cooling | ✅️repoints |
+      | change-thermostat-cooling-setpoint-schedule-refuses-an-absent-one | 🐧️change-thermostat-cooling | ⛔️refuses |
+      | change-thermostat-heating-throttle-range-widens-heating-band | 🎚️change-thermostat-heating | ✅️widens |
+      | change-thermostat-heating-throttle-range-refuses-a-zero-band | 🎚️change-thermostat-heating | ⛔️refuses |
+      | change-thermostat-cooling-throttle-range-widens-cooling-band | 🎛️change-thermostat-cooling | ✅️widens |
+      | change-thermostat-cooling-throttle-range-refuses-a-negative-band | 🎛️change-thermostat-cooling | ⛔️refuses |
+      | create-humidistat-controls-zone-one | 🌂️create-humidistat | ✅️controls |
+      | create-humidistat-refuses-an-absent-one | 🌂️create-humidistat | ⛔️refuses |
+      | delete-humidistat-drops-the-control | 🏜️delete-humidistat | ✅️drops |
+      | delete-humidistat-refuses-an-absent-one | 🏜️delete-humidistat | ⛔️refuses |
+      | change-humidistat-zone-moves-to-zone-two | 🏙️change-humidistat-zone | ✅️moves |
+      | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses |
+      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints |
+      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat | ✅️repoints |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat | ⛔️refuses |
+      | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat | ✅️widens |
+      | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat | ⛔️refuses |
+      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat | ✅️widens |
+      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat | ⛔️refuses |
+      | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves |
+      | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses |
+      | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops |
+      | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system | ✅️moves |
+      | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system | ✅️cools |
+      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system | ✅️lowers |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system | ✅️caps |
+      | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system | ✅️caps |
+      | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 🟧️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses |
+      | create-zone-equipment-adds-a-baseboard | 🛠️create-zone-equipment | ✅️adds |
+      | create-zone-equipment-refuses-rank-zero | 🛠️create-zone-equipment | ⛔️refuses |
+      | delete-zone-equipment-drops-the-baseboard | 🗑️delete-zone-equipment | ✅️drops |
+      | delete-zone-equipment-refuses-an-absent-one | 🗑️delete-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-zone-moves-to-zone-two | 🏬️change-zone-equipment-zone | ✅️moves |
+      | change-zone-equipment-zone-refuses-an-absent-zone | 🏬️change-zone-equipment-zone | ⛔️refuses |
+      | change-zone-equipment-type-swaps-to-a-fan-coil | 🔧️change-zone-equipment-type | ✅️swaps |
+      | change-zone-equipment-type-refuses-an-absent-row | 🔧️change-zone-equipment-type | ⛔️refuses |
+      | change-zone-equipment-priority-demotes-it | 🎗️change-zone-equipment | ✅️demotes-it |
+      | change-zone-equipment-priority-refuses-rank-zero | 🎗️change-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-heating-capacity-uprates-heating | 🧇️change-zone-equipment | ✅️uprates |
+      | change-zone-equipment-heating-capacity-refuses-a-negative | 🧇️change-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-cooling-capacity-uprates-cooling | 🍧️change-zone-equipment | ✅️uprates |
+      | change-zone-equipment-cooling-capacity-refuses-a-negative | 🍧️change-zone-equipment | ⛔️refuses |
+      | create-daylight-zone-lights-zone-one | 🔭️create-daylight-zone | ✅️lights |
+      | create-daylight-zone-refuses-a-bad-tau | 🔭️create-daylight-zone | ⛔️refuses |
+      | delete-daylight-zone-darkens-the-zone | 🌗️delete-daylight-zone | ✅️darkens |
+      | delete-daylight-zone-refuses-an-absent-one | 🌗️delete-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-zone-moves-to-zone-two | 🏫️change-daylight-zone-zone | ✅️moves |
+      | change-daylight-zone-zone-refuses-an-absent-zone | 🏫️change-daylight-zone-zone | ⛔️refuses |
+      | change-daylight-zone-illuminance-target-dims-the-target | 🪔️change-daylight-zone | ✅️dims |
+      | change-daylight-zone-illuminance-target-refuses-a-dark-target | 🪔️change-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-glare-limit-tightens-glare | 🕶️change-daylight-zone | ✅️tightens |
+      | change-daylight-zone-glare-limit-refuses-a-negative | 🕶️change-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-window-transmittance-darkens-the-glass | 🥃️change-daylight-zone | ✅️darkens |
+      | change-daylight-zone-window-transmittance-refuses-a-bad-tau | 🥃️change-daylight-zone | ⛔️refuses |
+      | create-sizing-object-sizes-zone-one | 📶️create-sizing-object | ✅️sizes |
+      | create-sizing-object-refuses-an-absent-zone | 📶️create-sizing-object | ⛔️refuses |
+      | delete-sizing-object-drops-the-sizing | 🪒️delete-sizing-object | ✅️drops |
+      | delete-sizing-object-refuses-an-absent-one | 🪒️delete-sizing-object | ⛔️refuses |
+      | change-sizing-object-zone-moves-to-zone-two | 🏨️change-sizing-object-zone | ✅️moves |
+      | change-sizing-object-zone-refuses-an-absent-zone | 🏨️change-sizing-object-zone | ⛔️refuses |
+      | change-sizing-object-sizing-type-sizes-for-cooling | 🧾️change-sizing-object | ✅️sizes |
+      | change-sizing-object-sizing-type-refuses-an-absent-row | 🧾️change-sizing-object | ⛔️refuses |
+      | change-sizing-object-design-day-type-reads-a-hot-day | 🌥️change-sizing-object | ✅️reads |
+      | change-sizing-object-design-day-type-refuses-an-absent-row | 🌥️change-sizing-object | ⛔️refuses |
+      | create-room-air-model-assignment-stratifies-zone-two | 🛏️create-room-air-model | ✅️stratifies |
+      | create-room-air-model-assignment-refuses-a-second-one | 🛏️create-room-air-model | ⛔️refuses |
+      | delete-room-air-model-assignment-falls-back | 🧺️delete-room-air-model | ✅️falls-back |
+      | delete-room-air-model-assignment-refuses-an-absent-one | 🧺️delete-room-air-model | ⛔️refuses |
+      | change-room-air-model-stratifies-the-air | 🪭️change-room-air-model | ✅️stratifies |
+      | change-room-air-model-refuses-an-absent-row | 🪭️change-room-air-model | ⛔️refuses |
+      | create-setpoint-manager-adds-a-scheduled-spm | 📌️create-setpoint-manager | ✅️adds |
+      | create-setpoint-manager-refuses-a-bad-kind | 📌️create-setpoint-manager | ⛔️refuses |
+      | delete-setpoint-manager-drops-the-spm | 🍄️delete-setpoint-manager | ✅️drops |
+      | delete-setpoint-manager-refuses-an-absent-one | 🍄️delete-setpoint-manager | ⛔️refuses |
+      | rename-setpoint-manager-renames-the-spm | 🖇️rename-setpoint-manager | ✅️renames |
+      | rename-setpoint-manager-refuses-a-blank-name | 🖇️rename-setpoint-manager | ⛔️refuses |
+      | replace-setpoint-manager-kind-resets-on-outdoor-air | 🔃️replace-setpoint-manager | ✅️resets |
+      | replace-setpoint-manager-kind-refuses-stray-limits | 🔃️replace-setpoint-manager | ⛔️refuses |
+      | change-setpoint-manager-schedule-repoints-the-spm | 🎼️change-setpoint-manager | ✅️repoints |
+      | change-setpoint-manager-schedule-refuses-an-absent-one | 🎼️change-setpoint-manager | ⛔️refuses |
       | create-air-loop-adds-a-main-loop | 🛞️create-air-loop | ✅️adds-a-main-loop |
-      | create-air-loop-refuses-a-jumbled-list | 🛞️create-air-loop | ⛔️refuses-a-jumbled-list |
+      | create-air-loop-refuses-a-jumbled-list | 🛞️create-air-loop | ⛔️refuses |
       | delete-air-loop-drops-the-loop | 🥀️delete-air-loop | ✅️drops-the-loop |
-      | delete-air-loop-refuses-a-served-loop | 🥀️delete-air-loop | ⛔️refuses-a-served-loop |
+      | delete-air-loop-refuses-a-served-loop | 🥀️delete-air-loop | ⛔️refuses |
       | rename-air-loop-renames-the-loop | 📇️rename-air-loop | ✅️renames-the-loop |
-      | rename-air-loop-refuses-a-blank-name | 📇️rename-air-loop | ⛔️refuses-a-blank-name |
-      | change-air-loop-supply-node-repoints-supply | ↗️change-air-loop-supply-node | ✅️repoints-supply |
-      | change-air-loop-supply-node-refuses-node-zero | ↗️change-air-loop-supply-node | ⛔️refuses-node-zero |
-      | change-air-loop-return-node-repoints-return | ↘️change-air-loop-return-node | ✅️repoints-return |
-      | change-air-loop-return-node-refuses-node-zero | ↘️change-air-loop-return-node | ⛔️refuses-node-zero |
-      | change-air-loop-design-supply-air-flow-uprates-the-flow | 🍥️change-air-loop-design-supply-air-flow | ✅️uprates-the-flow |
-      | change-air-loop-design-supply-air-flow-refuses-no-flow | 🍥️change-air-loop-design-supply-air-flow | ⛔️refuses-no-flow |
-      | add-air-loop-terminal-zone-serves-zone-two | 🪺️add-air-loop-terminal-zone | ✅️serves-zone-two |
-      | add-air-loop-terminal-zone-refuses-an-absent-zone | 🪺️add-air-loop-terminal-zone | ⛔️refuses-an-absent-zone |
-      | remove-air-loop-terminal-zone-stops-serving-one | 🪹️remove-air-loop-terminal-zone | ✅️stops-serving-one |
-      | remove-air-loop-terminal-zone-refuses-an-unserved | 🪹️remove-air-loop-terminal-zone | ⛔️refuses-an-unserved |
+      | rename-air-loop-refuses-a-blank-name | 📇️rename-air-loop | ⛔️refuses |
+      | change-air-loop-supply-node-repoints-supply | ↗️change-air-loop-supply | ✅️repoints |
+      | change-air-loop-supply-node-refuses-node-zero | ↗️change-air-loop-supply | ⛔️refuses |
+      | change-air-loop-return-node-repoints-return | ↘️change-air-loop-return | ✅️repoints |
+      | change-air-loop-return-node-refuses-node-zero | ↘️change-air-loop-return | ⛔️refuses |
+      | change-air-loop-design-supply-air-flow-uprates-the-flow | 🍥️change-air-loop-design | ✅️uprates |
+      | change-air-loop-design-supply-air-flow-refuses-no-flow | 🍥️change-air-loop-design | ⛔️refuses |
+      | add-air-loop-terminal-zone-serves-zone-two | 🪺️add-air-loop-terminal-zone | ✅️serves |
+      | add-air-loop-terminal-zone-refuses-an-absent-zone | 🪺️add-air-loop-terminal-zone | ⛔️refuses |
+      | remove-air-loop-terminal-zone-stops-serving-one | 🪹️remove-air-loop-terminal | ✅️stops |
+      | remove-air-loop-terminal-zone-refuses-an-unserved | 🪹️remove-air-loop-terminal | ⛔️refuses |
       | create-plant-loop-adds-a-hot-loop | ⚗️create-plant-loop | ✅️adds-a-hot-loop |
-      | create-plant-loop-refuses-a-jumbled-list | ⚗️create-plant-loop | ⛔️refuses-a-jumbled-list |
+      | create-plant-loop-refuses-a-jumbled-list | ⚗️create-plant-loop | ⛔️refuses |
       | delete-plant-loop-drops-the-loop | 💣️delete-plant-loop | ✅️drops-the-loop |
-      | delete-plant-loop-refuses-an-absent-one | 💣️delete-plant-loop | ⛔️refuses-an-absent-one |
+      | delete-plant-loop-refuses-an-absent-one | 💣️delete-plant-loop | ⛔️refuses |
       | rename-plant-loop-renames-the-loop | 📛️rename-plant-loop | ✅️renames-the-loop |
-      | rename-plant-loop-refuses-a-blank-name | 📛️rename-plant-loop | ⛔️refuses-a-blank-name |
-      | change-plant-loop-type-turns-it-chilled | ♻️change-plant-loop-type | ✅️turns-it-chilled |
-      | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses-an-absent-row |
-      | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply-temperature | ✅️cools-the-supply |
-      | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply-temperature | ⛔️refuses-a-hot-supply |
-      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return-temperature | ✅️cools-the-return |
-      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
-      | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design-flow | ✅️uprates-the-flow |
-      | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design-flow | ⛔️refuses-no-flow |
-      | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names-equipment |
-      | add-plant-loop-equipment-refuses-the-unset-id | 🔩️add-plant-loop-equipment | ⛔️refuses-the-unset-id |
-      | remove-plant-loop-equipment-drops-equipment | ⚙️remove-plant-loop-equipment | ✅️drops-equipment |
-      | remove-plant-loop-equipment-refuses-an-unlisted | ⚙️remove-plant-loop-equipment | ⛔️refuses-an-unlisted |
-      | create-outdoor-air-system-ventilates-the-loop | 🌲️create-outdoor-air-system | ✅️ventilates-the-loop |
-      | create-outdoor-air-system-refuses-an-absent-loop | 🌲️create-outdoor-air-system | ⛔️refuses-an-absent-loop |
-      | delete-outdoor-air-system-drops-the-system | 🍂️delete-outdoor-air-system | ✅️drops-the-system |
-      | delete-outdoor-air-system-refuses-an-absent-one | 🍂️delete-outdoor-air-system | ⛔️refuses-an-absent-one |
-      | change-outdoor-air-system-air-loop-moves-to-the-spare | ⛓️change-outdoor-air-system-air-loop | ✅️moves-to-the-spare |
-      | change-outdoor-air-system-air-loop-refuses-an-absent-loop | ⛓️change-outdoor-air-system-air-loop | ⛔️refuses-an-absent-loop |
-      | change-outdoor-air-system-min-oa-flow-raises-the-minimum | 🦋️change-outdoor-air-system-min-oa-flow | ✅️raises-the-minimum |
-      | change-outdoor-air-system-min-oa-flow-refuses-a-negative | 🦋️change-outdoor-air-system-min-oa-flow | ⛔️refuses-a-negative |
-      | change-outdoor-air-system-economizer-enabled-frees-the-cooling | 💰️change-outdoor-air-system-economizer-enabled | ✅️frees-the-cooling |
-      | change-outdoor-air-system-economizer-enabled-refuses-an-absent-row | 💰️change-outdoor-air-system-economizer-enabled | ⛔️refuses-an-absent-row |
-      | create-electrical-load-center-applies | 🏦️create-electrical-load-center | ✅️applies |
-      | create-electrical-load-center-refuses | 🏦️create-electrical-load-center | ⛔️refuses |
-      | delete-electrical-load-center-applies | 🔻️delete-electrical-load-center | ✅️applies |
-      | delete-electrical-load-center-refuses | 🔻️delete-electrical-load-center | ⛔️refuses |
-      | rename-electrical-load-center-applies | 🖊️rename-electrical-load-center | ✅️applies |
-      | rename-electrical-load-center-refuses | 🖊️rename-electrical-load-center | ⛔️refuses |
-      | add-electrical-load-center-pv-applies | ☄️add-electrical-load-center-pv | ✅️applies |
-      | add-electrical-load-center-pv-refuses | ☄️add-electrical-load-center-pv | ⛔️refuses |
-      | remove-electrical-load-center-pv-applies | 🌘️remove-electrical-load-center-pv | ✅️applies |
-      | remove-electrical-load-center-pv-refuses | 🌘️remove-electrical-load-center-pv | ⛔️refuses |
-      | add-electrical-load-center-battery-applies | 🔋️add-electrical-load-center-battery | ✅️applies |
-      | add-electrical-load-center-battery-refuses | 🔋️add-electrical-load-center-battery | ⛔️refuses |
-      | remove-electrical-load-center-battery-applies | 🪝️remove-electrical-load-center-battery | ✅️applies |
-      | remove-electrical-load-center-battery-refuses | 🪝️remove-electrical-load-center-battery | ⛔️refuses |
+      | rename-plant-loop-refuses-a-blank-name | 📛️rename-plant-loop | ⛔️refuses |
+      | change-plant-loop-type-turns-it-chilled | ♻️change-plant-loop-type | ✅️turns |
+      | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses |
+      | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply | ✅️cools |
+      | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply | ⛔️refuses |
+      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return | ✅️cools |
+      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return | ⛔️refuses |
+      | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design | ✅️uprates |
+      | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design | ⛔️refuses |
+      | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names |
+      | add-plant-loop-equipment-refuses-the-unset-id | 🔩️add-plant-loop-equipment | ⛔️refuses |
+      | remove-plant-loop-equipment-drops-equipment | ⚙️remove-plant-loop-equipment | ✅️drops |
+      | remove-plant-loop-equipment-refuses-an-unlisted | ⚙️remove-plant-loop-equipment | ⛔️refuses |
+      | create-outdoor-air-system-ventilates-the-loop | 🌲️create-outdoor-air | ✅️ventilates |
+      | create-outdoor-air-system-refuses-an-absent-loop | 🌲️create-outdoor-air | ⛔️refuses |
+      | delete-outdoor-air-system-drops-the-system | 🍂️delete-outdoor-air-system | ✅️drops |
+      | delete-outdoor-air-system-refuses-an-absent-one | 🍂️delete-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-air-loop-moves-to-the-spare | ⛓️change-outdoor-air-system | ✅️moves |
+      | change-outdoor-air-system-air-loop-refuses-an-absent-loop | ⛓️change-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-min-oa-flow-raises-the-minimum | 🦋️change-outdoor-air-system | ✅️raises |
+      | change-outdoor-air-system-min-oa-flow-refuses-a-negative | 🦋️change-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-economizer-enabled-frees-the-cooling | 💰️change-outdoor-air-system | ✅️frees |
+      | change-outdoor-air-system-economizer-enabled-refuses-an-absent-row | 💰️change-outdoor-air-system | ⛔️refuses |
+      | create-electrical-load-center-applies | 🏦️create-electrical-load | ✅️applies |
+      | create-electrical-load-center-refuses | 🏦️create-electrical-load | ⛔️refuses |
+      | delete-electrical-load-center-applies | 🔻️delete-electrical-load | ✅️applies |
+      | delete-electrical-load-center-refuses | 🔻️delete-electrical-load | ⛔️refuses |
+      | rename-electrical-load-center-applies | 🖊️rename-electrical-load | ✅️applies |
+      | rename-electrical-load-center-refuses | 🖊️rename-electrical-load | ⛔️refuses |
+      | add-electrical-load-center-pv-applies | ☄️add-electrical-load-center | ✅️applies |
+      | add-electrical-load-center-pv-refuses | ☄️add-electrical-load-center | ⛔️refuses |
+      | remove-electrical-load-center-pv-applies | 🌘️remove-electrical-load | ✅️applies |
+      | remove-electrical-load-center-pv-refuses | 🌘️remove-electrical-load | ⛔️refuses |
+      | add-electrical-load-center-battery-applies | 🔋️add-electrical-load-center | ✅️applies |
+      | add-electrical-load-center-battery-refuses | 🔋️add-electrical-load-center | ⛔️refuses |
+      | remove-electrical-load-center-battery-applies | 🪝️remove-electrical-load | ✅️applies |
+      | remove-electrical-load-center-battery-refuses | 🪝️remove-electrical-load | ⛔️refuses |
       | create-pv-system-applies | ✨️create-pv-system | ✅️applies |
       | create-pv-system-refuses | ✨️create-pv-system | ⛔️refuses |
       | delete-pv-system-applies | 🌒️delete-pv-system | ✅️applies |
       | delete-pv-system-refuses | 🌒️delete-pv-system | ⛔️refuses |
-      | change-pv-system-dc-capacity-applies | ⚛️change-pv-system-dc-capacity | ✅️applies |
-      | change-pv-system-dc-capacity-refuses | ⚛️change-pv-system-dc-capacity | ⛔️refuses |
+      | change-pv-system-dc-capacity-applies | ⚛️change-pv-system-dc | ✅️applies |
+      | change-pv-system-dc-capacity-refuses | ⚛️change-pv-system-dc | ⛔️refuses |
       | change-pv-system-area-applies | 🟨️change-pv-system-area | ✅️applies |
       | change-pv-system-area-refuses | 🟨️change-pv-system-area | ⛔️refuses |
       | change-pv-system-tilt-applies | 📈️change-pv-system-tilt | ✅️applies |
       | change-pv-system-tilt-refuses | 📈️change-pv-system-tilt | ⛔️refuses |
       | change-pv-system-azimuth-applies | 🧿️change-pv-system-azimuth | ✅️applies |
       | change-pv-system-azimuth-refuses | 🧿️change-pv-system-azimuth | ⛔️refuses |
-      | change-pv-system-module-efficiency-applies | 🎖️change-pv-system-module-efficiency | ✅️applies |
-      | change-pv-system-module-efficiency-refuses | 🎖️change-pv-system-module-efficiency | ⛔️refuses |
-      | change-pv-system-inverter-efficiency-applies | ♌️change-pv-system-inverter-efficiency | ✅️applies |
-      | change-pv-system-inverter-efficiency-refuses | ♌️change-pv-system-inverter-efficiency | ⛔️refuses |
+      | change-pv-system-module-efficiency-applies | 🎖️change-pv-system-module | ✅️applies |
+      | change-pv-system-module-efficiency-refuses | 🎖️change-pv-system-module | ⛔️refuses |
+      | change-pv-system-inverter-efficiency-applies | ♌️change-pv-system-inverter | ✅️applies |
+      | change-pv-system-inverter-efficiency-refuses | ♌️change-pv-system-inverter | ⛔️refuses |
       | create-battery-applies | 🪙️create-battery | ✅️applies |
       | create-battery-refuses | 🪙️create-battery | ⛔️refuses |
       | delete-battery-applies | ♒️delete-battery | ✅️applies |
@@ -467,68 +467,68 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-battery-capacity-refuses | 🥫️change-battery-capacity | ⛔️refuses |
       | change-battery-max-charge-applies | ⏫️change-battery-max-charge | ✅️applies |
       | change-battery-max-charge-refuses | ⏫️change-battery-max-charge | ⛔️refuses |
-      | change-battery-max-discharge-applies | ⏬️change-battery-max-discharge | ✅️applies |
-      | change-battery-max-discharge-refuses | ⏬️change-battery-max-discharge | ⛔️refuses |
-      | change-battery-round-trip-efficiency-applies | 🥉️change-battery-round-trip-efficiency | ✅️applies |
-      | change-battery-round-trip-efficiency-refuses | 🥉️change-battery-round-trip-efficiency | ⛔️refuses |
+      | change-battery-max-discharge-applies | ⏬️change-battery-max | ✅️applies |
+      | change-battery-max-discharge-refuses | ⏬️change-battery-max | ⛔️refuses |
+      | change-battery-round-trip-efficiency-applies | 🥉️change-battery-round-trip | ✅️applies |
+      | change-battery-round-trip-efficiency-refuses | 🥉️change-battery-round-trip | ⛔️refuses |
       | create-shw-system-applies | 🛀️create-shw-system | ✅️applies |
       | create-shw-system-refuses | 🛀️create-shw-system | ⛔️refuses |
       | delete-shw-system-applies | 🚱️delete-shw-system | ✅️applies |
       | delete-shw-system-refuses | 🚱️delete-shw-system | ⛔️refuses |
-      | change-shw-system-heater-capacity-applies | 🍵️change-shw-system-heater-capacity | ✅️applies |
-      | change-shw-system-heater-capacity-refuses | 🍵️change-shw-system-heater-capacity | ⛔️refuses |
-      | change-shw-system-storage-volume-applies | 🛢️change-shw-system-storage-volume | ✅️applies |
-      | change-shw-system-storage-volume-refuses | 🛢️change-shw-system-storage-volume | ⛔️refuses |
+      | change-shw-system-heater-capacity-applies | 🍵️change-shw-system-heater | ✅️applies |
+      | change-shw-system-heater-capacity-refuses | 🍵️change-shw-system-heater | ⛔️refuses |
+      | change-shw-system-storage-volume-applies | 🛢️change-shw-system-storage | ✅️applies |
+      | change-shw-system-storage-volume-refuses | 🛢️change-shw-system-storage | ⛔️refuses |
       | change-shw-system-setpoint-applies | 🏹️change-shw-system-setpoint | ✅️applies |
       | change-shw-system-setpoint-refuses | 🏹️change-shw-system-setpoint | ⛔️refuses |
       | change-shw-system-schedule-applies | 🕐️change-shw-system-schedule | ✅️applies |
       | change-shw-system-schedule-refuses | 🕐️change-shw-system-schedule | ⛔️refuses |
-      | create-solar-thermal-system-applies | 🌄️create-solar-thermal-system | ✅️applies |
-      | create-solar-thermal-system-refuses | 🌄️create-solar-thermal-system | ⛔️refuses |
-      | delete-solar-thermal-system-applies | 🌆️delete-solar-thermal-system | ✅️applies |
-      | delete-solar-thermal-system-refuses | 🌆️delete-solar-thermal-system | ⛔️refuses |
-      | change-solar-thermal-system-collector-area-applies | 🟩️change-solar-thermal-system-collector-area | ✅️applies |
-      | change-solar-thermal-system-collector-area-refuses | 🟩️change-solar-thermal-system-collector-area | ⛔️refuses |
-      | change-solar-thermal-system-efficiency-applies | 🏅️change-solar-thermal-system-efficiency | ✅️applies |
-      | change-solar-thermal-system-efficiency-refuses | 🏅️change-solar-thermal-system-efficiency | ⛔️refuses |
-      | change-solar-thermal-system-storage-volume-applies | 🧃️change-solar-thermal-system-storage-volume | ✅️applies |
-      | change-solar-thermal-system-storage-volume-refuses | 🧃️change-solar-thermal-system-storage-volume | ⛔️refuses |
-      | change-solar-thermal-system-tilt-applies | 🔼️change-solar-thermal-system-tilt | ✅️applies |
-      | change-solar-thermal-system-tilt-refuses | 🔼️change-solar-thermal-system-tilt | ⛔️refuses |
-      | change-solar-thermal-system-azimuth-applies | ⛵️change-solar-thermal-system-azimuth | ✅️applies |
-      | change-solar-thermal-system-azimuth-refuses | ⛵️change-solar-thermal-system-azimuth | ⛔️refuses |
+      | create-solar-thermal-system-applies | 🌄️create-solar-thermal | ✅️applies |
+      | create-solar-thermal-system-refuses | 🌄️create-solar-thermal | ⛔️refuses |
+      | delete-solar-thermal-system-applies | 🌆️delete-solar-thermal | ✅️applies |
+      | delete-solar-thermal-system-refuses | 🌆️delete-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-collector-area-applies | 🟩️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-collector-area-refuses | 🟩️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-efficiency-applies | 🏅️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-efficiency-refuses | 🏅️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-storage-volume-applies | 🧃️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-storage-volume-refuses | 🧃️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-tilt-applies | 🔼️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-tilt-refuses | 🔼️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-azimuth-applies | ⛵️change-solar-thermal-system | ✅️applies |
+      | change-solar-thermal-system-azimuth-refuses | ⛵️change-solar-thermal-system | ⛔️refuses |
       | create-refrigeration-system-applies | ❄️create-refrigeration-system | ✅️applies |
       | create-refrigeration-system-refuses | ❄️create-refrigeration-system | ⛔️refuses |
-      | delete-refrigeration-system-applies | 🫠️delete-refrigeration-system | ✅️applies |
-      | delete-refrigeration-system-refuses | 🫠️delete-refrigeration-system | ⛔️refuses |
-      | change-refrigeration-system-case-count-applies | 🗄️change-refrigeration-system-case-count | ✅️applies |
-      | change-refrigeration-system-case-count-refuses | 🗄️change-refrigeration-system-case-count | ⛔️refuses |
-      | change-refrigeration-system-design-load-applies | 🏋️change-refrigeration-system-design-load | ✅️applies |
-      | change-refrigeration-system-design-load-refuses | 🏋️change-refrigeration-system-design-load | ⛔️refuses |
-      | change-refrigeration-system-defrost-schedule-applies | 🕑️change-refrigeration-system-defrost-schedule | ✅️applies |
-      | change-refrigeration-system-defrost-schedule-refuses | 🕑️change-refrigeration-system-defrost-schedule | ⛔️refuses |
+      | delete-refrigeration-system-applies | 🫠️delete-refrigeration | ✅️applies |
+      | delete-refrigeration-system-refuses | 🫠️delete-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-case-count-applies | 🗄️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-case-count-refuses | 🗄️change-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-design-load-applies | 🏋️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-design-load-refuses | 🏋️change-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-defrost-schedule-applies | 🕑️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-defrost-schedule-refuses | 🕑️change-refrigeration | ⛔️refuses |
       | create-water-system-applies | 🚽️create-water-system | ✅️applies |
       | create-water-system-refuses | 🚽️create-water-system | ⛔️refuses |
       | delete-water-system-applies | 🧼️delete-water-system | ✅️applies |
       | delete-water-system-refuses | 🧼️delete-water-system | ⛔️refuses |
-      | change-water-system-fixture-count-applies | 🪣️change-water-system-fixture-count | ✅️applies |
-      | change-water-system-fixture-count-refuses | 🪣️change-water-system-fixture-count | ⛔️refuses |
-      | change-water-system-peak-flow-applies | 🚾️change-water-system-peak-flow | ✅️applies |
-      | change-water-system-peak-flow-refuses | 🚾️change-water-system-peak-flow | ⛔️refuses |
-      | change-water-system-schedule-applies | 🕒️change-water-system-schedule | ✅️applies |
-      | change-water-system-schedule-refuses | 🕒️change-water-system-schedule | ⛔️refuses |
+      | change-water-system-fixture-count-applies | 🪣️change-water-system | ✅️applies |
+      | change-water-system-fixture-count-refuses | 🪣️change-water-system | ⛔️refuses |
+      | change-water-system-peak-flow-applies | 🚾️change-water-system-peak | ✅️applies |
+      | change-water-system-peak-flow-refuses | 🚾️change-water-system-peak | ⛔️refuses |
+      | change-water-system-schedule-applies | 🕒️change-water-system | ✅️applies |
+      | change-water-system-schedule-refuses | 🕒️change-water-system | ⛔️refuses |
       | create-fault-applies | ⚠️create-fault | ✅️applies |
       | create-fault-refuses | ⚠️create-fault | ⛔️refuses |
       | delete-fault-applies | 🩹️delete-fault | ✅️applies |
       | delete-fault-refuses | 🩹️delete-fault | ⛔️refuses |
-      | change-fault-target-equipment-applies | 🎣️change-fault-target-equipment | ✅️applies |
-      | change-fault-target-equipment-refuses | 🎣️change-fault-target-equipment | ⛔️refuses |
+      | change-fault-target-equipment-applies | 🎣️change-fault-target | ✅️applies |
+      | change-fault-target-equipment-refuses | 🎣️change-fault-target | ⛔️refuses |
       | change-fault-type-applies | 🐛️change-fault-type | ✅️applies |
       | change-fault-type-refuses | 🐛️change-fault-type | ⛔️refuses |
       | change-fault-severity-applies | 🌶️change-fault-severity | ✅️applies |
       | change-fault-severity-refuses | 🌶️change-fault-severity | ⛔️refuses |
-      | change-fault-start-schedule-applies | 🕓️change-fault-start-schedule | ✅️applies |
-      | change-fault-start-schedule-refuses | 🕓️change-fault-start-schedule | ⛔️refuses |
+      | change-fault-start-schedule-applies | 🕓️change-fault-start | ✅️applies |
+      | change-fault-start-schedule-refuses | 🕓️change-fault-start | ⛔️refuses |
       | create-space-list-applies | 📋️create-space-list | ✅️applies |
       | create-space-list-refuses | 📋️create-space-list | ⛔️refuses |
       | delete-space-list-applies | 🗒️delete-space-list | ✅️applies |
@@ -547,24 +547,24 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | rename-thermal-enclosure-refuses | 🖋️rename-thermal-enclosure | ⛔️refuses |
       | add-thermal-enclosure-zone-applies | 🔒️add-thermal-enclosure-zone | ✅️applies |
       | add-thermal-enclosure-zone-refuses | 🔒️add-thermal-enclosure-zone | ⛔️refuses |
-      | remove-thermal-enclosure-zone-applies | 🔓️remove-thermal-enclosure-zone | ✅️applies |
-      | remove-thermal-enclosure-zone-refuses | 🔓️remove-thermal-enclosure-zone | ⛔️refuses |
+      | remove-thermal-enclosure-zone-applies | 🔓️remove-thermal-enclosure | ✅️applies |
+      | remove-thermal-enclosure-zone-refuses | 🔓️remove-thermal-enclosure | ⛔️refuses |
       | create-constant-schedule-applies | 🕜️create-constant-schedule | ✅️applies |
       | create-constant-schedule-refuses | 🕜️create-constant-schedule | ⛔️refuses |
       | delete-constant-schedule-applies | 📍️delete-constant-schedule | ✅️applies |
       | delete-constant-schedule-refuses | 📍️delete-constant-schedule | ⛔️refuses |
-      | change-constant-schedule-value-applies | 🕝️change-constant-schedule-value | ✅️applies |
-      | change-constant-schedule-value-refuses | 🕝️change-constant-schedule-value | ⛔️refuses |
+      | change-constant-schedule-value-applies | 🕝️change-constant-schedule | ✅️applies |
+      | change-constant-schedule-value-refuses | 🕝️change-constant-schedule | ⛔️refuses |
       | create-daily-schedule-applies | 🕞️create-daily-schedule | ✅️applies |
       | create-daily-schedule-refuses | 🕞️create-daily-schedule | ⛔️refuses |
       | delete-daily-schedule-applies | 🌓️delete-daily-schedule | ✅️applies |
       | delete-daily-schedule-refuses | 🌓️delete-daily-schedule | ⛔️refuses |
-      | replace-daily-schedule-hourly-values-applies | 🕔️replace-daily-schedule-hourly-values | ✅️applies |
-      | replace-daily-schedule-hourly-values-refuses | 🕔️replace-daily-schedule-hourly-values | ⛔️refuses |
-      | change-daily-schedule-interpolation-applies | 🕕️change-daily-schedule-interpolation | ✅️applies |
-      | change-daily-schedule-interpolation-refuses | 🕕️change-daily-schedule-interpolation | ⛔️refuses |
-      | change-daily-schedule-limits-applies | 🕟️change-daily-schedule-limits | ✅️applies |
-      | change-daily-schedule-limits-refuses | 🕟️change-daily-schedule-limits | ⛔️refuses |
+      | replace-daily-schedule-hourly-values-applies | 🕔️replace-daily-schedule | ✅️applies |
+      | replace-daily-schedule-hourly-values-refuses | 🕔️replace-daily-schedule | ⛔️refuses |
+      | change-daily-schedule-interpolation-applies | 🕕️change-daily-schedule | ✅️applies |
+      | change-daily-schedule-interpolation-refuses | 🕕️change-daily-schedule | ⛔️refuses |
+      | change-daily-schedule-limits-applies | 🕟️change-daily-schedule | ✅️applies |
+      | change-daily-schedule-limits-refuses | 🕟️change-daily-schedule | ⛔️refuses |
       | create-weekly-schedule-applies | 🗓️create-weekly-schedule | ✅️applies |
       | create-weekly-schedule-refuses | 🗓️create-weekly-schedule | ⛔️refuses |
       | delete-weekly-schedule-applies | 🕖️delete-weekly-schedule | ✅️applies |
@@ -575,44 +575,44 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | create-annual-schedule-refuses | 📚️create-annual-schedule | ⛔️refuses |
       | delete-annual-schedule-applies | 📕️delete-annual-schedule | ✅️applies |
       | delete-annual-schedule-refuses | 📕️delete-annual-schedule | ⛔️refuses |
-      | insert-annual-schedule-rule-applies | 📗️insert-annual-schedule-rule | ✅️applies |
-      | insert-annual-schedule-rule-refuses | 📗️insert-annual-schedule-rule | ⛔️refuses |
-      | remove-annual-schedule-rule-applies | 📙️remove-annual-schedule-rule | ✅️applies |
-      | remove-annual-schedule-rule-refuses | 📙️remove-annual-schedule-rule | ⛔️refuses |
-      | reorder-annual-schedule-rules-applies | 🗂️reorder-annual-schedule-rules | ✅️applies |
-      | reorder-annual-schedule-rules-refuses | 🗂️reorder-annual-schedule-rules | ⛔️refuses |
-      | change-annual-schedule-default-daily-schedule-applies | 🎌️change-annual-schedule-default-daily-schedule | ✅️applies |
-      | change-annual-schedule-default-daily-schedule-refuses | 🎌️change-annual-schedule-default-daily-schedule | ⛔️refuses |
-      | change-annual-schedule-holiday-daily-schedule-applies | 🎄️change-annual-schedule-holiday-daily-schedule | ✅️applies |
-      | change-annual-schedule-holiday-daily-schedule-refuses | 🎄️change-annual-schedule-holiday-daily-schedule | ⛔️refuses |
-      | add-annual-schedule-holiday-applies | 🎉️add-annual-schedule-holiday | ✅️applies |
-      | add-annual-schedule-holiday-refuses | 🎉️add-annual-schedule-holiday | ⛔️refuses |
-      | remove-annual-schedule-holiday-applies | 🎊️remove-annual-schedule-holiday | ✅️applies |
-      | remove-annual-schedule-holiday-refuses | 🎊️remove-annual-schedule-holiday | ⛔️refuses |
-      | create-time-series-schedule-applies | 🪗️create-time-series-schedule | ✅️applies |
-      | create-time-series-schedule-refuses | 🪗️create-time-series-schedule | ⛔️refuses |
-      | delete-time-series-schedule-applies | 🎞️delete-time-series-schedule | ✅️applies |
-      | delete-time-series-schedule-refuses | 🎞️delete-time-series-schedule | ⛔️refuses |
-      | replace-time-series-schedule-values-applies | 🕘️replace-time-series-schedule-values | ✅️applies |
-      | replace-time-series-schedule-values-refuses | 🕘️replace-time-series-schedule-values | ⛔️refuses |
-      | change-time-series-schedule-timestep-applies | 🕙️change-time-series-schedule-timestep | ✅️applies |
-      | change-time-series-schedule-timestep-refuses | 🕙️change-time-series-schedule-timestep | ⛔️refuses |
-      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration-vertices | ✅️shapes-a-gable |
-      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration-vertices | ⛔️refuses-a-line |
-      | change-glazing-material-thickness-applies | 🔷️change-glazing-material-thickness | ✅️applies |
-      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material-thickness | ⛔️refuses |
-      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material-conductivity | ✅️applies |
-      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material-conductivity | ⛔️refuses |
-      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material-solar-transmittance | ✅️applies |
-      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material-solar-transmittance | ⛔️refuses |
-      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material-visible-transmittance | ✅️applies |
-      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material-visible-transmittance | ⛔️refuses |
-      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material-infrared-emissivity | ✅️applies |
-      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material-infrared-emissivity | ⛔️refuses |
+      | insert-annual-schedule-rule-applies | 📗️insert-annual-schedule | ✅️applies |
+      | insert-annual-schedule-rule-refuses | 📗️insert-annual-schedule | ⛔️refuses |
+      | remove-annual-schedule-rule-applies | 📙️remove-annual-schedule | ✅️applies |
+      | remove-annual-schedule-rule-refuses | 📙️remove-annual-schedule | ⛔️refuses |
+      | reorder-annual-schedule-rules-applies | 🗂️reorder-annual-schedule | ✅️applies |
+      | reorder-annual-schedule-rules-refuses | 🗂️reorder-annual-schedule | ⛔️refuses |
+      | change-annual-schedule-default-daily-schedule-applies | 🎌️change-annual-schedule | ✅️applies |
+      | change-annual-schedule-default-daily-schedule-refuses | 🎌️change-annual-schedule | ⛔️refuses |
+      | change-annual-schedule-holiday-daily-schedule-applies | 🎄️change-annual-schedule | ✅️applies |
+      | change-annual-schedule-holiday-daily-schedule-refuses | 🎄️change-annual-schedule | ⛔️refuses |
+      | add-annual-schedule-holiday-applies | 🎉️add-annual-schedule | ✅️applies |
+      | add-annual-schedule-holiday-refuses | 🎉️add-annual-schedule | ⛔️refuses |
+      | remove-annual-schedule-holiday-applies | 🎊️remove-annual-schedule | ✅️applies |
+      | remove-annual-schedule-holiday-refuses | 🎊️remove-annual-schedule | ⛔️refuses |
+      | create-time-series-schedule-applies | 🪗️create-time-series | ✅️applies |
+      | create-time-series-schedule-refuses | 🪗️create-time-series | ⛔️refuses |
+      | delete-time-series-schedule-applies | 🎞️delete-time-series | ✅️applies |
+      | delete-time-series-schedule-refuses | 🎞️delete-time-series | ⛔️refuses |
+      | replace-time-series-schedule-values-applies | 🕘️replace-time-series | ✅️applies |
+      | replace-time-series-schedule-values-refuses | 🕘️replace-time-series | ⛔️refuses |
+      | change-time-series-schedule-timestep-applies | 🕙️change-time-series | ✅️applies |
+      | change-time-series-schedule-timestep-refuses | 🕙️change-time-series | ⛔️refuses |
+      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration | ✅️shapes |
+      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration | ⛔️refuses |
+      | change-glazing-material-thickness-applies | 🔷️change-glazing-material | ✅️applies |
+      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material | ✅️applies |
+      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material | ✅️applies |
+      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material | ✅️applies |
+      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material | ⛔️refuses |
       | rename-glazing-material-applies | 🟢️rename-glazing-material | ✅️applies |
       | rename-glazing-material-refuses | 🟢️rename-glazing-material | ⛔️refuses |
-      | change-gas-material-thickness-applies | 🟣️change-gas-material-thickness | ✅️applies |
-      | change-gas-material-thickness-refuses | 🟣️change-gas-material-thickness | ⛔️refuses |
+      | change-gas-material-thickness-applies | 🟣️change-gas-material | ✅️applies |
+      | change-gas-material-thickness-refuses | 🟣️change-gas-material | ⛔️refuses |
       | change-gas-material-gas-applies | 🟤️change-gas-material-gas | ✅️applies |
       | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
       | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |
@@ -633,125 +633,125 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
     Examples:
       | id | dir | fixture |
       | rename-model-renames-the-model | 🏷️rename-model | ✅️renames-the-model |
-      | rename-model-refuses-a-blank-name | 🏷️rename-model | ⛔️refuses-a-blank-name |
-      | change-model-version-bumps-the-version | 🔢️change-model-version | ✅️bumps-the-version |
-      | change-model-version-refuses-a-blank-version | 🔢️change-model-version | ⛔️refuses-a-blank-version |
+      | rename-model-refuses-a-blank-name | 🏷️rename-model | ⛔️refuses |
+      | change-model-version-bumps-the-version | 🔢️change-model-version | ✅️bumps |
+      | change-model-version-refuses-a-blank-version | 🔢️change-model-version | ⛔️refuses |
       | update-site-relocates-to-denver | 🌍️update-site | ✅️relocates-to-denver |
       | update-site-refuses-a-bad-latitude | 🌍️update-site | ⛔️refuses-a-bad-latitude |
-      | update-ground-temperature-sets-denver-ground | 🌡️update-ground-temperature | ✅️sets-denver-ground |
-      | update-ground-temperature-refuses-a-short-year | 🌡️update-ground-temperature | ⛔️refuses-a-short-year |
-      | update-run-period-shortens-to-january | 📅️update-run-period | ✅️shortens-to-january |
+      | update-ground-temperature-sets-denver-ground | 🌡️update-ground-temperature | ✅️sets |
+      | update-ground-temperature-refuses-a-short-year | 🌡️update-ground-temperature | ⛔️refuses |
+      | update-run-period-shortens-to-january | 📅️update-run-period | ✅️shortens |
       | update-run-period-refuses-month-13 | 📅️update-run-period | ⛔️refuses-month-13 |
-      | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches-a-network |
-      | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses-unpaired-nodes |
-      | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds-zone-air-temp |
-      | add-output-variable-refuses-a-duplicate | 📊️add-output-variable | ⛔️refuses-a-duplicate |
-      | remove-output-variable-drops-zone-air-temp | 📉️remove-output-variable | ✅️drops-zone-air-temp |
-      | remove-output-variable-refuses-an-absent-one | 📉️remove-output-variable | ⛔️refuses-an-absent-one |
-      | bind-weather-file-binds-hannover-epw | 🌦️bind-weather-file | ✅️binds-hannover-epw |
-      | bind-weather-file-refuses-a-bad-uri | 🌦️bind-weather-file | ⛔️refuses-a-bad-uri |
-      | unbind-weather-file-unbinds-the-weather | 🌤️unbind-weather-file | ✅️unbinds-the-weather |
-      | unbind-weather-file-refuses-when-unbound | 🌤️unbind-weather-file | ⛔️refuses-when-unbound |
-      | connect-referenced-model-connects-the-geometry | 🪢️connect-referenced-model | ✅️connects-the-geometry |
-      | connect-referenced-model-refuses-a-bad-uri | 🪢️connect-referenced-model | ⛔️refuses-a-bad-uri |
-      | disconnect-referenced-model-disconnects-the-geometry | ✂️disconnect-referenced-model | ✅️disconnects-the-geometry |
-      | disconnect-referenced-model-refuses-when-absent | ✂️disconnect-referenced-model | ⛔️refuses-when-absent |
+      | replace-airflow-network-attaches-a-network | 🫧️replace-airflow-network | ✅️attaches |
+      | replace-airflow-network-refuses-unpaired-nodes | 🫧️replace-airflow-network | ⛔️refuses |
+      | add-output-variable-adds-zone-air-temp | 📊️add-output-variable | ✅️adds |
+      | add-output-variable-refuses-a-duplicate | 📊️add-output-variable | ⛔️refuses |
+      | remove-output-variable-drops-zone-air-temp | 📉️remove-output-variable | ✅️drops |
+      | remove-output-variable-refuses-an-absent-one | 📉️remove-output-variable | ⛔️refuses |
+      | bind-weather-file-binds-hannover-epw | 🌦️bind-weather-file | ✅️binds |
+      | bind-weather-file-refuses-a-bad-uri | 🌦️bind-weather-file | ⛔️refuses |
+      | unbind-weather-file-unbinds-the-weather | 🌤️unbind-weather-file | ✅️unbinds |
+      | unbind-weather-file-refuses-when-unbound | 🌤️unbind-weather-file | ⛔️refuses |
+      | connect-referenced-model-connects-the-geometry | 🪢️connect-referenced-model | ✅️connects |
+      | connect-referenced-model-refuses-a-bad-uri | 🪢️connect-referenced-model | ⛔️refuses |
+      | disconnect-referenced-model-disconnects-the-geometry | ✂️disconnect-referenced | ✅️disconnects |
+      | disconnect-referenced-model-refuses-when-absent | ✂️disconnect-referenced | ⛔️refuses |
       | rename-zone-renames-zone-one | 🏠️rename-zone | ✅️renames-zone-one |
-      | rename-zone-refuses-a-missing-zone | 🏠️rename-zone | ⛔️refuses-a-missing-zone |
-      | change-zone-volume-resizes-zone-one | 📦️change-zone-volume | ✅️resizes-zone-one |
-      | change-zone-volume-refuses-zero-volume | 📦️change-zone-volume | ⛔️refuses-zero-volume |
-      | change-zone-multiplier-stacks-four-storeys | ✖️change-zone-multiplier | ✅️stacks-four-storeys |
-      | change-zone-multiplier-refuses-zero-instances | ✖️change-zone-multiplier | ⛔️refuses-zero-instances |
-      | change-zone-conditioned-frees-the-zone | 🌬️change-zone-conditioned | ✅️frees-the-zone |
-      | change-zone-conditioned-refuses-a-missing-zone | 🌬️change-zone-conditioned | ⛔️refuses-a-missing-zone |
-      | change-zone-floor-area-participation-excludes-the-zone | 📐️change-zone-floor-area-participation | ✅️excludes-the-zone |
-      | change-zone-floor-area-participation-refuses-a-missing-zone | 📐️change-zone-floor-area-participation | ⛔️refuses-a-missing-zone |
+      | rename-zone-refuses-a-missing-zone | 🏠️rename-zone | ⛔️refuses |
+      | change-zone-volume-resizes-zone-one | 📦️change-zone-volume | ✅️resizes |
+      | change-zone-volume-refuses-zero-volume | 📦️change-zone-volume | ⛔️refuses |
+      | change-zone-multiplier-stacks-four-storeys | ✖️change-zone-multiplier | ✅️stacks |
+      | change-zone-multiplier-refuses-zero-instances | ✖️change-zone-multiplier | ⛔️refuses |
+      | change-zone-conditioned-frees-the-zone | 🌬️change-zone-conditioned | ✅️frees |
+      | change-zone-conditioned-refuses-a-missing-zone | 🌬️change-zone-conditioned | ⛔️refuses |
+      | change-zone-floor-area-participation-excludes-the-zone | 📐️change-zone-floor-area | ✅️excludes |
+      | change-zone-floor-area-participation-refuses-a-missing-zone | 📐️change-zone-floor-area | ⛔️refuses |
       | create-zone-adds-a-second-zone | 🏘️create-zone | ✅️adds-a-second-zone |
       | create-zone-refuses-a-taken-id | 🏘️create-zone | ⛔️refuses-a-taken-id |
       | delete-zone-deletes-a-free-zone | 🏚️delete-zone | ✅️deletes-a-free-zone |
       | delete-zone-refuses-a-used-zone | 🏚️delete-zone | ⛔️refuses-a-used-zone |
       | create-space-adds-a-space | 🪑️create-space | ✅️adds-a-space |
-      | create-space-refuses-a-missing-zone | 🪑️create-space | ⛔️refuses-a-missing-zone |
+      | create-space-refuses-a-missing-zone | 🪑️create-space | ⛔️refuses |
       | delete-space-deletes-a-free-space | 🧹️delete-space | ✅️deletes-a-free-space |
-      | delete-space-refuses-a-missing-space | 🧹️delete-space | ⛔️refuses-a-missing-space |
+      | delete-space-refuses-a-missing-space | 🧹️delete-space | ⛔️refuses |
       | rename-space-renames-a-space | 🔤️rename-space | ✅️renames-a-space |
-      | rename-space-refuses-a-blank-name | 🔤️rename-space | ⛔️refuses-a-blank-name |
-      | change-space-floor-area-resizes-a-space | 🧮️change-space-floor-area | ✅️resizes-a-space |
-      | change-space-floor-area-refuses-negative-area | 🧮️change-space-floor-area | ⛔️refuses-negative-area |
+      | rename-space-refuses-a-blank-name | 🔤️rename-space | ⛔️refuses |
+      | change-space-floor-area-resizes-a-space | 🧮️change-space-floor-area | ✅️resizes |
+      | change-space-floor-area-refuses-negative-area | 🧮️change-space-floor-area | ⛔️refuses |
       | change-space-zone-moves-a-space | 🚚️change-space-zone | ✅️moves-a-space |
-      | change-space-zone-refuses-a-missing-zone | 🚚️change-space-zone | ⛔️refuses-a-missing-zone |
+      | change-space-zone-refuses-a-missing-zone | 🚚️change-space-zone | ⛔️refuses |
       | create-surface-adds-a-south-wall | 🟫️create-surface | ✅️adds-a-south-wall |
-      | create-surface-refuses-two-vertices | 🟫️create-surface | ⛔️refuses-two-vertices |
+      | create-surface-refuses-two-vertices | 🟫️create-surface | ⛔️refuses |
       | delete-surface-cascades-a-window | 🪚️delete-surface | ✅️cascades-a-window |
       | delete-surface-refuses-a-partner | 🪚️delete-surface | ⛔️refuses-a-partner |
       | rename-surface-renames-a-wall | 🏳️rename-surface | ✅️renames-a-wall |
-      | rename-surface-refuses-a-taken-name | 🏳️rename-surface | ⛔️refuses-a-taken-name |
+      | rename-surface-refuses-a-taken-name | 🏳️rename-surface | ⛔️refuses |
       | change-surface-zone-moves-a-wall | 🗜️change-surface-zone | ✅️moves-a-wall |
-      | change-surface-zone-refuses-a-missing-zone | 🗜️change-surface-zone | ⛔️refuses-a-missing-zone |
-      | change-surface-class-turns-a-wall-to-roof | 🧩️change-surface-class | ✅️turns-a-wall-to-roof |
-      | change-surface-class-refuses-a-missing-one | 🧩️change-surface-class | ⛔️refuses-a-missing-one |
-      | replace-surface-vertices-narrows-a-wall | 🔺️replace-surface-vertices | ✅️narrows-a-wall |
-      | replace-surface-vertices-refuses-a-line | 🔺️replace-surface-vertices | ⛔️refuses-a-line |
-      | change-surface-construction-swaps-the-wall-stack | 🧰️change-surface-construction | ✅️swaps-the-wall-stack |
-      | change-surface-construction-refuses-a-missing-one | 🧰️change-surface-construction | ⛔️refuses-a-missing-one |
-      | change-surface-boundary-condition-grounds-a-floor | 🚧️change-surface-boundary-condition | ✅️grounds-a-floor |
-      | change-surface-boundary-condition-refuses-half-a-union | 🚧️change-surface-boundary-condition | ⛔️refuses-half-a-union |
-      | change-surface-sun-exposed-shades-a-wall | 🌅️change-surface-sun-exposed | ✅️shades-a-wall |
-      | change-surface-sun-exposed-refuses-a-missing-one | 🌅️change-surface-sun-exposed | ⛔️refuses-a-missing-one |
-      | change-surface-wind-exposed-shelters-a-wall | 🍃️change-surface-wind-exposed | ✅️shelters-a-wall |
-      | change-surface-wind-exposed-refuses-a-missing-one | 🍃️change-surface-wind-exposed | ⛔️refuses-a-missing-one |
-      | change-surface-multiplier-repeats-a-wall | 🔁️change-surface-multiplier | ✅️repeats-a-wall |
-      | change-surface-multiplier-refuses-zero | 🔁️change-surface-multiplier | ⛔️refuses-zero |
-      | create-fenestration-adds-a-south-window | 🪟️create-fenestration | ✅️adds-a-south-window |
-      | create-fenestration-refuses-a-missing-host | 🪟️create-fenestration | ⛔️refuses-a-missing-host |
-      | delete-fenestration-removes-a-window | 🚪️delete-fenestration | ✅️removes-a-window |
-      | delete-fenestration-refuses-a-missing-one | 🚪️delete-fenestration | ⛔️refuses-a-missing-one |
-      | rename-fenestration-renames-a-window | 🏁️rename-fenestration | ✅️renames-a-window |
-      | rename-fenestration-refuses-a-blank-name | 🏁️rename-fenestration | ⛔️refuses-a-blank-name |
-      | change-fenestration-surface-rehosts-a-window | 🧲️change-fenestration-surface | ✅️rehosts-a-window |
-      | change-fenestration-surface-refuses-a-missing-host | 🧲️change-fenestration-surface | ⛔️refuses-a-missing-host |
-      | change-fenestration-u-value-swaps-the-glazing | 🌐️change-fenestration-u-value | ✅️swaps-the-glazing |
-      | change-fenestration-u-value-refuses-zero-u | 🌐️change-fenestration-u-value | ⛔️refuses-zero-u |
-      | change-fenestration-shgc-dims-the-solar-gain | 🌇️change-fenestration-shgc | ✅️dims-the-solar-gain |
-      | change-fenestration-shgc-refuses-shgc-above-one | 🌇️change-fenestration-shgc | ⛔️refuses-shgc-above-one |
-      | change-fenestration-vlt-dims-the-daylight | 🌈️change-fenestration-vlt | ✅️dims-the-daylight |
-      | change-fenestration-vlt-refuses-negative-vlt | 🌈️change-fenestration-vlt | ⛔️refuses-negative-vlt |
-      | change-fenestration-area-doubles-the-glazing | 🟥️change-fenestration-area | ✅️doubles-the-glazing |
-      | change-fenestration-area-refuses-zero-area | 🟥️change-fenestration-area | ⛔️refuses-zero-area |
-      | change-fenestration-frame-conductance-adds-a-frame | 🖼️change-fenestration-frame-conductance | ✅️adds-a-frame |
-      | change-fenestration-frame-conductance-refuses-negative-frame | 🖼️change-fenestration-frame-conductance | ⛔️refuses-negative-frame |
-      | change-fenestration-divider-conductance-adds-dividers | 🧷️change-fenestration-divider-conductance | ✅️adds-dividers |
-      | change-fenestration-divider-conductance-refuses-a-negative | 🧷️change-fenestration-divider-conductance | ⛔️refuses-a-negative |
-      | create-shading-surface-adds-an-awning | 🌳️create-shading-surface | ✅️adds-an-awning |
-      | create-shading-surface-refuses-a-line | 🌳️create-shading-surface | ⛔️refuses-a-line |
-      | delete-shading-surface-removes-an-awning | 🪵️delete-shading-surface | ✅️removes-an-awning |
-      | delete-shading-surface-refuses-a-missing-one | 🪵️delete-shading-surface | ⛔️refuses-a-missing-one |
-      | rename-shading-surface-renames-an-awning | 🏕️rename-shading-surface | ✅️renames-an-awning |
-      | rename-shading-surface-refuses-a-blank-name | 🏕️rename-shading-surface | ⛔️refuses-a-blank-name |
-      | replace-shading-surface-vertices-deepens-an-awning | 🗺️replace-shading-surface-vertices | ✅️deepens-an-awning |
-      | replace-shading-surface-vertices-refuses-a-line | 🗺️replace-shading-surface-vertices | ⛔️refuses-a-line |
-      | change-shading-surface-transmittance-schedule-lets-light-in | ⛱️change-shading-surface-transmittance-schedule | ✅️lets-light-in |
-      | change-shading-surface-transmittance-schedule-refuses-a-ghost | ⛱️change-shading-surface-transmittance-schedule | ⛔️refuses-a-ghost |
+      | change-surface-zone-refuses-a-missing-zone | 🗜️change-surface-zone | ⛔️refuses |
+      | change-surface-class-turns-a-wall-to-roof | 🧩️change-surface-class | ✅️turns |
+      | change-surface-class-refuses-a-missing-one | 🧩️change-surface-class | ⛔️refuses |
+      | replace-surface-vertices-narrows-a-wall | 🔺️replace-surface-vertices | ✅️narrows |
+      | replace-surface-vertices-refuses-a-line | 🔺️replace-surface-vertices | ⛔️refuses |
+      | change-surface-construction-swaps-the-wall-stack | 🧰️change-surface | ✅️swaps |
+      | change-surface-construction-refuses-a-missing-one | 🧰️change-surface | ⛔️refuses |
+      | change-surface-boundary-condition-grounds-a-floor | 🚧️change-surface-boundary | ✅️grounds |
+      | change-surface-boundary-condition-refuses-half-a-union | 🚧️change-surface-boundary | ⛔️refuses |
+      | change-surface-sun-exposed-shades-a-wall | 🌅️change-surface-sun-exposed | ✅️shades |
+      | change-surface-sun-exposed-refuses-a-missing-one | 🌅️change-surface-sun-exposed | ⛔️refuses |
+      | change-surface-wind-exposed-shelters-a-wall | 🍃️change-surface-wind | ✅️shelters |
+      | change-surface-wind-exposed-refuses-a-missing-one | 🍃️change-surface-wind | ⛔️refuses |
+      | change-surface-multiplier-repeats-a-wall | 🔁️change-surface-multiplier | ✅️repeats |
+      | change-surface-multiplier-refuses-zero | 🔁️change-surface-multiplier | ⛔️refuses |
+      | create-fenestration-adds-a-south-window | 🪟️create-fenestration | ✅️adds |
+      | create-fenestration-refuses-a-missing-host | 🪟️create-fenestration | ⛔️refuses |
+      | delete-fenestration-removes-a-window | 🚪️delete-fenestration | ✅️removes |
+      | delete-fenestration-refuses-a-missing-one | 🚪️delete-fenestration | ⛔️refuses |
+      | rename-fenestration-renames-a-window | 🏁️rename-fenestration | ✅️renames |
+      | rename-fenestration-refuses-a-blank-name | 🏁️rename-fenestration | ⛔️refuses |
+      | change-fenestration-surface-rehosts-a-window | 🧲️change-fenestration | ✅️rehosts |
+      | change-fenestration-surface-refuses-a-missing-host | 🧲️change-fenestration | ⛔️refuses |
+      | change-fenestration-u-value-swaps-the-glazing | 🌐️change-fenestration-u | ✅️swaps |
+      | change-fenestration-u-value-refuses-zero-u | 🌐️change-fenestration-u | ⛔️refuses |
+      | change-fenestration-shgc-dims-the-solar-gain | 🌇️change-fenestration-shgc | ✅️dims |
+      | change-fenestration-shgc-refuses-shgc-above-one | 🌇️change-fenestration-shgc | ⛔️refuses |
+      | change-fenestration-vlt-dims-the-daylight | 🌈️change-fenestration-vlt | ✅️dims |
+      | change-fenestration-vlt-refuses-negative-vlt | 🌈️change-fenestration-vlt | ⛔️refuses |
+      | change-fenestration-area-doubles-the-glazing | 🟥️change-fenestration-area | ✅️doubles |
+      | change-fenestration-area-refuses-zero-area | 🟥️change-fenestration-area | ⛔️refuses |
+      | change-fenestration-frame-conductance-adds-a-frame | 🖼️change-fenestration-frame | ✅️adds-a |
+      | change-fenestration-frame-conductance-refuses-negative-frame | 🖼️change-fenestration-frame | ⛔️refuses |
+      | change-fenestration-divider-conductance-adds-dividers | 🧷️change-fenestration | ✅️adds |
+      | change-fenestration-divider-conductance-refuses-a-negative | 🧷️change-fenestration | ⛔️refuses |
+      | create-shading-surface-adds-an-awning | 🌳️create-shading-surface | ✅️adds |
+      | create-shading-surface-refuses-a-line | 🌳️create-shading-surface | ⛔️refuses |
+      | delete-shading-surface-removes-an-awning | 🪵️delete-shading-surface | ✅️removes |
+      | delete-shading-surface-refuses-a-missing-one | 🪵️delete-shading-surface | ⛔️refuses |
+      | rename-shading-surface-renames-an-awning | 🏕️rename-shading-surface | ✅️renames |
+      | rename-shading-surface-refuses-a-blank-name | 🏕️rename-shading-surface | ⛔️refuses |
+      | replace-shading-surface-vertices-deepens-an-awning | 🗺️replace-shading-surface | ✅️deepens |
+      | replace-shading-surface-vertices-refuses-a-line | 🗺️replace-shading-surface | ⛔️refuses |
+      | change-shading-surface-transmittance-schedule-lets-light-in | ⛱️change-shading-surface | ✅️lets |
+      | change-shading-surface-transmittance-schedule-refuses-a-ghost | ⛱️change-shading-surface | ⛔️refuses |
       | connect-surfaces-joins-two-walls | 🤝️connect-surfaces | ✅️joins-two-walls |
-      | connect-surfaces-refuses-a-self-pair | 🤝️connect-surfaces | ⛔️refuses-a-self-pair |
-      | disconnect-surfaces-parts-two-walls | 💔️disconnect-surfaces | ✅️parts-two-walls |
-      | disconnect-surfaces-refuses-a-missing-pair | 💔️disconnect-surfaces | ⛔️refuses-a-missing-pair |
-      | bind-fenestration-glazing-construction-glazes-a-window | 🧊️bind-fenestration-glazing-construction | ✅️glazes-a-window |
-      | bind-fenestration-glazing-construction-refuses-no-stack | 🧊️bind-fenestration-glazing-construction | ⛔️refuses-no-stack |
-      | clear-fenestration-glazing-construction-ungazes-a-window | 🫗️clear-fenestration-glazing-construction | ✅️ungazes-a-window |
-      | clear-fenestration-glazing-construction-refuses-empty | 🫗️clear-fenestration-glazing-construction | ⛔️refuses-empty |
-      | change-fenestration-height-raises-the-head | ⬆️change-fenestration-height | ✅️raises-the-head |
-      | change-fenestration-height-refuses-zero-height | ⬆️change-fenestration-height | ⛔️refuses-zero-height |
-      | change-fenestration-sill-height-raises-the-sill | ⬇️change-fenestration-sill-height | ✅️raises-the-sill |
-      | change-fenestration-sill-height-refuses-negative-sill | ⬇️change-fenestration-sill-height | ⛔️refuses-negative-sill |
-      | change-fenestration-overhang-depth-adds-case-610-shade | 🧢️change-fenestration-overhang-depth | ✅️adds-case-610-shade |
-      | change-fenestration-overhang-depth-refuses-negative-depth | 🧢️change-fenestration-overhang-depth | ⛔️refuses-negative-depth |
-      | change-fenestration-overhang-offset-lifts-the-overhang | 🎩️change-fenestration-overhang-offset | ✅️lifts-the-overhang |
-      | change-fenestration-overhang-offset-refuses-negative-offset | 🎩️change-fenestration-overhang-offset | ⛔️refuses-negative-offset |
-      | change-fenestration-fin-depth-adds-case-630-fins | 🐬️change-fenestration-fin-depth | ✅️adds-case-630-fins |
-      | change-fenestration-fin-depth-refuses-negative-fin | 🐬️change-fenestration-fin-depth | ⛔️refuses-negative-fin |
-      | change-fenestration-fin-offset-spreads-the-fins | 🐋️change-fenestration-fin-offset | ✅️spreads-the-fins |
-      | change-fenestration-fin-offset-refuses-negative-offset | 🐋️change-fenestration-fin-offset | ⛔️refuses-negative-offset |
+      | connect-surfaces-refuses-a-self-pair | 🤝️connect-surfaces | ⛔️refuses |
+      | disconnect-surfaces-parts-two-walls | 💔️disconnect-surfaces | ✅️parts |
+      | disconnect-surfaces-refuses-a-missing-pair | 💔️disconnect-surfaces | ⛔️refuses |
+      | bind-fenestration-glazing-construction-glazes-a-window | 🧊️bind-fenestration-glazing | ✅️glazes |
+      | bind-fenestration-glazing-construction-refuses-no-stack | 🧊️bind-fenestration-glazing | ⛔️refuses |
+      | clear-fenestration-glazing-construction-ungazes-a-window | 🫗️clear-fenestration-glazing | ✅️ungazes |
+      | clear-fenestration-glazing-construction-refuses-empty | 🫗️clear-fenestration-glazing | ⛔️refuses |
+      | change-fenestration-height-raises-the-head | ⬆️change-fenestration-height | ✅️raises |
+      | change-fenestration-height-refuses-zero-height | ⬆️change-fenestration-height | ⛔️refuses |
+      | change-fenestration-sill-height-raises-the-sill | ⬇️change-fenestration-sill | ✅️raises |
+      | change-fenestration-sill-height-refuses-negative-sill | ⬇️change-fenestration-sill | ⛔️refuses |
+      | change-fenestration-overhang-depth-adds-case-610-shade | 🧢️change-fenestration | ✅️adds |
+      | change-fenestration-overhang-depth-refuses-negative-depth | 🧢️change-fenestration | ⛔️refuses |
+      | change-fenestration-overhang-offset-lifts-the-overhang | 🎩️change-fenestration | ✅️lifts |
+      | change-fenestration-overhang-offset-refuses-negative-offset | 🎩️change-fenestration | ⛔️refuses |
+      | change-fenestration-fin-depth-adds-case-630-fins | 🐬️change-fenestration-fin | ✅️adds |
+      | change-fenestration-fin-depth-refuses-negative-fin | 🐬️change-fenestration-fin | ⛔️refuses |
+      | change-fenestration-fin-offset-spreads-the-fins | 🐋️change-fenestration-fin | ✅️spreads |
+      | change-fenestration-fin-offset-refuses-negative-offset | 🐋️change-fenestration-fin | ⛔️refuses |
       | create-material-applies | 🧱️create-material | ✅️applies |
       | create-material-refuses | 🧱️create-material | ⛔️refuses |
       | delete-material-applies | 🪨️delete-material | ✅️applies |
@@ -760,18 +760,18 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | rename-material-refuses | 🪧️rename-material | ⛔️refuses |
       | change-material-thickness-applies | 📏️change-material-thickness | ✅️applies |
       | change-material-thickness-refuses | 📏️change-material-thickness | ⛔️refuses |
-      | change-material-conductivity-applies | 🔥️change-material-conductivity | ✅️applies |
-      | change-material-conductivity-refuses | 🔥️change-material-conductivity | ⛔️refuses |
+      | change-material-conductivity-applies | 🔥️change-material | ✅️applies |
+      | change-material-conductivity-refuses | 🔥️change-material | ⛔️refuses |
       | change-material-density-applies | ⚖️change-material-density | ✅️applies |
       | change-material-density-refuses | ⚖️change-material-density | ⛔️refuses |
-      | change-material-specific-heat-applies | ♨️change-material-specific-heat | ✅️applies |
-      | change-material-specific-heat-refuses | ♨️change-material-specific-heat | ⛔️refuses |
-      | change-material-thermal-absorptance-applies | 🔆️change-material-thermal-absorptance | ✅️applies |
-      | change-material-thermal-absorptance-refuses | 🔆️change-material-thermal-absorptance | ⛔️refuses |
-      | change-material-solar-absorptance-applies | ☀️change-material-solar-absorptance | ✅️applies |
-      | change-material-solar-absorptance-refuses | ☀️change-material-solar-absorptance | ⛔️refuses |
-      | change-material-visible-absorptance-applies | 👁️change-material-visible-absorptance | ✅️applies |
-      | change-material-visible-absorptance-refuses | 👁️change-material-visible-absorptance | ⛔️refuses |
+      | change-material-specific-heat-applies | ♨️change-material-specific | ✅️applies |
+      | change-material-specific-heat-refuses | ♨️change-material-specific | ⛔️refuses |
+      | change-material-thermal-absorptance-applies | 🔆️change-material-thermal | ✅️applies |
+      | change-material-thermal-absorptance-refuses | 🔆️change-material-thermal | ⛔️refuses |
+      | change-material-solar-absorptance-applies | ☀️change-material-solar | ✅️applies |
+      | change-material-solar-absorptance-refuses | ☀️change-material-solar | ⛔️refuses |
+      | change-material-visible-absorptance-applies | 👁️change-material-visible | ✅️applies |
+      | change-material-visible-absorptance-refuses | 👁️change-material-visible | ⛔️refuses |
       | create-construction-applies | 🏗️create-construction | ✅️applies |
       | create-construction-refuses | 🏗️create-construction | ⛔️refuses |
       | delete-construction-applies | 🧨️delete-construction | ✅️applies |
@@ -782,8 +782,8 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | add-construction-layer-refuses | ➕️add-construction-layer | ⛔️refuses |
       | remove-construction-layer-applies | ➖️remove-construction-layer | ✅️applies |
       | remove-construction-layer-refuses | ➖️remove-construction-layer | ⛔️refuses |
-      | reorder-construction-layers-applies | 🔀️reorder-construction-layers | ✅️applies |
-      | reorder-construction-layers-refuses | 🔀️reorder-construction-layers | ⛔️refuses |
+      | reorder-construction-layers-applies | 🔀️reorder-construction | ✅️applies |
+      | reorder-construction-layers-refuses | 🔀️reorder-construction | ⛔️refuses |
       | create-people-gain-applies | 👤️create-people-gain | ✅️applies |
       | create-people-gain-refuses | 👤️create-people-gain | ⛔️refuses |
       | delete-people-gain-applies | 🚷️delete-people-gain | ✅️applies |
@@ -792,260 +792,260 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-people-gain-zone-refuses | 🚶️change-people-gain-zone | ⛔️refuses |
       | change-people-gain-schedule-applies | ⏰️change-people-gain-schedule | ✅️applies |
       | change-people-gain-schedule-refuses | ⏰️change-people-gain-schedule | ⛔️refuses |
-      | change-people-gain-activity-schedule-applies | 🏃️change-people-gain-activity-schedule | ✅️applies |
-      | change-people-gain-activity-schedule-refuses | 🏃️change-people-gain-activity-schedule | ⛔️refuses |
-      | change-people-gain-people-per-area-applies | 👥️change-people-gain-people-per-area | ✅️applies |
-      | change-people-gain-people-per-area-refuses | 👥️change-people-gain-people-per-area | ⛔️refuses |
-      | change-people-gain-sensible-fraction-applies | 🌞️change-people-gain-sensible-fraction | ✅️applies |
-      | change-people-gain-sensible-fraction-refuses | 🌞️change-people-gain-sensible-fraction | ⛔️refuses |
-      | change-people-gain-latent-fraction-applies | 💧️change-people-gain-latent-fraction | ✅️applies |
-      | change-people-gain-latent-fraction-refuses | 💧️change-people-gain-latent-fraction | ⛔️refuses |
-      | change-people-gain-radiant-fraction-applies | 📡️change-people-gain-radiant-fraction | ✅️applies |
-      | change-people-gain-radiant-fraction-refuses | 📡️change-people-gain-radiant-fraction | ⛔️refuses |
+      | change-people-gain-activity-schedule-applies | 🏃️change-people-gain | ✅️applies |
+      | change-people-gain-activity-schedule-refuses | 🏃️change-people-gain | ⛔️refuses |
+      | change-people-gain-people-per-area-applies | 👥️change-people-gain-people | ✅️applies |
+      | change-people-gain-people-per-area-refuses | 👥️change-people-gain-people | ⛔️refuses |
+      | change-people-gain-sensible-fraction-applies | 🌞️change-people-gain | ✅️applies |
+      | change-people-gain-sensible-fraction-refuses | 🌞️change-people-gain | ⛔️refuses |
+      | change-people-gain-latent-fraction-applies | 💧️change-people-gain-latent | ✅️applies |
+      | change-people-gain-latent-fraction-refuses | 💧️change-people-gain-latent | ⛔️refuses |
+      | change-people-gain-radiant-fraction-applies | 📡️change-people-gain-radiant | ✅️applies |
+      | change-people-gain-radiant-fraction-refuses | 📡️change-people-gain-radiant | ⛔️refuses |
       | create-lighting-gain-applies | 💡️create-lighting-gain | ✅️applies |
       | create-lighting-gain-refuses | 💡️create-lighting-gain | ⛔️refuses |
       | delete-lighting-gain-applies | 🕯️delete-lighting-gain | ✅️applies |
       | delete-lighting-gain-refuses | 🕯️delete-lighting-gain | ⛔️refuses |
       | change-lighting-gain-zone-applies | 🔦️change-lighting-gain-zone | ✅️applies |
       | change-lighting-gain-zone-refuses | 🔦️change-lighting-gain-zone | ⛔️refuses |
-      | change-lighting-gain-schedule-applies | ⏱️change-lighting-gain-schedule | ✅️applies |
-      | change-lighting-gain-schedule-refuses | ⏱️change-lighting-gain-schedule | ⛔️refuses |
-      | change-lighting-gain-watts-per-area-applies | 🔌️change-lighting-gain-watts-per-area | ✅️applies |
-      | change-lighting-gain-watts-per-area-refuses | 🔌️change-lighting-gain-watts-per-area | ⛔️refuses |
-      | change-lighting-gain-radiant-fraction-applies | 🌟️change-lighting-gain-radiant-fraction | ✅️applies |
-      | change-lighting-gain-radiant-fraction-refuses | 🌟️change-lighting-gain-radiant-fraction | ⛔️refuses |
-      | change-lighting-gain-visible-fraction-applies | 🔅️change-lighting-gain-visible-fraction | ✅️applies |
-      | change-lighting-gain-visible-fraction-refuses | 🔅️change-lighting-gain-visible-fraction | ⛔️refuses |
-      | change-lighting-gain-return-air-fraction-applies | 🎐️change-lighting-gain-return-air-fraction | ✅️applies |
-      | change-lighting-gain-return-air-fraction-refuses | 🎐️change-lighting-gain-return-air-fraction | ⛔️refuses |
+      | change-lighting-gain-schedule-applies | ⏱️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-schedule-refuses | ⏱️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-watts-per-area-applies | 🔌️change-lighting-gain-watts | ✅️applies |
+      | change-lighting-gain-watts-per-area-refuses | 🔌️change-lighting-gain-watts | ⛔️refuses |
+      | change-lighting-gain-radiant-fraction-applies | 🌟️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-radiant-fraction-refuses | 🌟️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-visible-fraction-applies | 🔅️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-visible-fraction-refuses | 🔅️change-lighting-gain | ⛔️refuses |
+      | change-lighting-gain-return-air-fraction-applies | 🎐️change-lighting-gain | ✅️applies |
+      | change-lighting-gain-return-air-fraction-refuses | 🎐️change-lighting-gain | ⛔️refuses |
       | create-equipment-gain-applies | 🖥️create-equipment-gain | ✅️applies |
       | create-equipment-gain-refuses | 🖥️create-equipment-gain | ⛔️refuses |
       | delete-equipment-gain-applies | 🧯️delete-equipment-gain | ✅️applies |
       | delete-equipment-gain-refuses | 🧯️delete-equipment-gain | ⛔️refuses |
       | change-equipment-gain-zone-applies | 🖨️change-equipment-gain-zone | ✅️applies |
       | change-equipment-gain-zone-refuses | 🖨️change-equipment-gain-zone | ⛔️refuses |
-      | change-equipment-gain-schedule-applies | ⌛️change-equipment-gain-schedule | ✅️applies |
-      | change-equipment-gain-schedule-refuses | ⌛️change-equipment-gain-schedule | ⛔️refuses |
-      | change-equipment-gain-watts-per-area-applies | ⚡️change-equipment-gain-watts-per-area | ✅️applies |
-      | change-equipment-gain-watts-per-area-refuses | ⚡️change-equipment-gain-watts-per-area | ⛔️refuses |
-      | change-equipment-gain-radiant-fraction-applies | 🌠️change-equipment-gain-radiant-fraction | ✅️applies |
-      | change-equipment-gain-radiant-fraction-refuses | 🌠️change-equipment-gain-radiant-fraction | ⛔️refuses |
-      | change-equipment-gain-latent-fraction-applies | 💦️change-equipment-gain-latent-fraction | ✅️applies |
-      | change-equipment-gain-latent-fraction-refuses | 💦️change-equipment-gain-latent-fraction | ⛔️refuses |
+      | change-equipment-gain-schedule-applies | ⌛️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-schedule-refuses | ⌛️change-equipment-gain | ⛔️refuses |
+      | change-equipment-gain-watts-per-area-applies | ⚡️change-equipment-gain-watts | ✅️applies |
+      | change-equipment-gain-watts-per-area-refuses | ⚡️change-equipment-gain-watts | ⛔️refuses |
+      | change-equipment-gain-radiant-fraction-applies | 🌠️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-radiant-fraction-refuses | 🌠️change-equipment-gain | ⛔️refuses |
+      | change-equipment-gain-latent-fraction-applies | 💦️change-equipment-gain | ✅️applies |
+      | change-equipment-gain-latent-fraction-refuses | 💦️change-equipment-gain | ⛔️refuses |
       | create-infiltration-applies | 💨️create-infiltration | ✅️applies |
       | create-infiltration-refuses | 💨️create-infiltration | ⛔️refuses |
       | delete-infiltration-applies | 🧽️delete-infiltration | ✅️applies |
       | delete-infiltration-refuses | 🧽️delete-infiltration | ⛔️refuses |
       | change-infiltration-zone-applies | 🌀️change-infiltration-zone | ✅️applies |
       | change-infiltration-zone-refuses | 🌀️change-infiltration-zone | ⛔️refuses |
-      | change-infiltration-schedule-applies | ⏳️change-infiltration-schedule | ✅️applies |
-      | change-infiltration-schedule-refuses | ⏳️change-infiltration-schedule | ⛔️refuses |
-      | change-infiltration-flow-per-exterior-area-applies | 🌫️change-infiltration-flow-per-exterior-area | ✅️applies |
-      | change-infiltration-flow-per-exterior-area-refuses | 🌫️change-infiltration-flow-per-exterior-area | ⛔️refuses |
-      | change-infiltration-constant-term-coefficient-applies | 🅰️change-infiltration-constant-term-coefficient | ✅️applies |
-      | change-infiltration-constant-term-coefficient-refuses | 🅰️change-infiltration-constant-term-coefficient | ⛔️refuses |
+      | change-infiltration-schedule-applies | ⏳️change-infiltration | ✅️applies |
+      | change-infiltration-schedule-refuses | ⏳️change-infiltration | ⛔️refuses |
+      | change-infiltration-flow-per-exterior-area-applies | 🌫️change-infiltration-flow | ✅️applies |
+      | change-infiltration-flow-per-exterior-area-refuses | 🌫️change-infiltration-flow | ⛔️refuses |
+      | change-infiltration-constant-term-coefficient-applies | 🅰️change-infiltration | ✅️applies |
+      | change-infiltration-constant-term-coefficient-refuses | 🅰️change-infiltration | ⛔️refuses |
       | change-infiltration-temperature-term-coefficient-applies | 🅱️change-infiltration-temperature-term-coefficient | ✅️applies |
       | change-infiltration-temperature-term-coefficient-refuses | 🅱️change-infiltration-temperature-term-coefficient | ⛔️refuses |
-      | change-infiltration-velocity-term-coefficient-applies | 🆎️change-infiltration-velocity-term-coefficient | ✅️applies |
-      | change-infiltration-velocity-term-coefficient-refuses | 🆎️change-infiltration-velocity-term-coefficient | ⛔️refuses |
+      | change-infiltration-velocity-term-coefficient-applies | 🆎️change-infiltration | ✅️applies |
+      | change-infiltration-velocity-term-coefficient-refuses | 🆎️change-infiltration | ⛔️refuses |
       | change-infiltration-velocity-squared-term-coefficient-applies | 🆑️change-infiltration-velocity-squared-term-coefficient | ✅️applies |
       | change-infiltration-velocity-squared-term-coefficient-refuses | 🆑️change-infiltration-velocity-squared-term-coefficient | ⛔️refuses |
-      | create-mechanical-ventilation-applies | 🌪️create-mechanical-ventilation | ✅️applies |
-      | create-mechanical-ventilation-refuses | 🌪️create-mechanical-ventilation | ⛔️refuses |
-      | delete-mechanical-ventilation-applies | 🚫️delete-mechanical-ventilation | ✅️applies |
-      | delete-mechanical-ventilation-refuses | 🚫️delete-mechanical-ventilation | ⛔️refuses |
-      | change-mechanical-ventilation-zone-applies | 🧭️change-mechanical-ventilation-zone | ✅️applies |
-      | change-mechanical-ventilation-zone-refuses | 🧭️change-mechanical-ventilation-zone | ⛔️refuses |
-      | change-mechanical-ventilation-schedule-applies | 📆️change-mechanical-ventilation-schedule | ✅️applies |
-      | change-mechanical-ventilation-schedule-refuses | 📆️change-mechanical-ventilation-schedule | ⛔️refuses |
-      | change-mechanical-ventilation-design-flow-applies | 🚿️change-mechanical-ventilation-design-flow | ✅️applies |
-      | change-mechanical-ventilation-design-flow-refuses | 🚿️change-mechanical-ventilation-design-flow | ⛔️refuses |
+      | create-mechanical-ventilation-applies | 🌪️create-mechanical | ✅️applies |
+      | create-mechanical-ventilation-refuses | 🌪️create-mechanical | ⛔️refuses |
+      | delete-mechanical-ventilation-applies | 🚫️delete-mechanical | ✅️applies |
+      | delete-mechanical-ventilation-refuses | 🚫️delete-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-zone-applies | 🧭️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-zone-refuses | 🧭️change-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-schedule-applies | 📆️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-schedule-refuses | 📆️change-mechanical | ⛔️refuses |
+      | change-mechanical-ventilation-design-flow-applies | 🚿️change-mechanical | ✅️applies |
+      | change-mechanical-ventilation-design-flow-refuses | 🚿️change-mechanical | ⛔️refuses |
       | change-mechanical-ventilation-fan-total-efficiency-applies | 💠️change-mechanical-ventilation-fan-total-efficiency | ✅️applies |
       | change-mechanical-ventilation-fan-total-efficiency-refuses | 💠️change-mechanical-ventilation-fan-total-efficiency | ⛔️refuses |
       | change-mechanical-ventilation-fan-delta-pressure-applies | 🎈️change-mechanical-ventilation-fan-delta-pressure | ✅️applies |
       | change-mechanical-ventilation-fan-delta-pressure-refuses | 🎈️change-mechanical-ventilation-fan-delta-pressure | ⛔️refuses |
       | change-infiltration-method-applies | 🔬️change-infiltration-method | ✅️applies |
       | change-infiltration-method-refuses | 🔬️change-infiltration-method | ⛔️refuses |
-      | change-infiltration-design-flow-ach-applies | 🔄️change-infiltration-design-flow-ach | ✅️applies |
-      | change-infiltration-design-flow-ach-refuses | 🔄️change-infiltration-design-flow-ach | ⛔️refuses |
-      | change-infiltration-effective-leakage-area-applies | 🕳️change-infiltration-effective-leakage-area | ✅️applies |
-      | change-infiltration-effective-leakage-area-refuses | 🕳️change-infiltration-effective-leakage-area | ⛔️refuses |
-      | change-infiltration-discharge-coefficient-applies | 🚰️change-infiltration-discharge-coefficient | ✅️applies |
-      | change-infiltration-discharge-coefficient-refuses | 🚰️change-infiltration-discharge-coefficient | ⛔️refuses |
-      | change-infiltration-stack-height-applies | 🏭️change-infiltration-stack-height | ✅️applies |
-      | change-infiltration-stack-height-refuses | 🏭️change-infiltration-stack-height | ⛔️refuses |
-      | create-thermostat-controls-zone-one | 🩺️create-thermostat | ✅️controls-zone-one |
-      | create-thermostat-refuses-an-absent-zone | 🩺️create-thermostat | ⛔️refuses-an-absent-zone |
+      | change-infiltration-design-flow-ach-applies | 🔄️change-infiltration-design | ✅️applies |
+      | change-infiltration-design-flow-ach-refuses | 🔄️change-infiltration-design | ⛔️refuses |
+      | change-infiltration-effective-leakage-area-applies | 🕳️change-infiltration | ✅️applies |
+      | change-infiltration-effective-leakage-area-refuses | 🕳️change-infiltration | ⛔️refuses |
+      | change-infiltration-discharge-coefficient-applies | 🚰️change-infiltration | ✅️applies |
+      | change-infiltration-discharge-coefficient-refuses | 🚰️change-infiltration | ⛔️refuses |
+      | change-infiltration-stack-height-applies | 🏭️change-infiltration-stack | ✅️applies |
+      | change-infiltration-stack-height-refuses | 🏭️change-infiltration-stack | ⛔️refuses |
+      | create-thermostat-controls-zone-one | 🩺️create-thermostat | ✅️controls |
+      | create-thermostat-refuses-an-absent-zone | 🩺️create-thermostat | ⛔️refuses |
       | delete-thermostat-frees-zone-one | 🛑️delete-thermostat | ✅️frees-zone-one |
-      | delete-thermostat-refuses-an-absent-one | 🛑️delete-thermostat | ⛔️refuses-an-absent-one |
-      | change-thermostat-zone-moves-to-zone-two | 🛖️change-thermostat-zone | ✅️moves-to-zone-two |
-      | change-thermostat-zone-refuses-an-absent-zone | 🛖️change-thermostat-zone | ⛔️refuses-an-absent-zone |
-      | change-thermostat-heating-setpoint-schedule-repoints-heating | 🥵️change-thermostat-heating-setpoint-schedule | ✅️repoints-heating |
-      | change-thermostat-heating-setpoint-schedule-refuses-an-absent-one | 🥵️change-thermostat-heating-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-thermostat-cooling-setpoint-schedule-repoints-cooling | 🐧️change-thermostat-cooling-setpoint-schedule | ✅️repoints-cooling |
-      | change-thermostat-cooling-setpoint-schedule-refuses-an-absent-one | 🐧️change-thermostat-cooling-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-thermostat-heating-throttle-range-widens-heating-band | 🎚️change-thermostat-heating-throttle-range | ✅️widens-heating-band |
-      | change-thermostat-heating-throttle-range-refuses-a-zero-band | 🎚️change-thermostat-heating-throttle-range | ⛔️refuses-a-zero-band |
-      | change-thermostat-cooling-throttle-range-widens-cooling-band | 🎛️change-thermostat-cooling-throttle-range | ✅️widens-cooling-band |
-      | change-thermostat-cooling-throttle-range-refuses-a-negative-band | 🎛️change-thermostat-cooling-throttle-range | ⛔️refuses-a-negative-band |
-      | create-humidistat-controls-zone-one | 🌂️create-humidistat | ✅️controls-zone-one |
-      | create-humidistat-refuses-an-absent-one | 🌂️create-humidistat | ⛔️refuses-an-absent-one |
-      | delete-humidistat-drops-the-control | 🏜️delete-humidistat | ✅️drops-the-control |
-      | delete-humidistat-refuses-an-absent-one | 🏜️delete-humidistat | ⛔️refuses-an-absent-one |
-      | change-humidistat-zone-moves-to-zone-two | 🏙️change-humidistat-zone | ✅️moves-to-zone-two |
-      | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses-an-absent-zone |
-      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints-humidifying |
-      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses-an-absent-one |
-      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat-dehumidifying-setpoint | ✅️repoints-drying |
-      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat-dehumidifying-setpoint | ⛔️refuses-an-absent-one |
-      | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat-humidifying-throttle-range | ✅️widens-the-band |
-      | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat-humidifying-throttle-range | ⛔️refuses-a-zero-band |
-      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat-dehumidifying-throttle | ✅️widens-the-band |
-      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat-dehumidifying-throttle | ⛔️refuses-a-negative-band |
-      | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves-zone-one |
-      | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses-an-absent-zone |
-      | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops-the-system |
-      | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses-an-absent-one |
-      | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system-zone | ✅️moves-to-zone-two |
-      | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system-zone | ⛔️refuses-an-absent-zone |
-      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system-max-heating-supply | ✅️cools-the-supply |
-      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system-max-heating-supply | ⛔️refuses-a-hot-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ✅️lowers-the-supply |
-      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system-min-cooling-supply | ⛔️refuses-a-cold-supply |
-      | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system-max-heating-capacity | ✅️caps-the-heating |
-      | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system-max-heating-capacity | ⛔️refuses-a-stray-value |
-      | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system-max-cooling-capacity | ✅️caps-the-cooling |
-      | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 🟧️change-ideal-loads-system-max-cooling-capacity | ⛔️refuses-a-stray-value |
-      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates-per-head |
-      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses-a-negative |
-      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates-per-area |
-      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses-a-negative |
-      | create-zone-equipment-adds-a-baseboard | 🛠️create-zone-equipment | ✅️adds-a-baseboard |
-      | create-zone-equipment-refuses-rank-zero | 🛠️create-zone-equipment | ⛔️refuses-rank-zero |
-      | delete-zone-equipment-drops-the-baseboard | 🗑️delete-zone-equipment | ✅️drops-the-baseboard |
-      | delete-zone-equipment-refuses-an-absent-one | 🗑️delete-zone-equipment | ⛔️refuses-an-absent-one |
-      | change-zone-equipment-zone-moves-to-zone-two | 🏬️change-zone-equipment-zone | ✅️moves-to-zone-two |
-      | change-zone-equipment-zone-refuses-an-absent-zone | 🏬️change-zone-equipment-zone | ⛔️refuses-an-absent-zone |
-      | change-zone-equipment-type-swaps-to-a-fan-coil | 🔧️change-zone-equipment-type | ✅️swaps-to-a-fan-coil |
-      | change-zone-equipment-type-refuses-an-absent-row | 🔧️change-zone-equipment-type | ⛔️refuses-an-absent-row |
-      | change-zone-equipment-priority-demotes-it | 🎗️change-zone-equipment-priority | ✅️demotes-it |
-      | change-zone-equipment-priority-refuses-rank-zero | 🎗️change-zone-equipment-priority | ⛔️refuses-rank-zero |
-      | change-zone-equipment-heating-capacity-uprates-heating | 🧇️change-zone-equipment-heating-capacity | ✅️uprates-heating |
-      | change-zone-equipment-heating-capacity-refuses-a-negative | 🧇️change-zone-equipment-heating-capacity | ⛔️refuses-a-negative |
-      | change-zone-equipment-cooling-capacity-uprates-cooling | 🍧️change-zone-equipment-cooling-capacity | ✅️uprates-cooling |
-      | change-zone-equipment-cooling-capacity-refuses-a-negative | 🍧️change-zone-equipment-cooling-capacity | ⛔️refuses-a-negative |
-      | create-daylight-zone-lights-zone-one | 🔭️create-daylight-zone | ✅️lights-zone-one |
-      | create-daylight-zone-refuses-a-bad-tau | 🔭️create-daylight-zone | ⛔️refuses-a-bad-tau |
-      | delete-daylight-zone-darkens-the-zone | 🌗️delete-daylight-zone | ✅️darkens-the-zone |
-      | delete-daylight-zone-refuses-an-absent-one | 🌗️delete-daylight-zone | ⛔️refuses-an-absent-one |
-      | change-daylight-zone-zone-moves-to-zone-two | 🏫️change-daylight-zone-zone | ✅️moves-to-zone-two |
-      | change-daylight-zone-zone-refuses-an-absent-zone | 🏫️change-daylight-zone-zone | ⛔️refuses-an-absent-zone |
-      | change-daylight-zone-illuminance-target-dims-the-target | 🪔️change-daylight-zone-illuminance-target | ✅️dims-the-target |
-      | change-daylight-zone-illuminance-target-refuses-a-dark-target | 🪔️change-daylight-zone-illuminance-target | ⛔️refuses-a-dark-target |
-      | change-daylight-zone-glare-limit-tightens-glare | 🕶️change-daylight-zone-glare-limit | ✅️tightens-glare |
-      | change-daylight-zone-glare-limit-refuses-a-negative | 🕶️change-daylight-zone-glare-limit | ⛔️refuses-a-negative |
-      | change-daylight-zone-window-transmittance-darkens-the-glass | 🥃️change-daylight-zone-window-transmittance | ✅️darkens-the-glass |
-      | change-daylight-zone-window-transmittance-refuses-a-bad-tau | 🥃️change-daylight-zone-window-transmittance | ⛔️refuses-a-bad-tau |
-      | create-sizing-object-sizes-zone-one | 📶️create-sizing-object | ✅️sizes-zone-one |
-      | create-sizing-object-refuses-an-absent-zone | 📶️create-sizing-object | ⛔️refuses-an-absent-zone |
-      | delete-sizing-object-drops-the-sizing | 🪒️delete-sizing-object | ✅️drops-the-sizing |
-      | delete-sizing-object-refuses-an-absent-one | 🪒️delete-sizing-object | ⛔️refuses-an-absent-one |
-      | change-sizing-object-zone-moves-to-zone-two | 🏨️change-sizing-object-zone | ✅️moves-to-zone-two |
-      | change-sizing-object-zone-refuses-an-absent-zone | 🏨️change-sizing-object-zone | ⛔️refuses-an-absent-zone |
-      | change-sizing-object-sizing-type-sizes-for-cooling | 🧾️change-sizing-object-sizing-type | ✅️sizes-for-cooling |
-      | change-sizing-object-sizing-type-refuses-an-absent-row | 🧾️change-sizing-object-sizing-type | ⛔️refuses-an-absent-row |
-      | change-sizing-object-design-day-type-reads-a-hot-day | 🌥️change-sizing-object-design-day-type | ✅️reads-a-hot-day |
-      | change-sizing-object-design-day-type-refuses-an-absent-row | 🌥️change-sizing-object-design-day-type | ⛔️refuses-an-absent-row |
-      | create-room-air-model-assignment-stratifies-zone-two | 🛏️create-room-air-model-assignment | ✅️stratifies-zone-two |
-      | create-room-air-model-assignment-refuses-a-second-one | 🛏️create-room-air-model-assignment | ⛔️refuses-a-second-one |
-      | delete-room-air-model-assignment-falls-back | 🧺️delete-room-air-model-assignment | ✅️falls-back |
-      | delete-room-air-model-assignment-refuses-an-absent-one | 🧺️delete-room-air-model-assignment | ⛔️refuses-an-absent-one |
-      | change-room-air-model-stratifies-the-air | 🪭️change-room-air-model | ✅️stratifies-the-air |
-      | change-room-air-model-refuses-an-absent-row | 🪭️change-room-air-model | ⛔️refuses-an-absent-row |
-      | create-setpoint-manager-adds-a-scheduled-spm | 📌️create-setpoint-manager | ✅️adds-a-scheduled-spm |
-      | create-setpoint-manager-refuses-a-bad-kind | 📌️create-setpoint-manager | ⛔️refuses-a-bad-kind |
-      | delete-setpoint-manager-drops-the-spm | 🍄️delete-setpoint-manager | ✅️drops-the-spm |
-      | delete-setpoint-manager-refuses-an-absent-one | 🍄️delete-setpoint-manager | ⛔️refuses-an-absent-one |
-      | rename-setpoint-manager-renames-the-spm | 🖇️rename-setpoint-manager | ✅️renames-the-spm |
-      | rename-setpoint-manager-refuses-a-blank-name | 🖇️rename-setpoint-manager | ⛔️refuses-a-blank-name |
-      | replace-setpoint-manager-kind-resets-on-outdoor-air | 🔃️replace-setpoint-manager-kind | ✅️resets-on-outdoor-air |
-      | replace-setpoint-manager-kind-refuses-stray-limits | 🔃️replace-setpoint-manager-kind | ⛔️refuses-stray-limits |
-      | change-setpoint-manager-schedule-repoints-the-spm | 🎼️change-setpoint-manager-schedule | ✅️repoints-the-spm |
-      | change-setpoint-manager-schedule-refuses-an-absent-one | 🎼️change-setpoint-manager-schedule | ⛔️refuses-an-absent-one |
+      | delete-thermostat-refuses-an-absent-one | 🛑️delete-thermostat | ⛔️refuses |
+      | change-thermostat-zone-moves-to-zone-two | 🛖️change-thermostat-zone | ✅️moves |
+      | change-thermostat-zone-refuses-an-absent-zone | 🛖️change-thermostat-zone | ⛔️refuses |
+      | change-thermostat-heating-setpoint-schedule-repoints-heating | 🥵️change-thermostat-heating | ✅️repoints |
+      | change-thermostat-heating-setpoint-schedule-refuses-an-absent-one | 🥵️change-thermostat-heating | ⛔️refuses |
+      | change-thermostat-cooling-setpoint-schedule-repoints-cooling | 🐧️change-thermostat-cooling | ✅️repoints |
+      | change-thermostat-cooling-setpoint-schedule-refuses-an-absent-one | 🐧️change-thermostat-cooling | ⛔️refuses |
+      | change-thermostat-heating-throttle-range-widens-heating-band | 🎚️change-thermostat-heating | ✅️widens |
+      | change-thermostat-heating-throttle-range-refuses-a-zero-band | 🎚️change-thermostat-heating | ⛔️refuses |
+      | change-thermostat-cooling-throttle-range-widens-cooling-band | 🎛️change-thermostat-cooling | ✅️widens |
+      | change-thermostat-cooling-throttle-range-refuses-a-negative-band | 🎛️change-thermostat-cooling | ⛔️refuses |
+      | create-humidistat-controls-zone-one | 🌂️create-humidistat | ✅️controls |
+      | create-humidistat-refuses-an-absent-one | 🌂️create-humidistat | ⛔️refuses |
+      | delete-humidistat-drops-the-control | 🏜️delete-humidistat | ✅️drops |
+      | delete-humidistat-refuses-an-absent-one | 🏜️delete-humidistat | ⛔️refuses |
+      | change-humidistat-zone-moves-to-zone-two | 🏙️change-humidistat-zone | ✅️moves |
+      | change-humidistat-zone-refuses-an-absent-zone | 🏙️change-humidistat-zone | ⛔️refuses |
+      | change-humidistat-humidifying-setpoint-schedule-repoints-humidifying | ☔️change-humidistat-humidifying-setpoint-schedule | ✅️repoints |
+      | change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one | ☔️change-humidistat-humidifying-setpoint-schedule | ⛔️refuses |
+      | change-humidistat-dehumidifying-setpoint-schedule-repoints-drying | 🏝️change-humidistat | ✅️repoints |
+      | change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one | 🏝️change-humidistat | ⛔️refuses |
+      | change-humidistat-humidifying-throttle-range-widens-the-band | 🌧️change-humidistat | ✅️widens |
+      | change-humidistat-humidifying-throttle-range-refuses-a-zero-band | 🌧️change-humidistat | ⛔️refuses |
+      | change-humidistat-dehumidifying-throttle-range-widens-the-band | 🧻️change-humidistat | ✅️widens |
+      | change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band | 🧻️change-humidistat | ⛔️refuses |
+      | create-ideal-loads-system-serves-zone-one | 🫁️create-ideal-loads-system | ✅️serves |
+      | create-ideal-loads-system-refuses-an-absent-zone | 🫁️create-ideal-loads-system | ⛔️refuses |
+      | delete-ideal-loads-system-drops-the-system | 🫥️delete-ideal-loads-system | ✅️drops |
+      | delete-ideal-loads-system-refuses-an-absent-one | 🫥️delete-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-zone-moves-to-zone-two | 🏢️change-ideal-loads-system | ✅️moves |
+      | change-ideal-loads-system-zone-refuses-an-absent-zone | 🏢️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply | 🔴️change-ideal-loads-system | ✅️cools |
+      | change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply | 🔴️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply | 🔵️change-ideal-loads-system | ✅️lowers |
+      | change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply | 🔵️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-heating-capacity-caps-the-heating | ⛽️change-ideal-loads-system | ✅️caps |
+      | change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value | ⛽️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-max-cooling-capacity-caps-the-cooling | 🟧️change-ideal-loads-system | ✅️caps |
+      | change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value | 🟧️change-ideal-loads-system | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head | 🧍️change-ideal-loads-system-outdoor-air-per-person | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative | 🧍️change-ideal-loads-system-outdoor-air-per-person | ⛔️refuses |
+      | change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area | 🔳️change-ideal-loads-system-outdoor-air-per-area | ✅️ventilates |
+      | change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative | 🔳️change-ideal-loads-system-outdoor-air-per-area | ⛔️refuses |
+      | create-zone-equipment-adds-a-baseboard | 🛠️create-zone-equipment | ✅️adds |
+      | create-zone-equipment-refuses-rank-zero | 🛠️create-zone-equipment | ⛔️refuses |
+      | delete-zone-equipment-drops-the-baseboard | 🗑️delete-zone-equipment | ✅️drops |
+      | delete-zone-equipment-refuses-an-absent-one | 🗑️delete-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-zone-moves-to-zone-two | 🏬️change-zone-equipment-zone | ✅️moves |
+      | change-zone-equipment-zone-refuses-an-absent-zone | 🏬️change-zone-equipment-zone | ⛔️refuses |
+      | change-zone-equipment-type-swaps-to-a-fan-coil | 🔧️change-zone-equipment-type | ✅️swaps |
+      | change-zone-equipment-type-refuses-an-absent-row | 🔧️change-zone-equipment-type | ⛔️refuses |
+      | change-zone-equipment-priority-demotes-it | 🎗️change-zone-equipment | ✅️demotes-it |
+      | change-zone-equipment-priority-refuses-rank-zero | 🎗️change-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-heating-capacity-uprates-heating | 🧇️change-zone-equipment | ✅️uprates |
+      | change-zone-equipment-heating-capacity-refuses-a-negative | 🧇️change-zone-equipment | ⛔️refuses |
+      | change-zone-equipment-cooling-capacity-uprates-cooling | 🍧️change-zone-equipment | ✅️uprates |
+      | change-zone-equipment-cooling-capacity-refuses-a-negative | 🍧️change-zone-equipment | ⛔️refuses |
+      | create-daylight-zone-lights-zone-one | 🔭️create-daylight-zone | ✅️lights |
+      | create-daylight-zone-refuses-a-bad-tau | 🔭️create-daylight-zone | ⛔️refuses |
+      | delete-daylight-zone-darkens-the-zone | 🌗️delete-daylight-zone | ✅️darkens |
+      | delete-daylight-zone-refuses-an-absent-one | 🌗️delete-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-zone-moves-to-zone-two | 🏫️change-daylight-zone-zone | ✅️moves |
+      | change-daylight-zone-zone-refuses-an-absent-zone | 🏫️change-daylight-zone-zone | ⛔️refuses |
+      | change-daylight-zone-illuminance-target-dims-the-target | 🪔️change-daylight-zone | ✅️dims |
+      | change-daylight-zone-illuminance-target-refuses-a-dark-target | 🪔️change-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-glare-limit-tightens-glare | 🕶️change-daylight-zone | ✅️tightens |
+      | change-daylight-zone-glare-limit-refuses-a-negative | 🕶️change-daylight-zone | ⛔️refuses |
+      | change-daylight-zone-window-transmittance-darkens-the-glass | 🥃️change-daylight-zone | ✅️darkens |
+      | change-daylight-zone-window-transmittance-refuses-a-bad-tau | 🥃️change-daylight-zone | ⛔️refuses |
+      | create-sizing-object-sizes-zone-one | 📶️create-sizing-object | ✅️sizes |
+      | create-sizing-object-refuses-an-absent-zone | 📶️create-sizing-object | ⛔️refuses |
+      | delete-sizing-object-drops-the-sizing | 🪒️delete-sizing-object | ✅️drops |
+      | delete-sizing-object-refuses-an-absent-one | 🪒️delete-sizing-object | ⛔️refuses |
+      | change-sizing-object-zone-moves-to-zone-two | 🏨️change-sizing-object-zone | ✅️moves |
+      | change-sizing-object-zone-refuses-an-absent-zone | 🏨️change-sizing-object-zone | ⛔️refuses |
+      | change-sizing-object-sizing-type-sizes-for-cooling | 🧾️change-sizing-object | ✅️sizes |
+      | change-sizing-object-sizing-type-refuses-an-absent-row | 🧾️change-sizing-object | ⛔️refuses |
+      | change-sizing-object-design-day-type-reads-a-hot-day | 🌥️change-sizing-object | ✅️reads |
+      | change-sizing-object-design-day-type-refuses-an-absent-row | 🌥️change-sizing-object | ⛔️refuses |
+      | create-room-air-model-assignment-stratifies-zone-two | 🛏️create-room-air-model | ✅️stratifies |
+      | create-room-air-model-assignment-refuses-a-second-one | 🛏️create-room-air-model | ⛔️refuses |
+      | delete-room-air-model-assignment-falls-back | 🧺️delete-room-air-model | ✅️falls-back |
+      | delete-room-air-model-assignment-refuses-an-absent-one | 🧺️delete-room-air-model | ⛔️refuses |
+      | change-room-air-model-stratifies-the-air | 🪭️change-room-air-model | ✅️stratifies |
+      | change-room-air-model-refuses-an-absent-row | 🪭️change-room-air-model | ⛔️refuses |
+      | create-setpoint-manager-adds-a-scheduled-spm | 📌️create-setpoint-manager | ✅️adds |
+      | create-setpoint-manager-refuses-a-bad-kind | 📌️create-setpoint-manager | ⛔️refuses |
+      | delete-setpoint-manager-drops-the-spm | 🍄️delete-setpoint-manager | ✅️drops |
+      | delete-setpoint-manager-refuses-an-absent-one | 🍄️delete-setpoint-manager | ⛔️refuses |
+      | rename-setpoint-manager-renames-the-spm | 🖇️rename-setpoint-manager | ✅️renames |
+      | rename-setpoint-manager-refuses-a-blank-name | 🖇️rename-setpoint-manager | ⛔️refuses |
+      | replace-setpoint-manager-kind-resets-on-outdoor-air | 🔃️replace-setpoint-manager | ✅️resets |
+      | replace-setpoint-manager-kind-refuses-stray-limits | 🔃️replace-setpoint-manager | ⛔️refuses |
+      | change-setpoint-manager-schedule-repoints-the-spm | 🎼️change-setpoint-manager | ✅️repoints |
+      | change-setpoint-manager-schedule-refuses-an-absent-one | 🎼️change-setpoint-manager | ⛔️refuses |
       | create-air-loop-adds-a-main-loop | 🛞️create-air-loop | ✅️adds-a-main-loop |
-      | create-air-loop-refuses-a-jumbled-list | 🛞️create-air-loop | ⛔️refuses-a-jumbled-list |
+      | create-air-loop-refuses-a-jumbled-list | 🛞️create-air-loop | ⛔️refuses |
       | delete-air-loop-drops-the-loop | 🥀️delete-air-loop | ✅️drops-the-loop |
-      | delete-air-loop-refuses-a-served-loop | 🥀️delete-air-loop | ⛔️refuses-a-served-loop |
+      | delete-air-loop-refuses-a-served-loop | 🥀️delete-air-loop | ⛔️refuses |
       | rename-air-loop-renames-the-loop | 📇️rename-air-loop | ✅️renames-the-loop |
-      | rename-air-loop-refuses-a-blank-name | 📇️rename-air-loop | ⛔️refuses-a-blank-name |
-      | change-air-loop-supply-node-repoints-supply | ↗️change-air-loop-supply-node | ✅️repoints-supply |
-      | change-air-loop-supply-node-refuses-node-zero | ↗️change-air-loop-supply-node | ⛔️refuses-node-zero |
-      | change-air-loop-return-node-repoints-return | ↘️change-air-loop-return-node | ✅️repoints-return |
-      | change-air-loop-return-node-refuses-node-zero | ↘️change-air-loop-return-node | ⛔️refuses-node-zero |
-      | change-air-loop-design-supply-air-flow-uprates-the-flow | 🍥️change-air-loop-design-supply-air-flow | ✅️uprates-the-flow |
-      | change-air-loop-design-supply-air-flow-refuses-no-flow | 🍥️change-air-loop-design-supply-air-flow | ⛔️refuses-no-flow |
-      | add-air-loop-terminal-zone-serves-zone-two | 🪺️add-air-loop-terminal-zone | ✅️serves-zone-two |
-      | add-air-loop-terminal-zone-refuses-an-absent-zone | 🪺️add-air-loop-terminal-zone | ⛔️refuses-an-absent-zone |
-      | remove-air-loop-terminal-zone-stops-serving-one | 🪹️remove-air-loop-terminal-zone | ✅️stops-serving-one |
-      | remove-air-loop-terminal-zone-refuses-an-unserved | 🪹️remove-air-loop-terminal-zone | ⛔️refuses-an-unserved |
+      | rename-air-loop-refuses-a-blank-name | 📇️rename-air-loop | ⛔️refuses |
+      | change-air-loop-supply-node-repoints-supply | ↗️change-air-loop-supply | ✅️repoints |
+      | change-air-loop-supply-node-refuses-node-zero | ↗️change-air-loop-supply | ⛔️refuses |
+      | change-air-loop-return-node-repoints-return | ↘️change-air-loop-return | ✅️repoints |
+      | change-air-loop-return-node-refuses-node-zero | ↘️change-air-loop-return | ⛔️refuses |
+      | change-air-loop-design-supply-air-flow-uprates-the-flow | 🍥️change-air-loop-design | ✅️uprates |
+      | change-air-loop-design-supply-air-flow-refuses-no-flow | 🍥️change-air-loop-design | ⛔️refuses |
+      | add-air-loop-terminal-zone-serves-zone-two | 🪺️add-air-loop-terminal-zone | ✅️serves |
+      | add-air-loop-terminal-zone-refuses-an-absent-zone | 🪺️add-air-loop-terminal-zone | ⛔️refuses |
+      | remove-air-loop-terminal-zone-stops-serving-one | 🪹️remove-air-loop-terminal | ✅️stops |
+      | remove-air-loop-terminal-zone-refuses-an-unserved | 🪹️remove-air-loop-terminal | ⛔️refuses |
       | create-plant-loop-adds-a-hot-loop | ⚗️create-plant-loop | ✅️adds-a-hot-loop |
-      | create-plant-loop-refuses-a-jumbled-list | ⚗️create-plant-loop | ⛔️refuses-a-jumbled-list |
+      | create-plant-loop-refuses-a-jumbled-list | ⚗️create-plant-loop | ⛔️refuses |
       | delete-plant-loop-drops-the-loop | 💣️delete-plant-loop | ✅️drops-the-loop |
-      | delete-plant-loop-refuses-an-absent-one | 💣️delete-plant-loop | ⛔️refuses-an-absent-one |
+      | delete-plant-loop-refuses-an-absent-one | 💣️delete-plant-loop | ⛔️refuses |
       | rename-plant-loop-renames-the-loop | 📛️rename-plant-loop | ✅️renames-the-loop |
-      | rename-plant-loop-refuses-a-blank-name | 📛️rename-plant-loop | ⛔️refuses-a-blank-name |
-      | change-plant-loop-type-turns-it-chilled | ♻️change-plant-loop-type | ✅️turns-it-chilled |
-      | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses-an-absent-row |
-      | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply-temperature | ✅️cools-the-supply |
-      | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply-temperature | ⛔️refuses-a-hot-supply |
-      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return-temperature | ✅️cools-the-return |
-      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return-temperature | ⛔️refuses-a-cold-return |
-      | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design-flow | ✅️uprates-the-flow |
-      | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design-flow | ⛔️refuses-no-flow |
-      | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names-equipment |
-      | add-plant-loop-equipment-refuses-the-unset-id | 🔩️add-plant-loop-equipment | ⛔️refuses-the-unset-id |
-      | remove-plant-loop-equipment-drops-equipment | ⚙️remove-plant-loop-equipment | ✅️drops-equipment |
-      | remove-plant-loop-equipment-refuses-an-unlisted | ⚙️remove-plant-loop-equipment | ⛔️refuses-an-unlisted |
-      | create-outdoor-air-system-ventilates-the-loop | 🌲️create-outdoor-air-system | ✅️ventilates-the-loop |
-      | create-outdoor-air-system-refuses-an-absent-loop | 🌲️create-outdoor-air-system | ⛔️refuses-an-absent-loop |
-      | delete-outdoor-air-system-drops-the-system | 🍂️delete-outdoor-air-system | ✅️drops-the-system |
-      | delete-outdoor-air-system-refuses-an-absent-one | 🍂️delete-outdoor-air-system | ⛔️refuses-an-absent-one |
-      | change-outdoor-air-system-air-loop-moves-to-the-spare | ⛓️change-outdoor-air-system-air-loop | ✅️moves-to-the-spare |
-      | change-outdoor-air-system-air-loop-refuses-an-absent-loop | ⛓️change-outdoor-air-system-air-loop | ⛔️refuses-an-absent-loop |
-      | change-outdoor-air-system-min-oa-flow-raises-the-minimum | 🦋️change-outdoor-air-system-min-oa-flow | ✅️raises-the-minimum |
-      | change-outdoor-air-system-min-oa-flow-refuses-a-negative | 🦋️change-outdoor-air-system-min-oa-flow | ⛔️refuses-a-negative |
-      | change-outdoor-air-system-economizer-enabled-frees-the-cooling | 💰️change-outdoor-air-system-economizer-enabled | ✅️frees-the-cooling |
-      | change-outdoor-air-system-economizer-enabled-refuses-an-absent-row | 💰️change-outdoor-air-system-economizer-enabled | ⛔️refuses-an-absent-row |
-      | create-electrical-load-center-applies | 🏦️create-electrical-load-center | ✅️applies |
-      | create-electrical-load-center-refuses | 🏦️create-electrical-load-center | ⛔️refuses |
-      | delete-electrical-load-center-applies | 🔻️delete-electrical-load-center | ✅️applies |
-      | delete-electrical-load-center-refuses | 🔻️delete-electrical-load-center | ⛔️refuses |
-      | rename-electrical-load-center-applies | 🖊️rename-electrical-load-center | ✅️applies |
-      | rename-electrical-load-center-refuses | 🖊️rename-electrical-load-center | ⛔️refuses |
-      | add-electrical-load-center-pv-applies | ☄️add-electrical-load-center-pv | ✅️applies |
-      | add-electrical-load-center-pv-refuses | ☄️add-electrical-load-center-pv | ⛔️refuses |
-      | remove-electrical-load-center-pv-applies | 🌘️remove-electrical-load-center-pv | ✅️applies |
-      | remove-electrical-load-center-pv-refuses | 🌘️remove-electrical-load-center-pv | ⛔️refuses |
-      | add-electrical-load-center-battery-applies | 🔋️add-electrical-load-center-battery | ✅️applies |
-      | add-electrical-load-center-battery-refuses | 🔋️add-electrical-load-center-battery | ⛔️refuses |
-      | remove-electrical-load-center-battery-applies | 🪝️remove-electrical-load-center-battery | ✅️applies |
-      | remove-electrical-load-center-battery-refuses | 🪝️remove-electrical-load-center-battery | ⛔️refuses |
+      | rename-plant-loop-refuses-a-blank-name | 📛️rename-plant-loop | ⛔️refuses |
+      | change-plant-loop-type-turns-it-chilled | ♻️change-plant-loop-type | ✅️turns |
+      | change-plant-loop-type-refuses-an-absent-row | ♻️change-plant-loop-type | ⛔️refuses |
+      | change-plant-loop-supply-temperature-cools-the-supply | ☕️change-plant-loop-supply | ✅️cools |
+      | change-plant-loop-supply-temperature-refuses-a-hot-supply | ☕️change-plant-loop-supply | ⛔️refuses |
+      | change-plant-loop-return-temperature-cools-the-return | 🫖️change-plant-loop-return | ✅️cools |
+      | change-plant-loop-return-temperature-refuses-a-cold-return | 🫖️change-plant-loop-return | ⛔️refuses |
+      | change-plant-loop-design-flow-uprates-the-flow | 🚤️change-plant-loop-design | ✅️uprates |
+      | change-plant-loop-design-flow-refuses-no-flow | 🚤️change-plant-loop-design | ⛔️refuses |
+      | add-plant-loop-equipment-names-equipment | 🔩️add-plant-loop-equipment | ✅️names |
+      | add-plant-loop-equipment-refuses-the-unset-id | 🔩️add-plant-loop-equipment | ⛔️refuses |
+      | remove-plant-loop-equipment-drops-equipment | ⚙️remove-plant-loop-equipment | ✅️drops |
+      | remove-plant-loop-equipment-refuses-an-unlisted | ⚙️remove-plant-loop-equipment | ⛔️refuses |
+      | create-outdoor-air-system-ventilates-the-loop | 🌲️create-outdoor-air | ✅️ventilates |
+      | create-outdoor-air-system-refuses-an-absent-loop | 🌲️create-outdoor-air | ⛔️refuses |
+      | delete-outdoor-air-system-drops-the-system | 🍂️delete-outdoor-air-system | ✅️drops |
+      | delete-outdoor-air-system-refuses-an-absent-one | 🍂️delete-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-air-loop-moves-to-the-spare | ⛓️change-outdoor-air-system | ✅️moves |
+      | change-outdoor-air-system-air-loop-refuses-an-absent-loop | ⛓️change-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-min-oa-flow-raises-the-minimum | 🦋️change-outdoor-air-system | ✅️raises |
+      | change-outdoor-air-system-min-oa-flow-refuses-a-negative | 🦋️change-outdoor-air-system | ⛔️refuses |
+      | change-outdoor-air-system-economizer-enabled-frees-the-cooling | 💰️change-outdoor-air-system | ✅️frees |
+      | change-outdoor-air-system-economizer-enabled-refuses-an-absent-row | 💰️change-outdoor-air-system | ⛔️refuses |
+      | create-electrical-load-center-applies | 🏦️create-electrical-load | ✅️applies |
+      | create-electrical-load-center-refuses | 🏦️create-electrical-load | ⛔️refuses |
+      | delete-electrical-load-center-applies | 🔻️delete-electrical-load | ✅️applies |
+      | delete-electrical-load-center-refuses | 🔻️delete-electrical-load | ⛔️refuses |
+      | rename-electrical-load-center-applies | 🖊️rename-electrical-load | ✅️applies |
+      | rename-electrical-load-center-refuses | 🖊️rename-electrical-load | ⛔️refuses |
+      | add-electrical-load-center-pv-applies | ☄️add-electrical-load-center | ✅️applies |
+      | add-electrical-load-center-pv-refuses | ☄️add-electrical-load-center | ⛔️refuses |
+      | remove-electrical-load-center-pv-applies | 🌘️remove-electrical-load | ✅️applies |
+      | remove-electrical-load-center-pv-refuses | 🌘️remove-electrical-load | ⛔️refuses |
+      | add-electrical-load-center-battery-applies | 🔋️add-electrical-load-center | ✅️applies |
+      | add-electrical-load-center-battery-refuses | 🔋️add-electrical-load-center | ⛔️refuses |
+      | remove-electrical-load-center-battery-applies | 🪝️remove-electrical-load | ✅️applies |
+      | remove-electrical-load-center-battery-refuses | 🪝️remove-electrical-load | ⛔️refuses |
       | create-pv-system-applies | ✨️create-pv-system | ✅️applies |
       | create-pv-system-refuses | ✨️create-pv-system | ⛔️refuses |
       | delete-pv-system-applies | 🌒️delete-pv-system | ✅️applies |
       | delete-pv-system-refuses | 🌒️delete-pv-system | ⛔️refuses |
-      | change-pv-system-dc-capacity-applies | ⚛️change-pv-system-dc-capacity | ✅️applies |
-      | change-pv-system-dc-capacity-refuses | ⚛️change-pv-system-dc-capacity | ⛔️refuses |
+      | change-pv-system-dc-capacity-applies | ⚛️change-pv-system-dc | ✅️applies |
+      | change-pv-system-dc-capacity-refuses | ⚛️change-pv-system-dc | ⛔️refuses |
       | change-pv-system-area-applies | 🟨️change-pv-system-area | ✅️applies |
       | change-pv-system-area-refuses | 🟨️change-pv-system-area | ⛔️refuses |
       | change-pv-system-tilt-applies | 📈️change-pv-system-tilt | ✅️applies |
       | change-pv-system-tilt-refuses | 📈️change-pv-system-tilt | ⛔️refuses |
       | change-pv-system-azimuth-applies | 🧿️change-pv-system-azimuth | ✅️applies |
       | change-pv-system-azimuth-refuses | 🧿️change-pv-system-azimuth | ⛔️refuses |
-      | change-pv-system-module-efficiency-applies | 🎖️change-pv-system-module-efficiency | ✅️applies |
-      | change-pv-system-module-efficiency-refuses | 🎖️change-pv-system-module-efficiency | ⛔️refuses |
-      | change-pv-system-inverter-efficiency-applies | ♌️change-pv-system-inverter-efficiency | ✅️applies |
-      | change-pv-system-inverter-efficiency-refuses | ♌️change-pv-system-inverter-efficiency | ⛔️refuses |
+      | change-pv-system-module-efficiency-applies | 🎖️change-pv-system-module | ✅️applies |
+      | change-pv-system-module-efficiency-refuses | 🎖️change-pv-system-module | ⛔️refuses |
+      | change-pv-system-inverter-efficiency-applies | ♌️change-pv-system-inverter | ✅️applies |
+      | change-pv-system-inverter-efficiency-refuses | ♌️change-pv-system-inverter | ⛔️refuses |
       | create-battery-applies | 🪙️create-battery | ✅️applies |
       | create-battery-refuses | 🪙️create-battery | ⛔️refuses |
       | delete-battery-applies | ♒️delete-battery | ✅️applies |
@@ -1054,68 +1054,68 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | change-battery-capacity-refuses | 🥫️change-battery-capacity | ⛔️refuses |
       | change-battery-max-charge-applies | ⏫️change-battery-max-charge | ✅️applies |
       | change-battery-max-charge-refuses | ⏫️change-battery-max-charge | ⛔️refuses |
-      | change-battery-max-discharge-applies | ⏬️change-battery-max-discharge | ✅️applies |
-      | change-battery-max-discharge-refuses | ⏬️change-battery-max-discharge | ⛔️refuses |
-      | change-battery-round-trip-efficiency-applies | 🥉️change-battery-round-trip-efficiency | ✅️applies |
-      | change-battery-round-trip-efficiency-refuses | 🥉️change-battery-round-trip-efficiency | ⛔️refuses |
+      | change-battery-max-discharge-applies | ⏬️change-battery-max | ✅️applies |
+      | change-battery-max-discharge-refuses | ⏬️change-battery-max | ⛔️refuses |
+      | change-battery-round-trip-efficiency-applies | 🥉️change-battery-round-trip | ✅️applies |
+      | change-battery-round-trip-efficiency-refuses | 🥉️change-battery-round-trip | ⛔️refuses |
       | create-shw-system-applies | 🛀️create-shw-system | ✅️applies |
       | create-shw-system-refuses | 🛀️create-shw-system | ⛔️refuses |
       | delete-shw-system-applies | 🚱️delete-shw-system | ✅️applies |
       | delete-shw-system-refuses | 🚱️delete-shw-system | ⛔️refuses |
-      | change-shw-system-heater-capacity-applies | 🍵️change-shw-system-heater-capacity | ✅️applies |
-      | change-shw-system-heater-capacity-refuses | 🍵️change-shw-system-heater-capacity | ⛔️refuses |
-      | change-shw-system-storage-volume-applies | 🛢️change-shw-system-storage-volume | ✅️applies |
-      | change-shw-system-storage-volume-refuses | 🛢️change-shw-system-storage-volume | ⛔️refuses |
+      | change-shw-system-heater-capacity-applies | 🍵️change-shw-system-heater | ✅️applies |
+      | change-shw-system-heater-capacity-refuses | 🍵️change-shw-system-heater | ⛔️refuses |
+      | change-shw-system-storage-volume-applies | 🛢️change-shw-system-storage | ✅️applies |
+      | change-shw-system-storage-volume-refuses | 🛢️change-shw-system-storage | ⛔️refuses |
       | change-shw-system-setpoint-applies | 🏹️change-shw-system-setpoint | ✅️applies |
       | change-shw-system-setpoint-refuses | 🏹️change-shw-system-setpoint | ⛔️refuses |
       | change-shw-system-schedule-applies | 🕐️change-shw-system-schedule | ✅️applies |
       | change-shw-system-schedule-refuses | 🕐️change-shw-system-schedule | ⛔️refuses |
-      | create-solar-thermal-system-applies | 🌄️create-solar-thermal-system | ✅️applies |
-      | create-solar-thermal-system-refuses | 🌄️create-solar-thermal-system | ⛔️refuses |
-      | delete-solar-thermal-system-applies | 🌆️delete-solar-thermal-system | ✅️applies |
-      | delete-solar-thermal-system-refuses | 🌆️delete-solar-thermal-system | ⛔️refuses |
-      | change-solar-thermal-system-collector-area-applies | 🟩️change-solar-thermal-system-collector-area | ✅️applies |
-      | change-solar-thermal-system-collector-area-refuses | 🟩️change-solar-thermal-system-collector-area | ⛔️refuses |
-      | change-solar-thermal-system-efficiency-applies | 🏅️change-solar-thermal-system-efficiency | ✅️applies |
-      | change-solar-thermal-system-efficiency-refuses | 🏅️change-solar-thermal-system-efficiency | ⛔️refuses |
-      | change-solar-thermal-system-storage-volume-applies | 🧃️change-solar-thermal-system-storage-volume | ✅️applies |
-      | change-solar-thermal-system-storage-volume-refuses | 🧃️change-solar-thermal-system-storage-volume | ⛔️refuses |
-      | change-solar-thermal-system-tilt-applies | 🔼️change-solar-thermal-system-tilt | ✅️applies |
-      | change-solar-thermal-system-tilt-refuses | 🔼️change-solar-thermal-system-tilt | ⛔️refuses |
-      | change-solar-thermal-system-azimuth-applies | ⛵️change-solar-thermal-system-azimuth | ✅️applies |
-      | change-solar-thermal-system-azimuth-refuses | ⛵️change-solar-thermal-system-azimuth | ⛔️refuses |
+      | create-solar-thermal-system-applies | 🌄️create-solar-thermal | ✅️applies |
+      | create-solar-thermal-system-refuses | 🌄️create-solar-thermal | ⛔️refuses |
+      | delete-solar-thermal-system-applies | 🌆️delete-solar-thermal | ✅️applies |
+      | delete-solar-thermal-system-refuses | 🌆️delete-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-collector-area-applies | 🟩️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-collector-area-refuses | 🟩️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-efficiency-applies | 🏅️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-efficiency-refuses | 🏅️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-storage-volume-applies | 🧃️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-storage-volume-refuses | 🧃️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-tilt-applies | 🔼️change-solar-thermal | ✅️applies |
+      | change-solar-thermal-system-tilt-refuses | 🔼️change-solar-thermal | ⛔️refuses |
+      | change-solar-thermal-system-azimuth-applies | ⛵️change-solar-thermal-system | ✅️applies |
+      | change-solar-thermal-system-azimuth-refuses | ⛵️change-solar-thermal-system | ⛔️refuses |
       | create-refrigeration-system-applies | ❄️create-refrigeration-system | ✅️applies |
       | create-refrigeration-system-refuses | ❄️create-refrigeration-system | ⛔️refuses |
-      | delete-refrigeration-system-applies | 🫠️delete-refrigeration-system | ✅️applies |
-      | delete-refrigeration-system-refuses | 🫠️delete-refrigeration-system | ⛔️refuses |
-      | change-refrigeration-system-case-count-applies | 🗄️change-refrigeration-system-case-count | ✅️applies |
-      | change-refrigeration-system-case-count-refuses | 🗄️change-refrigeration-system-case-count | ⛔️refuses |
-      | change-refrigeration-system-design-load-applies | 🏋️change-refrigeration-system-design-load | ✅️applies |
-      | change-refrigeration-system-design-load-refuses | 🏋️change-refrigeration-system-design-load | ⛔️refuses |
-      | change-refrigeration-system-defrost-schedule-applies | 🕑️change-refrigeration-system-defrost-schedule | ✅️applies |
-      | change-refrigeration-system-defrost-schedule-refuses | 🕑️change-refrigeration-system-defrost-schedule | ⛔️refuses |
+      | delete-refrigeration-system-applies | 🫠️delete-refrigeration | ✅️applies |
+      | delete-refrigeration-system-refuses | 🫠️delete-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-case-count-applies | 🗄️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-case-count-refuses | 🗄️change-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-design-load-applies | 🏋️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-design-load-refuses | 🏋️change-refrigeration | ⛔️refuses |
+      | change-refrigeration-system-defrost-schedule-applies | 🕑️change-refrigeration | ✅️applies |
+      | change-refrigeration-system-defrost-schedule-refuses | 🕑️change-refrigeration | ⛔️refuses |
       | create-water-system-applies | 🚽️create-water-system | ✅️applies |
       | create-water-system-refuses | 🚽️create-water-system | ⛔️refuses |
       | delete-water-system-applies | 🧼️delete-water-system | ✅️applies |
       | delete-water-system-refuses | 🧼️delete-water-system | ⛔️refuses |
-      | change-water-system-fixture-count-applies | 🪣️change-water-system-fixture-count | ✅️applies |
-      | change-water-system-fixture-count-refuses | 🪣️change-water-system-fixture-count | ⛔️refuses |
-      | change-water-system-peak-flow-applies | 🚾️change-water-system-peak-flow | ✅️applies |
-      | change-water-system-peak-flow-refuses | 🚾️change-water-system-peak-flow | ⛔️refuses |
-      | change-water-system-schedule-applies | 🕒️change-water-system-schedule | ✅️applies |
-      | change-water-system-schedule-refuses | 🕒️change-water-system-schedule | ⛔️refuses |
+      | change-water-system-fixture-count-applies | 🪣️change-water-system | ✅️applies |
+      | change-water-system-fixture-count-refuses | 🪣️change-water-system | ⛔️refuses |
+      | change-water-system-peak-flow-applies | 🚾️change-water-system-peak | ✅️applies |
+      | change-water-system-peak-flow-refuses | 🚾️change-water-system-peak | ⛔️refuses |
+      | change-water-system-schedule-applies | 🕒️change-water-system | ✅️applies |
+      | change-water-system-schedule-refuses | 🕒️change-water-system | ⛔️refuses |
       | create-fault-applies | ⚠️create-fault | ✅️applies |
       | create-fault-refuses | ⚠️create-fault | ⛔️refuses |
       | delete-fault-applies | 🩹️delete-fault | ✅️applies |
       | delete-fault-refuses | 🩹️delete-fault | ⛔️refuses |
-      | change-fault-target-equipment-applies | 🎣️change-fault-target-equipment | ✅️applies |
-      | change-fault-target-equipment-refuses | 🎣️change-fault-target-equipment | ⛔️refuses |
+      | change-fault-target-equipment-applies | 🎣️change-fault-target | ✅️applies |
+      | change-fault-target-equipment-refuses | 🎣️change-fault-target | ⛔️refuses |
       | change-fault-type-applies | 🐛️change-fault-type | ✅️applies |
       | change-fault-type-refuses | 🐛️change-fault-type | ⛔️refuses |
       | change-fault-severity-applies | 🌶️change-fault-severity | ✅️applies |
       | change-fault-severity-refuses | 🌶️change-fault-severity | ⛔️refuses |
-      | change-fault-start-schedule-applies | 🕓️change-fault-start-schedule | ✅️applies |
-      | change-fault-start-schedule-refuses | 🕓️change-fault-start-schedule | ⛔️refuses |
+      | change-fault-start-schedule-applies | 🕓️change-fault-start | ✅️applies |
+      | change-fault-start-schedule-refuses | 🕓️change-fault-start | ⛔️refuses |
       | create-space-list-applies | 📋️create-space-list | ✅️applies |
       | create-space-list-refuses | 📋️create-space-list | ⛔️refuses |
       | delete-space-list-applies | 🗒️delete-space-list | ✅️applies |
@@ -1134,24 +1134,24 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | rename-thermal-enclosure-refuses | 🖋️rename-thermal-enclosure | ⛔️refuses |
       | add-thermal-enclosure-zone-applies | 🔒️add-thermal-enclosure-zone | ✅️applies |
       | add-thermal-enclosure-zone-refuses | 🔒️add-thermal-enclosure-zone | ⛔️refuses |
-      | remove-thermal-enclosure-zone-applies | 🔓️remove-thermal-enclosure-zone | ✅️applies |
-      | remove-thermal-enclosure-zone-refuses | 🔓️remove-thermal-enclosure-zone | ⛔️refuses |
+      | remove-thermal-enclosure-zone-applies | 🔓️remove-thermal-enclosure | ✅️applies |
+      | remove-thermal-enclosure-zone-refuses | 🔓️remove-thermal-enclosure | ⛔️refuses |
       | create-constant-schedule-applies | 🕜️create-constant-schedule | ✅️applies |
       | create-constant-schedule-refuses | 🕜️create-constant-schedule | ⛔️refuses |
       | delete-constant-schedule-applies | 📍️delete-constant-schedule | ✅️applies |
       | delete-constant-schedule-refuses | 📍️delete-constant-schedule | ⛔️refuses |
-      | change-constant-schedule-value-applies | 🕝️change-constant-schedule-value | ✅️applies |
-      | change-constant-schedule-value-refuses | 🕝️change-constant-schedule-value | ⛔️refuses |
+      | change-constant-schedule-value-applies | 🕝️change-constant-schedule | ✅️applies |
+      | change-constant-schedule-value-refuses | 🕝️change-constant-schedule | ⛔️refuses |
       | create-daily-schedule-applies | 🕞️create-daily-schedule | ✅️applies |
       | create-daily-schedule-refuses | 🕞️create-daily-schedule | ⛔️refuses |
       | delete-daily-schedule-applies | 🌓️delete-daily-schedule | ✅️applies |
       | delete-daily-schedule-refuses | 🌓️delete-daily-schedule | ⛔️refuses |
-      | replace-daily-schedule-hourly-values-applies | 🕔️replace-daily-schedule-hourly-values | ✅️applies |
-      | replace-daily-schedule-hourly-values-refuses | 🕔️replace-daily-schedule-hourly-values | ⛔️refuses |
-      | change-daily-schedule-interpolation-applies | 🕕️change-daily-schedule-interpolation | ✅️applies |
-      | change-daily-schedule-interpolation-refuses | 🕕️change-daily-schedule-interpolation | ⛔️refuses |
-      | change-daily-schedule-limits-applies | 🕟️change-daily-schedule-limits | ✅️applies |
-      | change-daily-schedule-limits-refuses | 🕟️change-daily-schedule-limits | ⛔️refuses |
+      | replace-daily-schedule-hourly-values-applies | 🕔️replace-daily-schedule | ✅️applies |
+      | replace-daily-schedule-hourly-values-refuses | 🕔️replace-daily-schedule | ⛔️refuses |
+      | change-daily-schedule-interpolation-applies | 🕕️change-daily-schedule | ✅️applies |
+      | change-daily-schedule-interpolation-refuses | 🕕️change-daily-schedule | ⛔️refuses |
+      | change-daily-schedule-limits-applies | 🕟️change-daily-schedule | ✅️applies |
+      | change-daily-schedule-limits-refuses | 🕟️change-daily-schedule | ⛔️refuses |
       | create-weekly-schedule-applies | 🗓️create-weekly-schedule | ✅️applies |
       | create-weekly-schedule-refuses | 🗓️create-weekly-schedule | ⛔️refuses |
       | delete-weekly-schedule-applies | 🕖️delete-weekly-schedule | ✅️applies |
@@ -1162,44 +1162,44 @@ Feature: Apply every typed s.energy.model mutation against an independent Python
       | create-annual-schedule-refuses | 📚️create-annual-schedule | ⛔️refuses |
       | delete-annual-schedule-applies | 📕️delete-annual-schedule | ✅️applies |
       | delete-annual-schedule-refuses | 📕️delete-annual-schedule | ⛔️refuses |
-      | insert-annual-schedule-rule-applies | 📗️insert-annual-schedule-rule | ✅️applies |
-      | insert-annual-schedule-rule-refuses | 📗️insert-annual-schedule-rule | ⛔️refuses |
-      | remove-annual-schedule-rule-applies | 📙️remove-annual-schedule-rule | ✅️applies |
-      | remove-annual-schedule-rule-refuses | 📙️remove-annual-schedule-rule | ⛔️refuses |
-      | reorder-annual-schedule-rules-applies | 🗂️reorder-annual-schedule-rules | ✅️applies |
-      | reorder-annual-schedule-rules-refuses | 🗂️reorder-annual-schedule-rules | ⛔️refuses |
-      | change-annual-schedule-default-daily-schedule-applies | 🎌️change-annual-schedule-default-daily-schedule | ✅️applies |
-      | change-annual-schedule-default-daily-schedule-refuses | 🎌️change-annual-schedule-default-daily-schedule | ⛔️refuses |
-      | change-annual-schedule-holiday-daily-schedule-applies | 🎄️change-annual-schedule-holiday-daily-schedule | ✅️applies |
-      | change-annual-schedule-holiday-daily-schedule-refuses | 🎄️change-annual-schedule-holiday-daily-schedule | ⛔️refuses |
-      | add-annual-schedule-holiday-applies | 🎉️add-annual-schedule-holiday | ✅️applies |
-      | add-annual-schedule-holiday-refuses | 🎉️add-annual-schedule-holiday | ⛔️refuses |
-      | remove-annual-schedule-holiday-applies | 🎊️remove-annual-schedule-holiday | ✅️applies |
-      | remove-annual-schedule-holiday-refuses | 🎊️remove-annual-schedule-holiday | ⛔️refuses |
-      | create-time-series-schedule-applies | 🪗️create-time-series-schedule | ✅️applies |
-      | create-time-series-schedule-refuses | 🪗️create-time-series-schedule | ⛔️refuses |
-      | delete-time-series-schedule-applies | 🎞️delete-time-series-schedule | ✅️applies |
-      | delete-time-series-schedule-refuses | 🎞️delete-time-series-schedule | ⛔️refuses |
-      | replace-time-series-schedule-values-applies | 🕘️replace-time-series-schedule-values | ✅️applies |
-      | replace-time-series-schedule-values-refuses | 🕘️replace-time-series-schedule-values | ⛔️refuses |
-      | change-time-series-schedule-timestep-applies | 🕙️change-time-series-schedule-timestep | ✅️applies |
-      | change-time-series-schedule-timestep-refuses | 🕙️change-time-series-schedule-timestep | ⛔️refuses |
-      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration-vertices | ✅️shapes-a-gable |
-      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration-vertices | ⛔️refuses-a-line |
-      | change-glazing-material-thickness-applies | 🔷️change-glazing-material-thickness | ✅️applies |
-      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material-thickness | ⛔️refuses |
-      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material-conductivity | ✅️applies |
-      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material-conductivity | ⛔️refuses |
-      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material-solar-transmittance | ✅️applies |
-      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material-solar-transmittance | ⛔️refuses |
-      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material-visible-transmittance | ✅️applies |
-      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material-visible-transmittance | ⛔️refuses |
-      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material-infrared-emissivity | ✅️applies |
-      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material-infrared-emissivity | ⛔️refuses |
+      | insert-annual-schedule-rule-applies | 📗️insert-annual-schedule | ✅️applies |
+      | insert-annual-schedule-rule-refuses | 📗️insert-annual-schedule | ⛔️refuses |
+      | remove-annual-schedule-rule-applies | 📙️remove-annual-schedule | ✅️applies |
+      | remove-annual-schedule-rule-refuses | 📙️remove-annual-schedule | ⛔️refuses |
+      | reorder-annual-schedule-rules-applies | 🗂️reorder-annual-schedule | ✅️applies |
+      | reorder-annual-schedule-rules-refuses | 🗂️reorder-annual-schedule | ⛔️refuses |
+      | change-annual-schedule-default-daily-schedule-applies | 🎌️change-annual-schedule | ✅️applies |
+      | change-annual-schedule-default-daily-schedule-refuses | 🎌️change-annual-schedule | ⛔️refuses |
+      | change-annual-schedule-holiday-daily-schedule-applies | 🎄️change-annual-schedule | ✅️applies |
+      | change-annual-schedule-holiday-daily-schedule-refuses | 🎄️change-annual-schedule | ⛔️refuses |
+      | add-annual-schedule-holiday-applies | 🎉️add-annual-schedule | ✅️applies |
+      | add-annual-schedule-holiday-refuses | 🎉️add-annual-schedule | ⛔️refuses |
+      | remove-annual-schedule-holiday-applies | 🎊️remove-annual-schedule | ✅️applies |
+      | remove-annual-schedule-holiday-refuses | 🎊️remove-annual-schedule | ⛔️refuses |
+      | create-time-series-schedule-applies | 🪗️create-time-series | ✅️applies |
+      | create-time-series-schedule-refuses | 🪗️create-time-series | ⛔️refuses |
+      | delete-time-series-schedule-applies | 🎞️delete-time-series | ✅️applies |
+      | delete-time-series-schedule-refuses | 🎞️delete-time-series | ⛔️refuses |
+      | replace-time-series-schedule-values-applies | 🕘️replace-time-series | ✅️applies |
+      | replace-time-series-schedule-values-refuses | 🕘️replace-time-series | ⛔️refuses |
+      | change-time-series-schedule-timestep-applies | 🕙️change-time-series | ✅️applies |
+      | change-time-series-schedule-timestep-refuses | 🕙️change-time-series | ⛔️refuses |
+      | replace-fenestration-vertices-shapes-a-gable | 🔶️replace-fenestration | ✅️shapes |
+      | replace-fenestration-vertices-refuses-a-line | 🔶️replace-fenestration | ⛔️refuses |
+      | change-glazing-material-thickness-applies | 🔷️change-glazing-material | ✅️applies |
+      | change-glazing-material-thickness-refuses | 🔷️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-conductivity-applies | 🟠️change-glazing-material | ✅️applies |
+      | change-glazing-material-conductivity-refuses | 🟠️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-solar-transmittance-applies | 🟡️change-glazing-material | ✅️applies |
+      | change-glazing-material-solar-transmittance-refuses | 🟡️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-visible-transmittance-applies | 🥽️change-glazing-material | ✅️applies |
+      | change-glazing-material-visible-transmittance-refuses | 🥽️change-glazing-material | ⛔️refuses |
+      | change-glazing-material-infrared-emissivity-applies | 🩻️change-glazing-material | ✅️applies |
+      | change-glazing-material-infrared-emissivity-refuses | 🩻️change-glazing-material | ⛔️refuses |
       | rename-glazing-material-applies | 🟢️rename-glazing-material | ✅️applies |
       | rename-glazing-material-refuses | 🟢️rename-glazing-material | ⛔️refuses |
-      | change-gas-material-thickness-applies | 🟣️change-gas-material-thickness | ✅️applies |
-      | change-gas-material-thickness-refuses | 🟣️change-gas-material-thickness | ⛔️refuses |
+      | change-gas-material-thickness-applies | 🟣️change-gas-material | ✅️applies |
+      | change-gas-material-thickness-refuses | 🟣️change-gas-material | ⛔️refuses |
       | change-gas-material-gas-applies | 🟤️change-gas-material-gas | ✅️applies |
       | change-gas-material-gas-refuses | 🟤️change-gas-material-gas | ⛔️refuses |
       | rename-gas-material-applies | 🔘️rename-gas-material | ✅️applies |

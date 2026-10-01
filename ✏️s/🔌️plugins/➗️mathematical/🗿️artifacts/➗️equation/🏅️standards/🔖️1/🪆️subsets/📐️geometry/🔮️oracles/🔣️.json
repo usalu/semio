@@ -13,12 +13,12 @@
       "vectors": [
         {
           "mutationId": "replace-points",
-          "sourceMutationDirectoryName": "🔄️replace-points",
-          "mutationDirectoryName": "🔄️replace-points",
+          "sourceMutationDirectoryName": "🔄️replace",
+          "mutationDirectoryName": "🔄️replace",
           "scenarios": [
             {
               "id": "replays-the-identical-empty-point-cloud",
-              "directoryName": "🧪️replays-the-identical-empty-point-cloud"
+              "directoryName": "🧪️replays"
             }
           ]
         },
@@ -29,7 +29,7 @@
           "scenarios": [
             {
               "id": "seeds-the-empty-cloud-with-its-first-point",
-              "directoryName": "🧪️seeds-the-empty-cloud-with-its-first-point"
+              "directoryName": "🧪️seeds"
             }
           ]
         },
@@ -40,7 +40,7 @@
           "scenarios": [
             {
               "id": "rejects-removing-a-point-from-an-empty-cloud",
-              "directoryName": "🧪️rejects-removing-a-point-from-an-empty-cloud"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -51,7 +51,7 @@
           "scenarios": [
             {
               "id": "rejects-moving-a-point-that-is-not-in-the-cloud",
-              "directoryName": "🧪️rejects-moving-a-point-that-is-not-in-the-cloud"
+              "directoryName": "🧪️rejects"
             }
           ]
         }

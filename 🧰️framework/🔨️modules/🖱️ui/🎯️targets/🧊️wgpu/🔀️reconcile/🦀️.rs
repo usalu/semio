@@ -1062,7 +1062,7 @@ fn media_transport_revision(value: Option<&serde_json::Value>) -> bool {
         .is_some_and(|value| (value == "0" || (value.len() <= 20 && value.as_bytes().first().is_some_and(|first| (b'1'..=b'9').contains(first)) && value.as_bytes()[1..].iter().all(u8::is_ascii_digit))) && value.parse::<u64>().is_ok())
 }
 
-pub fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
+pub(crate) fn media_transport_contract_valid(value: &serde_json::Value) -> bool {
     const ROOT_KEYS: &[&str] = &["schemaVersion", "kind", "mediaType", "revision", "durationMs", "positionMs", "selectionStartMs", "selectionEndMs", "locale", "labels", "resource", "capability", "hostContentHeight"];
     const LABEL_KEYS: &[&str] = &["play", "pause", "seek", "position", "duration", "selectionStart", "selectionEnd", "loading", "progress", "cancel", "unsupported", "unknownDuration", "audio", "video"];
     let Some(root) = value.as_object().filter(|root| json_object_has_exact_keys(root, ROOT_KEYS)) else { return false };

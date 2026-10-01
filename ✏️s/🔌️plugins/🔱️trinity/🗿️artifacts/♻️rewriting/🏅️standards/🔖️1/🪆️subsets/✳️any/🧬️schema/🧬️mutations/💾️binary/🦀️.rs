@@ -21,6 +21,10 @@ pub const BINARY_TAG_REGISTRY: &[(&str, u8)] = &[
     ("RemoveParameterBinding", super::remove_parameter_binding::binary::BINARY_TAG),
     ("ChangeRuleLayoutPoint", super::change_rule_layout_point::binary::BINARY_TAG),
     ("RemoveRuleLayoutPoint", super::remove_rule_layout_point::binary::BINARY_TAG),
+    ("DragWorkingNodes", super::drag_working_nodes::binary::BINARY_TAG),
+    ("PatchWorkingNodes", super::patch_working_nodes::binary::BINARY_TAG),
+    ("DragRuleNodes", super::drag_rule_nodes::binary::BINARY_TAG),
+    ("SetRuleLayoutPoints", super::set_rule_layout_points::binary::BINARY_TAG),
 ];
 
 /// 📦️ Encodes a `RewriteRuleMutation` to its binary command form.

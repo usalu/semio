@@ -940,7 +940,7 @@ impl store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation> for 
         let (post, inverse, forward) = prepare_writer_artifact(base.get(), mutation)?;
         let authority = self.authority.as_ref().ok_or_else(|| "Writer Artifact preparation lost its Store authority".to_string())?;
         let id = format!("writer-artifact-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit {
+        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![forward],
@@ -1051,11 +1051,6 @@ impl ArtifactEditor for WriterPlayApp {
 
     const DIALECT: Dialect = crate::WRITER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = WRITER_DOCUMENT_SCHEMA;
-
-    /// 🏷️ Every history row and the history-edit editor read the leaf's own localized label.
-    fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::label(op))
-    }
 
     /// ⌨️ Writer's typing algebra (design §13.2): a typing run of the prose editor is ONE net `splice-text` — every typed splice
     /// composes into it (`TextSplice::then`), a run that erased what it typed is empty, a caret that jumped away splits; a

@@ -47,8 +47,8 @@ pub fn contribute(base: &TiffSnapshot, pixels: Vec<u8>) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-pixels payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixels/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-pixels payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

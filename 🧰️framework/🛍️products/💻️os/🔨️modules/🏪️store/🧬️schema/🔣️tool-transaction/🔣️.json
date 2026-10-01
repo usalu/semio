@@ -1,0 +1,95 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/schema/os/store/tool-transaction",
+  "title": "Tool transaction corpus",
+  "description": "Language-agnostic cases of the store's transaction-scoped amend (design §15) over the demo mutation family: plain edits, appends into one tool transaction's open edit, commits, aborts, undo and remote edits, each step with the store state every implementation must reach after it — the refusal (if any), the live value, the ledger's edit count, the open transaction and its operation count, the operations the step announced on the backbone, and the value of the persisted document.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "tool", "codec", "cases"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "family": { "const": "demo" },
+    "tool": { "type": "string", "minLength": 1, "description": "The tool every appended transaction names (`TransactionRef.tool`)." },
+    "codec": {
+      "description": "Binary command vectors (`format u8 | ordinal varint | record`): an append of no operations under the corpus tool, a commit and an abort.",
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["command", "hex"],
+        "properties": {
+          "command": { "type": "object", "minProperties": 1, "maxProperties": 1, "additionalProperties": false, "properties": { "append": { "$ref": "#/definitions/transactionId" }, "commit": { "$ref": "#/definitions/transactionId" }, "abort": { "$ref": "#/definitions/transactionId" } } },
+          "hex": { "type": "string", "pattern": "^(?:[0-9a-f]{2})+$" }
+        }
+      }
+    },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/case" } }
+  },
+  "definitions": {
+    "value": { "type": ["integer", "null"], "minimum": -2147483648, "maximum": 2147483647 },
+    "transactionId": { "type": "string", "pattern": "^tx-[a-z]+$", "maxLength": 127 },
+    "operation": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["operation", "n"], "properties": { "operation": { "const": "setN" }, "n": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 } } },
+        { "type": "object", "additionalProperties": false, "required": ["operation", "delta"], "properties": { "operation": { "const": "addN" }, "delta": { "type": "integer", "minimum": -2147483648, "maximum": 2147483647 } } }
+      ]
+    },
+    "expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["refused", "n", "edits", "open", "openOperations", "announced", "persisted"],
+      "properties": {
+        "refused": { "description": "The store's refusal of the step (nothing changed), or null.", "enum": [null, "transactionOpen", "unknownTransaction", "emptyApply"] },
+        "n": { "$ref": "#/definitions/value" },
+        "edits": { "type": "integer", "minimum": 0, "description": "Edits in the ledger, the open one included." },
+        "open": { "oneOf": [{ "type": "null" }, { "$ref": "#/definitions/transactionId" }] },
+        "openOperations": { "type": "integer", "minimum": 0 },
+        "announced": { "type": "integer", "minimum": 0, "description": "Operation envelopes this step sent on the backbone." },
+        "persisted": { "description": "The value of the document its persisted forms reload to.", "type": ["integer", "null"], "minimum": -2147483648, "maximum": 2147483647 }
+      }
+    },
+    "step": {
+      "oneOf": [
+        { "type": "object", "additionalProperties": false, "required": ["apply", "expect"], "properties": { "apply": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/operation" } }, "expect": { "$ref": "#/definitions/expect" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["append", "expect"],
+          "properties": {
+            "append": { "type": "object", "additionalProperties": false, "required": ["transaction", "operations"], "properties": { "transaction": { "$ref": "#/definitions/transactionId" }, "operations": { "type": "array", "items": { "$ref": "#/definitions/operation" } } } },
+            "expect": { "$ref": "#/definitions/expect" }
+          }
+        },
+        { "type": "object", "additionalProperties": false, "required": ["commit", "expect"], "properties": { "commit": { "$ref": "#/definitions/transactionId" }, "expect": { "$ref": "#/definitions/expect" } } },
+        { "type": "object", "additionalProperties": false, "required": ["abort", "expect"], "properties": { "abort": { "$ref": "#/definitions/transactionId" }, "expect": { "$ref": "#/definitions/expect" } } },
+        { "type": "object", "additionalProperties": false, "required": ["undo", "expect"], "properties": { "undo": { "const": true }, "expect": { "$ref": "#/definitions/expect" } } },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["remote", "expect"],
+          "properties": {
+            "remote": {
+              "description": "One edit of another replica arriving, its clock after or before every local edit.",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["clock", "operation"],
+              "properties": { "clock": { "enum": ["after", "before"] }, "operation": { "$ref": "#/definitions/operation" } }
+            },
+            "expect": { "$ref": "#/definitions/expect" }
+          }
+        }
+      ]
+    },
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "initial", "steps"],
+      "properties": {
+        "name": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "initial": { "type": "object", "additionalProperties": false, "required": ["n"], "properties": { "n": { "$ref": "#/definitions/value" } } },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/step" } }
+      }
+    }
+  }
+}

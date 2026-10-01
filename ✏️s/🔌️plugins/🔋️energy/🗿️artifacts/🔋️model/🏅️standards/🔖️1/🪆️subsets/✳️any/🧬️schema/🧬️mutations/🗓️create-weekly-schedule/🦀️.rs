@@ -1,4 +1,4 @@
-//! 🗓️ Energy model mutation — `CreateWeeklySchedule`: Defines one week as seven daily profiles, Sunday first — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
+//! 🗓️ Energy model mutation — `CreateWeeklySchedule`: Defines one week as seven daily profiles, Sunday first (slot 0) through Saturday (slot 6) — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
 
 use crate::diff::EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
@@ -6,7 +6,7 @@ use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
-/// 🗓️ `create-weekly-schedule` payload. Defines one week as seven daily profiles, Sunday first — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
+/// 🗓️ `create-weekly-schedule` payload. Defines one week as seven daily profiles, Sunday first (slot 0) through Saturday (slot 6) — the shape `ScheduleSet::weekly_value` indexes by day of week before it reads the hour.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

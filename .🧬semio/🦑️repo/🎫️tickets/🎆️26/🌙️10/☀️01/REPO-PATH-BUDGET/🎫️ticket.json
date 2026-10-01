@@ -1,0 +1,10 @@
+{
+  "title": "Repo Path Budget",
+  "emoji": "📏",
+  "status": "open",
+  "description": "Bring every repo path outside the norm plugin under the taxonomy 240-byte budget. Fresh census of path-too-long files, decide per plugin whether option B (one-emoji case directories plus a short slug, with minimal kind renames) suffices or another shortening is required, apply it with every reference updated at once, and re-run crate tests, feature cases, schema lints, and the taxonomy path check until zero path-too-long findings remain. Do not edit the norm plugin; that work belongs to 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪5dba80e691944459b7592926ce5e39ee"
+  ]
+}

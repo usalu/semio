@@ -45,3 +45,5 @@ record change-layer-locked tag=15
 field payload bytes
 record change-layer-transform tag=16
 field payload bytes
+record paint-stroke tag=17
+field payload bytes

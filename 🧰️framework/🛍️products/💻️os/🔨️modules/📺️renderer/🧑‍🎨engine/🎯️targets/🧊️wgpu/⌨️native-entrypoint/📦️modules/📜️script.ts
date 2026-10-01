@@ -3,7 +3,7 @@ import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../../🔌️plugin/�
 import { readFileSync } from "node:fs";
 import { isAbsolute, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { BundleScript, ScriptRouter } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { nativeRuntimeDirectory, publishNativeRuntime } from "./🟦️.ts";

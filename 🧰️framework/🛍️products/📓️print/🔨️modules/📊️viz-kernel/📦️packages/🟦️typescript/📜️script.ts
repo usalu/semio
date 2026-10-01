@@ -4,7 +4,8 @@
  * that is its registered oracle. The check table and its d3 imports live in `🔬️probes/🟦️.ts`; the
  * kernel modules themselves have no runtime dependency on anything outside this repository.
  */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { VIZ_KERNEL_LEVELS, vizKernelChecks, type Level } from "./🔬️probes/🟦️.ts";
 
 //#region 🔖️Comparison
@@ -94,4 +95,4 @@ class BuildScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

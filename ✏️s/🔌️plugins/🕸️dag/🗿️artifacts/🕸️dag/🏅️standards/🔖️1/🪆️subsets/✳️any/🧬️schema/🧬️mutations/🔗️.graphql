@@ -14,6 +14,9 @@ union DagMutation =
   | ReorderNodes
   | ConnectNodes
   | DisconnectNodes
+  | MoveNodes
+  | SetNodePositions
+  | SetSlider
 
 type CreateNode { node: DagNodeSpec! }
 type DeleteNode { id: String! }
@@ -29,6 +32,11 @@ type ReplaceNodeProperties { id: String! newPropertiesJson: String! }
 type ReorderNodes { order: [String!]! }
 type ConnectNodes { id: String! source: String! target: String! routeStyle: String! propertiesJson: String! }
 type DisconnectNodes { id: String! }
+type MoveNodes { ids: [String!]! dx: Float! dy: Float! }
+type DagNodePosition { id: String! x: Float! y: Float! }
+type SetNodePositions { positions: [DagNodePosition!]! }
+enum DagSliderField { value min max }
+type SetSlider { id: String! field: DagSliderField! value: Float! }
 
 type DagNodeSpec {
   id: String!

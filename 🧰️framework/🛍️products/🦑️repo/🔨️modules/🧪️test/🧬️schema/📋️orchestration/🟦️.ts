@@ -516,8 +516,9 @@ export function rustValueEnums(path: string, source: string): RustValueEnum[] {
   return enums;
 }
 
-/** 🌳️ Every mutation leaf descriptor, `#[derive(Mutations)]` aggregate and committed `🦠️mutation/🔣️.json` fixture under the source roots. */
-function mutationTree(repoRoot: string): MutationTree {
+/** 🌳️ Every mutation leaf descriptor, `#[derive(Mutations)]` aggregate and committed `🦠️mutation/🔣️.json` fixture under `roots` (the
+ * source roots by default). */
+function mutationTree(repoRoot: string, roots: readonly string[] = MUTATION_TREE_ROOTS): MutationTree {
   const tree: MutationTree = { leaves: [], aggregates: [], fixtures: [], features: [], wrappers: new Map(), schemas: [] };
   const wrappersOf = (leaf: string): RustValueEnum[] =>
     [`${leaf}/🦀️.rs`, `${leaf}/🦠️mutation/🦀️.rs`].flatMap((path) => {
@@ -548,7 +549,7 @@ function mutationTree(repoRoot: string): MutationTree {
     const inner = name === "🧬️mutations" && (files.has("🦀️.rs") || !directory.split("/").at(-2)!.endsWith("fixtures")) ? directory : name.endsWith("fixtures") ? null : root;
     for (const entry of entries) if (entry.isDirectory() && !MUTATION_TREE_SKIPPED.has(entry.name)) visit(`${directory}/${entry.name}`, inner);
   };
-  for (const root of MUTATION_TREE_ROOTS) if (existsSync(join(repoRoot, root))) visit(root, null);
+  for (const root of roots) if (existsSync(join(repoRoot, root))) visit(root, null);
   return tree;
 }
 
@@ -987,15 +988,399 @@ function runMutationPayloadParity(repoRoot: string, segments: string[]): never {
 }
 //#endregion ⚖️MutationPayloadParity
 
+//#region 🦀️RustSources
+/** 🗂️ The roots the history gates read Rust from: the mutation roots plus the hub compositions. */
+const RUST_SOURCE_ROOTS = [...MUTATION_TREE_ROOTS, "🌎️hub"];
+
+/** 🔎️ Every `.rs` source under `under` whose text `keep` admits, repository-relative and sorted, with its text; build output, generated
+ * and hidden directories are skipped. */
+function rustSources(repoRoot: string, under: string, keep: (source: string) => boolean): { readonly path: string; readonly source: string }[] {
+  const found: { path: string; source: string }[] = [];
+  const walk = (directory: string): void => {
+    let entries: Dirent[];
+    try {
+      entries = readdirSync(join(repoRoot, directory), { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const entry of entries) {
+      const path = `${directory}/${entry.name}`;
+      if (entry.isDirectory()) {
+        if (!MUTATION_TREE_SKIPPED.has(entry.name) && !entry.name.startsWith(".")) walk(path);
+      } else if (entry.isFile() && entry.name.endsWith(".rs") && path.startsWith(under)) {
+        const source = readFileSync(join(repoRoot, path), "utf8");
+        if (keep(source)) found.push({ path, source });
+      }
+    }
+  };
+  const directory = under !== "" && existsSync(join(repoRoot, under)) && !under.endsWith(".rs");
+  for (const root of directory ? [under] : RUST_SOURCE_ROOTS) if (directory || under === "" || root.startsWith(under) || under.startsWith(root)) walk(root);
+  return found.sort((left, right) => left.path.localeCompare(right.path));
+}
+
+/** 🧱️ One `impl … Trait<…> for Type { … }` block of a Rust source: the trait's last path segment, its first generic argument as text,
+ * the implementing type's last path segment, and the token range of its body (the braces included). */
+type RustImplBlock = Readonly<{ trait: string; argument: string; implementor: string; open: number; close: number }>;
+
+/** 🧱️ Every trait impl block of `tokens`, nested ones included. */
+function rustImplBlocks(tokens: readonly RustToken[]): RustImplBlock[] {
+  const blocks: RustImplBlock[] = [];
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (tokens[index]!.kind !== "ident" || tokens[index]!.text !== "impl") continue;
+    let open = index + 1;
+    let angle = 0;
+    let forAt = -1;
+    while (open < tokens.length && !(tokens[open]!.text === "{" && angle <= 0) && tokens[open]!.text !== ";") {
+      const text = tokens[open]!.text;
+      if (text === "<") angle += 1;
+      else if (text === ">" && tokens[open - 1]?.text !== "-") angle -= 1;
+      else if (text === "for" && angle === 0 && forAt < 0) forAt = open;
+      open += 1;
+    }
+    if (forAt < 0 || tokens[open]?.text !== "{") continue;
+    let traitEnd = forAt - 1;
+    let argument = "";
+    if (tokens[traitEnd]?.text === ">") {
+      let depth = 0;
+      let start = traitEnd;
+      for (; start > index; start -= 1) {
+        if (tokens[start]!.text === ">" && tokens[start - 1]?.text !== "-") depth += 1;
+        else if (tokens[start]!.text === "<" && --depth === 0) break;
+      }
+      const inner = tokens.slice(start + 1, traitEnd);
+      const comma = inner.findIndex((token, at) => token.text === "," && inner.slice(0, at).filter((part) => part.text === "<").length === inner.slice(0, at).filter((part) => part.text === ">").length);
+      argument = (comma < 0 ? inner : inner.slice(0, comma)).map((token) => token.text).join("").replace(/^::/u, "");
+      traitEnd = start - 1;
+    }
+    const trait = tokens[traitEnd]?.kind === "ident" ? tokens[traitEnd]!.text : "";
+    const path = tokens.slice(forAt + 1, open);
+    const head = path.findIndex((token) => token.text === "<" || token.text === "where");
+    const named = (head < 0 ? path : path.slice(0, head)).filter((token) => token.kind === "ident");
+    blocks.push({ trait, argument, implementor: named.at(-1)?.text ?? "", open, close: rustGroupEnd(tokens, open) });
+  }
+  return blocks;
+}
+
+/** 🔧️ Every `fn <name>` item directly inside the block `open..close`, with the token range of its body (absent for a declaration). */
+function rustFunctions(tokens: readonly RustToken[], open: number, close: number): { readonly name: string; readonly start: number; readonly body: readonly [number, number] | null }[] {
+  const functions: { name: string; start: number; body: readonly [number, number] | null }[] = [];
+  for (let index = open + 1; index < close; index += 1) {
+    const token = tokens[index]!;
+    if (token.kind === "punct" && token.text === "{") {
+      index = rustGroupEnd(tokens, index);
+      continue;
+    }
+    if (token.kind !== "ident" || token.text !== "fn" || tokens[index + 1]?.kind !== "ident") continue;
+    let cursor = index + 2;
+    while (cursor < close && tokens[cursor]!.text !== "(") cursor += 1;
+    cursor = rustGroupEnd(tokens, cursor) + 1;
+    while (cursor < close && tokens[cursor]!.text !== "{" && tokens[cursor]!.text !== ";") cursor += 1;
+    const body = tokens[cursor]?.text === "{" ? ([cursor, rustGroupEnd(tokens, cursor)] as const) : null;
+    functions.push({ name: tokens[index + 1]!.text, start: index, body });
+    index = body === null ? cursor : body[1];
+  }
+  return functions;
+}
+
+/** ✂️ The arguments of the call whose `(` sits at `open`: one token run per top-level comma (a trailing comma adds none). */
+function rustCallArguments(tokens: readonly RustToken[], open: number): RustToken[][] {
+  const close = rustGroupEnd(tokens, open);
+  const args: RustToken[][] = [[]];
+  let depth = 0;
+  for (let index = open + 1; index < close; index += 1) {
+    const token = tokens[index]!;
+    if (token.kind === "punct" && "([{".includes(token.text)) depth += 1;
+    else if (token.kind === "punct" && ")]}".includes(token.text)) depth -= 1;
+    if (depth === 0 && token.kind === "punct" && token.text === ",") args.push([]);
+    else args.at(-1)!.push(token);
+  }
+  return args.at(-1)!.length === 0 ? args.slice(0, -1) : args;
+}
+
+/** 🔗️ Whether `tokens[index…]` spells the path `segments` (`A::b`). */
+function rustPathAt(tokens: readonly RustToken[], index: number, segments: readonly string[]): boolean {
+  return segments.every((segment, offset) => tokens[index + offset * 3]?.text === segment && (offset === segments.length - 1 || (tokens[index + offset * 3 + 1]?.text === ":" && tokens[index + offset * 3 + 2]?.text === ":")));
+}
+
+/** 🔤️ The text of the first string literal of `tokens`, quotes stripped; `null` when it holds none. */
+function rustFirstLiteral(tokens: readonly RustToken[]): string | null {
+  const literal = tokens.find((token) => token.kind === "literal" && /^b?r?#*"/u.test(token.text));
+  return literal === undefined ? null : literal.text.replace(/^b?r?#*"|"#*$/gu, "");
+}
+//#endregion 🦀️RustSources
+
+//#region 🏷️MutationLabels
+/** 🩺️ The classes of a `schema-mutation-label` finding: an app overriding the leaf label (`labelOverride`), a leaf label that is
+ * locale-invariant data (`labelLocaleInvariant`), a locale argument that is the empty literal (`labelLocaleEmpty`), an operation's
+ * text line used as a label (`labelOpText`), and a label body the gate cannot read as one of the admitted shapes (`labelUnresolved`). */
+export type MutationLabelFindingClass = "labelOverride" | "labelLocaleInvariant" | "labelLocaleEmpty" | "labelOpText" | "labelUnresolved";
+
+/** 🏷️ How one label body names its operation: `LocalizedLabel::native(en, de)` (`native`), a forward to another label (`forward`), or a finding. */
+export type MutationLabelVerdict = "native" | "forward" | MutationLabelFindingClass;
+
+/** 🏷️ One label site of a Rust source: the trait it implements (`MutationKind`, `CompositeMutationKind`, `SemanticMutation`, an app
+ * trait for an override, or `data` for a `LocalizedLabel::data` call), its implementor, the verdict and every `[en, de]` template read. */
+export type MutationLabelSite = Readonly<{ path: string; trait: string; implementor: string; verdict: MutationLabelVerdict; texts: readonly (readonly [string | null, string | null])[] }>;
+
+/** 📊️ One plugin's share of the label census: label bodies read, `native` and `forward` ones, and the findings per class. */
+export type MutationLabelCensusRow = { readonly owner: string; labels: number; native: number; forward: number; findings: number; readonly refused: Record<string, number> };
+
+/** 🏷️ The `schema-mutation-label` lint, its census and every label site read. */
+export type MutationLabelReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationLabelCensusRow[]; readonly sites: readonly MutationLabelSite[] };
+
+const MUTATION_LABEL_TRAITS = new Set(["MutationKind", "CompositeMutationKind", "SemanticMutation"]);
+const MUTATION_LABEL_APP_TRAITS = new Set(["ArtifactApp", "ArtifactEditor", "ArtifactViewer"]);
+
+/** 🏷️ The verdict of one label body `tokens[start..end]`: every `LocalizedLabel::native` call must take two locale arguments, neither
+ * the empty literal; `LocalizedLabel::data` and `print_op` are findings; a body without `native` must forward to a `label` call. */
+export function rustLabelVerdict(tokens: readonly RustToken[], start: number, end: number): { verdict: MutationLabelVerdict; texts: (readonly [string | null, string | null])[] } {
+  const texts: (readonly [string | null, string | null])[] = [];
+  const found = new Set<MutationLabelVerdict>();
+  let forward = false;
+  for (let index = start; index < end; index += 1) {
+    const token = tokens[index]!;
+    if (rustPathAt(tokens, index, ["LocalizedLabel", "native"]) && tokens[index + 4]?.text === "(") {
+      const args = rustCallArguments(tokens, index + 4);
+      if (args.length !== 2) found.add("labelUnresolved");
+      else {
+        const [en, de] = args.map(rustFirstLiteral) as [string | null, string | null];
+        texts.push([en, de]);
+        if (args.some((arg) => arg.filter((part) => part.text !== "&").length === 1 && rustFirstLiteral(arg) === "")) found.add("labelLocaleEmpty");
+      }
+    } else if (rustPathAt(tokens, index, ["LocalizedLabel", "data"])) found.add("labelLocaleInvariant");
+    else if (token.kind === "ident" && token.text === "print_op") found.add("labelOpText");
+    else if (token.kind === "ident" && /(^|_)label$/u.test(token.text) && tokens[index + 1]?.text === "(" && tokens[index - 1]?.text !== "fn") forward = true;
+  }
+  const uninhabited = tokens.slice(start + 1, end).map((token) => token.text).join(" ") === "match * self { }";
+  const worst = (["labelOpText", "labelLocaleInvariant", "labelLocaleEmpty", "labelUnresolved"] as const).find((verdict) => found.has(verdict));
+  return { verdict: worst ?? (texts.length > 0 ? "native" : forward || uninhabited ? "forward" : "labelUnresolved"), texts };
+}
+
+/** 🏷️ Every label site of one Rust source: each `fn label` of a `MutationKind`/`CompositeMutationKind`/`SemanticMutation` impl, each
+ * `fn mutation_label` of an app impl (an override, always a finding), and each `LocalizedLabel::data(…)` call fed by `print_op`. */
+export function rustMutationLabelSites(path: string, source: string): MutationLabelSite[] {
+  const tokens = rustLex(source);
+  const sites: MutationLabelSite[] = [];
+  for (const block of rustImplBlocks(tokens)) {
+    for (const fn of rustFunctions(tokens, block.open, block.close)) {
+      if (fn.body === null) continue;
+      if (MUTATION_LABEL_TRAITS.has(block.trait) && fn.name === "label") sites.push({ path, trait: block.trait, implementor: block.implementor, ...rustLabelVerdict(tokens, fn.body[0], fn.body[1]) });
+      if (MUTATION_LABEL_APP_TRAITS.has(block.trait) && fn.name === "mutation_label") sites.push({ path, trait: block.trait, implementor: block.implementor, verdict: "labelOverride", texts: [] });
+    }
+  }
+  for (let index = 0; index < tokens.length; index += 1) {
+    if (!rustPathAt(tokens, index, ["LocalizedLabel", "data"]) || tokens[index + 4]?.text !== "(") continue;
+    const close = rustGroupEnd(tokens, index + 4);
+    if (tokens.slice(index + 5, close).some((token) => token.kind === "ident" && token.text === "print_op")) sites.push({ path, trait: "data", implementor: "", verdict: "labelOpText", texts: [] });
+  }
+  return sites;
+}
+
+/**
+ * 🏷️ Reads every label site of every Rust source under `under` (design §16.2): a history row is labelled by its leaf in every shell
+ * locale, so each leaf label is `LocalizedLabel::native(en, de)` or a forward to one, no app overrides the leaf label, and no
+ * operation's text line is ever a label. Every other verdict is one `schema-mutation-label` diagnostic.
+ */
+export function mutationLabelReport(repoRoot: string, under = ""): MutationLabelReport {
+  const diagnostics: SchemaDiagnostic[] = [];
+  const census = new Map<string, MutationLabelCensusRow>();
+  const sites: MutationLabelSite[] = [];
+  const relevant = (source: string): boolean => !source.includes("quote!") && (source.includes("fn label") || source.includes("fn mutation_label") || (source.includes("LocalizedLabel::data") && source.includes("print_op")));
+  for (const { path, source } of rustSources(repoRoot, under, relevant)) {
+    if (path.split("/").includes("🧪️tests")) continue;
+    for (const site of rustMutationLabelSites(path, source)) {
+      sites.push(site);
+      const owner = mutationPayloadOwner(path);
+      const row = census.get(owner) ?? { owner, labels: 0, native: 0, forward: 0, findings: 0, refused: {} };
+      census.set(owner, row);
+      if (site.trait !== "data" && !MUTATION_LABEL_APP_TRAITS.has(site.trait)) row.labels += 1;
+      if (site.verdict === "native") row.native += 1;
+      else if (site.verdict === "forward") row.forward += 1;
+      else {
+        row.findings += 1;
+        row.refused[site.verdict] = (row.refused[site.verdict] ?? 0) + 1;
+        diagnostics.push({ code: "schema-mutation-label", scope: null, export: null, format: null, path, detail: `${site.verdict}: ${site.trait} for ${site.implementor || "a LocalizedLabel::data call"}${site.texts.length > 0 ? ` ${JSON.stringify(site.texts)}` : ""}` });
+      }
+    }
+  }
+  return { diagnostics, census: [...census.values()].sort((left, right) => right.findings - left.findings || left.owner.localeCompare(right.owner)), sites };
+}
+
+/**
+ * 🏷️ `test schema mutation-labels` — the `schema-mutation-label` gate: every applied leaf of every plugin labels itself in every shell
+ * locale, no app overrides that label, no history row falls back to an operation's text line. `--census` prints the per-plugin table
+ * and always exits 0; without it any finding fails.
+ *
+ *   bun 📜️script.ts schema mutation-labels [--census] [--under <path>] [--json]
+ */
+function runMutationLabels(repoRoot: string, segments: string[]): never {
+  const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
+  const report = mutationLabelReport(repoRoot, under);
+  const census = segments.includes("--census");
+  if (segments.includes("--json")) {
+    console.log(JSON.stringify(census ? report.census : { diagnostics: report.diagnostics, census: report.census }, null, 2));
+    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  }
+  const total = report.census.reduce((sum, row) => ({ labels: sum.labels + row.labels, native: sum.native + row.native, forward: sum.forward + row.forward }), { labels: 0, native: 0, forward: 0 });
+  if (census) {
+    const classes = [...new Set(report.census.flatMap((row) => Object.keys(row.refused)))].sort();
+    console.log(["owner", "labels", "native", "forward", "findings", ...classes].join("\t"));
+    for (const row of report.census) console.log([row.owner, row.labels, row.native, row.forward, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
+  } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-labels]   ${entry.path} — ${entry.detail}`);
+  console.log(`[schema mutation-labels] ${total.native} native and ${total.forward} forwarding of ${total.labels} leaf label(s); ${report.diagnostics.length} schema-mutation-label finding(s)${under === "" ? "" : ` under ${under}`}`);
+  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+}
+//#endregion 🏷️MutationLabels
+
+//#region ✏️MutationEditability
+/** ✏️ The history-edit verdict of one operation shape: `editable` (an input schema and no foreign-step capability), `inert` (no input
+ * schema — a non-payload phase of a `#[mutation_leaf(payload = …)]` leaf) or `foreign` (a composite that may emit foreign steps). */
+export type MutationEditabilityVerdict = "editable" | "inert" | "foreign";
+
+/** ✏️ One leaf of a `#[derive(Mutations)]` aggregate: its verdict and, for a payload-marked leaf, the inert phase variants beside its
+ * editable payload. */
+export type MutationLeafEditability = Readonly<{ owner: string; aggregate: string; path: string; kind: string; variant: string; verdict: "editable" | "foreign"; inert: readonly string[] }>;
+
+/** 🖐️ One hand-written `impl Mutation<S> for T`: the declared reason it is outside the generic history editor — it forwards every
+ * payload accessor of a derived aggregate (`forwarding`), it is a config/presence/transient/window/draft lane (`lane`), a test fixture
+ * (`fixture`), uninhabited (`empty`), or no app names it as its document `type Mutation`, so no history row ever holds one
+ * (`unexposed`) — or the finding `aggregateHandwritten`. */
+export type MutationHandwrittenAggregate = Readonly<{ owner: string; path: string; name: string; snapshot: string; reason: "forwarding" | "lane" | "fixture" | "empty" | "unexposed" | "aggregateHandwritten" }>;
+
+/** 📊️ One plugin's share of the editability census. */
+export type MutationEditabilityCensusRow = { readonly owner: string; aggregates: number; leaves: number; editable: number; foreign: number; inert: number; handwritten: number; findings: number; readonly refused: Record<string, number> };
+
+/** ✏️ The `schema-mutation-editability` lint, its census, every leaf verdict and every hand-written aggregate. */
+export type MutationEditabilityReport = { readonly diagnostics: readonly SchemaDiagnostic[]; readonly census: readonly MutationEditabilityCensusRow[]; readonly leaves: readonly MutationLeafEditability[]; readonly handwritten: readonly MutationHandwrittenAggregate[] };
+
+const MUTATION_LANE_SEGMENTS = new Set(["🎚️config", "👥️presence", "🫧️transient", "🪟️window", "📝️draft"]);
+const MUTATION_PAYLOAD_ACCESSORS = ["INPUT_SCHEMAS", "input_schema", "payload_value", "with_payload_value", "from_payload_value"];
+
+/** 🖐️ The declared reason of a hand-written `impl Mutation<snapshot> for name` at `path` whose body is `body`. */
+export function mutationHandwrittenReason(path: string, name: string, snapshot: string, body: readonly RustToken[], source: string): MutationHandwrittenAggregate["reason"] {
+  const segments = path.split("/");
+  if (new RegExp(`enum\\s+${name.replace(/[$]/gu, "\\$")}\\s*\\{\\s*\\}`, "u").test(source)) return "empty";
+  if (MUTATION_PAYLOAD_ACCESSORS.every((accessor) => body.some((token) => token.kind === "ident" && token.text === accessor))) return "forwarding";
+  if (segments.some((segment) => MUTATION_LANE_SEGMENTS.has(segment)) || /(Config|Presence|Transient|Draft)$/u.test(snapshot) || /(Config|Presence|Transient|Draft)Mutation$/u.test(name)) return "lane";
+  if (segments.some((segment) => segment === "🧪️tests" || segment === "tests" || segment.endsWith("fixtures"))) return "fixture";
+  return "aggregateHandwritten";
+}
+
+/**
+ * ✏️ Enumerates every mutation aggregate under `under` (design §16.3) and decides, from source alone, which history mutations the
+ * generic editor can edit: each leaf of a `#[derive(Mutations)]` aggregate is `editable` unless its descriptor composes a plan
+ * (`foreign`, the `may_emit_foreign_steps` capability), a payload-marked leaf adds its inert phases; a generic aggregate gets no emitted
+ * payload law (`aggregateGeneric`), a variant without a leaf descriptor is `leafUnresolved`, and a hand-written `impl Mutation` must
+ * declare its reason (`mutationHandwrittenReason`) or is `aggregateHandwritten`. `roots` bounds the tree read (the source roots by
+ * default); a narrower root also bounds the app-document scan to `under`.
+ */
+export function mutationEditabilityReport(repoRoot: string, under = "", roots: readonly string[] = MUTATION_TREE_ROOTS): MutationEditabilityReport {
+  const tree = mutationTree(repoRoot, roots);
+  const diagnostics: SchemaDiagnostic[] = [];
+  const census = new Map<string, MutationEditabilityCensusRow>();
+  const rowOf = (owner: string): MutationEditabilityCensusRow => {
+    const row = census.get(owner) ?? { owner, aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, handwritten: 0, findings: 0, refused: {} };
+    census.set(owner, row);
+    return row;
+  };
+  const refuse = (row: MutationEditabilityCensusRow, kind: string, path: string, detail: string): void => {
+    row.findings += 1;
+    row.refused[kind] = (row.refused[kind] ?? 0) + 1;
+    diagnostics.push({ code: "schema-mutation-editability", scope: null, export: null, format: null, path, detail: `${kind}: ${detail}` });
+  };
+  const leaves: MutationLeafEditability[] = [];
+  for (const aggregate of tree.aggregates) {
+    if (!aggregate.path.startsWith(under)) continue;
+    const root = aggregate.path.slice(0, aggregate.path.lastIndexOf("/"));
+    const owner = mutationPayloadOwner(aggregate.path);
+    const row = rowOf(owner);
+    row.aggregates += 1;
+    if (new RegExp(`enum\\s+${aggregate.name}\\s*<`, "u").test(readFileSync(join(repoRoot, aggregate.path), "utf8"))) refuse(row, "aggregateGeneric", aggregate.path, `${aggregate.name} is generic, so #[derive(Mutations)] emits no payload law for it`);
+    for (const variant of aggregate.variants.keys()) {
+      const candidates = tree.leaves.filter((candidate) => candidate.variant === variant);
+      const closest = Math.max(0, ...candidates.map((candidate) => sharedSegments(candidate.directory, root)));
+      const leaf = candidates.find((candidate) => candidate.root === root) ?? candidates.find((candidate) => closest >= 4 && sharedSegments(candidate.directory, root) === closest);
+      if (leaf === undefined) {
+        refuse(row, "leafUnresolved", aggregate.path, `${aggregate.name}::${variant} names no leaf descriptor near ${root}`);
+        continue;
+      }
+      const composite = readJsonObject(repoRoot, `${leaf.directory}/🔣️.json`)?.composition === "composite";
+      const wrapper = tree.wrappers.get(leaf.directory)?.find((candidate) => candidate.name === aggregate.payloadTypes.get(variant));
+      const inert = wrapper === undefined ? [] : [...wrapper.variants.keys()].filter((phase) => phase !== wrapper.payloadVariant);
+      leaves.push({ owner, aggregate: aggregate.name, path: leaf.directory, kind: leaf.kind, variant, verdict: composite ? "foreign" : "editable", inert });
+      row.leaves += 1;
+      row.inert += inert.length;
+      if (composite) row.foreign += 1;
+      else row.editable += 1;
+    }
+  }
+  const handwritten: MutationHandwrittenAggregate[] = [];
+  const appMutations = new Set<string>();
+  const pending: { path: string; source: string; block: RustImplBlock; body: RustToken[] }[] = [];
+  for (const { path, source } of rustSources(repoRoot, roots === MUTATION_TREE_ROOTS ? "" : under, (text) => !text.includes("quote!") && /\bimpl\b[^{;]*\bMutation\b/u.test(text))) {
+    const tokens = rustLex(source);
+    for (const block of rustImplBlocks(tokens)) {
+      const body = tokens.slice(block.open, block.close + 1);
+      if (MUTATION_LABEL_APP_TRAITS.has(block.trait))
+        for (let index = 0; index + 3 < body.length; index += 1) {
+          if (body[index]!.text !== "type" || body[index + 1]!.text !== "Mutation" || body[index + 2]!.text !== "=") continue;
+          const end = body.findIndex((token, at) => at > index && token.text === ";");
+          const head = body.slice(index + 3, end).findIndex((token) => token.text === "<");
+          const named = body.slice(index + 3, head < 0 ? end : index + 3 + head).filter((token) => token.kind === "ident");
+          if (named.length > 0) appMutations.add(named.at(-1)!.text);
+        }
+      if (block.trait === "Mutation" && path.startsWith(under)) pending.push({ path, source, block, body });
+    }
+  }
+  for (const { path, source, block, body } of pending) {
+    const owner = mutationPayloadOwner(path);
+    const declared = mutationHandwrittenReason(path, block.implementor, block.argument, body, source);
+    const reason = declared === "aggregateHandwritten" && !appMutations.has(block.implementor) ? "unexposed" : declared;
+    handwritten.push({ owner, path, name: block.implementor, snapshot: block.argument, reason });
+    const row = rowOf(owner);
+    row.handwritten += 1;
+    if (reason === "aggregateHandwritten") refuse(row, reason, path, `impl Mutation<${block.argument}> for ${block.implementor} is an app document aggregate that is neither derived nor forwards ${MUTATION_PAYLOAD_ACCESSORS.join(", ")}, so the history editor cannot edit its operations and nothing declares why`);
+  }
+  return { diagnostics, census: [...census.values()].sort((left, right) => right.findings - left.findings || right.foreign - left.foreign || left.owner.localeCompare(right.owner)), leaves, handwritten };
+}
+
+/**
+ * ✏️ `test schema mutation-editability` — the `schema-mutation-editability` gate: every mutation aggregate is editable by the generic
+ * history editor or declares why not. `--census` prints the per-plugin table and always exits 0; `--json` adds every leaf verdict and
+ * hand-written aggregate (the non-editable list); without either any finding fails.
+ *
+ *   bun 📜️script.ts schema mutation-editability [--census] [--under <path>] [--json]
+ */
+function runMutationEditability(repoRoot: string, segments: string[]): never {
+  const under = segments.includes("--under") ? (segments[segments.indexOf("--under") + 1] ?? "") : "";
+  const report = mutationEditabilityReport(repoRoot, under);
+  const census = segments.includes("--census");
+  if (segments.includes("--json")) {
+    console.log(JSON.stringify(census ? report.census : report, null, 2));
+    process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+  }
+  const total = report.census.reduce((sum, row) => ({ aggregates: sum.aggregates + row.aggregates, leaves: sum.leaves + row.leaves, editable: sum.editable + row.editable, foreign: sum.foreign + row.foreign, inert: sum.inert + row.inert, handwritten: sum.handwritten + row.handwritten }), { aggregates: 0, leaves: 0, editable: 0, foreign: 0, inert: 0, handwritten: 0 });
+  if (census) {
+    const classes = [...new Set(report.census.flatMap((row) => Object.keys(row.refused)))].sort();
+    console.log(["owner", "aggregates", "leaves", "editable", "foreign", "inert", "handwritten", "findings", ...classes].join("\t"));
+    for (const row of report.census) console.log([row.owner, row.aggregates, row.leaves, row.editable, row.foreign, row.inert, row.handwritten, row.findings, ...classes.map((name) => row.refused[name] ?? 0)].join("\t"));
+  } else for (const entry of report.diagnostics.slice(0, 40)) console.log(`[schema mutation-editability]   ${entry.path} — ${entry.detail}`);
+  console.log(`[schema mutation-editability] ${total.editable}/${total.leaves} leaves of ${total.aggregates} aggregates editable (${total.foreign} composite with foreign-step capability, ${total.inert} inert phase(s)); ${total.handwritten} hand-written aggregate(s); ${report.diagnostics.length} schema-mutation-editability finding(s)${under === "" ? "" : ` under ${under}`}`);
+  process.exit(census || report.diagnostics.length === 0 ? 0 : 1);
+}
+//#endregion ✏️MutationEditability
+
 /**
  * 🧬️ `test schema` — the scope-owned schema contract gate.
  *
- * It answers five questions in one pass and keeps them apart in the output: does every contract sit
+ * It answers seven questions in one pass and keeps them apart in the output: does every contract sit
  * on an eligible owner in the one place it belongs (the invariants), does every `schema://` reference
  * resolve through the declared catalog (resolution), does every bound fixture fail or pass at the
  * STAGE it declared (the fixtures), does every mutation input carry a UI descriptor
- * (`schema-mutation-input-ui`), and does every mutation leaf and aggregate schema describe the wire its
- * committed fixtures and `#[derive(Mutations)]` enum witness (`schema-mutation-payload-parity`). Nothing
+ * (`schema-mutation-input-ui`), does every mutation leaf and aggregate schema describe the wire its
+ * committed fixtures and `#[derive(Mutations)]` enum witness (`schema-mutation-payload-parity`), is
+ * every leaf labelled in every locale (`schema-mutation-label`), and is every aggregate editable in
+ * history or declares why not (`schema-mutation-editability`). Nothing
  * here searches the tree for a schema; an absent catalog is reported as absent, because a gate that
  * silently found a substitute would be measuring the substitute.
  *
@@ -1007,9 +1392,17 @@ export class SchemaScript extends Script {
   run(segments: string[]): void {
     if (segments[0] === "mutation-inputs") runMutationInputUi(this.repoRoot, segments.slice(1));
     if (segments[0] === "mutation-payloads") runMutationPayloadParity(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-labels") runMutationLabels(this.repoRoot, segments.slice(1));
+    if (segments[0] === "mutation-editability") runMutationEditability(this.repoRoot, segments.slice(1));
     const under = segments[segments.indexOf("--under") + 1];
     const scope = segments.includes("--under") && under !== undefined ? under : "";
-    const diagnostics: SchemaDiagnostic[] = [...schemaContractDiagnostics(this.repoRoot, scope), ...mutationInputUiReport(this.repoRoot, scope).diagnostics, ...mutationPayloadParityReport(this.repoRoot, scope).diagnostics];
+    const diagnostics: SchemaDiagnostic[] = [
+      ...schemaContractDiagnostics(this.repoRoot, scope),
+      ...mutationInputUiReport(this.repoRoot, scope).diagnostics,
+      ...mutationPayloadParityReport(this.repoRoot, scope).diagnostics,
+      ...mutationLabelReport(this.repoRoot, scope).diagnostics,
+      ...mutationEditabilityReport(this.repoRoot, scope).diagnostics,
+    ];
     const reports: SchemaFixtureReport[] = [];
     for (const collection of discoverSchemaFixtures(this.repoRoot, scope)) for (const fixture of collection.fixtures) reports.push(runSchemaFixture(this.repoRoot, fixture, collection.caseDir));
     const failed = reports.filter((report) => report.outcome === "failed");

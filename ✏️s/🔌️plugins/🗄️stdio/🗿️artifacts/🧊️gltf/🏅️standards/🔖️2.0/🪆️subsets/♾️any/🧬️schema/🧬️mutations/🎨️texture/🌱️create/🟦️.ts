@@ -4,7 +4,7 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateTexturePayload {
-  position: number;
+  position: bigint;
 }
 
 export type CreateTextureMutation = GltfPhase<GltfCreateTexturePayload, GltfDiff>;

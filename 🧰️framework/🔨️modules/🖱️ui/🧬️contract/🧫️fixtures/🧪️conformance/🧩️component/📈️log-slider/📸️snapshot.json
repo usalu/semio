@@ -1,0 +1,55 @@
+{
+  "surface": "conformance.component.log-slider",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 1.0,
+        "min": 0.1,
+        "max": 10.0,
+        "step": 0.01,
+        "snaps": [
+          0.25,
+          0.5,
+          1.0,
+          2.0,
+          4.0
+        ],
+        "scale": "log",
+        "precision": 2,
+        "limits": {
+          "min": {
+            "value": 0.0,
+            "exclusive": true,
+            "refusal": "Must be greater than 0"
+          }
+        }
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Factor"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setFactor",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

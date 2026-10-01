@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "rewrites-description",
-              "directoryName": "📝️rewrites-description"
+              "directoryName": "📝️rewrites"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "architecture-to-engineering",
-              "directoryName": "⚙️architecture-to-engineering"
+              "directoryName": "⚙️architecture"
             }
           ]
         },
@@ -175,15 +175,15 @@
           "scenarios": [
             {
               "id": "hides-volume-1",
-              "directoryName": "🙈️hides-volume-1"
+              "directoryName": "🙈️hides"
             },
             {
               "id": "hides-the-seed-bay",
-              "directoryName": "🌲️hides-the-seed-bay"
+              "directoryName": "🌲️hides"
             },
             {
               "id": "rejects-hiding-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-hiding-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -194,15 +194,15 @@
           "scenarios": [
             {
               "id": "locks-volume-1",
-              "directoryName": "🔒️locks-volume-1"
+              "directoryName": "🔒️locks"
             },
             {
               "id": "locks-the-seed-bay",
-              "directoryName": "🌲️locks-the-seed-bay"
+              "directoryName": "🌲️locks"
             },
             {
               "id": "rejects-locking-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-locking-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -224,7 +224,7 @@
           "scenarios": [
             {
               "id": "adds-grip-pair",
-              "directoryName": "🤝️adds-grip-pair"
+              "directoryName": "🤝️adds"
             }
           ]
         },
@@ -250,11 +250,11 @@
             },
             {
               "id": "paints-the-seed-bay",
-              "directoryName": "🌲️paints-the-seed-bay"
+              "directoryName": "🌲️paints"
             },
             {
               "id": "rejects-a-volume-id-the-model-already-holds",
-              "directoryName": "🚫️rejects-a-volume-id-the-model-already-holds"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -265,7 +265,7 @@
           "scenarios": [
             {
               "id": "removes-part-a-and-severs-fastener",
-              "directoryName": "🚫️removes-part-a-and-severs-fastener"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -280,11 +280,11 @@
             },
             {
               "id": "clears-the-seed-bay",
-              "directoryName": "🌲️clears-the-seed-bay"
+              "directoryName": "🌲️clears"
             },
             {
               "id": "rejects-deleting-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-deleting-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -306,7 +306,7 @@
           "scenarios": [
             {
               "id": "removes-grip-pair",
-              "directoryName": "🚫️removes-grip-pair"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -365,11 +365,11 @@
             },
             {
               "id": "shifts-the-seed-bay-north",
-              "directoryName": "🌲️shifts-the-seed-bay-north"
+              "directoryName": "🌲️shifts"
             },
             {
               "id": "rejects-moving-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-moving-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -380,7 +380,7 @@
           "scenarios": [
             {
               "id": "removes-grip-1-and-severs-fastener",
-              "directoryName": "🚫️removes-grip-1-and-severs-fastener"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -402,7 +402,7 @@
           "scenarios": [
             {
               "id": "repositions-fast-1",
-              "directoryName": "📍️repositions-fast-1"
+              "directoryName": "📍️repositions"
             }
           ]
         },
@@ -413,7 +413,7 @@
           "scenarios": [
             {
               "id": "null-catalogs-is-noop",
-              "directoryName": "📇️null-catalogs-is-noop"
+              "directoryName": "📇️null"
             }
           ]
         },
@@ -435,7 +435,7 @@
           "scenarios": [
             {
               "id": "circle-to-rectangle",
-              "directoryName": "🔳️circle-to-rectangle"
+              "directoryName": "🔳️circle"
             }
           ]
         },
@@ -461,11 +461,11 @@
             },
             {
               "id": "squares-the-seed-bay",
-              "directoryName": "🌲️squares-the-seed-bay"
+              "directoryName": "🌲️squares"
             },
             {
               "id": "rejects-rotating-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-rotating-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -495,7 +495,7 @@
             },
             {
               "id": "rejects-scaling-a-volume-the-model-never-held",
-              "directoryName": "🚫️rejects-scaling-a-volume-the-model-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -510,7 +510,7 @@
             },
             {
               "id": "skips-locked-volume-ghost",
-              "directoryName": "⚠️skips-locked-volume-ghost"
+              "directoryName": "⚠️skips"
             },
             {
               "id": "rejects-ghosts",
@@ -533,7 +533,7 @@
           "scenarios": [
             {
               "id": "drags-part-and-volume",
-              "directoryName": "🚚️drags-part-and-volume"
+              "directoryName": "🚚️drags"
             },
             {
               "id": "skips-locked-ghost",
@@ -560,7 +560,7 @@
           "scenarios": [
             {
               "id": "turns-part-and-volume",
-              "directoryName": "🔄️turns-part-and-volume"
+              "directoryName": "🔄️turns"
             },
             {
               "id": "skips-locked-ghost",
@@ -587,7 +587,7 @@
           "scenarios": [
             {
               "id": "scales-parts-and-volume",
-              "directoryName": "🔍️scales-parts-and-volume"
+              "directoryName": "🔍️scales"
             },
             {
               "id": "skips-locked-ghost",

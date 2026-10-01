@@ -43,20 +43,7 @@ export function base64ErrorMessage(error: Base64Error): string {
 }
 
 /** 🔤️ Encodes bytes with the padded RFC 4648 standard alphabet. */
-export function base64StandardEncode(bytes: Uint8Array): string {
-  let encoded = "";
-  for (let offset = 0; offset < bytes.length; offset += 3) {
-    const remaining = bytes.length - offset;
-    const first = bytes[offset] as number;
-    const second = remaining >= 2 ? (bytes[offset + 1] as number) : 0;
-    const third = remaining >= 3 ? (bytes[offset + 2] as number) : 0;
-    encoded += BASE64_STANDARD_ALPHABET[first >> 2];
-    encoded += BASE64_STANDARD_ALPHABET[((first & 0x03) << 4) | (second >> 4)];
-    encoded += remaining >= 2 ? BASE64_STANDARD_ALPHABET[((second & 0x0f) << 2) | (third >> 6)] : "=";
-    encoded += remaining >= 3 ? BASE64_STANDARD_ALPHABET[third & 0x3f] : "=";
-  }
-  return encoded;
-}
+export function base64StandardEncode(bytes:Uint8Array):string{return base64StandardEncodeControlled(bytes,{maximumOutputBytes:Number.MAX_SAFE_INTEGER,progress:()=>true});}
 
 function sextet(byte: number, index: number): number {
   if (byte >= 0x41 && byte <= 0x5a) return byte - 0x41;
@@ -69,34 +56,57 @@ function sextet(byte: number, index: number): number {
 
 /** 🔤️ Decodes padded RFC 4648 standard base64 and rejects whitespace, misplaced padding and
  * non-canonical unused bits — throwing {@link Base64DecodeError}, never returning partial bytes. */
-export function base64StandardDecode(encoded: string): Uint8Array {
-  const source = new Uint8Array(encoded.length);
-  for (let index = 0; index < encoded.length; index += 1) source[index] = encoded.charCodeAt(index) & 0xff;
-  if (source.length % 4 !== 0) throw new Base64DecodeError({ kind: "invalidLength" });
-  const decoded: number[] = [];
-  for (let offset = 0; offset < source.length; offset += 4) {
-    const last = offset + 4 === source.length;
-    const chunk = [source[offset] as number, source[offset + 1] as number, source[offset + 2] as number, source[offset + 3] as number];
-    if (chunk[0] === 0x3d || chunk[1] === 0x3d) throw new Base64DecodeError({ kind: "invalidPadding" });
-    const first = sextet(chunk[0] as number, offset);
-    const second = sextet(chunk[1] as number, offset + 1);
-    decoded.push(((first << 2) | (second >> 4)) & 0xff);
-    if (chunk[2] === 0x3d) {
-      if (!last || chunk[3] !== 0x3d) throw new Base64DecodeError({ kind: "invalidPadding" });
-      if ((second & 0x0f) !== 0) throw new Base64DecodeError({ kind: "nonCanonicalTrailingBits" });
-      continue;
-    }
-    const third = sextet(chunk[2] as number, offset + 2);
-    decoded.push(((second << 4) | (third >> 2)) & 0xff);
-    if (chunk[3] === 0x3d) {
-      if (!last) throw new Base64DecodeError({ kind: "invalidPadding" });
-      if ((third & 0x03) !== 0) throw new Base64DecodeError({ kind: "nonCanonicalTrailingBits" });
-      continue;
-    }
-    const fourth = sextet(chunk[3] as number, offset + 3);
-    decoded.push(((third << 6) | fourth) & 0xff);
+export function base64StandardDecode(encoded:string):Uint8Array{return base64StandardDecodeControlled(encoded,{maximumOutputBytes:Number.MAX_SAFE_INTEGER,progress:()=>true});}
+
+/** 🧬️ Caller-owned output bounds and cancellation at every bounded base64 chunk. */
+export interface Base64Control {
+  readonly maximumOutputBytes:number;
+  readonly progress:(event:Base64Progress)=>boolean;
+}
+/** 📍️ Byte counts for encoding and ASCII character counts for validation or decoding. */
+export interface Base64Progress {
+  readonly phase:"encode"|"validate"|"decode";
+  readonly completed:number;
+  readonly total:number;
+}
+const alphabet=BASE64_STANDARD_ALPHABET;
+function admit(size:number,control:Base64Control):void{
+  if(!Number.isSafeInteger(control.maximumOutputBytes)||control.maximumOutputBytes<0||!Number.isSafeInteger(size)||size>control.maximumOutputBytes)throw Error("intrinsic byte output limit exceeded");
+}
+function checkpoint(control:Base64Control,phase:Base64Progress["phase"],completed:number,total:number):void{
+  if(!control.progress({phase,completed,total}))throw Error("intrinsic bytes cancelled");
+}
+/** 🔤️ Produces canonical RFC4648 padding with no runtime library dependency. */
+export function base64StandardEncodeControlled(bytes:Uint8Array,control:Base64Control):string{
+  admit(Math.ceil(bytes.length/3)*4,control);checkpoint(control,"encode",0,bytes.length);
+  const chunks:string[]=[];
+  for(let offset=0;offset<bytes.length;){
+    const end=Math.min(offset+4095,bytes.length);let chunk="";
+    while(offset<end){const a=bytes[offset++]!,hasB=offset<bytes.length,b=hasB?bytes[offset++]!:0,hasC=offset<bytes.length,c=hasC?bytes[offset++]!:0;chunk+=alphabet[a>>>2]!+alphabet[((a&3)<<4)|(b>>>4)]!+(hasB?alphabet[((b&15)<<2)|(c>>>6)]!:"=")+(hasC?alphabet[c&63]!:"=");}
+    chunks.push(chunk);checkpoint(control,"encode",offset,bytes.length);
   }
-  return Uint8Array.from(decoded);
+  return chunks.join("");
+}
+/** 🔤️ Validates canonical padding and unused bits before allocating the owned result. */
+export function base64StandardDecodeControlled(text:string,control:Base64Control):Uint8Array{
+  if(text.length%4)throw new Base64DecodeError({kind:"invalidLength"});
+  const padding=text.endsWith("==")?2:text.endsWith("=")?1:0;
+  const size=text.length/4*3-padding;admit(size,control);checkpoint(control,"validate",0,text.length);
+  for(let offset=0;offset<text.length;offset+=4){
+    if(text[offset]==="="||text[offset+1]==="=")throw new Base64DecodeError({kind:"invalidPadding"});
+    const a=sextet(text.charCodeAt(offset),offset),b=sextet(text.charCodeAt(offset+1),offset+1),pad2=text[offset+2]==="=",pad1=text[offset+3]==="=",last=offset+4===text.length;
+    if(((pad1||pad2)&&!last)||(pad2&&!pad1))throw new Base64DecodeError({kind:"invalidPadding"});
+    const c=pad2?0:sextet(text.charCodeAt(offset+2),offset+2);if(!pad1)sextet(text.charCodeAt(offset+3),offset+3);
+    if((pad2&&(b&15)!==0)||(pad1&&!pad2&&(c&3)!==0))throw new Base64DecodeError({kind:"nonCanonicalTrailingBits"});
+    if((offset+4)%4096===0||last)checkpoint(control,"validate",offset+4,text.length);
+  }
+  checkpoint(control,"decode",0,text.length);const bytes=new Uint8Array(size);let output=0;
+  for(let offset=0;offset<text.length;offset+=4){
+    const a=sextet(text.charCodeAt(offset),offset),b=sextet(text.charCodeAt(offset+1),offset+1),c=text[offset+2]==="="?0:sextet(text.charCodeAt(offset+2),offset+2),d=text[offset+3]==="="?0:sextet(text.charCodeAt(offset+3),offset+3);
+    bytes[output++]=(a<<2)|(b>>>4);if(output<size)bytes[output++]=(b<<4)|(c>>>2);if(output<size)bytes[output++]=(c<<6)|d;
+    if((offset+4)%4096===0||offset+4===text.length)checkpoint(control,"decode",offset+4,text.length);
+  }
+  return bytes;
 }
 
 const BASE64_URL_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";

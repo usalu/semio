@@ -40,7 +40,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     Ok(receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count())
                 }
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
                 let left_id = fixture["leftWindowId"].as_str().unwrap();
                 let right_id = fixture["rightWindowId"].as_str().unwrap();
                 let view = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: EquationGraphWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };
@@ -121,7 +121,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
 
 #[test]
 fn equation_graph_window_config_mutations_follow_the_neutral_trace_and_restore() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: EquationGraphWindowConfig = dsl::json::from_json_str(&fixture["base"].to_string()).unwrap();
     let mut windows = std::collections::BTreeMap::from([(fixture["leftWindowId"].as_str().unwrap().to_string(), base.clone()), (fixture["rightWindowId"].as_str().unwrap().to_string(), base)]);
     for row in fixture["cases"].as_array().unwrap() {

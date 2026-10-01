@@ -7,9 +7,10 @@
  *
  * 1. THE VOCABULARY. wgpu hand-builds every `nodeGraphEdit` sub-operation into a bounded action, so
  *    nothing in Rust catches it drifting from the shape the GUEST decodes. Each operation's name and
- *    field names are read out of generation3d's own `node-graph-edit` command source and out of
- *    React's `NodeGraph`, never restated here — a rename on either side fails this test instead of
- *    silently splitting the two renderers.
+ *    field names are read out of the reference guest's own closed row declarations (flow's
+ *    `node-graph-edit` command, `action_row_fields(row, operation, &[…])`) and out of React's
+ *    `NodeGraph`, never restated here — a rename on either side fails this test instead of silently
+ *    splitting the two renderers.
  * 2. THE ADMISSION RULE. That a plain pointer move must not be priced like a mutation is a property
  *    of the dispatch code's SHAPE — no reservation before the change is known — and this pins that
  *    shape in the one file that owns it.
@@ -26,7 +27,7 @@ const suiteRoot = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(suiteRoot, "../../../../../../../..");
 const engineRoot = resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine");
 const canvasSource = resolve(engineRoot, "🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs");
-const guestSource = resolve(repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs");
+const guestSource = resolve(repoRoot, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs");
 
 type EditRow = Record<string, unknown>;
 type FixtureCase = { readonly name: string; readonly rule: string; readonly gesture: Record<string, unknown>; readonly expectedEdits?: readonly EditRow[]; readonly expectedSelection?: readonly string[]; readonly expectedCameraMoves?: boolean };
@@ -41,15 +42,15 @@ const law = JSON.parse(readFileSync(resolve(engineRoot, "🧫️fixtures/🫳️
 const canvas = readFileSync(canvasSource, "utf8");
 const guest = readFileSync(guestSource, "utf8");
 
-/** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation, from its own match arm. A node drag is the
- * shared node-graph gesture record (design §13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), which every guest decodes through
- * the ONE `NodeDragRecord::from_row`, so its fields are that record's closed row (`NODE_DRAG_ROW_FIELDS`) less the
- * discriminator. */
+/** 🔗️ The field names the GUEST reads out of one `nodeGraphEdit` sub-operation: the closed field list its own match arm
+ * declares (`action_row_fields(row, operation, &[…])`), less the discriminator. A node drag is the shared node-graph gesture
+ * record (design §13.3 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), which every guest decodes through the ONE
+ * `NodeDragRecord::from_row`, so its fields are that record's closed row (`NODE_DRAG_ROW_FIELDS`) less the discriminator. */
 const guestFields = (operation: string): readonly string[] => {
   if (operation === NODE_DRAG_OPERATION) return NODE_DRAG_ROW_FIELDS.filter((field) => field !== "operation");
   const arm = guest.slice(guest.indexOf(`"${operation}" =>`));
-  const body = arm.slice(0, arm.indexOf("\n                }"));
-  return [...new Set([...body.matchAll(/operation\.get\("(\w+)"\)/gu)].map((match) => match[1]!))];
+  const declared = /action_row_fields\(row, operation, &\[([^\]]*)\]\)/u.exec(arm)?.[1] ?? "";
+  return [...declared.matchAll(/"(\w+)"/gu)].map((match) => match[1]!).filter((field) => field !== "operation");
 };
 
 /** 🔌️ Splits a `"<nodeId>@<portId>"` endpoint — the one grammar the graph reports hover, picks and wire ends in. */

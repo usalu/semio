@@ -55,11 +55,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-support" => Vector {
-            before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds-a-vertical-6161a1/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🛡️create-support/🛞️adds/🎯️outcome/🔣️.json"),
         },
         "delete-support" => Vector {
             before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/📸️snapshot/⬅️before/🔣️.json"),
@@ -69,11 +69,11 @@ fn vector(kind: &str) -> Vector {
             outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🗑️delete-support/🔓️releases-the-82b34f/🎯️outcome/🔣️.json"),
         },
         "replace-support" => Vector {
-            before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades-the-834e4a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../🛡️boundary/🧫️fixtures/🧬️mutations/🔁️replace-support/🔒️upgrades/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem2d-1-boundary: no committed specification vector is registered for kind {other:?}"),
     }

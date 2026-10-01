@@ -2316,11 +2316,11 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_stroke_color {
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }
@@ -2912,11 +2912,11 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_material_base_color {
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                         }

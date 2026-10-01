@@ -1,0 +1,51 @@
+{
+  "surface": "conformance.component.dial-with-snaps",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "slider",
+        "value": 1.5707963267948966,
+        "min": -3.141592653589793,
+        "max": 3.141592653589793,
+        "step": 0.017453292519943295,
+        "unit": "rad",
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0.0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "appearance": "dial",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "limits": {}
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Angle"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setAngle",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

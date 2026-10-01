@@ -1,5 +1,5 @@
 /** 🏠️ Strict local-interaction contracts and independent immutable restore semantics. */
-import { semioSchemaAjvV1 } from "../../../../../../🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { produce } from "immer";
 import { applyEdits, modify, parse } from "jsonc-parser";
 import { sumBy } from "lodash";

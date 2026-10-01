@@ -31,7 +31,7 @@
         "$ref": "#/$defs/DrawingPathPointTarget"
       },
       "x-semio-ui": {
-        "role": "target",
+        "role": "value",
         "label": {
           "en": "Path points",
           "de": "Pfadpunkte"

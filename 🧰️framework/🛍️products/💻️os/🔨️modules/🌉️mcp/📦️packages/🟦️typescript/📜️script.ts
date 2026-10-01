@@ -5,7 +5,9 @@
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { requireMcpBinary, runMcpClientEndToEnd } from "../../🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -41,4 +43,4 @@ class ClientEndToEndScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("client-e2e", ClientEndToEndScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

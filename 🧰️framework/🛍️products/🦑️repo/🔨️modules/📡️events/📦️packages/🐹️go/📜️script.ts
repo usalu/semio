@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-events-go` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, goLevelTestArgs, goCoverageArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { goLevelTestArgs, goCoverageArgs, resolveTestLevel, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const moduleRoot = import.meta.dir;
 
@@ -13,4 +15,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

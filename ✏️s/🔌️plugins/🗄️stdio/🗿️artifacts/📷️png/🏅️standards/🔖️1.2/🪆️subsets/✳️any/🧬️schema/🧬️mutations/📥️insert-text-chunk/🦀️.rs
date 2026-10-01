@@ -64,8 +64,8 @@ pub fn chunk_order_insert_text_diff(order: &[PngChunkMarker], at: usize) -> PngC
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-text-chunk/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed insert-text-chunk payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📥️insert-text-chunk/🎯️direct/🦠️mutation/🔣️.json")).expect("committed insert-text-chunk payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

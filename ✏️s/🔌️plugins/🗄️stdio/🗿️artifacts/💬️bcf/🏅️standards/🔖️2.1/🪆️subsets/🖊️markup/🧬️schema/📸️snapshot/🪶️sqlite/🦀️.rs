@@ -1,7 +1,7 @@
 //! 💬️ Handwritten topic, viewpoint, camera and component relationships.
 use super::*;
 use std::collections::BTreeMap;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,Projection,FloatColumn,FloatRow,insert_key_ieee754,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,Projection,FloatColumn,FloatRow,insert_key_ieee754,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 
 type Entities<'a>=BTreeMap<i64,&'a SqliteRow>;
 const CAMERA_FLOATS:&[FloatColumn]=&[FloatColumn::Binary64(2),FloatColumn::Binary64(3),FloatColumn::Binary64(4),FloatColumn::Binary64(5),FloatColumn::Binary64(6),FloatColumn::Binary64(7),FloatColumn::Binary64(8),FloatColumn::Binary64(9),FloatColumn::Binary64(10)];
@@ -17,6 +17,41 @@ fn point(row:FloatRow<'_>,column:usize)->Result<BcfPoint3,String>{Ok(BcfPoint3{x
 
 impl ArtifactSqliteSnapshot for BcfSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
+ fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+  let mut bound = NativeEncodingBound::new(control)?;
+  let scalar = 2 * std::mem::size_of::<dsl::FieldValue>() + 64;
+  bound.add(32768)?;
+  for text in [&self.schema, &self.version] { bound.repeated(text.len(), 24)?; }
+  for topic in &self.topics {
+   bound.add(8192)?;
+   for text in [&topic.guid, &topic.title, &topic.description, &topic.status, &topic.priority, &topic.creation_date, &topic.creation_author] { bound.repeated(text.len(), 24)?; }
+   for label in &topic.labels { bound.add(1024)?; bound.repeated(label.len(), 24)?; }
+   for comment in &topic.comments {
+    bound.add(2048)?;
+    for text in [&comment.guid, &comment.date, &comment.author, &comment.text] { bound.repeated(text.len(), 24)?; }
+    if let Some(reference) = &comment.viewpoint_ref { bound.repeated(reference.len(), 24)?; }
+   }
+   for view in &topic.viewpoints {
+    bound.add(8192)?;
+    bound.repeated(view.guid.len(), 24)?;
+    if view.camera.is_some() { bound.add(2048)?; bound.repeated(10, scalar)?; }
+    if let Some(components) = &view.components {
+     bound.add(8192)?;
+     for name in &components.selection { bound.add(1024)?; bound.repeated(name.len(), 24)?; }
+     for name in &components.visibility.exceptions { bound.add(1024)?; bound.repeated(name.len(), 24)?; }
+     for color in &components.coloring {
+      bound.add(2048)?;
+      bound.repeated(color.color.len(), 24)?;
+      for name in &color.components { bound.add(1024)?; bound.repeated(name.len(), 24)?; }
+     }
+    }
+    if let Some(image) = &view.snapshot { bound.repeated(image.len(), scalar)?; }
+   }
+  }
+  for part in &self.parts { bound.add(2048)?; bound.repeated(part.name.len(), 24)?; bound.repeated(part.data.len(), 16)?; }
+  bound.finish()
+ }
+
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{
   let mut out=Projection::new(Self::SQLITE_SCHEMA,control)?;out.insert("bcf_document",&[Cell::Text(&self.schema),Cell::Text(&self.version)])?;
   for(ordinal,topic)in self.topics.iter().enumerate(){let id=out.insert("bcf_topic",&[Cell::Integer(1),Cell::Integer(i64::try_from(ordinal).map_err(|error|error.to_string())?),Cell::Text(&topic.guid),Cell::Text(&topic.title),Cell::Text(&topic.description),Cell::Text(&topic.status),Cell::Text(&topic.priority),Cell::Text(&topic.creation_date),Cell::Text(&topic.creation_author)])?;write_strings(&mut out,"bcf_topic_label",id,&topic.labels)?;

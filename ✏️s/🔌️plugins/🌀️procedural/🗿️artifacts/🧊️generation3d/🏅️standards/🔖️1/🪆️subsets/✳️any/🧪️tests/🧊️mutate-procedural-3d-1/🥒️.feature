@@ -87,20 +87,20 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                      | vector                                                                      |
-      | create-widget           | 🌱️create-widget/📝️inserts-node-c-at-index-2                            |
-      | update-widget           | 🩹update-widget/🎚️retunes-the-knob-slider-value                        |
-      | delete-widget           | ❌delete-widget/🚫️removes-node-a-and-leaves-wire-ab-dangling           |
-      | connect-synapse         | 🔗️connect-synapse/🔌️wires-node-b-to-node-c-at-index-1                  |
-      | update-synapse          | 🔄️update-synapse/📡️repoints-wire-ab-onto-the-cap-port                  |
-      | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts-wire-ab-leaving-both-nodes                |
-      | move-widget             | 📍️move-widget/📍️repositions-node-a-in-the-graph                        |
-      | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins-the-node-a-position                  |
-      | update-camera           | 📷️update-camera/🔍️frames-the-graph-at-double-zoom                      |
-      | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema-id                       |
-      | create-generation       | ➕create-generation/🌱️appends-generation-2-moves-selection     |
-      | delete-generation       | 🗑️delete-generation/🚫️removes-selected-generation-2-falls |
-      | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1-via-new-name               |
-      | change-generation-value | 🔧️change-generation-value/🏢️raises-storeys-answer-generation  |
+      | create-widget           | 🌱️create-widget/📝️inserts                            |
+      | update-widget           | 🩹update-widget/🎚️retunes                        |
+      | delete-widget           | ❌delete-widget/🚫️removes           |
+      | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
+      | update-synapse          | 🔄️update/📡️repoints                  |
+      | disconnect-synapse      | ✂️disconnect/✂️cuts                |
+      | move-widget             | 📍️move/📍️repositions                        |
+      | delete-widget-position  | 🧹️delete-widget/🧹️unpins                  |
+      | update-camera           | 📷️update-camera/🔍️frames                      |
+      | change-schema           | 🔤️change-schema/🏷️restamps                       |
+      | create-generation       | ➕create-generation/🌱️appends     |
+      | delete-generation       | 🗑️delete/🚫️removes |
+      | rename-generation       | 🏷️rename/🏷️retitles               |
+      | change-generation-value | 🔧️change/🏢️raises  |
 
   @id-inverse
   @level-exhaustive
@@ -121,25 +121,25 @@ Feature: Apply every typed generation3d mutation twice — once in Rust, once in
     And every field the committed diff declares actually differs
     Examples:
       | id                      | vector                                                                      |
-      | create-widget           | 🌱️create-widget/📝️inserts-node-c-at-index-2                            |
-      | update-widget           | 🩹update-widget/🎚️retunes-the-knob-slider-value                        |
-      | delete-widget           | ❌delete-widget/🚫️removes-node-a-and-leaves-wire-ab-dangling           |
-      | connect-synapse         | 🔗️connect-synapse/🔌️wires-node-b-to-node-c-at-index-1                  |
-      | update-synapse          | 🔄️update-synapse/📡️repoints-wire-ab-onto-the-cap-port                  |
-      | disconnect-synapse      | ✂️disconnect-synapse/✂️cuts-wire-ab-leaving-both-nodes                |
-      | move-widget             | 📍️move-widget/📍️repositions-node-a-in-the-graph                        |
-      | delete-widget-position  | 🧹️delete-widget-position/🧹️unpins-the-node-a-position                  |
-      | update-camera           | 📷️update-camera/🔍️frames-the-graph-at-double-zoom                      |
-      | change-schema           | 🔤️change-schema/🏷️restamps-the-fixture-schema-id                       |
-      | create-generation       | ➕create-generation/🌱️appends-generation-2-moves-selection     |
-      | delete-generation       | 🗑️delete-generation/🚫️removes-selected-generation-2-falls |
-      | rename-generation       | 🏷️rename-generation/🏷️retitles-generation-1-via-new-name               |
-      | change-generation-value | 🔧️change-generation-value/🏢️raises-storeys-answer-generation  |
+      | create-widget           | 🌱️create-widget/📝️inserts                            |
+      | update-widget           | 🩹update-widget/🎚️retunes                        |
+      | delete-widget           | ❌delete-widget/🚫️removes           |
+      | connect-synapse         | 🔗️connect-synapse/🔌️wires                  |
+      | update-synapse          | 🔄️update/📡️repoints                  |
+      | disconnect-synapse      | ✂️disconnect/✂️cuts                |
+      | move-widget             | 📍️move/📍️repositions                        |
+      | delete-widget-position  | 🧹️delete-widget/🧹️unpins                  |
+      | update-camera           | 📷️update-camera/🔍️frames                      |
+      | change-schema           | 🔤️change-schema/🏷️restamps                       |
+      | create-generation       | ➕create-generation/🌱️appends     |
+      | delete-generation       | 🗑️delete/🚫️removes |
+      | rename-generation       | 🏷️rename/🏷️retitles               |
+      | change-generation-value | 🔧️change/🏢️raises  |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-widget graph with its two-generation history
-    Given the committed before-snapshot shared://🧬️mutations/🗑️delete-generation/🚫️removes-selected-generation-2-falls/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🗑️delete/🚫️removes/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

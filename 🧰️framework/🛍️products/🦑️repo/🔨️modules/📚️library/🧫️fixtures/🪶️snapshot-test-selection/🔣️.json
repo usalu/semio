@@ -1,0 +1,48 @@
+{
+  "packageName": "semio-s-artifact-procedural-generation2d",
+  "packageRoot": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/📦️packages/🦀️rust",
+  "ordinaryFeatures": [
+    "component-app-assembly"
+  ],
+  "cases": [
+    {
+      "command": [
+        "test-snapshot-sqlite",
+        "native"
+      ],
+      "snapshotFeatures": [],
+      "expectedFeatures": []
+    },
+    {
+      "command": [
+        "test-snapshot-sqlite",
+        "native"
+      ],
+      "snapshotFeatures": [
+        "owned-snapshot-law"
+      ],
+      "expectedFeatures": [
+        "owned-snapshot-law"
+      ]
+    },
+    {
+      "command": [
+        "test",
+        "--lib"
+      ],
+      "snapshotFeatures": [],
+      "expectedFeatures": [
+        "component-app-assembly"
+      ]
+    },
+    {
+      "command": [
+        "test-snapshot-sqlite",
+        "native"
+      ],
+      "expectedFeatures": [
+        "component-app-assembly"
+      ]
+    }
+  ]
+}

@@ -395,15 +395,9 @@ pub fn video_codec_to_artifact(codec: remodeling_video::VideoCodec) -> DocumentV
     }
 }
 
-/// 🏷️ `(codec, width, height, duration_ms, container)` from either container family's probe.
-pub fn describe_video_probe(probe: &remodeling_video::VideoProbe) -> (remodeling_video::VideoCodec, u32, u32, f64, &'static str) {
-    match probe {
-        remodeling_video::VideoProbe::Mp4(info) => (info.codec, info.width, info.height, info.duration_ms, "mp4"),
-        remodeling_video::VideoProbe::Avi(info) => {
-            let duration_ms = if info.fps > 0.0 { f64::from(info.frame_count) / info.fps * 1000.0 } else { 0.0 };
-            (info.codec, info.width, info.height, duration_ms, "avi")
-        }
-    }
+/// 🏷️ Owned codec, dimensions, duration and container identity from the admitted probe.
+pub fn describe_video_probe(probe: &remodeling_video::VideoProbe) -> (remodeling_video::VideoCodec, u32, u32, f64, &str) {
+    (probe.codec, probe.width, probe.height, probe.duration_ms, &probe.container)
 }
 //#endregion 🔖️EngineMapping
 

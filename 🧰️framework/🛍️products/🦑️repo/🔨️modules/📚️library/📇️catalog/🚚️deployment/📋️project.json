@@ -12,7 +12,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "contract-check"
+            "check",
+            "component-deployment-contract"
           ]
         }
       }

@@ -407,7 +407,7 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️rewrites-the-second-slides-textbox-and-adds-a-speaker-note/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔤️rewrites/🦀️.rs"]
 mod set_snapshot_rewrites_the_second_slides_textbox_and_adds_a_speaker_note;
 #[cfg(test)]
 #[path = "📸️set-snapshot/🧪️tests/🔃️reverses-the-slide-order/🦀️.rs"]

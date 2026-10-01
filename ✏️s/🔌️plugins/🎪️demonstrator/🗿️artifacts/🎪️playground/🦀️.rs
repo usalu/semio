@@ -239,7 +239,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags-the-playground-document-schema/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/🧪️tests/📅️retags/🦀️.rs"]
                             mod tests_retags_the_playground_artifact_schema;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️change-schema/📝️text/🦀️.rs"]
                             pub mod text;
@@ -356,7 +356,7 @@ pub mod editor {
         pub mod commands {
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔧️change-schema/🦀️.rs"]
             pub mod change_schema;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
             pub mod set_active_example;
         }
 

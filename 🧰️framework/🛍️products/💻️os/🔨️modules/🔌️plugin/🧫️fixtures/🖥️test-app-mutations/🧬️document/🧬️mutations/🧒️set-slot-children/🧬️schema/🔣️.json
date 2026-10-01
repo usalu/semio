@@ -17,6 +17,12 @@
         "label": {
           "en": "Child references",
           "de": "Kindverweise"
+        },
+        "role": "target",
+        "ref": {
+          "kind": "s.test.child",
+          "domain": "test.slot",
+          "granularity": "child"
         }
       }
     }

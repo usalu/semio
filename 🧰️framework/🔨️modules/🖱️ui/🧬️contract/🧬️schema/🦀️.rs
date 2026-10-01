@@ -391,7 +391,7 @@ export type InputKind = "text" | "longText" | "number" | "date" | "color" | "fil
     },
     SchemaMetadata {
         name: "InputProps",
-        version: 3,
+        version: 4,
         typescript: r####"/**
  * ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
  * (`Trigger::Change`/`Trigger::Commit`).
@@ -410,7 +410,16 @@ precision: number | null,
  * 📌️ Detents of a `InputKind::Number` field under the detent law of [`SliderProps::snaps`] against `min`/`max`
  * (unbounded when absent): its page keys jump between them ([`ui_number_key_value`]), typing never snaps.
  */
-snaps: Array<number>, };"####,
+snaps: Array<number>,
+/**
+ * 🔁️ A `InputKind::Number` field's `value` is the stored number; it shows and reads `stored × display_factor`
+ * ([`ui_number_display_text`]/[`ui_number_typed_value`]).
+ */
+displayFactor: number | null,
+/**
+ * ⛔️ The hard range a typed number must keep (`min`/`max` themselves when absent), see [`UiNumberLimits`].
+ */
+limits: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "Justify",
@@ -492,12 +501,15 @@ export type MenuRef = { id: string, args: UiValue | null, };"####,
     },
     SchemaMetadata {
         name: "NumberStepperProps",
-        version: 2,
+        version: 3,
         typescript: r####"/**
  * 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
- * `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits.
+ * `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits (in display
+ * units); `snaps` are its detents under the slider's detent law against `min`/`max` (the page keys stop on them,
+ * [`ui_number_key_value`]); the display facets and `limits` read as on [`SliderProps`], `limits` refusing a typed
+ * value (`min`/`max` themselves when absent).
  */
-export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, precision: number | null, };"####,
+export type NumberStepperProps = { value: number, step: number, uniform: boolean, min: number | null, max: number | null, precision: number | null, snaps: Array<number>, unit: string | null, displayUnit: string | null, displayFactor: number | null, limits: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "OverlayLayout",
@@ -701,15 +713,28 @@ export type SizeToken = "xs" | "sm" | "md" | "lg" | "xl";"####,
 export type Sizing = "hug" | "fill" | { "fixed": SpaceToken };"####,
     },
     SchemaMetadata {
-        name: "SliderProps",
-        version: 3,
+        name: "SliderAppearance",
+        version: 1,
         typescript: r####"/**
- * 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `snaps` are the
- * slider's detents: strictly ascending, finite, inside `min..=max`, at most
- * [`crate::UI_FIXED_LIST_ITEMS`] of them — every renderer paints one tick per snap and resolves a
- * pointer value through [`slider_pointer_value`] and a key through [`slider_key_value`].
+ * 🎡️ How a slider draws its travel: a straight `track`, or a rotary `dial` sweeping one full counter-clockwise
+ * turn with the travel's centre at three o'clock — so a `-180°..180°` angle points where it turns
+ * ([`dial_angle`]/[`dial_position`]). Both take the same keys, pointer law and accessibility.
  */
-export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, snaps: Array<number>, };"####,
+export type SliderAppearance = "track" | "dial";"####,
+    },
+    SchemaMetadata {
+        name: "SliderProps",
+        version: 4,
+        typescript: r####"/**
+ * 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `min`/`max` are the travel;
+ * `snaps` are its detents: strictly ascending, finite, inside `min..=max`, at most [`crate::UI_FIXED_LIST_ITEMS`]
+ * of them — every renderer paints one tick per snap at its [`slider_axis_position`] and resolves a pointer value
+ * through [`slider_pointer_value`] and a key through [`slider_key_value`]. Values are stored values; the readout,
+ * the spoken value and a typed value are display values (`stored × display_factor`, at `precision`, beside
+ * `display_unit` else `unit`, read back by [`ui_number_typed_value`]). A typed value is refused by `limits` (the
+ * travel itself when absent).
+ */
+export type SliderProps = { value: number, min: number, max: number, step: number, unit: string | null, snaps: Array<number>, appearance?: SliderAppearance, scale?: UiNumberScale, precision: number | null, displayUnit: string | null, displayFactor: number | null, limits: UiNumberLimits | null, };"####,
     },
     SchemaMetadata {
         name: "SpaceToken",
@@ -1010,12 +1035,12 @@ export type Trigger = "activate" | "change" | "commit" | "delta" | "drop" | "sub
     },
     SchemaMetadata {
         name: "UiContractViolation",
-        version: 4,
+        version: 5,
         typescript: r####"/**
  * ⚠️ One structural invariant a [`crate::UiSnapshot`] fails — every variant here is a whole-document
  * shape property, never a per-patch wire quota (those are [`PatchRejection::QuotaExceeded`]).
  */
-export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, } | { "type": "invalidRowTarget", node: UiNodeId, } | { "type": "invalidSnaps", node: UiNodeId, };"####,
+export type UiContractViolation = { "type": "cycle", node: UiNodeId, } | { "type": "orphanChild", parent: UiNodeId, child: UiNodeId, } | { "type": "duplicateSiblingKey", parent: UiNodeId, key: string, } | { "type": "nodeQuota", count: number, max: number, } | { "type": "depthQuota", node: UiNodeId, depth: number, max: number, } | { "type": "danglingRoot", node: UiNodeId, } | { "type": "sectionNested", node: UiNodeId, } | { "type": "nonFiniteNumber", node: UiNodeId, } | { "type": "invalidTreeInlineToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeSectionHeaderToolbar", node: UiNodeId, toolbar: UiNodeId, } | { "type": "invalidTreeDetail", node: UiNodeId, detail: UiNodeId, } | { "type": "invalidRowTarget", node: UiNodeId, } | { "type": "invalidSnaps", node: UiNodeId, } | { "type": "invalidNumberRange", node: UiNodeId, };"####,
     },
     SchemaMetadata {
         name: "UiDocumentLimits",
@@ -1125,6 +1150,35 @@ export type UiNodeRecord = { id: UiNodeId,
  * 🔑️ Reconciliation key, unique only among this node's own siblings (not surface-wide).
  */
 key: string, component: Component, layout: LayoutSpec, style: StyleSpec, activity: Activity, disabled: boolean, transition: TransitionHint | null, accessibility: AccessibilitySpec, bindings: Array<ActionBinding>, menu: MenuRef | null, children: Array<UiNodeId>, };"####,
+    },
+    SchemaMetadata {
+        name: "UiNumberBound",
+        version: 1,
+        typescript: r####"/**
+ * 🧱️ One hard bound of a numeric control's value: the limit, whether the limit itself is excluded, and the
+ * refusal a renderer shows when a typed value crosses it — already localized by the producer and naming the
+ * bound in display units (the contract carries no locale). A crossing value is never dispatched: the draft is
+ * kept and the refusal shown.
+ */
+export type UiNumberBound = { value: number, exclusive?: boolean, refusal: Label | null, };"####,
+    },
+    SchemaMetadata {
+        name: "UiNumberLimits",
+        version: 1,
+        typescript: r####"/**
+ * 🛤️ The hard range a numeric control's value must keep, each side open when absent. A slider's `min`/`max`
+ * are then only its travel (a soft range): a typed value may leave the travel while the limits admit it.
+ */
+export type UiNumberLimits = { min: UiNumberBound | null, max: UiNumberBound | null, };"####,
+    },
+    SchemaMetadata {
+        name: "UiNumberScale",
+        version: 1,
+        typescript: r####"/**
+ * 📈️ How a slider's travel maps onto its track: evenly (`linear`), or by ratio (`log`, a strictly positive
+ * travel) — see [`slider_axis_position`]/[`slider_axis_value`].
+ */
+export type UiNumberScale = "linear" | "log";"####,
     },
     SchemaMetadata {
         name: "UiPatch",

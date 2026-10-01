@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🖨️ `@semio-tech/print` router: `bun ./📜️script.ts fonts|generate viz|preview-generated|test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { PrintFontProvisioningCommand } from "../../🎮️commands/🔤print-font-provisioning/🟦️.ts";
 import { PrintPipelineVerificationCommand } from "../../🎮️commands/🧪️print-pipeline-verification/🟦️.ts";
 import { PrintTokenPreviewScript } from "../../🔨️modules/🎨print-design-token-paints/📜️script.ts";
@@ -33,4 +34,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PrintTokenPreviewScript)
   .register("test", TestScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

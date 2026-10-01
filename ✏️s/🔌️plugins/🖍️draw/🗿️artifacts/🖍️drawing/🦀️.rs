@@ -778,7 +778,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends-shape-b-at-the-root/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/➕️create-layer/🧪️tests/➕️appends/🦀️.rs"]
                             mod tests_appends_shape_b_at_the_root;
                         }
                         #[path = "."]
@@ -790,7 +790,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes-group-a-with-its-child/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🗑️delete-layer/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_group_a_with_its_child;
                         }
                         #[path = "."]
@@ -802,7 +802,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects-a-missing-source-layer/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/📋️duplicate-layer/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_missing_source_layer;
                         }
                         #[path = "."]
@@ -814,7 +814,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves-shape-a-above-shape-b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️structure/🧬️schema/🧬️mutations/🔃reorder-layer/🧪️tests/⬆️moves/🦀️.rs"]
                             mod tests_moves_shape_a_above_shape_b;
                         }
                     }
@@ -847,7 +847,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds-a-dashed-stroke/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🖊️replace-layer-stroke/🧪️tests/🖊️adds/🦀️.rs"]
                             mod tests_adds_a_dashed_stroke;
                         }
                         #[path = "."]
@@ -859,7 +859,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid-to-linear-gradient/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🎨️replace-layer-fill/🧪️tests/🌈️solid/🦀️.rs"]
                             mod tests_solid_to_linear_gradient;
                         }
                         #[path = "."]
@@ -871,7 +871,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal-to-multiply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌓️set-layer-blend-mode/🧪️tests/✖️normal/🦀️.rs"]
                             mod tests_normal_to_multiply;
                         }
                         #[path = "."]
@@ -907,7 +907,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims-shape-a-to-half/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️style/🧬️schema/🧬️mutations/🌫️set-layer-opacity/🧪️tests/🌫️dims/🦀️.rs"]
                             mod tests_dims_shape_a_to_half;
                         }
                     }
@@ -933,38 +933,38 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod update_layer_transform {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧪️tests/📐️translates-and-scales-shape-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🧪️tests/📐️translates/🦀️.rs"]
                             mod tests_translates_and_scales_shape_a;
                         }
                         #[path = "."]
                         pub mod set_layer_boolean_operation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🧪️tests/➖️union-to-subtract/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/🧪️tests/➖️union/🦀️.rs"]
                             mod tests_union_to_subtract;
                         }
                         #[path = "."]
                         pub mod update_layer_trace_params {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/↩️inverse/🦀️.rs"]
                             pub mod inverse;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🦠️mutation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🧪️tests/🔍️sharpens-the-trace/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/🧪️tests/🔍️sharpens/🦀️.rs"]
                             mod tests_sharpens_the_trace;
                         }
                         #[path = "."]
@@ -1000,7 +1000,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🧪️tests/📐️doubles-a-rect/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📐️scale-layers/🧪️tests/📐️doubles/🦀️.rs"]
                             mod tests_doubles_a_rect;
                         }
                         #[path = "."]
@@ -1012,7 +1012,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🧪️tests/📍️drags-two-anchors/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/📍️drag-path-points/🧪️tests/📍️drags/🦀️.rs"]
                             mod tests_drags_two_anchors;
                         }
                     }
@@ -1033,7 +1033,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames-shape-a-without-touching-its-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/✏️rename-layer/🧪️tests/✏️renames/🦀️.rs"]
                             mod tests_renames_shape_a_without_touching_its_id;
                         }
                         #[path = "."]
@@ -1045,7 +1045,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🙈️hides-shape-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/👁️set-layer-visible/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_shape_a;
                         }
                         #[path = "."]
@@ -1057,7 +1057,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/🔒️locks-shape-a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏷️metadata/🧬️schema/🧬️mutations/🔒️set-layer-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_shape_a;
                         }
                     }

@@ -1,4 +1,5 @@
 use super::*;
+use crate::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
 use crate::mutations::{change_form_title, change_step_description, create_block, create_step, delete_block, delete_step, move_block_to_step, rename_step, reorder_step, replace_block};
 use crate::{FormQuestion, FormStep, FORMS_DOCUMENT_SCHEMA};
 use protocol::os_spr::protocol_laws::{assert_fatal_never_applies, assert_missing_target_is_error};
@@ -215,6 +216,91 @@ async fn replace_block_round_trips() {
     assert_eq!(steps_of(&state), steps_of(&base));
 }
 
+//#region 🎛️ChangeBlockField
+fn number_block(id: &str) -> FormQuestion {
+    FormQuestion { kind: "number".into(), min: Some(0.0), max: Some(100.0), step: Some(1.0), ..sample_block(id) }
+}
+
+fn applied(base: &FormsSnapshot, mutation: &FormMutation) -> FormsSnapshot {
+    mutation.diff(base).diff().apply(base).expect("valid mutation diff")
+}
+
+/// ⚖️ LAW: `change-block-field` sets exactly its field of the question in whichever step holds it (absolute: the value is
+/// the edit) and its base-derived inverse restores the step; clearing an optional field drops it.
+#[semio_framework_async_macros::async_test]
+async fn change_block_field_sets_one_field_and_round_trips() {
+    let mut step2 = sample_step("s2");
+    step2.blocks = vec![number_block("b2")];
+    let base = base_snapshot_with_steps(vec![sample_step("s1"), step2]);
+    for change in [BlockField::Max(Some(40.0)), BlockField::Label("Area".into()), BlockField::Unit(Some("m²".into())), BlockField::Step(None), BlockField::Options(Some(vec![crate::FormQuestionOption { value: "a".into(), label: "A".into() }]))] {
+        let mutation = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b2".into(), change: change.clone() });
+        let outcome = mutation.diff(&base);
+        assert!(outcome.messages().is_empty(), "{change:?}: {:?}", outcome.messages());
+        let after = applied(&base, &mutation);
+        let question = &steps_of(&after)[1].blocks[0];
+        assert_eq!(change.read(question), change, "the question holds exactly the set value");
+        assert_eq!(&change.applied(&steps_of(&base)[1].blocks[0]), question, "nothing but the field moved");
+        let mut state = after;
+        for step in &mutation.inverse(&base) {
+            state = applied(&state, step);
+        }
+        assert_eq!(steps_of(&state), steps_of(&base), "{change:?}: the inverse restores the base question");
+    }
+}
+
+/// ⚖️ LAW: an edit breaking the question's own invariants is Fatal and never applies — an inverted range, a step that is
+/// not positive, a default the kind cannot answer, a repeated option value (`duplicate-id`).
+#[semio_framework_async_macros::async_test]
+async fn change_block_field_refuses_broken_invariants_as_fatal() {
+    let mut step1 = sample_step("s1");
+    step1.blocks = vec![number_block("b1")];
+    let base = base_snapshot_with_steps(vec![step1]);
+    let repeated = vec![crate::FormQuestionOption { value: "a".into(), label: "A".into() }, crate::FormQuestionOption { value: "a".into(), label: "B".into() }];
+    for (change, code) in [
+        (BlockField::Min(Some(150.0)), "mutation.invariant"),
+        (BlockField::Max(Some(-1.0)), "mutation.invariant"),
+        (BlockField::Step(Some(0.0)), "mutation.invariant"),
+        (BlockField::Default(Some(dsl::DslValue::String("ten".into()))), "mutation.invariant"),
+        (BlockField::Params(Some(dsl::DslValue::Bool(true))), "mutation.invariant"),
+        (BlockField::Options(Some(repeated)), "mutation.duplicate-id"),
+    ] {
+        let outcome = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: change.clone() }).diff(&base);
+        assert_eq!((outcome.worst_level(), outcome.messages().first().map(|message| message.code.0.clone())), (Some(protocol::Severity::Fatal), Some(code.to_string())), "{change:?}");
+        assert_fatal_never_applies(&outcome).await;
+    }
+}
+
+/// ⚖️ LAW: an edit of a question no step holds is an Error-level `target-missing`, and the same value twice is a no-op.
+#[semio_framework_async_macros::async_test]
+async fn change_block_field_missing_target_is_error_and_a_repeat_is_a_no_op() {
+    let mut step1 = sample_step("s1");
+    step1.blocks = vec![number_block("b1")];
+    let base = base_snapshot_with_steps(vec![step1]);
+    assert_missing_target_is_error(&base, &FormMutation::ChangeBlockField(ChangeBlockField { block_id: "missing".into(), change: BlockField::Min(Some(1.0)) })).await;
+    let repeat = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: BlockField::Min(Some(0.0)) }).diff(&base);
+    assert_eq!(repeat.messages().first().map(|message| (message.code.0.as_str(), message.level)), Some(("mutation.no-op", protocol::Severity::Warning)));
+}
+
+/// 🧮️ `BlockField::changes` names every field two versions of a question differ in, in declaration order.
+#[test]
+fn block_field_changes_name_every_differing_field_in_order() {
+    let before = number_block("b1");
+    let after = FormQuestion { label: "Area".into(), max: Some(50.0), unit: Some("m²".into()), step: None, ..before.clone() };
+    assert_eq!(BlockField::changes(&before, &after), vec![BlockField::Label("Area".into()), BlockField::Unit(Some("m²".into())), BlockField::Max(Some(50.0)), BlockField::Step(None)]);
+    assert!(BlockField::changes(&before, &before).is_empty());
+}
+
+/// 🏷️ A `change-block-field` row is labelled from its field in every locale.
+#[test]
+fn change_block_field_is_labelled_from_its_field() {
+    let mutation = FormMutation::ChangeBlockField(ChangeBlockField { block_id: "q-area".into(), change: BlockField::Min(Some(1.0)) });
+    let label = mutation.label();
+    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Change minimum of question \"q-area\"");
+    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Minimum der Frage \"q-area\" ändern");
+    assert_eq!(mutation.target(), vec!["q-area".to_string()]);
+}
+//#endregion 🎛️ChangeBlockField
+
 #[semio_framework_async_macros::async_test]
 async fn change_form_title_round_trips_including_clearing() {
     let base = base_snapshot();
@@ -235,7 +321,7 @@ async fn change_form_title_round_trips_including_clearing() {
 
 #[semio_framework_async_macros::async_test]
 async fn semantic_kinds_cover_every_variant() {
-    assert_eq!(FormMutation::kinds().len(), 12);
+    assert_eq!(FormMutation::kinds().len(), 13);
     let mutation = FormMutation::RenameStep(rename_step::mutation::RenameStep { id: "s1".into(), new_title: "x".into() });
     assert_eq!(mutation.semantics().kind, "rename-step");
     assert_eq!(mutation.semantics().record, "RenamedStep");
@@ -312,5 +398,6 @@ async fn create_family_missing_target_is_error() {
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
     store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/➕create-block/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    store::os_store::test_support::assert_wire_witness::<FormMutation>(include_str!("../../../../🧫️fixtures/🧬️mutations/🎛️change-block-field/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }
 //#endregion 🧾️WireWitnesses

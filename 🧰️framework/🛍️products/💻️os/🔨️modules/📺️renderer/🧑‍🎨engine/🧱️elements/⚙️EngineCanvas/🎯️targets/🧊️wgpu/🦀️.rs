@@ -22,7 +22,8 @@ use infinite_world::world::{tool_run_trace, WorldAssetFault, WorldAssetMetadataI
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::mem::ManuallyDrop;
-use std::sync::{Arc, Mutex, MutexGuard, OnceLock};
+use crate::interpreter::WorkerCell;
+use std::sync::Arc;
 use ui_wgpu::wgpu::{draw_text_overlay, FontAtlas, GpuContext, KeyAction, PointerModifiers, RasterTextureStageFault, Rect, Rgba, Theme};
 use ui_wgpu::wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode};
 use vello::peniko::Color;
@@ -590,6 +591,7 @@ impl EngineSurfaceRetirement {
             || Self::close_string(&mut cache.glyph_catalogs_json)
             || Self::close_string(&mut cache.placement_compatibility_json)
             || Self::close_string(&mut cache.selection_json)
+            || Self::close_string(&mut cache.highlighted_ids_json)
             || Self::close_string(&mut cache.camera_json)
             || Self::close_string(&mut cache.hovered_id)
             || Self::close_string(&mut cache.active_utility)
@@ -1631,6 +1633,7 @@ struct BoardSyncCache {
     glyph_catalogs_json: Option<String>,
     placement_compatibility_json: Option<String>,
     selection_json: Option<String>,
+    highlighted_ids_json: Option<String>,
     camera_json: Option<String>,
     hovered_id: Option<String>,
     active_utility: Option<String>,
@@ -1928,6 +1931,7 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.glyph_catalogs_json.is_none()
         && cache.placement_compatibility_json.is_none()
         && cache.selection_json.is_none()
+        && cache.highlighted_ids_json.is_none()
         && cache.camera_json.is_none()
         && cache.hovered_id.is_none()
         && cache.active_utility.is_none()
@@ -1943,39 +1947,6 @@ fn board_sync_terminal(cache: &BoardSyncCache) -> bool {
         && cache.area_brush_size.is_none()
         && cache.size_key.is_none()
         && cache.tool_run_trace_window_id.is_none()
-}
-
-/// 🧵️ Worker-safe retained cell whose existing `with`/`borrow` call shape keeps scene code concise.
-struct WorkerCell<T> {
-    inner: OnceLock<Mutex<T>>,
-}
-
-impl<T> WorkerCell<T> {
-    const fn new() -> Self {
-        Self { inner: OnceLock::new() }
-    }
-}
-
-impl<T: Default> WorkerCell<T> {
-    fn state(&self) -> &Mutex<T> {
-        self.inner.get_or_init(|| Mutex::new(T::default()))
-    }
-
-    fn borrow(&self) -> MutexGuard<'_, T> {
-        self.state().lock().expect("worker canvas state")
-    }
-
-    fn borrow_mut(&self) -> MutexGuard<'_, T> {
-        self.borrow()
-    }
-
-    fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>> {
-        self.state().try_lock().ok()
-    }
-
-    fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
-        apply(self)
-    }
 }
 
 static MAP_TILE_ASSET_FAULT: WorkerCell<Option<WorldAssetFault>> = WorkerCell::new();
@@ -2901,6 +2872,11 @@ fn sync_board_engine(host: &mut infinite_canvas::BoardHost, cache: &mut BoardSyn
         let ids = serde_json::from_str::<Vec<String>>(&board.selection_json).unwrap_or_default();
         host.set_selection_ids_silent(&ids);
         cache.selection_json = Some(board.selection_json.clone());
+        changed = true;
+    }
+    if fixture_applied || cache.highlighted_ids_json.as_deref() != Some(board.highlighted_ids_json.as_str()) {
+        host.set_highlighted_ids(serde_json::from_str::<Vec<String>>(&board.highlighted_ids_json).unwrap_or_default());
+        cache.highlighted_ids_json = Some(board.highlighted_ids_json.clone());
         changed = true;
     }
     if fixture_applied || cache.camera_json.as_deref() != Some(board.camera_json.as_str()) {
@@ -4916,6 +4892,15 @@ pub fn map_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
     ((x - inner.x) as f64, (y - inner.y) as f64)
 }
 
+/// ✂️ A board pointer in surface-local pixels, mapped exactly as React's Board2dHost maps a DOM pointer: the position and
+/// the surface origin each as the shortest decimal of their f32 value (`board2dFloat32Decimal`), then subtracted — so
+/// both hosts hand the board engine the same coordinates and record the same gesture offsets
+/// (`🖥️Board2dHost/🧫️fixtures/🧫️float32-decimal`).
+pub fn board_local_pointer(inner: Rect, x: f32, y: f32) -> (f64, f64) {
+    let decimal = |value: f32| infinite_canvas::board_pointer_offset(f64::from(value));
+    (decimal(x) - decimal(inner.x), decimal(y) - decimal(inner.y))
+}
+
 /// 🎯️ Port of `marqueeModeFromModifiers` (ui `⚛️react` target) for a map marquee — the unmodified
 /// case is `"replace"`, the `MergeMode` variant the guest actually declares; the `"default"` this
 /// used to send is in no `MergeMode` taxonomy and never merged anything.
@@ -5568,7 +5553,7 @@ pub fn puzzle_board_key_into(surface_id: &str, controller_id: &str, key: &KeyAct
 }
 
 pub fn puzzle_board_pointer_down(surface_id: &str, inner: Rect, x: f32, y: f32, button: i16, shift: bool, ctrl_or_meta: bool) {
-    let (sx, sy) = map_local_pointer(inner, x, y);
+    let (sx, sy) = board_local_pointer(inner, x, y);
     with_board_host_mut(surface_id, |host| host.pointer_down_screen(sx, sy, button.max(0) as u8, shift, ctrl_or_meta));
     board_set_pointer_inside(surface_id, true);
 }
@@ -5584,7 +5569,7 @@ pub fn puzzle_board_pointer_move_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let (sx, sy) = map_local_pointer(inner, x, y);
+    let (sx, sy) = board_local_pointer(inner, x, y);
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Move, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
@@ -5620,7 +5605,7 @@ pub fn puzzle_board_pointer_up_into(
     alt: bool,
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
-    let (sx, sy) = map_local_pointer(inner, x, y);
+    let (sx, sy) = board_local_pointer(inner, x, y);
     let plan = plan_board_pointer(surface_id, infinite_canvas::BoardPointerIntent { phase: infinite_canvas::BoardPointerPhase::Up, x: sx, y: sy, shift, ctrl_or_meta, alt })?;
     let Some(plan) = plan else {
         return Ok(false);
@@ -5685,7 +5670,7 @@ pub fn board_drag_active(surface_id: &str) -> bool {
 
 pub fn puzzle_board_wheel_into(surface_id: &str, controller_id: &str, inner: Rect, x: f32, y: f32, delta: f32, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     let mut reservation = input.reserve_actions(2, 2 * ui_wgpu::wgpu::action::ACTION_ITEM_BYTE_CAPACITY)?;
-    let (sx, sy) = map_local_pointer(inner, x, y);
+    let (sx, sy) = board_local_pointer(inner, x, y);
     let plan = with_board_host(surface_id, |host| host.plan_wheel(sx, sy, delta as f64)).ok_or(ui_wgpu::wgpu::BoundedActionFault::Structure)?;
     let camera = plan.camera();
     board_drain_into_buffer(surface_id);
@@ -6130,31 +6115,20 @@ pub fn paint2d_pointer_button_into(
         return Ok(true);
     }
     if let Some(edit) = with_raster_host_mut(&scene.host_id, |host| host.paint_edit().cloned()).flatten() {
-        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[
-            &scene.controller_id,
-            edit.action(),
-            "surfaceId",
-            &scene.surface_id,
-            "layerId",
-            &edit.layer_id,
-            edit.revision_field(),
-            edit.revision_value().unwrap_or(""),
-            "operation",
-            &edit.operation,
-            "selection",
-        ])?;
+        let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[&scene.controller_id, edit.action(), "surfaceId", &scene.surface_id, "layerId", &edit.layer_id, "tool", edit.tool, "xs", "ys"])?;
         let mut batch = input.reserve_actions(1, bytes)?;
         batch.action(&scene.controller_id, edit.action(), bytes, |builder| {
             builder.begin_object(None)?;
             builder.string(Some("surfaceId"), &scene.surface_id)?;
             builder.string(Some("layerId"), &edit.layer_id)?;
-            if let Some(key) = edit.revision_value() {
-                builder.string(Some(edit.revision_field()), key)?;
-            } else {
-                builder.null(Some(edit.revision_field()))?;
+            builder.string(Some("tool"), edit.tool)?;
+            for (key, axis) in [("xs", 0), ("ys", 1)] {
+                builder.begin_array(Some(key))?;
+                for point in &edit.points {
+                    builder.number(None, point[axis])?;
+                }
+                builder.end_container()?;
             }
-            builder.string(Some("operation"), &edit.operation)?;
-            builder.null(Some("selection"))?;
             builder.end_container()
         })?;
         batch.publish()?;

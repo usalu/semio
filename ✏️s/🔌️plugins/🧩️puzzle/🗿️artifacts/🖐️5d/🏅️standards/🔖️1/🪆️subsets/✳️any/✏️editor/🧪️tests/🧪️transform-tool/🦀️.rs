@@ -107,3 +107,30 @@ fn the_transform_tool_is_a_one_state_statechart_that_commits_per_event() {
         assert!(runner.at_rest() && runner.transaction().is_none_or(|transaction| transaction.state() != semio_framework_tool_machine::ToolTransactionState::Open), "nothing stays open between gestures");
     }
 }
+
+/// 📄️ Paging changes WHEN a world drop's proximity scan runs, never WHAT it finds: for every page size the paged scan
+/// reports monotone progress, needs exactly `ceil(parts / page)` steps and ends on the very record the one-call scan
+/// finds — the same fastenings in the same order — and an already fastened pair stays excluded.
+#[test]
+fn a_paged_world_drop_scan_finds_exactly_what_the_one_call_scan_finds() {
+    let mut base = scene();
+    let grip = Puzzle5dGrip { id: "g".into(), grip_kind: None, grip_2d: Default::default(), grip_3d: Puzzle5dGrip3d { position: [0.0; 3], ..Default::default() } };
+    for (index, y) in [0.2, -0.3, 0.6, 2.0, 0.1].into_iter().enumerate() {
+        base.parts.push(Puzzle5dPart { id: format!("n{index}"), part_3d: Puzzle5dPart3d { origin: [1.5, y, 0.0], ..Default::default() }, grips: vec![grip.clone()], ..Default::default() });
+    }
+    base.fasteners.push(crate::Puzzle5dFastener { id: "held".into(), source: "n4:g".into(), target: "b:g".into(), fastener_kind: None, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0, x: 0.0, y: 0.0 });
+    let whole = puzzle5d_relocate_record(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
+    assert_eq!(whole.fastenings, ["a:g", "n0:g", "n1:g", "n2:g"].map(|target| ("b:g".to_string(), target.to_string())), "every free grip within the radius, in document order; `n4` is already fastened and `n3` is out of reach");
+    for page in 1..=base.parts.len() + 1 {
+        let mut scan = Puzzle5dRelocateScan::begin(&base, "b", [2.5, 0.0, 0.0], 0.75).expect("b is in the scene");
+        let (mut steps, mut measured) = (0, 0);
+        while !scan.step(&base, page) {
+            steps += 1;
+            let (done, total) = scan.progress(&base);
+            assert!(done > measured && done < total, "page {page}: progress is monotone and never claims the end early");
+            measured = done;
+        }
+        assert_eq!(steps + 1, base.parts.len().div_ceil(page), "page {page}: one step per page");
+        assert_eq!(scan.finish(), whole, "page {page}: the paged scan ends on the one-call record");
+    }
+}

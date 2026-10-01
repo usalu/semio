@@ -5446,6 +5446,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-hub-auth-client"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-mcp",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-hub-block"
 version = "0.1.0"
 dependencies = [
@@ -6024,7 +6032,6 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-remodel-remodeling",
- "semio-s-artifact-stdio-avi",
  "semio-s-artifact-stdio-gltf",
  "semio-s-artifact-stdio-jpg",
  "semio-s-artifact-stdio-json",
@@ -6130,6 +6137,7 @@ dependencies = [
  "semio-framework",
  "semio-framework-artifact-infinite-dag",
  "semio-framework-artifact-space-space",
+ "semio-framework-artifact-workflow-workflow",
  "semio-framework-async-macros",
  "semio-framework-dispatch-macros",
  "semio-framework-hash",
@@ -6141,6 +6149,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-ui-scene",
  "semio-framework-value-derive",
@@ -6306,7 +6315,6 @@ dependencies = [
  "semio-s-artifact-stdio-docx",
  "semio-s-artifact-stdio-pptx",
  "semio-s-artifact-stdio-xlsx",
- "semio-s-artifact-stdio-xml",
 ]
 
 [[package]]
@@ -6571,6 +6579,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-tool-run",
  "semio-framework-ui",
  "semio-framework-ui-contract",
@@ -6874,10 +6883,12 @@ dependencies = [
  "semio-framework-dispatch-macros",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os-kernel",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-cad-cad",
@@ -7423,11 +7434,13 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-bmp",

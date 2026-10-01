@@ -1,110 +1,38 @@
-//! 🖌️ Lowpoly play app — the `app_commands!` dispatch context (`LowpolyScratch`): the mid-drag paint
-//! stroke scratch, gumball transform-drag scratch, paint texture cache and preview sequence counter.
-//! These are genuine mid-gesture scratch buffers, never document or config state — the "scratch +
-//! commit" pattern the `ArtifactApp` trait itself sanctions. Held behind one `RefCell<LowpolyScratch>`
-//! on `LowpolyPlayApp` (mirrors `flow`'s `Mutex<FlowEvalSession>` pattern) so `render(&self, ..)` can
-//! still read texture/transform preview state while `handle(&self, ..)` locks it mutably for dispatch.
+//! 🖌️ Lowpoly play app — the `app_commands!` dispatch context (`LowpolyScratch`: the session-local mesh workspace
+//! cache, the dispatch's mesh-domain selection and the render-side paint texture cache) and the artifact-level
+//! local-only transient (`LowpolyTransient`): that cache plus every window's open paint gesture — its tool statechart
+//! configuration by stable ids, the admission and base revision it opened on, and its open `ToolTransaction`'s one
+//! provisional leaf. The gesture is artifact-level rather than window-level so the SIBLING windows paint its preview
+//! too (a stroke on the UV canvas shows on the model and back), keyed by the owning window id so two windows never
+//! clobber each other; never history, never shared (design
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, the FEM gumball's
+//! documented deviation).
+#![allow(unexpected_cfgs)]
 
 use crate::editor::lowpoly::config::LowpolyConfig;
 use crate::editor::lowpoly::engine::LowpolyDocument;
-use crate::editor::lowpoly::view::{build_doc, try_build_doc};
-use crate::op::{LowpolyMutation, PixelRun};
-use crate::schema::{composite_layer_pixels, flood_fill, pixel_runs_from_diff, sample_pixel_from, stamp_brush};
-use crate::{empty_paint_pixels, LowpolyObject, LowpolyObjectPatch, LowpolyPaintLayer, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use crate::editor::lowpoly::view::try_build_doc;
+use crate::op::LowpolyMutation;
+use crate::schema::composite_layer_pixels;
+use crate::{LowpolyObject, LowpolyObjectPatch, LowpolySelection, LowpolySnapshot, LOWPOLY_PAINT_TEXTURE_SIZE};
+use machine::Command;
 use protocol::Mutation;
-use semio_framework_3d::mesh::Vec3;
 use semio_framework_plugin::Emit;
+use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolTransactionState, ToolYield};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::Arc;
 use store::ArtifactPack;
 
-//#region 🔖️Sessions
-/// 🖌️ In-progress paint drag: the pre-stroke layer buffer and the accumulating scratch buffer.
-/// Mid-drag ticks mutate `scratch` (view state); the stroke commits as ONE `PaintStroke` operation on end.
-pub struct PaintStrokeSession {
-    object_id: String,
-    layer_index: usize,
-    base: Vec<u8>,
-    scratch: Vec<u8>,
-}
-
-/// 🧲️ In-progress gumball transform drag. The mesh-transform operation re-serializes the WHOLE
-/// `mesh_workspace` buffer per apply, so a per-tick `amend` would `combined.extend` N full-mesh patches and
-/// replay them all (O(N) retained megabyte-scale JSON + O(N²) replay). Instead every mid-drag tick
-/// applies its delta to this scratch `LowpolyDocument` emitting ZERO operations, and the whole gesture
-/// commits as ONE `Objects(Patch)` (base → final mesh) on drag end (`Emit::commit`, coalesce-key `None`).
-pub struct TransformSession {
-    object_id: String,
-    before: LowpolyObject,
-    /// 🕸️ The `mesh_workspace` content the drag-start compute session was built from — `before`
-    /// (a `LowpolyObject`) no longer carries it (round 2 of this ticket's round-trip law fix), so it
-    /// is snapshotted alongside `before` here for `commit_transform`'s before/after comparison.
-    before_mesh_workspace: String,
-    doc: LowpolyDocument,
-}
-
-/// 🗃️ Pure render-side cache of composited paint textures (base64 PNG per object), invalidated
-/// by a fingerprint over the document's paint pixels + the live stroke dirty counter. Never serialized.
-#[derive(Default)]
-pub struct PaintTextureLut {
-    fingerprint: Option<u64>,
-    pub textures: HashMap<String, String>,
-}
-//#endregion 🔖️Sessions
-
-//#region 🔖️Transform
-#[derive(Clone, Copy)]
-pub enum Transform {
-    Translate(Vec3),
-    Rotate { axis: Vec3, angle: f32 },
-    Scale(Vec3),
-}
-
-/// 🧯️ `clippy::needless_pass_by_value` — takes `MeshKernelError` by value (not `&MeshKernelError`) on
-/// purpose: every call site uses it directly as a `.map_err(map_kernel_err)` callback, and `map_err`'s
-/// closure signature is `FnOnce(E) -> F`, which always hands the error by value.
+//#region 🔖️MeshEdit
+/// 🧯️ `clippy::needless_pass_by_value` — takes `MeshKernelError` by value on purpose: every call site uses it as a
+/// `.map_err(map_kernel_err)` callback, and `map_err`'s closure signature hands the error by value.
 #[allow(clippy::needless_pass_by_value)]
 pub fn map_kernel_err(error: semio_framework_3d::mesh::MeshKernelError) -> String {
     format!("{error:?}")
 }
 
-pub fn apply_transform(doc: &mut LowpolyDocument, transform: Transform) -> Result<(), String> {
-    let selection_mode = doc.selection().mode.clone();
-    let pivot = doc.selection_transform_pivot().map_err(|e| e.to_string())?;
-    let component_verts = match selection_mode.as_str() {
-        "vertex" | "face" | "edge" => Some(doc.selection_vertex_ids().map_err(|e| e.to_string())?),
-        _ => None,
-    };
-    let component = matches!(selection_mode.as_str(), "vertex" | "face" | "edge");
-    let verts = if component {
-        let verts = component_verts.ok_or_else(|| "no vertices".to_string())?;
-        if verts.is_empty() {
-            return Err("no component vertices in selection".into());
-        }
-        Some(verts)
-    } else {
-        None
-    };
-    let mesh = doc.active_mesh_mut().map_err(|e| e.to_string())?;
-    match transform {
-        Transform::Translate(delta) => match &verts {
-            Some(verts) => mesh.move_vertices(verts, delta).map_err(map_kernel_err)?,
-            None => mesh.translate(delta).map_err(map_kernel_err)?,
-        },
-        Transform::Rotate { axis, angle } => match &verts {
-            Some(verts) => mesh.rotate_vertices(verts, axis, angle, pivot).map_err(map_kernel_err)?,
-            None => mesh.rotate(axis, angle).map_err(map_kernel_err)?,
-        },
-        Transform::Scale(scale) => match &verts {
-            Some(verts) => mesh.scale_vertices(verts, scale, pivot).map_err(map_kernel_err)?,
-            None => mesh.scale(scale).map_err(map_kernel_err)?,
-        },
-    }
-    doc.sync_meshes_to_snapshot().map_err(|e| e.to_string())
-}
-
-/// 🎯️ Extracts UV (0..1) from a paint command's fields — either direct `u`/`v` (world 3d picks) or
-/// canvas `x`/`y` positions mapped through the paint-texture extent (UV canvas).
+/// 🎯️ Extracts UV (0..1) from a paint command's fields — either direct `u`/`v` (world 3d picks) or canvas `x`/`y`
+/// positions mapped through the paint-texture extent (UV canvas).
 pub fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: Option<f32>) -> Option<(f32, f32)> {
     if let (Some(u), Some(v)) = (u, v) {
         return Some((u, v));
@@ -117,13 +45,10 @@ pub fn paint_uv_from_command(u: Option<f32>, v: Option<f32>, x: Option<f32>, y: 
     Some((u as f32, v as f32))
 }
 
-/// 🧮️ The changed-field patch turning `before` into `after` — an internal diff-fragment type
-/// (never a mutation payload itself, per `📓️taxonomy.md`'s option-bag rule), consumed by
-/// `semantic_mutation_for_patch` below to pick the one real semantic mutation kind a kernel edit or
-/// gumball drag actually touched. The `mesh_workspace` content comparison lives OUTSIDE this patch
-/// (see `semantic_mutation_for_patch`'s own `before_mesh_workspace`/`after_mesh_workspace` params) —
-/// `LowpolyObject`/`LowpolyObjectPatch` carry no mesh content field at all (round 2 of this ticket's
-/// round-trip law fix); only the `mesh` handle is comparable here.
+/// 🧮️ The changed-field patch turning `before` into `after` — an internal diff-fragment type (never a mutation
+/// payload itself), consumed by `semantic_mutation_for_patch` below to pick the one real semantic mutation kind a
+/// kernel edit touched. The `mesh_workspace` content comparison lives OUTSIDE this patch (see
+/// `semantic_mutation_for_patch`'s own `before_mesh_workspace`/`after_mesh_workspace` params).
 pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> LowpolyObjectPatch {
     LowpolyObjectPatch {
         name: (before.name != after.name).then(|| after.name.clone()),
@@ -134,13 +59,9 @@ pub fn object_patch_diff(before: &LowpolyObject, after: &LowpolyObject) -> Lowpo
     }
 }
 
-/// 🎯️ Maps an `object_patch_diff` result (plus the drag/edit's before/after `mesh_workspace`
-/// session-cache content, no longer reachable through `patch` itself) to the one semantic
-/// `LowpolyMutation` it represents — a kernel mesh edit or gumball drag changes exactly one facet per
-/// commit (name XOR smooth-shading XOR one transform axis XOR mesh), never several at once, so the
-/// first populated field wins. Transform sub-field priority (position, then rotation, then scale)
-/// matches the gumball's own single-axis-per-drag gesture (`translate_selection`/`rotate_selection`/
-/// `scale_selection` each mutate exactly one `LowpolyTransform` field via `apply_transform`).
+/// 🎯️ Maps an `object_patch_diff` result (plus the edit's before/after `mesh_workspace` content) to the one semantic
+/// `LowpolyMutation` it represents — a kernel mesh edit changes exactly one facet per commit (name XOR smooth-shading
+/// XOR one transform axis XOR mesh), so the first populated field wins.
 pub fn semantic_mutation_for_patch(id: String, before_transform: &crate::LowpolyTransform, patch: &LowpolyObjectPatch, before_mesh_workspace: &str, after_mesh_workspace: &str) -> Option<LowpolyMutation> {
     if let Some(new_name) = &patch.name {
         return Some(LowpolyMutation::RenameObject(crate::mutations::rename_object::RenameObject { id, new_name: new_name.clone() }));
@@ -188,28 +109,20 @@ fn fnv1a_u64(mut hash: u64, bytes: &[u8]) -> u64 {
     hash
 }
 
-/// 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config,
-/// then returns the resulting `Objects(Patch)` capturing only the changed object fields. Takes
-/// `ctx: &mut LowpolyScratch` (round 2 of this ticket's round-trip law fix) — the compute session's
-/// live `mesh_workspace` content now lives session-side, never on `LowpolyObject`, so building the
-/// doc and reading back its post-edit content both need the cache.
+/// 🔧️ Runs a kernel mesh edit against a compute session built from the projection + config, then returns the
+/// resulting single semantic mutation. Takes `ctx` because the compute session's live `mesh_workspace` content for a
+/// legacy handle-only object lives session-side; building the doc and reading back its post-edit content both need
+/// the cache.
 ///
-/// 🔊️ Every refusal is an `Err` naming its cause — a session that cannot be built, an edit the kernel
-/// rejects, an active object the projection does not carry. Handlers surface it as their `Fault`, so a
-/// command that does nothing says why in the host's console instead of landing as a silent no-op
-/// (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17: `extrude` after a
-/// store-level undo was invisible for hours). An edit that changes nothing is still `Ok(Emit::default())`.
+/// 🔊️ Every refusal is an `Err` naming its cause — a session that cannot be built, an edit the kernel rejects, an
+/// active object the projection does not carry — so a command that does nothing says why. An edit that changes
+/// nothing is still `Ok(Emit::default())`.
 pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut LowpolyScratch, edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>) -> Result<Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation>, String> {
     let mut doc = try_build_doc(projection, config, ctx).map_err(|error| format!("lowpoly mesh edit: compute session refused: {error}"))?;
     let object_id = doc.active_object_id().to_string();
     let before = projection.objects.iter().find(|object| object.id == object_id).cloned().ok_or_else(|| format!("lowpoly mesh edit: active object {object_id} is not in the document"))?;
-    // 🕸️ The "before" geometry is the DOCUMENT's — `reload_meshes` just resolved every object from its
-    // persisted `mesh_content`, so the compute session's cache is authoritative here and the scratch
-    // transient is not: after an undo the transient still carries the undone edit's mesh, and an
-    // identical edit (same face, same default distance) then diffed to "nothing changed" and landed as a
-    // silent no-op (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17, react
-    // playground: extrude → ⌘Z → extrude did nothing). Resyncing the scratch keeps every later read
-    // (`transient_snapshot`, the stroke and transform sessions) on the same live geometry.
+    // 🕸️ The "before" geometry is the DOCUMENT's — `reload_meshes` just resolved every object from its persisted
+    // `mesh_content`, so the compute session's cache is authoritative here and a stale transient is not.
     ctx.set_mesh_workspace_map(doc.mesh_workspace().clone());
     let before_mesh_workspace = ctx.mesh_workspace(&object_id).to_string();
     edit(&mut doc).map_err(|error| format!("lowpoly mesh edit on {object_id} (selection {:?}): {error}", doc.selection()))?;
@@ -223,86 +136,48 @@ pub fn mesh_edit(projection: &LowpolySnapshot, config: &LowpolyConfig, ctx: &mut
         None => Emit::default(),
     })
 }
-//#endregion 🔖️Transform
+//#endregion 🔖️MeshEdit
 
 //#region 🔖️LowpolyScratch
-/// 🖌️ B1: `LowpolyPlayApp` sheds `RefCell<LowpolyPlayRuntime>` entirely — every former runtime
-/// field now lives in `LowpolyConfig`, written through `LowpolyConfigMutation`s emitted from `handle`.
-/// This struct holds the genuine mid-gesture scratch state the `ArtifactApp` trait sanctions, PLUS
-/// (round 2 of ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM's round-trip law fix) the
-/// session-local `mesh_workspace` cache — live half-edge-mesh JSON per object id, formerly a field on
-/// `LowpolyObject` itself, moved here because a codec-excluded field cannot legitimately live on a
-/// persisted snapshot type (`store::os_store::test_support::assert_document_text_round_trip` is a
-/// general law every `ArtifactDsl + ArtifactPack` snapshot type must satisfy). Exactly the pattern
-/// `draw`'s `DrawSession` and DKM's `EngineRep` already establish elsewhere in this ticket: an
-/// ephemeral value threaded alongside the persisted view, never embedded in the persisted snapshot.
+/// 🗃️ Pure render-side cache of composited paint textures (base64 PNG per object), invalidated by a fingerprint over
+/// the rendered projection's paint pixels. Never serialized.
+#[derive(Default)]
+pub struct PaintTextureLut {
+    fingerprint: Option<u64>,
+    pub textures: HashMap<String, String>,
+}
+
+/// 🖌️ The dispatch context every `🎮️commands/*` handler receives: the session-local `mesh_workspace` cache (live
+/// half-edge-mesh JSON per object id, the fallback for a legacy handle-only object whose content the document does not
+/// persist), the dispatch's mesh-domain selection, the paint texture cache and the window paint gestures the
+/// transient carries, passed through untouched so a republished cache never drops an open stroke.
 pub struct LowpolyScratch {
-    stroke: Option<PaintStrokeSession>,
-    stroke_drag_active: bool,
-    stroke_dirty: u64,
-    transform: Option<TransformSession>,
-    transform_drag_active: bool,
     texture_cache: PaintTextureLut,
-    /// 👻️ Per-`key` monotone counter for `gesture_preview` — see `//#region 🔖️GesturePreview`.
-    preview_seq: u64,
-    /// 🕸️ Live half-edge-mesh JSON per object id — see this struct's own doc comment. Seeded from
-    /// `crate::schema::default_mesh_workspace()` on `Default::default()` so a
-    /// freshly booted session can immediately reload the mesh `ArtifactApp::initial_snapshot()`
-    /// (`default_snapshot()`) describes; real interactive objects get their own entry from
-    /// `mesh_edit`/`LowpolyDocument::add_primitive` as they are created/edited. NEVER the persisted
-    /// document representation, NEVER round-tripped through undo/redo (store-level undo/redo bypass
-    /// `ArtifactApp::handle` entirely, so this cache can go stale relative to the document's `mesh`
-    /// handle across an undo/redo of a `create-mesh`/`delete-mesh` — `LowpolyDocument::reload_meshes`
-    /// detects that staleness and fails closed rather than silently computing wrong geometry; a real
-    /// fix needs child-document resolution, which no WASM-guest plugin in this repo has yet).
     mesh_workspace: HashMap<String, String>,
-    /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: the mesh domain's CURRENT selection,
-    /// resolved from `InteractionView` by `LowpolyPlayApp::handle` right before it delegates to
-    /// `LowpolyCommand::dispatch` — the `app_commands!`-generated dispatcher calls every leaf command's
-    /// `handle(payload, doc, cfg, ctx)` uniformly, with no `interaction` parameter of its own, so this
-    /// scratch field is the one channel by which those handlers (via `build_doc`/`mesh_edit`) see the
-    /// framework-owned selection without every one of them threading a fifth argument. Never persisted,
-    /// never read outside the dispatch that set it.
     current_selection: LowpolySelection,
-    /// 🎯️ The object THIS dispatch's mesh-domain selection addresses (`view::selection_object_id`);
-    /// `build_doc` edits it instead of the config's active object. Never persisted.
     selection_object_id: Option<String>,
-    /// 🎯️ Every object THIS dispatch's mesh-domain selection names at object granularity — what an
-    /// object-level delete or duplicate acts on (`view::LowpolyWorldSelection::object_ids`).
     selected_object_ids: Vec<String>,
+    paint: BTreeMap<String, LowpolyPaintGesture>,
 }
 
 impl Default for LowpolyScratch {
     fn default() -> Self {
-        Self {
-            stroke: None,
-            stroke_drag_active: false,
-            stroke_dirty: 0,
-            transform: None,
-            transform_drag_active: false,
-            texture_cache: PaintTextureLut::default(),
-            preview_seq: 0,
-            mesh_workspace: crate::schema::default_mesh_workspace(),
-            current_selection: LowpolySelection::default(),
-            selection_object_id: None,
-            selected_object_ids: Vec::new(),
-        }
+        Self { texture_cache: PaintTextureLut::default(), mesh_workspace: crate::schema::default_mesh_workspace(), current_selection: LowpolySelection::default(), selection_object_id: None, selected_object_ids: Vec::new(), paint: BTreeMap::new() }
     }
 }
 
 impl LowpolyScratch {
-    /// 🕹️ Sets THIS dispatch's mesh-domain selection — see `current_selection`'s own doc comment.
+    /// 🕹️ Sets THIS dispatch's mesh-domain selection.
     pub fn set_current_selection(&mut self, selection: LowpolySelection) {
         self.current_selection = selection;
     }
 
-    /// 🕹️ THIS dispatch's mesh-domain selection (or the default/empty one outside a command dispatch,
-    /// e.g. `render`).
+    /// 🕹️ THIS dispatch's mesh-domain selection (the default/empty one outside a command dispatch, e.g. `render`).
     pub fn current_selection(&self) -> &LowpolySelection {
         &self.current_selection
     }
 
-    /// 🎯️ Sets the object ids THIS dispatch's selection names — see `selected_object_ids`.
+    /// 🎯️ Sets the object ids THIS dispatch's selection names at object granularity.
     pub fn set_selected_object_ids(&mut self, object_ids: Vec<String>) {
         self.selected_object_ids = object_ids;
     }
@@ -319,89 +194,22 @@ impl LowpolyScratch {
         self.selection_object_id.as_deref()
     }
 
-    /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no
-    /// working content for it yet (e.g. an object loaded from a real document import, pending child-
-    /// document resolution — see this struct's own doc comment).
+    /// 🕸️ The live half-edge-mesh JSON cached for `object_id`, or `""` when this session has no working content for it.
     pub fn mesh_workspace(&self, object_id: &str) -> &str {
         self.mesh_workspace.get(object_id).map(String::as_str).unwrap_or_default()
     }
 
-    /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s
-    /// input, since it needs one entry per object to reload every mesh, not just the active one.
+    /// 🕸️ A clone of the full session-local mesh-workspace cache — `LowpolyDocument::with_context`'s input.
     pub fn mesh_workspace_map(&self) -> HashMap<String, String> {
         self.mesh_workspace.clone()
     }
 
-    /// 🕸️ Replaces the whole session-local mesh-workspace cache — called after a successful edit with
-    /// `LowpolyDocument::mesh_workspace()`'s post-`sync_meshes_to_snapshot` content.
+    /// 🕸️ Replaces the whole session-local mesh-workspace cache after a successful edit.
     pub fn set_mesh_workspace_map(&mut self, map: HashMap<String, String>) {
         self.mesh_workspace = map;
     }
 
-    pub fn stroke_drag_active(&self) -> bool {
-        self.stroke_drag_active
-    }
-
-    pub fn set_stroke_drag_active(&mut self, value: bool) {
-        self.stroke_drag_active = value;
-    }
-
-    pub fn set_transform_drag_active(&mut self, value: bool) {
-        self.transform_drag_active = value;
-    }
-
-    pub fn transform_projection(&self) -> Option<LowpolySnapshot> {
-        self.transform.as_ref().map(|session| session.doc.snapshot().clone())
-    }
-
-    /// 🧰️ Clears every mid-gesture scratch when the host changes interaction context.
-    pub fn reset_gestures(&mut self) {
-        self.stroke = None;
-        self.stroke_drag_active = false;
-        self.transform = None;
-        self.transform_drag_active = false;
-    }
-
-    /// ▶️ `paintStrokeBegin`: arms the drag flag and clears any stale scratch from a previous gesture.
-    pub fn begin_stroke_drag(&mut self) {
-        self.stroke_drag_active = true;
-        self.stroke = None;
-    }
-
-    /// ⏹️ `paintStrokeEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub fn end_stroke_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        self.stroke_drag_active = false;
-        self.commit_stroke()
-    }
-
-    /// ▶️ `transformBegin`: arms the drag flag and clears any stale scratch from a previous gesture.
-    pub fn begin_transform_drag(&mut self) {
-        self.transform_drag_active = true;
-        self.transform = None;
-    }
-
-    /// ⏹️ `transformEnd`: disarms the drag flag and commits the accumulated scratch as one edit.
-    pub fn end_transform_drag(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        self.transform_drag_active = false;
-        self.commit_transform()
-    }
-
-    /// 🖼️ The layers to composite for `object`, overlaying the live stroke scratch when the drag
-    /// targets that object so the in-progress stroke previews before it commits.
-    fn composite_layers_for(&self, object: &LowpolyObject) -> Vec<u8> {
-        if let Some(session) = &self.stroke {
-            if session.object_id == object.id {
-                let mut layers = object.paint_layers.clone();
-                if let Some(layer) = layers.get_mut(session.layer_index) {
-                    layer.pixels = session.scratch.clone();
-                }
-                return composite_layer_pixels(&layers);
-            }
-        }
-        composite_layer_pixels(&object.paint_layers)
-    }
-
-    fn paint_fingerprint(&self, projection: &LowpolySnapshot) -> u64 {
+    fn paint_fingerprint(projection: &LowpolySnapshot) -> u64 {
         let mut hash = 0xcbf29ce484222325u64;
         for object in &projection.objects {
             hash = fnv1a_u64(hash, object.id.as_bytes());
@@ -411,17 +219,19 @@ impl LowpolyScratch {
                 hash = fnv1a_u64(hash, &layer.pixels);
             }
         }
-        fnv1a_u64(hash, &self.stroke_dirty.to_le_bytes())
+        hash
     }
 
+    /// 🎨️ Composites every object's paint stack of `projection` (the document with every open paint gesture previewed)
+    /// into the texture cache, unless its pixels did not change since the last refresh.
     pub fn refresh_texture_cache(&mut self, projection: &LowpolySnapshot) {
-        let fingerprint = self.paint_fingerprint(projection);
+        let fingerprint = Self::paint_fingerprint(projection);
         if self.texture_cache.fingerprint == Some(fingerprint) {
             return;
         }
         let mut textures = HashMap::new();
         for object in &projection.objects {
-            let composite = self.composite_layers_for(object);
+            let composite = composite_layer_pixels(&object.paint_layers);
             if let Ok(png_bytes) = encode_rgba_png(&composite, LOWPOLY_PAINT_TEXTURE_SIZE as u32, LOWPOLY_PAINT_TEXTURE_SIZE as u32) {
                 textures.insert(object.id.clone(), base64_codec::base64_standard_encode(png_bytes));
             }
@@ -432,273 +242,60 @@ impl LowpolyScratch {
     pub fn textures(&self) -> &HashMap<String, String> {
         &self.texture_cache.textures
     }
-
-    /// 📌️ Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
-    /// pattern b — the whole drag is one undoable edit; megabyte pixel buffers never coalesce per tick).
-    pub fn commit_stroke(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        let Some(session) = self.stroke.take() else {
-            return Emit::default();
-        };
-        self.stroke_dirty += 1;
-        let runs: Vec<PixelRun> = pixel_runs_from_diff(&session.base, &session.scratch).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect();
-        if runs.is_empty() {
-            return Emit::default();
-        }
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::mutations::edit_paint_layer::EditPaintLayer { object_id: session.object_id, layer_index: session.layer_index, runs })], "Paint stroke")
-    }
-
-    /// 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
-    /// the paint color (as a `SetPaintColor` config op). Emits ZERO document operations — the stroke
-    /// commits only on `paintStrokeEnd` (View-kind safe).
-    pub fn paint_tick(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: &str, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        let utility = config.paint_utility.clone();
-        if utility == "eyedropper" {
-            let Some(object) = projection.objects.iter().find(|object| object.id == object_id) else {
-                return Emit::default();
-            };
-            let composite = composite_layer_pixels(&object.paint_layers);
-            let color = sample_pixel_from(&composite, u, v);
-            return Emit::config(vec![crate::editor::lowpoly::config::LowpolyConfigMutation::SetPaintColor { r: color[0], g: color[1], b: color[2], a: color[3] }]);
-        }
-        let layer_index = config.active_paint_layer as usize;
-        let need_new = match &self.stroke {
-            Some(session) => session.object_id != object_id || session.layer_index != layer_index,
-            None => true,
-        };
-        if need_new {
-            let base = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map_or_else(empty_paint_pixels, LowpolyPaintLayer::materialized_pixels);
-            self.stroke = Some(PaintStrokeSession { object_id: object_id.to_string(), layer_index, scratch: base.clone(), base });
-        }
-        let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
-        let params = crate::editor::lowpoly::view::utility_params_value(config);
-        if let Some(session) = self.stroke.as_mut() {
-            if utility == "fill" {
-                flood_fill(&mut session.scratch, u, v, color);
-            } else {
-                let radius = crate::editor::lowpoly::view::utility_param_f32(&params, "brushSize", 16.0);
-                let opacity = crate::editor::lowpoly::view::utility_param_f32(&params, "brushOpacity", 1.0);
-                let hardness = crate::editor::lowpoly::view::utility_param_f32(&params, "brushHardness", 0.5);
-                stamp_brush(&mut session.scratch, u, v, radius, color, hardness, opacity, utility == "eraser");
-            }
-        }
-        self.stroke_dirty += 1;
-        Emit::default()
-    }
-
-    /// 🪣️ A single-shot flood fill emitted as ONE `PaintStroke` edit (the `fillBucket`/`paintFill`
-    /// operation path — not drag-bracketed, so it commits immediately).
-    pub fn fill_at(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, object_id: String, u: f32, v: f32) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        let layer_index = config.active_paint_layer as usize;
-        let color = [config.paint_color_r, config.paint_color_g, config.paint_color_b, config.paint_color_a];
-        let Some(layer) = projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)) else {
-            return Emit::default();
-        };
-        let base = layer.materialized_pixels();
-        let mut scratch = base.clone();
-        flood_fill(&mut scratch, u, v, color);
-        let runs: Vec<PixelRun> = pixel_runs_from_diff(&base, &scratch).into_iter().map(|(offset, bytes)| PixelRun { offset, bytes }).collect();
-        if runs.is_empty() {
-            return Emit::default();
-        }
-        self.stroke_dirty += 1;
-        Emit::commit(vec![LowpolyMutation::EditPaintLayer(crate::mutations::edit_paint_layer::EditPaintLayer { object_id, layer_index, runs })], "Fill")
-    }
-
-    /// 🧲️ Runs one gumball transform delta against a working scratch document. Mid-drag it emits
-    /// nothing; only `transformEnd` (or an unbracketed single dispatch) commits the accumulated diff.
-    pub fn transform_selection(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig, mode: &str, ids: Vec<u32>, transform: Transform, description: &str) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        if self.transform_drag_active {
-            if self.transform.is_none() {
-                self.begin_transform_session(projection, config);
-            }
-            if let Some(session) = self.transform.as_mut() {
-                if !ids.is_empty() {
-                    session.doc.apply_selection(mode, ids);
-                }
-                let _ = apply_transform(&mut session.doc, transform);
-            }
-            self.preview_seq = self.preview_seq.wrapping_add(1);
-            return Emit::default();
-        }
-        let emitted = mesh_edit(projection, config, self, move |doc| {
-            if !ids.is_empty() {
-                doc.apply_selection(mode, ids);
-            }
-            apply_transform(doc, transform)
-        })
-        .unwrap_or_default();
-        if emitted.artifact_mutations.is_empty() {
-            Emit::default()
-        } else {
-            Emit::commit(emitted.artifact_mutations, description)
-        }
-    }
-
-    /// 🎬️ Snapshots the active object as the transform-drag base and builds the working scratch doc.
-    fn begin_transform_session(&mut self, projection: &LowpolySnapshot, config: &LowpolyConfig) {
-        let Some(doc) = build_doc(projection, config, self) else {
-            return;
-        };
-        let object_id = doc.active_object_id().to_string();
-        let Some(before) = projection.objects.iter().find(|object| object.id == object_id).cloned() else {
-            return;
-        };
-        let before_mesh_workspace = doc.mesh_workspace().get(&object_id).cloned().unwrap_or_default();
-        self.transform = Some(TransformSession { object_id, before, before_mesh_workspace, doc });
-    }
-
-    /// 📌️ Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
-    pub fn commit_transform(&mut self) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
-        let Some(mut session) = self.transform.take() else {
-            return Emit::default();
-        };
-        if session.doc.sync_meshes_to_snapshot().is_err() {
-            return Emit::default();
-        }
-        self.set_mesh_workspace_map(session.doc.mesh_workspace().clone());
-        let Some(after) = session.doc.snapshot().objects.iter().find(|object| object.id == session.object_id).cloned() else {
-            return Emit::default();
-        };
-        let after_mesh_workspace = self.mesh_workspace(&session.object_id).to_string();
-        let patch = object_patch_diff(&session.before, &after);
-        match semantic_mutation_for_patch(session.object_id, &session.before.transform, &patch, &session.before_mesh_workspace, &after_mesh_workspace) {
-            Some(mutation) => Emit::commit(vec![mutation], "Transform selection"),
-            None => Emit::default(),
-        }
-    }
-
-    //#region 🔖️GesturePreview
-    /// 👻️ CW7 db+protocol+vcs-slimming campaign, "preview law for gesture apps": the live gumball
-    /// drag's current object state, expressed as a patch anchored to the drag-start snapshot
-    /// (`session.before`) via the same `object_patch_diff` `commit_transform` uses for the eventual real
-    /// commit. Anchoring to a fixed base (not the previous preview tick) keeps this correct even when
-    /// the lossy, uncredited preview lane drops every message but the latest — a receiver only ever
-    /// needs the last-synced canonical object (`before`, already has it) plus this one patch, never a
-    /// chain of prior preview messages. `apply_transform` already calls `sync_meshes_to_snapshot`
-    /// every tick (mid-drag world-scene rendering needs it regardless), so reading
-    /// `session.doc.snapshot()` here adds no new per-tick cost. `None` outside an active drag; this
-    /// reads `TransformSession` only, never emits or mutates a `LowpolyMutation`.
-    ///
-    /// 🚧️ Deliberately unwired beyond this accessor — same gap as `draw-plugin`'s
-    /// `draw_gesture_preview_payload`: `framework/sync::SyncSession::publish_preview` is host-only
-    /// ("WASI-P2 plugins never link this crate") and this crate compiles as a WASI-P2 component; the
-    /// one cross-sandbox channel this crate can reach, `store::BackboneMessage`, has no preview-shaped
-    /// variant. See `.🧬semio/🦑️repo/🎫️tickets/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/cw7-preview-law.txt`.
-    /// `#[allow(dead_code)]`: exercised by `🧪️Tests` only until a host bridge exists.
-    #[allow(dead_code)]
-    pub fn gesture_preview(&self) -> Option<(&'static str, u64, Vec<u8>)> {
-        let session = self.transform.as_ref()?;
-        let after = session.doc.snapshot().objects.iter().find(|object| object.id == session.object_id)?.clone();
-        let patch = object_patch_diff(&session.before, &after);
-        let payload = GesturePreviewPayload { object_id: session.object_id.clone(), patch };
-        Some(("gesture:transform", self.preview_seq, dsl::json::to_json_string(&payload).into_bytes()))
-    }
-    //#endregion 🔖️GesturePreview
-}
-
-/// 📦️ Wire shape for `gesture_preview`'s payload — `{ objectId, patch }` — `ToValue`-derived since
-/// `LowpolyObjectPatch` (a framework schema type) carries `serde::Serialize` only under `cfg(test)`.
-#[derive(value_derive::ToValue)]
-#[value(rename_all = "camelCase")]
-struct GesturePreviewPayload {
-    object_id: String,
-    patch: LowpolyObjectPatch,
 }
 //#endregion 🔖️LowpolyScratch
 
+//#region 🖌️PaintGesture
+/// 💾️ One window's in-flight paint gesture between dispatches: the paint tool's statechart configuration by stable
+/// ids, the admission's authoring seed and the base revision it opened on, the open transaction's ref and its ONE
+/// provisional leaf — an `apply-paint-stroke` whose dabs grow tick by tick, or the `edit-paint-layer` of a fill.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct LowpolyPaintGesture {
+    pub states: Vec<String>,
+    pub authoring_seed: String,
+    pub base_revision: String,
+    pub transaction: protocol::TransactionRef,
+    pub leaf: LowpolyMutation,
+}
+//#endregion 🖌️PaintGesture
+
 //#region 🔖️Transient
-/// 🎨️ `(object, layer, before, after)` of a live stroke — see `LowpolyTransient::stroke_diff_parts`.
-pub(crate) type StrokeDiffParts<'a> = (&'a str, usize, std::borrow::Cow<'a, [u8]>, &'a [u8]);
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-struct PaintStrokeState {
-    object_id: String,
-    layer_index: usize,
-    /// 🎨️ The stroke's pre-edit layer, SPARSE when it is the never-painted default (`empty` = opaque
-    /// white, exactly `LowpolyPaintLayer::compacted`'s law) and base64 on the wire: the transient
-    /// mutation is JSON text, where an int-array pixel buffer costs ~4 bytes per byte — two 256²
-    /// buffers came to ~2 MB against the 1 MiB one-item publication bound (`paintAt` refused with
-    /// `transient mutation exceeds the one-item publication bound`, 2026-09-18).
-    #[value(with = "crate::bytes_base64")]
-    base: Vec<u8>,
-    #[value(with = "crate::bytes_base64")]
-    scratch: Vec<u8>,
-}
-
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(rename_all = "camelCase")]
-struct TransformState {
-    object_id: String,
-    before: LowpolyObject,
-    before_mesh_workspace: String,
-    snapshot: LowpolySnapshot,
-    selection: LowpolySelection,
-    mesh_workspace: BTreeMap<String, String>,
-}
-
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct LowpolyTransientState {
-    stroke: Option<Arc<PaintStrokeState>>,
-    stroke_drag_active: bool,
-    stroke_dirty: u64,
-    transform: Option<Arc<TransformState>>,
-    transform_drag_active: bool,
-    preview_seq: u64,
     mesh_workspace: Arc<BTreeMap<String, String>>,
+    paint: BTreeMap<String, LowpolyPaintGesture>,
 }
 
 impl Default for LowpolyTransientState {
     fn default() -> Self {
-        Self { stroke: None, stroke_drag_active: false, stroke_dirty: 0, transform: None, transform_drag_active: false, preview_seq: 0, mesh_workspace: Arc::new(crate::schema::default_mesh_workspace().into_iter().collect()) }
+        Self { mesh_workspace: Arc::new(crate::schema::default_mesh_workspace().into_iter().collect()), paint: BTreeMap::new() }
     }
 }
 
 struct LowpolyTransientStateRef<'a> {
-    stroke: Option<&'a PaintStrokeState>,
-    stroke_drag_active: bool,
-    stroke_dirty: u64,
-    transform: Option<&'a TransformState>,
-    transform_drag_active: bool,
-    preview_seq: u64,
     mesh_workspace: &'a BTreeMap<String, String>,
+    paint: &'a BTreeMap<String, LowpolyPaintGesture>,
 }
 
-/// 🌉️ Hand-written, not derived: `#[derive(value_derive::ToValue)]` on a struct with reference
-/// fields (`Option<&'a T>`, `&'a BTreeMap<..>`) would need `ToValue` implemented for those
-/// reference types themselves, which the codec deliberately never provides (owned-only, see
-/// `🌱️value/🔁️codec/🦀️.rs`'s scalar section) — each field is instead converted through
-/// the owned type's existing `ToValue` impl via ordinary method-call auto-deref, mirroring exactly
-/// the object shape the derive macro emits for the owned twin (camelCase keys, `None`/`Null`).
+/// 🌉️ Hand-written, not derived: the reference fields would need `ToValue` for reference types, which the codec
+/// deliberately never provides; each field converts through its owned type's impl, in the derive's camelCase shape.
 impl<'a> dsl::ToValue for LowpolyTransientStateRef<'a> {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::DslValue::Object(vec![
-            ("stroke".to_string(), self.stroke.map_or(dsl::DslValue::Null, dsl::ToValue::to_value)),
-            ("strokeDragActive".to_string(), dsl::ToValue::to_value(&self.stroke_drag_active)),
-            ("strokeDirty".to_string(), dsl::ToValue::to_value(&self.stroke_dirty)),
-            ("transform".to_string(), self.transform.map_or(dsl::DslValue::Null, dsl::ToValue::to_value)),
-            ("transformDragActive".to_string(), dsl::ToValue::to_value(&self.transform_drag_active)),
-            ("previewSeq".to_string(), dsl::ToValue::to_value(&self.preview_seq)),
-            ("meshWorkspace".to_string(), dsl::ToValue::to_value(self.mesh_workspace)),
-        ])
+        dsl::DslValue::Object(vec![("meshWorkspace".to_string(), dsl::ToValue::to_value(self.mesh_workspace)), ("paint".to_string(), dsl::ToValue::to_value(self.paint))])
     }
 }
 
 #[derive(value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase")]
 struct LowpolyTransientStateWire {
-    stroke: Option<PaintStrokeState>,
-    stroke_drag_active: bool,
-    stroke_dirty: u64,
-    transform: Option<TransformState>,
-    transform_drag_active: bool,
-    preview_seq: u64,
     mesh_workspace: BTreeMap<String, String>,
+    #[value(default)]
+    paint: BTreeMap<String, LowpolyPaintGesture>,
 }
 
-/// 🫧️ Immutable request-owned Lowpoly editing session snapshot. Large paint and live mesh bytes
-/// remain behind one shared typed root; retained jobs clone only bounded segments into their
-/// operation-owned workspace and checkpoints carry identity/cursors, never this content.
+/// 🫧️ Immutable request-owned Lowpoly editing session snapshot: the live mesh bytes behind one shared typed root, and
+/// every window's open paint gesture.
 #[derive(Clone, Debug, PartialEq)]
 pub struct LowpolyTransient {
     state: Arc<LowpolyTransientState>,
@@ -718,189 +315,40 @@ impl LowpolyTransient {
         Self { state: Arc::new(state) }
     }
 
-    pub(crate) fn begin_stroke_drag(&self) -> Self {
-        Self {
-            state: Arc::new(LowpolyTransientState {
-                stroke: None,
-                stroke_drag_active: true,
-                stroke_dirty: self.state.stroke_dirty,
-                transform: self.state.transform.clone(),
-                transform_drag_active: self.state.transform_drag_active,
-                preview_seq: self.state.preview_seq,
-                mesh_workspace: self.state.mesh_workspace.clone(),
-            }),
-        }
+    /// 🖌️ The paint gesture `window` has in flight.
+    pub fn paint(&self, window: &str) -> Option<&LowpolyPaintGesture> {
+        self.state.paint.get(window)
     }
 
-    pub(crate) fn begin_transform_drag(&self) -> Self {
-        Self {
-            state: Arc::new(LowpolyTransientState {
-                stroke: self.state.stroke.clone(),
-                stroke_drag_active: self.state.stroke_drag_active,
-                stroke_dirty: self.state.stroke_dirty,
-                transform: None,
-                transform_drag_active: true,
-                preview_seq: self.state.preview_seq,
-                mesh_workspace: self.state.mesh_workspace.clone(),
-            }),
-        }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn reset_gestures(&self) -> Self {
-        Self {
-            state: Arc::new(LowpolyTransientState {
-                stroke: None,
-                stroke_drag_active: false,
-                stroke_dirty: self.state.stroke_dirty,
-                transform: None,
-                transform_drag_active: false,
-                preview_seq: self.state.preview_seq,
-                mesh_workspace: self.state.mesh_workspace.clone(),
-            }),
-        }
-    }
-
-    /// 🎨️ `(object, layer, before, after)` of the live stroke — `before` materialised from its sparse
-    /// (never painted, opaque white) wire form when needed, so both buffers always agree in length.
-    pub(crate) fn stroke_diff_parts(&self) -> Option<StrokeDiffParts<'_>> {
-        self.state.stroke.as_deref().map(|stroke| {
-            let before = if stroke.base.is_empty() { std::borrow::Cow::Owned(empty_paint_pixels()) } else { std::borrow::Cow::Borrowed(stroke.base.as_slice()) };
-            (stroke.object_id.as_str(), stroke.layer_index, before, stroke.scratch.as_slice())
-        })
-    }
-
-    pub(crate) fn finish_stroke_drag(&self) -> Self {
-        Self {
-            state: Arc::new(LowpolyTransientState {
-                stroke: None,
-                stroke_drag_active: false,
-                stroke_dirty: self.state.stroke_dirty.saturating_add(u64::from(self.state.stroke.is_some())),
-                transform: self.state.transform.clone(),
-                transform_drag_active: self.state.transform_drag_active,
-                preview_seq: self.state.preview_seq,
-                mesh_workspace: self.state.mesh_workspace.clone(),
-            }),
-        }
-    }
-
-    pub fn segmented_extent(&self, segment_bytes: usize) -> Option<usize> {
-        if segment_bytes == 0 {
-            return None;
-        }
-        let chunks = |bytes: &[u8]| bytes.len().div_ceil(segment_bytes).max(1);
-        let mut extent = 0_usize;
-        let mut add = |bytes: &[u8]| {
-            extent = extent.checked_add(chunks(bytes))?;
-            Some(())
+    /// 🪟️ This transient with `window`'s paint gesture replaced by `gesture` (`None` clears it); the mesh root is shared.
+    pub fn with_paint(&self, window: &str, gesture: Option<LowpolyPaintGesture>) -> Self {
+        let mut paint = self.state.paint.clone();
+        match gesture {
+            Some(gesture) => paint.insert(window.to_string(), gesture),
+            None => paint.remove(window),
         };
-        for (key, value) in self.state.mesh_workspace.iter() {
-            add(key.as_bytes())?;
-            add(value.as_bytes())?;
-        }
-        if let Some(stroke) = &self.state.stroke {
-            add(stroke.object_id.as_bytes())?;
-            add(&stroke.base)?;
-            add(&stroke.scratch)?;
-        }
-        if let Some(transform) = &self.state.transform {
-            add(transform.object_id.as_bytes())?;
-            add(transform.before.id.as_bytes())?;
-            add(transform.before.name.as_bytes())?;
-            add(transform.before_mesh_workspace.as_bytes())?;
-            for object in &transform.snapshot.objects {
-                add(object.id.as_bytes())?;
-                add(object.name.as_bytes())?;
-                for layer in &object.paint_layers {
-                    add(layer.name.as_bytes())?;
-                    add(&layer.pixels)?;
-                }
-            }
-            for (key, value) in &transform.mesh_workspace {
-                add(key.as_bytes())?;
-                add(value.as_bytes())?;
-            }
-        }
-        Some(extent.max(1))
+        Self { state: Arc::new(LowpolyTransientState { mesh_workspace: self.state.mesh_workspace.clone(), paint }) }
     }
 
-    pub fn segment_at(&self, mut cursor: usize, segment_bytes: usize) -> Option<&[u8]> {
-        if segment_bytes == 0 {
-            return None;
-        }
-        macro_rules! pick {
-            ($bytes:expr) => {{
-                let bytes: &[u8] = $bytes;
-                let units = bytes.len().div_ceil(segment_bytes).max(1);
-                if cursor < units {
-                    let start = cursor * segment_bytes;
-                    return Some(&bytes[start.min(bytes.len())..start.saturating_add(segment_bytes).min(bytes.len())]);
-                }
-                cursor -= units;
-            }};
-        }
-        for (key, value) in self.state.mesh_workspace.iter() {
-            pick!(key.as_bytes());
-            pick!(value.as_bytes());
-        }
-        if let Some(stroke) = &self.state.stroke {
-            pick!(stroke.object_id.as_bytes());
-            pick!(stroke.base.as_slice());
-            pick!(stroke.scratch.as_slice());
-        }
-        if let Some(transform) = &self.state.transform {
-            pick!(transform.object_id.as_bytes());
-            pick!(transform.before.id.as_bytes());
-            pick!(transform.before.name.as_bytes());
-            pick!(transform.before_mesh_workspace.as_bytes());
-            for object in &transform.snapshot.objects {
-                pick!(object.id.as_bytes());
-                pick!(object.name.as_bytes());
-                for layer in &object.paint_layers {
-                    pick!(layer.name.as_bytes());
-                    pick!(layer.pixels.as_slice());
-                }
-            }
-            for (key, value) in &transform.mesh_workspace {
-                pick!(key.as_bytes());
-                pick!(value.as_bytes());
-            }
-        }
-        (cursor == 0).then_some(&[])
+    /// 👁️ `document` with every window's provisional paint leaf applied — the preview every window of this instance
+    /// paints, never history; `None` when no gesture is open. A leaf that does not apply is skipped.
+    pub fn paint_preview(&self, document: &LowpolySnapshot) -> Option<LowpolySnapshot> {
+        (!self.state.paint.is_empty()).then(|| self.state.paint.values().fold(document.clone(), |state, gesture| protocol::apply_mutation(&state, &gesture.leaf).map_or(state, |(next, _)| next)))
     }
 }
 
-/// 🔀️ Hand-written, not derived: `state` is an `Arc<LowpolyTransientState>` and the wrapped state
-/// mixes owned/`Arc`-shared fields; bridges through `LowpolyTransientStateRef`/
-/// `LowpolyTransientStateWire` the same way the removed `Serialize`/`Deserialize` pair once did.
+/// 🔀️ Hand-written, not derived: `state` is an `Arc<LowpolyTransientState>` whose mesh root is itself shared; bridges
+/// through `LowpolyTransientStateRef`/`LowpolyTransientStateWire`.
 impl dsl::ToValue for LowpolyTransient {
     fn to_value(&self) -> dsl::DslValue {
-        dsl::ToValue::to_value(&LowpolyTransientStateRef {
-            stroke: self.state.stroke.as_deref(),
-            stroke_drag_active: self.state.stroke_drag_active,
-            stroke_dirty: self.state.stroke_dirty,
-            transform: self.state.transform.as_deref(),
-            transform_drag_active: self.state.transform_drag_active,
-            preview_seq: self.state.preview_seq,
-            mesh_workspace: &self.state.mesh_workspace,
-        })
+        dsl::ToValue::to_value(&LowpolyTransientStateRef { mesh_workspace: &self.state.mesh_workspace, paint: &self.state.paint })
     }
 }
 
 impl dsl::FromValue for LowpolyTransient {
     fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
         let wire: LowpolyTransientStateWire = dsl::FromValue::from_value(value)?;
-        Ok(Self {
-            state: Arc::new(LowpolyTransientState {
-                stroke: wire.stroke.map(Arc::new),
-                stroke_drag_active: wire.stroke_drag_active,
-                stroke_dirty: wire.stroke_dirty,
-                transform: wire.transform.map(Arc::new),
-                transform_drag_active: wire.transform_drag_active,
-                preview_seq: wire.preview_seq,
-                mesh_workspace: Arc::new(wire.mesh_workspace),
-            }),
-        })
+        Ok(Self { state: Arc::new(LowpolyTransientState { mesh_workspace: Arc::new(wire.mesh_workspace), paint: wire.paint }) })
     }
 }
 
@@ -965,9 +413,8 @@ pub enum LowpolyTransientMutation {
 impl Mutation<LowpolyTransient> for LowpolyTransientMutation {
     type Diff = LowpolyTransient;
 
-    /// 🧷️ Provisional per-variant leaf metadata for this hand-written (non-derived) aggregate — one
-    /// entry for the sole `Snapshot` variant, mirroring `generation2d`'s identical precedent for its
-    /// own hand-written session/transient aggregate.
+    /// 🧷️ Per-variant leaf metadata for this hand-written (non-derived) aggregate — one entry for the sole `Snapshot`
+    /// variant.
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[protocol::MutationLeafDescriptor {
         schema_version: 1,
         owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🖌️set-snapshot",
@@ -1025,59 +472,276 @@ impl protocol::OpBinary for LowpolyTransientMutation {
 }
 
 impl LowpolyScratch {
-    pub fn from_transient(transient: &LowpolyTransient, current_selection: LowpolySelection) -> Result<Self, String> {
-        let state = transient.state.as_ref();
-        let transform = state
-            .transform
-            .as_deref()
-            .map(|state| {
-                LowpolyDocument::with_context(state.snapshot.clone(), state.object_id.clone(), state.selection.clone(), state.mesh_workspace.clone().into_iter().collect())
-                    .map(|doc| TransformSession { object_id: state.object_id.clone(), before: state.before.clone(), before_mesh_workspace: state.before_mesh_workspace.clone(), doc })
-                    .map_err(|error| error.to_string())
-            })
-            .transpose()?;
-        Ok(Self {
-            stroke: state.stroke.as_deref().map(|stroke| PaintStrokeSession { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: if stroke.base.is_empty() { empty_paint_pixels() } else { stroke.base.clone() }, scratch: stroke.scratch.clone() }),
-            stroke_drag_active: state.stroke_drag_active,
-            stroke_dirty: state.stroke_dirty,
-            transform,
-            transform_drag_active: state.transform_drag_active,
+    /// 🫧️ The dispatch context rehydrated from the live transient: its mesh cache and its window paint gestures.
+    pub fn from_transient(transient: &LowpolyTransient, current_selection: LowpolySelection) -> Self {
+        Self {
             texture_cache: PaintTextureLut::default(),
-            preview_seq: state.preview_seq,
-            mesh_workspace: state.mesh_workspace.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
+            mesh_workspace: transient.state.mesh_workspace.iter().map(|(key, value)| (key.clone(), value.clone())).collect(),
             current_selection,
             selection_object_id: None,
             selected_object_ids: Vec::new(),
-        })
+            paint: transient.state.paint.clone(),
+        }
     }
 
-    pub fn transient_snapshot(&self) -> Result<LowpolyTransient, String> {
-        let transform = self.transform.as_ref().map(|session| TransformState {
-            object_id: session.object_id.clone(),
-            before: LowpolyObject { paint_layers: session.before.paint_layers.iter().cloned().map(LowpolyPaintLayer::compacted).collect(), ..session.before.clone() },
-            before_mesh_workspace: session.before_mesh_workspace.clone(),
-            // 🎨️ The drag's working snapshot carries materialised paint buffers; the transient only needs
-            // the geometry, so every untouched layer rides as its sparse default.
-            snapshot: LowpolySnapshot {
-                objects: session.doc.snapshot().objects.iter().map(|object| LowpolyObject { paint_layers: object.paint_layers.iter().cloned().map(LowpolyPaintLayer::compacted).collect(), ..object.clone() }).collect(),
-                ..session.doc.snapshot().clone()
-            },
-            selection: session.doc.selection().clone(),
-            mesh_workspace: session.doc.mesh_workspace().clone().into_iter().collect(),
-        });
-        let state = LowpolyTransientState {
-            stroke: self.stroke.as_ref().map(|stroke| Arc::new(PaintStrokeState { object_id: stroke.object_id.clone(), layer_index: stroke.layer_index, base: LowpolyPaintLayer { pixels: stroke.base.clone(), ..LowpolyPaintLayer::new("") }.compacted().pixels, scratch: stroke.scratch.clone() })),
-            stroke_drag_active: self.stroke_drag_active,
-            stroke_dirty: self.stroke_dirty,
-            transform: transform.map(Arc::new),
-            transform_drag_active: self.transform_drag_active,
-            preview_seq: self.preview_seq,
-            mesh_workspace: Arc::new(self.mesh_workspace.clone().into_iter().collect()),
-        };
-        Ok(LowpolyTransient { state: Arc::new(state) })
+    /// 🫧️ The transient this context republishes: its (possibly updated) mesh cache and the window paint gestures it
+    /// rehydrated, untouched.
+    pub fn transient_snapshot(&self) -> LowpolyTransient {
+        LowpolyTransient { state: Arc::new(LowpolyTransientState { mesh_workspace: Arc::new(self.mesh_workspace.clone().into_iter().collect()), paint: self.paint.clone() }) }
     }
 }
 //#endregion 🔖️Transient
+
+//#region 🛠️Tool
+/// 🪪️ The editor id every lowpoly tool transaction's `tool` is scoped by: `<appId>#<verb>`.
+pub const LOWPOLY_TOOL_APP_ID: &str = "s.lowpoly.lowpoly@1/*#editor";
+
+/// 🔑️ The transaction key of a streamed gesture's one leaf; a one-shot keys its leaves `"leaf:<index>"`.
+pub const LOWPOLY_TOOL_STREAM_KEY: &str = "stream:0";
+
+/// 📨️ One tool event's leaves: a one-shot's whole set, or a stream tick's single leaf (none for a bare release).
+#[derive(Clone, Debug)]
+pub struct LowpolyToolRequest {
+    pub leaves: Vec<LowpolyMutation>,
+}
+
+/// 🧰️ The tool's context: the net leaf a streamed gesture has accumulated so far (`None` at rest).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct LowpolyToolContext {
+    pub stream: Option<LowpolyMutation>,
+}
+
+/// ➕️ `net` followed by `tick` as ONE net leaf: a paint stroke appends the tick's dabs when the brush is unchanged;
+/// everything else (a fill, a changed brush) keeps the net leaf the gesture opened with.
+pub fn lowpoly_stream_then(net: LowpolyMutation, tick: &LowpolyMutation) -> LowpolyMutation {
+    let merged = match (&net, tick) {
+        (LowpolyMutation::ApplyPaintStroke(stroke), LowpolyMutation::ApplyPaintStroke(next)) => stroke.then(next),
+        _ => None,
+    };
+    merged.map_or(net, LowpolyMutation::ApplyPaintStroke)
+}
+
+fn lowpoly_tool_context(input: LowpolyToolContext) -> LowpolyToolContext {
+    input
+}
+
+fn request_moves(_context: &LowpolyToolContext, event: Option<&lowpoly_tool::Event>) -> bool {
+    matches!(event, Some(lowpoly_tool::Event::Once(request) | lowpoly_tool::Event::Stream(request)) if !request.leaves.is_empty())
+}
+
+fn yield_once(_context: &mut LowpolyToolContext, event: Option<&lowpoly_tool::Event>, sink: &mut Vec<Command<lowpoly_tool::LowpolyTool>>) {
+    let Some(lowpoly_tool::Event::Once(request)) = event else { return };
+    sink.extend(request.leaves.iter().enumerate().map(|(index, leaf)| Command::Effect(ToolYield::upsert(format!("leaf:{index}"), leaf.clone()))));
+    sink.push(Command::Effect(ToolYield::Commit));
+}
+
+fn begin_stream(context: &mut LowpolyToolContext, event: Option<&lowpoly_tool::Event>, sink: &mut Vec<Command<lowpoly_tool::LowpolyTool>>) {
+    let Some(lowpoly_tool::Event::Stream(LowpolyToolRequest { leaves })) = event else { return };
+    let Some(tick) = leaves.first() else { return };
+    sink.push(Command::Effect(ToolYield::upsert(LOWPOLY_TOOL_STREAM_KEY, tick.clone())));
+    context.stream = Some(tick.clone());
+}
+
+fn continue_stream(context: &mut LowpolyToolContext, event: Option<&lowpoly_tool::Event>, sink: &mut Vec<Command<lowpoly_tool::LowpolyTool>>) {
+    let (Some(lowpoly_tool::Event::Stream(request)), Some(stream)) = (event, context.stream.take()) else { return };
+    let net = match request.leaves.first() {
+        Some(tick) => lowpoly_stream_then(stream, tick),
+        None => stream,
+    };
+    sink.push(Command::Effect(ToolYield::upsert(LOWPOLY_TOOL_STREAM_KEY, net.clone())));
+    context.stream = Some(net);
+}
+
+fn finish_stream(context: &mut LowpolyToolContext, event: Option<&lowpoly_tool::Event>, sink: &mut Vec<Command<lowpoly_tool::LowpolyTool>>) {
+    let (Some(lowpoly_tool::Event::Finish(request)), Some(stream)) = (event, context.stream.take()) else { return };
+    let net = match request.leaves.first() {
+        Some(tick) => lowpoly_stream_then(stream, tick),
+        None => stream,
+    };
+    sink.push(Command::Effect(ToolYield::upsert(LOWPOLY_TOOL_STREAM_KEY, net)));
+    sink.push(Command::Effect(ToolYield::Commit));
+}
+
+fn cancel_stream(context: &mut LowpolyToolContext, _event: Option<&lowpoly_tool::Event>, sink: &mut Vec<Command<lowpoly_tool::LowpolyTool>>) {
+    context.stream = None;
+    sink.push(Command::Effect(ToolYield::Abort));
+}
+
+machine::statechart! {
+    machine lowpoly_tool {
+        context: LowpolyToolContext;
+        event Event { Once(LowpolyToolRequest), Stream(LowpolyToolRequest), Finish(LowpolyToolRequest), Cancel }
+        input: LowpolyToolContext;
+        output: ();
+        effect: ToolYield<LowpolyMutation>;
+        context_from_input: lowpoly_tool_context;
+        initial: idle;
+        state idle {
+            on Once if request_moves => idle do yield_once;
+            on Stream if request_moves => streaming do begin_stream;
+        }
+        state streaming {
+            on Stream => streaming do continue_stream;
+            on Finish => idle do finish_stream;
+            on Cancel => idle do cancel_stream;
+        }
+    }
+}
+
+/// 🧷️ The lowpoly tool's host: its chart declares no timer, no invoke and no foreign effect.
+pub struct LowpolyToolHost;
+
+impl machine::Host<lowpoly_tool::LowpolyTool> for LowpolyToolHost {
+    fn execute_effect(&mut self, _actor: machine::ActorId, _effect: ToolYield<LowpolyMutation>) {}
+    fn schedule(&mut self, _actor: machine::ActorId, _timer: machine::TimerId, _delay_ms: u64) {}
+    fn cancel_timer(&mut self, _actor: machine::ActorId, _timer: machine::TimerId) {}
+    fn start_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn cancel_task(&mut self, _actor: machine::ActorId, _invoke: machine::InvokeId) {}
+    fn now_ms(&self) -> u64 {
+        semio_framework_job::default_now_ms().unwrap_or(0)
+    }
+}
+
+fn lowpoly_tool_clock() -> protocol::HybridLogicalTimestamp {
+    protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 }
+}
+
+/// 🛠️ Runs one gesture through a lowpoly tool at rest as ONE transaction of `<appId>#<verb>`, its ref minted from the
+/// admission's `authoring_seed` and the host clock. `None` when the gesture yields nothing: zero trace.
+pub fn lowpoly_tool_once(verb: &str, authoring_seed: &str, leaves: Vec<LowpolyMutation>) -> Option<(protocol::TransactionRef, Vec<LowpolyMutation>)> {
+    let mut runner = ToolMachineRunner::<lowpoly_tool::LowpolyTool, LowpolyToolHost>::start(format!("{LOWPOLY_TOOL_APP_ID}#{verb}"), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost).ok()?;
+    match runner.send(lowpoly_tool::Event::Once(LowpolyToolRequest { leaves }), lowpoly_tool_clock()).ok()? {
+        ToolStep::Committed(transaction, mutations) => Some((transaction, mutations)),
+        _ => None,
+    }
+}
+
+/// 📤️ The emission of one one-shot gesture: its committed transaction as ONE edit stamped with the ref — plain when the
+/// view carries no admission (a render or test view without command authority) — or nothing.
+pub fn lowpoly_tool_emit(verb: &str, doc: &semio_framework_plugin::ArtifactView<'_, LowpolySnapshot>, leaves: Vec<LowpolyMutation>) -> Emit<LowpolyMutation, crate::editor::lowpoly::config::LowpolyConfigMutation> {
+    let seed = doc.operation_optional().map(|operation| operation.authoring_seed.as_str()).unwrap_or_default();
+    match lowpoly_tool_once(verb, seed, leaves) {
+        Some((transaction, mutations)) if !seed.is_empty() => Emit::commit_transaction(transaction, mutations),
+        Some((_, mutations)) => Emit::mutations(mutations),
+        None => Emit::default(),
+    }
+}
+
+/// 🎚️ Where one paint dispatch sits in its gesture: a one-shot `Once`, a `Stream` tick into the window's open
+/// transaction, the `Commit` that ends it, or a host `Abort` with its reason.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LowpolyToolPhase {
+    Once,
+    Stream,
+    Commit,
+    Abort(ToolAbortReason),
+}
+
+impl LowpolyToolPhase {
+    /// 🧩️ Reads a paint verb's `phase` (`stream` | `commit` | `abort`, absent = one-shot) and an abort's `reason`
+    /// (`blur`, `captureLost`, `baseMoved`, `frozen`, `retired`; absent = `tool`); `None` for an unknown one.
+    pub fn parse(phase: Option<&str>, reason: Option<&str>) -> Option<Self> {
+        match phase {
+            None => Some(Self::Once),
+            Some("stream") => Some(Self::Stream),
+            Some("commit") => Some(Self::Commit),
+            Some("abort") => reason.map_or(Some(ToolAbortReason::Tool), ToolAbortReason::parse).map(Self::Abort),
+            Some(_) => None,
+        }
+    }
+}
+
+/// 🛠️ One window's paint tool for one dispatch, a `🛠️tool-machine` runner scoped `<appId>#paint`, started at rest or
+/// resumed from the gesture its window persisted.
+struct LowpolyPaintTool {
+    runner: ToolMachineRunner<lowpoly_tool::LowpolyTool, LowpolyToolHost>,
+    authoring_seed: String,
+    base_revision: String,
+}
+
+impl LowpolyPaintTool {
+    fn tool_id() -> String {
+        format!("{LOWPOLY_TOOL_APP_ID}#paint")
+    }
+
+    fn start(authoring_seed: &str, base_revision: &str) -> Result<Self, ToolRefusal> {
+        let runner = ToolMachineRunner::start(Self::tool_id(), protocol::ActorId(authoring_seed.to_string()), LowpolyToolContext::default(), LowpolyToolHost)?;
+        Ok(Self { runner, authoring_seed: authoring_seed.to_string(), base_revision: base_revision.to_string() })
+    }
+
+    fn resume(gesture: &LowpolyPaintGesture) -> Result<Self, ToolRefusal> {
+        let context = LowpolyToolContext { stream: Some(gesture.leaf.clone()) };
+        let persisted = machine::PersistedSnapshot { version: 1, fingerprint: <lowpoly_tool::LowpolyTool as machine::Machine>::definition().fingerprint, states: gesture.states.clone(), history: Vec::new(), done: false };
+        let snapshot = machine::restore::<lowpoly_tool::LowpolyTool, machine::NoMigrations>(&persisted, context, &[]).map_err(|_| ToolRefusal::Closed)?;
+        let transaction = ToolTransaction::resume(gesture.transaction.clone(), vec![(LOWPOLY_TOOL_STREAM_KEY.to_string(), gesture.leaf.clone())]);
+        let runner = ToolMachineRunner::resume(Self::tool_id(), protocol::ActorId(gesture.authoring_seed.clone()), LowpolyToolContext::default(), snapshot, Some(transaction), LowpolyToolHost)?;
+        Ok(Self { runner, authoring_seed: gesture.authoring_seed.clone(), base_revision: gesture.base_revision.clone() })
+    }
+
+    fn send(&mut self, phase: LowpolyToolPhase, tick: Option<LowpolyMutation>) -> Result<ToolStep<LowpolyMutation>, ToolRefusal> {
+        let request = LowpolyToolRequest { leaves: tick.into_iter().collect() };
+        let event = match phase {
+            LowpolyToolPhase::Stream => lowpoly_tool::Event::Stream(request),
+            LowpolyToolPhase::Commit if !self.runner.at_rest() => lowpoly_tool::Event::Finish(request),
+            LowpolyToolPhase::Abort(_) => lowpoly_tool::Event::Cancel,
+            LowpolyToolPhase::Once | LowpolyToolPhase::Commit => lowpoly_tool::Event::Once(request),
+        };
+        self.runner.send(event, lowpoly_tool_clock())
+    }
+
+    fn persist(self) -> Option<LowpolyPaintGesture> {
+        let (snapshot, transaction) = self.runner.into_parts();
+        let transaction = transaction.filter(|transaction| transaction.state() == ToolTransactionState::Open)?;
+        let leaf = transaction.entries().iter().find(|(key, _)| key == LOWPOLY_TOOL_STREAM_KEY).map(|(_, leaf)| leaf.clone())?;
+        Some(LowpolyPaintGesture { states: machine::persist(&snapshot).states, authoring_seed: self.authoring_seed, base_revision: self.base_revision, transaction: transaction.reference().clone(), leaf })
+    }
+}
+
+/// 🧮️ What one paint dispatch did: the transaction it committed (publish it as ONE edit) and the next transient when
+/// the dispatch opened, advanced, committed or dropped the window's gesture.
+pub struct LowpolyPaintDrive {
+    pub committed: Option<(protocol::TransactionRef, Vec<LowpolyMutation>)>,
+    pub transient: Option<LowpolyTransient>,
+}
+
+/// 🛠️ Drives `window`'s paint tool through ONE dispatch. `Once` commits `tick` as one transaction; `Stream` upserts it
+/// into the window's open transaction (opening it on the first tick), `Commit` folds it in and commits the whole
+/// gesture, `Abort` drops the open gesture with zero trace. An open gesture a one-shot interrupts is aborted
+/// `captureLost`; one whose base moved under it is aborted `baseMoved`, and a stream tick or commit that found it is
+/// dropped with it.
+pub fn lowpoly_paint_drive(transient: &LowpolyTransient, window: &str, phase: LowpolyToolPhase, tick: Option<LowpolyMutation>, authoring_seed: &str, base_revision: &str) -> LowpolyPaintDrive {
+    let persisted = transient.paint(window);
+    let open = persisted.and_then(|gesture| LowpolyPaintTool::resume(gesture).ok());
+    let dropped = LowpolyPaintDrive { committed: None, transient: persisted.map(|_| transient.with_paint(window, None)) };
+    let open = match (open, phase) {
+        (Some(mut tool), LowpolyToolPhase::Abort(reason)) => {
+            tool.runner.abort(reason);
+            return dropped;
+        }
+        (None, LowpolyToolPhase::Abort(_)) => return dropped,
+        (Some(mut tool), _) if tool.base_revision != base_revision => {
+            tool.runner.abort(ToolAbortReason::BaseMoved);
+            if phase != LowpolyToolPhase::Once {
+                return dropped;
+            }
+            None
+        }
+        (Some(mut tool), LowpolyToolPhase::Once) => {
+            tool.runner.abort(ToolAbortReason::CaptureLost);
+            None
+        }
+        (open, _) => open,
+    };
+    let Some(mut tool) = open.or_else(|| LowpolyPaintTool::start(authoring_seed, base_revision).ok()) else { return dropped };
+    let step = tool.send(phase, tick);
+    let next = transient.with_paint(window, tool.persist());
+    let changed = (next != *transient).then_some(next);
+    match step {
+        Ok(ToolStep::Committed(reference, mutations)) => LowpolyPaintDrive { committed: Some((reference, mutations)), transient: changed },
+        Ok(_) | Err(_) => LowpolyPaintDrive { committed: None, transient: changed },
+    }
+}
+//#endregion 🛠️Tool
 
 //#region 🧪️Tests
 #[cfg(test)]

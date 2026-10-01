@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-job` task router: `bun ./📜️script.ts <test>`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargoTestBudgeted, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -21,4 +23,4 @@ class CanonicalArchitectureScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("canonical-architecture", CanonicalArchitectureScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

@@ -110,7 +110,7 @@
           "scenarios": [
             {
               "id": "repaints-the-right-pixel-of-the-single-image",
-              "directoryName": "🖼️repaints-the-right-pixel-of-the-single-image"
+              "directoryName": "🖼️repaints"
             }
           ]
         }

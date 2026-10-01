@@ -14,9 +14,9 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "change-parameter-binding";
         let aggregate_variant = "ChangeParameterBinding";
-        let directory = "🔧️change-parameter-binding";
+        let directory = "🔧️change-parameter";
         let binary_tag = 3;
-        let owner = mutation_root.join("🔧️change-parameter-binding");
+        let owner = mutation_root.join("🔧️change-parameter");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
@@ -62,9 +62,9 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "change-rule-layout-point";
         let aggregate_variant = "ChangeRuleLayoutPoint";
-        let directory = "📐️change-rule-layout-point";
+        let directory = "📐️change-rule-layout";
         let binary_tag = 5;
-        let owner = mutation_root.join("📐️change-rule-layout-point");
+        let owner = mutation_root.join("📐️change-rule-layout");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");
@@ -302,9 +302,9 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "remove-rule-layout-point";
         let aggregate_variant = "RemoveRuleLayoutPoint";
-        let directory = "🗑️remove-rule-layout-point";
+        let directory = "🗑️remove-rule-layout";
         let binary_tag = 6;
-        let owner = mutation_root.join("🗑️remove-rule-layout-point");
+        let owner = mutation_root.join("🗑️remove-rule-layout");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor_source = std::fs::read_to_string(owner.join("🔣️.json")).expect("direct language-neutral descriptor");
         let descriptor: pack::JsonValue = pack::parse_json(&descriptor_source).expect("direct descriptor must be valid JSON");

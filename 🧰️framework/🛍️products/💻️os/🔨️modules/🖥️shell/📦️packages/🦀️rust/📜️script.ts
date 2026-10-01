@@ -3,7 +3,9 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargo, runCargoTestBudgeted, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class CheckScript extends BundleScript {
   run(): void {
@@ -169,4 +171,4 @@ class SchemaCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("schema-check", SchemaCheckScript).register("preview-generated", PreviewGeneratedScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });

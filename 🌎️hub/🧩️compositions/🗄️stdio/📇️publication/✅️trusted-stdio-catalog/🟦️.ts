@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { publicationWasmPath } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🛂️descriptor-verification/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
+import { publicationWasmPath } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 const CATALOG_ARTIFACT_MAX_BYTES = 64 * 1024 * 1024;
 
@@ -24,7 +24,7 @@ export type TrustedStdioNativeCodecReceiptV1 = TrustedStdioNativeCodecV1 & {
 
 export type TrustedStdioOpenTargetV1 = TrustedStdioNativeCodecV1 & {
   readonly role: "editor";
-  readonly surfaceId: "stdio.json.editor";
+  readonly surfaceId: string;
 };
 
 
@@ -119,7 +119,7 @@ export function loadFirstPartyStdioNativeCodecReceipts(repoRoot = getWorkspaceRo
 
 /** 🗄️ Admits only first-party stdio native codec receipts with separate declared pack identities and independently verified protocol source SHA-256. */
 export function verifyStdioNativeCodecReceipts(receipts: readonly TrustedStdioNativeCodecReceiptV1[]): TrustedStdioNativeCodecV1[] {
-  if (receipts.length === 0 || receipts.length > 1024) throw new Error("empty native codec catalog");
+  if (receipts.length > 1024) throw new Error("native codec catalog exceeds its bound");
   const seen = new Set<string>();
   const codecs: TrustedStdioNativeCodecV1[] = [];
   for (const row of receipts) {
@@ -171,18 +171,44 @@ export function stdioComponentAdmission(repoRoot: string): TrustedStdioComponent
 }
 
 
-/** 🗄️ Builds the nonempty first-party stdio native-codec catalog without inventing hashes or a hub bundle. */
-export function buildTrustedStdioCatalogV1(repoRoot = getWorkspaceRoot(), receipts?: readonly TrustedStdioNativeCodecReceiptV1[]): TrustedStdioCatalogV1 {
-  const codecs = verifyStdioNativeCodecReceipts(receipts ?? loadFirstPartyStdioNativeCodecReceipts(repoRoot));
-  const json = codecs.find((row) => row.artifactKind === "s.stdio.json");
-  if (!json || json.factoryId !== "stdio.native.json.v1") throw new Error("stdio.json native codec is absent");
+/** 🧩️ The exact selected codec and open-target contributions for this composition. */
+export type TrustedStdioInventoryV1 = { readonly receipts: readonly TrustedStdioNativeCodecReceiptV1[]; readonly openTargets: readonly TrustedStdioOpenTargetV1[] };
+
+/** 🛂️ Checks each contributed target against its admitted codec without choosing a default artifact. */
+function admittedOpenTargets(codecs: readonly TrustedStdioNativeCodecV1[], targets: readonly TrustedStdioOpenTargetV1[]): TrustedStdioOpenTargetV1[] {
+  if (!Array.isArray(targets) || targets.length > 1024) throw new Error("open target inventory exceeds its bound");
+  const keys = ["artifactKind", "artifactSchema", "packSchemaHash", "protocolSourceSha256", "factoryId", "extension", "role", "surfaceId"].sort();
+  const seen = new Set<string>();
+  return targets.map(row => {
+    if (!row || JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(keys) || row.role !== "editor" || typeof row.surfaceId !== "string" || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/u.test(row.surfaceId) || row.surfaceId.length > 256) throw new Error("open target contribution is invalid");
+    const identity = [row.factoryId, row.role, row.surfaceId].join("\0");
+    if (seen.has(identity)) throw new Error("duplicate open target contribution");
+    seen.add(identity);
+    const codec = codecs.find(codec => codec.factoryId === row.factoryId);
+    if (!codec || Object.keys(codec).some(key => codec[key as keyof TrustedStdioNativeCodecV1] !== row[key as keyof TrustedStdioNativeCodecV1])) throw new Error("open target does not match its admitted codec");
+    return { ...codec, role: row.role, surfaceId: row.surfaceId };
+  });
+}
+
+/** 🗄️ Builds the exact selected catalog from owner-produced contributions. */
+export function buildTrustedStdioCatalogV1(repoRoot = getWorkspaceRoot(), inventory?: TrustedStdioInventoryV1): TrustedStdioCatalogV1 {
+  const codecs = verifyStdioNativeCodecReceipts(inventory?.receipts ?? loadFirstPartyStdioNativeCodecReceipts(repoRoot));
+  let targets = inventory?.openTargets;
+  if (!inventory) {
+    const payloadPath = join(stdioOwnerRoot(repoRoot), "📇️publication", "📜️native-catalog.json");
+    const info = lstatSync(payloadPath);
+    if (!info.isFile() || info.isSymbolicLink() || info.size > 1024 * 1024) throw new Error("owned publication payload must be bounded and regular");
+    const payload = JSON.parse(readFileSync(payloadPath, "utf8")) as TrustedStdioCatalogV1;
+    if (payload.schemaVersion !== 1 || payload.pluginId !== "stdio" || payload.packageId !== "semio:stdio" || !Array.isArray(payload.nativeCodecs) || payload.nativeCodecs.length !== codecs.length || codecs.some((codec, index) => { const row = payload.nativeCodecs[index]; return !row || JSON.stringify(Object.keys(row).sort()) !== JSON.stringify(Object.keys(codec).sort()) || Object.keys(codec).some(key => codec[key as keyof TrustedStdioNativeCodecV1] !== row[key as keyof TrustedStdioNativeCodecV1]); })) throw new Error("owned publication payload codec inventory is stale");
+    targets = payload.openTargets;
+  }
   return {
     schemaVersion: 1,
     pluginId: "stdio",
     packageId: "semio:stdio",
     version: TRUSTED_STDIO_VERSION,
     nativeCodecs: codecs,
-    openTargets: [{ ...json, role: "editor", surfaceId: "stdio.json.editor" }],
+    openTargets: admittedOpenTargets(codecs, targets!),
     publication: "committed",
     hubBundle: "withheld",
     componentAdmission: stdioComponentAdmission(repoRoot),
@@ -196,10 +222,10 @@ export function encodeTrustedStdioCatalogV1(catalog: TrustedStdioCatalogV1): str
 }
 
 
-/** 🗄️ Writes a verified nonempty stdio catalog and returns the Node crypto receipt. */
-export function publishTrustedStdioCatalogV1(options: { readonly outDir: string; readonly repoRoot?: string; readonly receipts?: readonly TrustedStdioNativeCodecReceiptV1[] }): TrustedStdioCatalogPublicationV1 {
+/** 🗄️ Writes a verified selected stdio catalog and returns the Node crypto receipt. */
+export function publishTrustedStdioCatalogV1(options: { readonly outDir: string; readonly repoRoot?: string; readonly inventory?: TrustedStdioInventoryV1 }): TrustedStdioCatalogPublicationV1 {
   const repoRoot = options.repoRoot ?? getWorkspaceRoot();
-  const catalog = buildTrustedStdioCatalogV1(repoRoot, options.receipts);
+  const catalog = buildTrustedStdioCatalogV1(repoRoot, options.inventory);
   const encoded = encodeTrustedStdioCatalogV1(catalog);
   mkdirSync(options.outDir, { recursive: true });
   const outPath = join(options.outDir, TRUSTED_STDIO_CATALOG_FILENAME);
@@ -208,15 +234,3 @@ export function publishTrustedStdioCatalogV1(options: { readonly outDir: string;
 }
 
 
-/** 🗄️ Publishes the first-party stdio native-codec catalog without claiming hub bundle admission. */
-export class TrustedCatalogPublishScript extends BundleScript {
-  run(segments: string[]): void {
-    const option = (name: string): string | undefined => {
-      const index = segments.indexOf(name);
-      return index < 0 ? undefined : segments[index + 1];
-    };
-    const outDir = option("--out") ?? join(this.root, "🤖️generated");
-    const receipt = publishTrustedStdioCatalogV1({ outDir, repoRoot: getWorkspaceRoot() });
-    console.log(`trusted stdio catalog ${receipt.publication}: ${receipt.catalog.nativeCodecs.length} codecs, open=${receipt.catalog.openTargets[0]?.artifactKind}, hubBundle=${receipt.catalog.hubBundle}, component=${receipt.catalog.componentAdmission.status}, sha256=${receipt.catalogSha256} -> ${receipt.outPath}`);
-  }
-}

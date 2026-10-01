@@ -4,16 +4,9 @@ import { join } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv, { type ValidateFunction } from "ajv";
-import {
-  BundleScript,
-  ScriptRouter,
-  runBundleScriptMain,
-  runCargo,
-  runVitest,
-  runWasmPackWebBuild,
-  resolveTestLevel,
-  runExactCargoLaws,
-} from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runVitest, runWasmPackWebBuild, resolveTestLevel, runExactCargoLaws } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { blake3Hex } from "../../../../../🔨️modules/🔏️hash/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
@@ -1178,4 +1171,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("wasm", WasmScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

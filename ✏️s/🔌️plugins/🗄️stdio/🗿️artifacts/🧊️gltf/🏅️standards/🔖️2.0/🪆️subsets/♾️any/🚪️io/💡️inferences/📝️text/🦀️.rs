@@ -162,6 +162,7 @@ fn write_canonical_json(value: &dsl::DslValue, output: &mut String) -> Result<()
         dsl::DslValue::Bool(value) => output.push_str(if *value { "true" } else { "false" }),
         dsl::DslValue::Number(value) => output.push_str(&canonical_number(value)?),
         dsl::DslValue::String(value) => output.push_str(&canonical_json_string(value)),
+        dsl::DslValue::Bytes(_) => output.push_str(&pack::json_to_string(&pack::json_from_dsl_value(value))),
         dsl::DslValue::Array(values) => {
             output.push('[');
             for (index, value) in values.iter().enumerate() {

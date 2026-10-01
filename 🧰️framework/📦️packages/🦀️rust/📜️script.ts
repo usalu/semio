@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework` task router: `bun ./📜️script.ts test|generate|check|lint`. */
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runExactCargoLaws, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, runExactCargoLaws, runCargoLint, runCargoTestBudgeted, runCmdStatus, runTestBudgeted, runVitest, resolveTestLevel } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
@@ -161,7 +163,7 @@ class SnapshotSqliteTestScript extends BundleScript {
       return;
     }
     if (segments[0] === "io") {
-      await runCargoTestBudgeted(["semio-framework-os-kernel"], this.repoRoot, ["--lib", "sqlite_snapshot_native_encoding_"]);
+      await runCargoTestBudgeted(["semio-framework-os-kernel"], this.repoRoot, ["--test", "sqlite_snapshot_native_admission"]);
       await runCargoTestBudgeted(["semio-framework-plugin"], this.repoRoot, ["--lib", "sqlite_snapshot_"]);
       return;
     }
@@ -252,4 +254,4 @@ class CheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test-artifact-kind", ArtifactKindTestScript).register("test", TestScript).register("test-fixture-ownership", FixtureOwnershipTestScript).register("test-action-choices", ActionChoicesTestScript).register("test-tool-run-actions", ToolRunActionsTestScript).register("test-history-edit-actions", HistoryEditActionsTestScript).register("test-mutation-inputs", MutationInputsTestScript).register("test-host-effect-invocation", HostEffectInvocationTestScript).register("test-snapshot-sqlite", SnapshotSqliteTestScript).register("test-core-modules", CoreModulesTestScript).register("test-package-descriptor-value-codec", PackageDescriptorValueCodecTestScript).register("test-wire-retirement-source", WireRetirementSourceScript).register("test-wire-retirement-native", WireRetirementNativeScript).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckScript).register("lint", LintScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

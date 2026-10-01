@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/app/cad/cad/world-window-transient/schema.json",
+  "title": "CadWorldWindowTransient",
+  "description": "Ephemeral local engagement state of one exact CAD world window (design §17.4 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): the action line being typed, the REPL step it shows, the pane and serialized session of the live construction or transform interaction, and the interaction the window last finalized. Never config, never history; a reload starts idle.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["engagementInput", "engagementStep", "engagementPane", "engagementSessionJson", "lastFinalizedInteractionId"],
+  "properties": {
+    "engagementInput": { "type": "string", "description": "The action line as typed." },
+    "engagementStep": { "type": "string", "minLength": 1, "description": "The REPL step the window shows (`Idle` at rest)." },
+    "engagementPane": { "type": ["string", "null"], "description": "The pane the action line addresses." },
+    "engagementSessionJson": { "type": ["string", "null"], "description": "The live interaction session, serialized (`CadEngagementScratch`)." },
+    "lastFinalizedInteractionId": { "type": ["string", "null"], "description": "The interaction this window last committed (its repeat-last)." }
+  }
+}

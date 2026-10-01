@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🪄️ `@semio-tech/value-derive-rs` router: `bun ./📜️script.ts test`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargoTestBudgeted } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -11,4 +13,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

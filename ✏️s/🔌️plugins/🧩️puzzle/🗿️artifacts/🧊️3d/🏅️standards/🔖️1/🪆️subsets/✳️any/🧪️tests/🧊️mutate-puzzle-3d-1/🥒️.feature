@@ -29,7 +29,7 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
   other shape over the one the before-snapshot holds.
 
   🚧️ THREE REFUSALS THE REFERENCE ARGUES BY CLAUSE, and reports rather than works around. First,
-  `replace-object-vortex` in both roles. Its ONLY committed vector, `⏸️rekind-vortex-1-is-noop`,
+  `replace-object-vortex` in both roles. Its ONLY committed vector, `⏸️rekind`,
   supplies a genuinely different vortex — `vortex-1` moves from `vortex-kind-a` to `vortex-kind-c` —
   and yet its committed outcome declares `mutation.no-op` and its after-snapshot is identical to its
   before-snapshot. At least three rules produce exactly that and no committed document distinguishes
@@ -97,40 +97,40 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
     Examples:
       | id                            | vector                                                               |
       | create-object                 | 🌱create-object/🌱️appends-object-c                              |
-      | delete-object                 | 🗑️delete-object/🚫️removes-object-a-and-severs-attraction        |
+      | delete-object                 | 🗑️delete-object/🚫️removes        |
       | move-object                   | 📍move-object/📍️moves-object-a                                  |
       | rotate-object                 | 🔃rotate-object/🔄️half-turn-about-z                             |
       | scale-object                  | 📏scale-object/📐️uniform-to-per-axis                            |
-      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints-object-a-mesh                   |
+      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints                   |
       | edit-object-label             | 🖋️edit-object-label/🔤️relabels-object-a                        |
-      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns-object-a-kind                  |
+      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns                  |
       | change-object-anchor          | ⚓change-object-anchor/⚓️fixed-to-derived                       |
       | change-object-hidden          | 👁️change-object-hidden/🙈️hides-object-a                         |
       | change-object-locked          | 🔒change-object-locked/🔒️locks-object-a                         |
-      | add-object-vortex             | ➕add-object-vortex/🌀️appends-vortex-3-to-object-b              |
-      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes-vortex-2-and-severs-attraction |
-      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind-vortex-1-is-noop               |
-      | connect-vortices              | 🪢️connect-vortices/🧲️adds-second-attraction                     |
-      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes-attraction-1                   |
-      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions-attraction-1        |
+      | add-object-vortex             | ➕add-object-vortex/🌀️appends              |
+      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes |
+      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind               |
+      | connect-vortices              | 🪢️connect-vortices/🧲️adds                     |
+      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes                   |
+      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions        |
       | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2                       |
       | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1                       |
       | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                           |
       | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z                      |
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform                     |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1                  |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1                  |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides                  |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks                  |
       | create-reference              | 🖼️create-reference/🖼️appends-reference-2                        |
       | delete-reference              | 🚮delete-reference/🚫️removes-reference-1                        |
       | move-reference                | 🎯move-reference/↔️slides-reference-1                           |
       | resize-reference              | 📎resize-reference/↔️widens-reference-1                         |
-      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints-reference-1-source        |
-      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides-reference-1                   |
-      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks-reference-1                   |
-      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering                   |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
+      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints        |
+      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides                   |
+      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture                   |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds            |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes      |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs          |
       | drag-selection                | ✋️drag-selection/✋️drags-two-objects                            |
       | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-objects                         |
       | scale-selection               | 🔍️scale-selection/🔍️scales-two-objects                         |
@@ -155,40 +155,40 @@ Feature: Apply every typed puzzle3d scene mutation twice — once in Rust, once 
     Examples:
       | id                            | vector                                                               |
       | create-object                 | 🌱create-object/🌱️appends-object-c                              |
-      | delete-object                 | 🗑️delete-object/🚫️removes-object-a-and-severs-attraction        |
+      | delete-object                 | 🗑️delete-object/🚫️removes        |
       | move-object                   | 📍move-object/📍️moves-object-a                                  |
       | rotate-object                 | 🔃rotate-object/🔄️half-turn-about-z                             |
       | scale-object                  | 📏scale-object/📐️uniform-to-per-axis                            |
-      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints-object-a-mesh                   |
+      | change-object-mesh            | 🧱change-object-mesh/🕸️repoints                   |
       | edit-object-label             | 🖋️edit-object-label/🔤️relabels-object-a                        |
-      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns-object-a-kind                  |
+      | change-object-kind            | 🏗️change-object-kind/🏷️reassigns                  |
       | change-object-anchor          | ⚓change-object-anchor/⚓️fixed-to-derived                       |
       | change-object-hidden          | 👁️change-object-hidden/🙈️hides-object-a                         |
       | change-object-locked          | 🔒change-object-locked/🔒️locks-object-a                         |
-      | add-object-vortex             | ➕add-object-vortex/🌀️appends-vortex-3-to-object-b              |
-      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes-vortex-2-and-severs-attraction |
-      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind-vortex-1-is-noop               |
-      | connect-vortices              | 🪢️connect-vortices/🧲️adds-second-attraction                     |
-      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes-attraction-1                   |
-      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions-attraction-1        |
+      | add-object-vortex             | ➕add-object-vortex/🌀️appends              |
+      | remove-object-vortex          | ➖remove-object-vortex/🚫️removes |
+      | replace-object-vortex         | 🔌replace-object-vortex/⏸️rekind               |
+      | connect-vortices              | 🪢️connect-vortices/🧲️adds                     |
+      | disconnect-vortices           | ✂️disconnect-vortices/🚫️removes                   |
+      | replace-attraction-geometry   | 🧮replace-attraction-geometry/📍️repositions        |
       | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2                       |
       | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1                       |
       | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                           |
       | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z                      |
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform                     |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1                  |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1                  |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides                  |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks                  |
       | create-reference              | 🖼️create-reference/🖼️appends-reference-2                        |
       | delete-reference              | 🚮delete-reference/🚫️removes-reference-1                        |
       | move-reference                | 🎯move-reference/↔️slides-reference-1                           |
       | resize-reference              | 📎resize-reference/↔️widens-reference-1                         |
-      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints-reference-1-source        |
-      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides-reference-1                   |
-      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks-reference-1                   |
-      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering                   |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-vortex-kind-pair            |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-vortex-kind-pair      |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs-vortex-kind-catalog          |
+      | replace-reference-source      | 🖇️replace-reference-source/🖇️repoints        |
+      | change-reference-hidden       | 👀change-reference-hidden/🙈️hides                   |
+      | change-reference-locked       | 🗝️change-reference-locked/🔒️locks                   |
+      | change-domain                 | 🌐change-domain/⚙️architecture                   |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds            |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes      |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️installs          |
       | drag-selection                | ✋️drag-selection/✋️drags-two-objects                            |
       | rotate-selection              | 🔄️rotate-selection/🔄️turns-two-objects                         |
       | scale-selection               | 🔍️scale-selection/🔍️scales-two-objects                         |

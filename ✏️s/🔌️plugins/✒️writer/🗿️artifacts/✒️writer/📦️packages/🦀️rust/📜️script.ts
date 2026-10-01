@@ -2,7 +2,8 @@
 import { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from "../../../../../../../🧰️framework/🔨️modules/🕸️graph/🛂️manifest/🏃️execution/🟦️.ts";
 /** 📦️ writer writer Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -23,4 +24,4 @@ if (segments[0] === "writer-window-state") {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-writer-writer", { commands: { "graph-generate":GraphGenerateScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-writer-writer", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { "graph-generate":GraphGenerateScript,"graph-wire-check":OwnerGraphWireCheckScript, verify: OwnedVerifyScript } });

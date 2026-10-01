@@ -459,7 +459,7 @@ async fn prefix_ring_evictions_retire_through_the_snapshot_factory() {
     let displaced = store.displaced_retirements.owners.len();
     store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![input(&ids[0], Some(set(40)))] }).await.expect("supersede");
     assert!(store.displaced_retirements.owners.len() > displaced, "stale ring entries retire through displaced owners");
-    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation>(store.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
+    let live = forward_prefix_digests::<DemoSnapshot, DemoMutation, _, _>(store.revision_accumulator.identity_digest, store.applied_edit_ids(), &store.envelope().vcs.edits, store.supersessions()).expect("digests");
     assert!(store.prefix_ring.iter().all(|entry| live.get(entry.length) == Some(&entry.digest)), "no stale entry survives");
     close_demo_artifact_store(&mut store);
     assert!(completed.load(std::sync::atomic::Ordering::SeqCst) > retained.len(), "every evicted and live root retired exactly");
@@ -705,7 +705,7 @@ async fn interior_revert_store(early_exit: bool) -> ArtifactStore<DemoSnapshot, 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".into()), payload: add(1).encode_op().unwrap() },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".into()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 4, physical_ms: u64::MAX / 2, logical: 0 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     };
     let report = store.ingest_remote(peer).await.expect("the peer edit ingests");
     assert!(report.accepted);
@@ -803,8 +803,14 @@ async fn a_new_alternative_preserves_the_trunk_it_branched_from() {
     assert_eq!(store.snapshot_ref().n, Some(3), "the trunk keeps the original positions");
     assert_eq!((store.active_line_id(), store.envelope().active_alternative_id.clone()), (trunk.clone(), None));
     assert!(store.supersessions().is_empty(), "the edited alternative's scoped supersession stays on it");
-    let checkout = store.envelope().transitions.last().and_then(|envelope| crate::os_spr::history_transition_from_envelope(envelope).ok().flatten());
-    assert!(matches!(checkout, Some(crate::os_spr::HistoryTransition::Checkout { alternative_id: None, .. })), "the log never names the trunk: {checkout:?}");
+    assert!(store.envelope().transitions.iter().all(|envelope| {
+        match crate::os_spr::history_transition_from_envelope(envelope).expect("transition").expect("history") {
+            crate::os_spr::HistoryTransition::Checkout { .. } => false,
+            crate::os_spr::HistoryTransition::Branch { alternative_id, .. } => alternative_id != trunk,
+            crate::os_spr::HistoryTransition::Commit(checkpoint) => checkpoint.line_id.as_deref() != Some(trunk.as_str()),
+            _ => true,
+        }
+    }), "a head switch is local, and the log never names the trunk");
     store.dispatch(ArtifactCommand::Supersede { scope: Some(trunk.clone()), inputs: vec![input(&ids[1], Some(add(5)))] }).await.expect("a supersession scoped to the trunk");
     assert_eq!(store.snapshot_ref().n, Some(6));
     store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: edited.clone() }).await.expect("switch to the edited alternative");
@@ -904,15 +910,15 @@ std::thread_local! {
 /// 🧿️ A demo operation with a fail-closed owner's discipline: its cold disposal is counted, and a bare drop — what a
 /// partial decode used to do — is counted too, so a law can prove none happened.
 #[derive(Clone, Debug, PartialEq)]
-struct WitnessOp(DemoMutation, bool);
+pub(super) struct WitnessOp(DemoMutation, bool);
 
 impl WitnessOp {
-    fn live(operation: DemoMutation) -> Self {
+    pub(super) fn live(operation: DemoMutation) -> Self {
         Self(operation, true)
     }
 
     /// 📊️ `(retired, dropped)` so far on this thread.
-    fn tally() -> (usize, usize) {
+    pub(super) fn tally() -> (usize, usize) {
         (WITNESS_RETIRED.with(std::cell::Cell::get), WITNESS_DROPPED.with(std::cell::Cell::get))
     }
 }

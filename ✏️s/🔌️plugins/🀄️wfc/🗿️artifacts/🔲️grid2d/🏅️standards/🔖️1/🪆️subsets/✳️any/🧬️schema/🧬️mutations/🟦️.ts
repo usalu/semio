@@ -1,3 +1,4 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ Grid2dMutation — one discriminated-union member per `🧬️mutations/<slug>/` triad's payload.
  * Mirrors the Rust `🦀️.rs` sibling's `Grid2dMutation` enum, which carries `#[derive(dsl::Mutations)]`
  * with no enum-level tag attribute, so it serializes EXTERNALLY TAGGED:
@@ -6,7 +7,7 @@
 import type { WfcAdjacencyRule2d, WfcTile2d, WfcTileMedia2d } from "../📸️snapshot/🟦️.ts";
 
 export interface ChangeSeed {
-  seed: number;
+  seed: bigint;
 }
 
 export interface ResizeGrid {
@@ -15,8 +16,8 @@ export interface ResizeGrid {
 }
 
 export interface ChangeCellSize {
-  cellWidth: number;
-  cellHeight: number;
+  cellWidth: Binary64;
+  cellHeight: Binary64;
 }
 
 export interface ChangePeriodicity {
@@ -34,7 +35,7 @@ export interface DeleteTile {
 
 export interface ChangeTileWeight {
   id: string;
-  weight: number;
+  weight: Binary64;
 }
 
 export interface ChangeTileMedia {

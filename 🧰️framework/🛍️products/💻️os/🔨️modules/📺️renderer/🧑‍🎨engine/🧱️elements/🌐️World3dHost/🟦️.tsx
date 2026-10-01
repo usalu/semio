@@ -1,3 +1,4 @@
+import { publishedPageUrl } from "../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 // #region 🧲️Header
 // 🎨️ framework/products/os/modules/renderer/engine/elements/World3dHost/component.tsx
 /** 🌐️ `World3dHost` — the 3D world viewport scene host: mesh/instance parsing, point-cloud and vortex-marker
@@ -2431,7 +2432,7 @@ function GlbInstanceMesh({
   readonly revision: MeshStyleKind;
   readonly pickEnabled: boolean;
 }) {
-  const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
+  const gltf = useLoader(GLTFLoader, publishedPageUrl(meshAssetTransportUrl(url)));
   const invalidate = useThree((state) => state.invalidate);
   if (!GLB_MESH_LOCAL_BOUNDS.has(url)) {
     const corners = glbMeshFrameCorners(gltf.scene);
@@ -2532,7 +2533,7 @@ function extractGlbCollisionMesh(gltf: Awaited<ReturnType<GLTFLoader["loadAsync"
  * actor, whose mesh store is not part of any checkpoint) could never be told again — see
  * {@link Puzzle3dBrushMeshRegistry}. */
 function BrushMeshRegistrar({ url, revision, onRegister }: { readonly url: string; readonly revision: number; readonly onRegister: (url: string, positions: number[], indices: number[]) => void }) {
-  const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
+  const gltf = useLoader(GLTFLoader, publishedPageUrl(meshAssetTransportUrl(url)));
   useEffect(() => {
     const mesh = extractGlbCollisionMesh(gltf);
     if (mesh.positions.length === 0 || mesh.indices.length === 0) return;
@@ -2544,7 +2545,7 @@ function BrushMeshRegistrar({ url, revision, onRegister }: { readonly url: strin
 /** 🥽️ One loaded GLB as the single welded geometry a tool run trace instance draws through, already in the
  * {@link GLB_MESH_FRAME_ROTATION_X} frame the instance group applies. */
 function ToolRunTraceGlbGeometry({ url, onGeometry }: { readonly url: string; readonly onGeometry: (url: string, geometry: BufferGeometry | null) => void }) {
-  const gltf = useLoader(GLTFLoader, meshAssetTransportUrl(url));
+  const gltf = useLoader(GLTFLoader, publishedPageUrl(meshAssetTransportUrl(url)));
   useEffect(() => {
     const mesh = extractGlbCollisionMesh(gltf);
     if (mesh.positions.length === 0 || mesh.indices.length === 0) return;
@@ -2673,6 +2674,45 @@ export function gumballIdentityDelta(transformMode: string | undefined, base: Re
   if (kind === "translate") return { action: "translateSelection", args: { ...base, dx: 0, dy: 0, dz: 0 } };
   if (kind === "rotate") return { action: "rotateSelection", args: { ...base, ax: 0, ay: 0, az: 1, angle: 0 } };
   return { action: "scaleSelection", args: { ...base, sx: 1, sy: 1, sz: 1 } };
+}
+
+/** 🖌️ Where a paint dab under the pointer comes from: the press that opens a paint gesture, a drag over a mesh while it is
+ * held, or the click that follows a release — a gesture's dabs stream into ONE open transaction the release commits. */
+export type WorldPaintOrigin = "press" | "drag" | "click";
+
+/** 🖌️ A World3d paint gesture between events: whether its first dab streamed into the app's open tool transaction, and
+ * whether the click that follows its release belongs to it. */
+export type WorldPaintGesture = { readonly streamed: boolean; readonly clickConsumed: boolean };
+
+/** 🖌️ What reaches a World3d paint gesture: a dab under the pointer, a host press, the window-level release, or a host
+ * cancel (`blur`, `captureLost`). */
+export type WorldPaintEvent =
+  | { readonly kind: "dab"; readonly origin: WorldPaintOrigin; readonly objectId: string; readonly u: number; readonly v: number }
+  | { readonly kind: "press" }
+  | { readonly kind: "release" }
+  | { readonly kind: "cancel"; readonly reason: "blur" | "captureLost" };
+
+/** 🖌️ The gesture before any press. */
+export const WORLD_PAINT_IDLE: WorldPaintGesture = { streamed: false, clickConsumed: false };
+
+/** 🛠️ One step of a World3d paint gesture, pure: a press or drag dab streams into the app's ONE open tool transaction
+ * (`paintAt` with `phase: "stream"`), the release commits it (`phase: "commit"`) and consumes the click that follows, a
+ * cancel drops it with zero trace (`phase: "abort"` + `reason`); a click with nothing streamed is a one-shot dab (no
+ * `phase`). Returns the next gesture and the one `paintAt` to dispatch, if any — the same protocol the wgpu world engine
+ * publishes (a press pick, move picks, the release). */
+export function worldPaintStep(gesture: WorldPaintGesture, event: WorldPaintEvent): { readonly gesture: WorldPaintGesture; readonly dispatch: Record<string, unknown> | null } {
+  switch (event.kind) {
+    case "press":
+      return { gesture: { ...gesture, clickConsumed: false }, dispatch: null };
+    case "dab":
+      if (event.origin !== "click") return { gesture: { ...gesture, streamed: true }, dispatch: { objectId: event.objectId, u: event.u, v: event.v, phase: "stream" } };
+      if (gesture.clickConsumed) return { gesture: { ...gesture, clickConsumed: false }, dispatch: null };
+      return { gesture, dispatch: { objectId: event.objectId, u: event.u, v: event.v } };
+    case "release":
+      return gesture.streamed ? { gesture: { streamed: false, clickConsumed: true }, dispatch: { phase: "commit" } } : { gesture, dispatch: null };
+    case "cancel":
+      return gesture.streamed ? { gesture: { streamed: false, clickConsumed: false }, dispatch: { phase: "abort", reason: event.reason } } : { gesture, dispatch: null };
+  }
 }
 
 /** ⚡️ Local mid-drag gumball preview delta — applied imperatively to selected instance roots so meshes track the pointer without a WASM/React round-trip (same instant path as catalogue drop ghosts). */
@@ -2960,8 +3000,8 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
   readonly hoveredComponent?: WorldHoverComponent;
   readonly showEdges?: boolean;
   readonly pickEnabled: boolean;
-  readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
-  readonly paintFromHit: (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => void;
+  readonly onPaintAt?: (objectId: string, u: number, v: number, origin: WorldPaintOrigin) => void;
+  readonly paintFromHit: (objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }, origin: WorldPaintOrigin) => void;
   readonly flatShading?: boolean;
   readonly onInstancePointerDown: (id: string, index: number, event: { shiftKey: boolean; ctrlKey: boolean; metaKey: boolean }) => void;
   readonly onInstancePointerMove: (id: string | null) => void;
@@ -3036,7 +3076,11 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             flatShading={flatShading}
             raycast={worldInstanceMeshRaycast(instancePickEnabled)}
             onPointerDown={(event) => {
-              if (onPaintAt || !faceDragActive || !onFaceDragStart || !event.face) return;
+              if (onPaintAt) {
+                if (event.button === 0) paintFromHit(instance.id, meshData, event, "press");
+                return;
+              }
+              if (!faceDragActive || !onFaceDragStart || !event.face) return;
               if (!(targets.face && event.faceIndex != null && meshData.faceIds?.[event.faceIndex] != null)) return;
               const faceId = meshData.faceIds[event.faceIndex]!;
               if (!(isActiveObject && selectionMode === "face" && selectedComponentIds.has(faceId))) return;
@@ -3052,7 +3096,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             }}
             onClick={(event) => {
               if (onPaintAt) {
-                paintFromHit(instance.id, meshData, event);
+                paintFromHit(instance.id, meshData, event, "click");
                 return;
               }
               if (lockedClickClears) {
@@ -3075,7 +3119,7 @@ const WorldInstanceNode = reactHostPort.memo(function WorldInstanceNode({
             }}
             onPointerMove={(event) => {
               if (onPaintAt) {
-                if ((event.buttons & 1) !== 0) paintFromHit(instance.id, meshData, event);
+                if ((event.buttons & 1) !== 0) paintFromHit(instance.id, meshData, event, "drag");
                 return;
               }
               if (!instancePickEnabled) return;
@@ -3344,7 +3388,7 @@ function WorldInstancesLayer({
   readonly onHoverPaint?: (id: string | null) => void;
   readonly onWorldPick: (args: { granularity: string; id: number; merge: string; objectId?: string }) => void;
   readonly onComponentHover: (args: { objectId: string; mode: string; id: number } | null) => void;
-  readonly onPaintAt?: (objectId: string, u: number, v: number) => void;
+  readonly onPaintAt?: (objectId: string, u: number, v: number, origin: WorldPaintOrigin) => void;
   readonly gumballDragActive: boolean;
   readonly controllerId: string;
   readonly gumballPreviewSourceId: string;
@@ -3731,7 +3775,7 @@ function WorldInstancesLayer({
     [selection.selectionMergeMode, persistentSelectionMode],
   );
 
-  const paintFromHit = useCallback((objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }) => {
+  const paintFromHit = useCallback((objectId: string, mesh: WorldMeshData, event: { faceIndex?: number | null; uv?: { x: number; y: number } }, origin: WorldPaintOrigin) => {
     if (!onPaintAt) return;
     let u = event.uv?.x;
     let v = event.uv?.y;
@@ -3744,7 +3788,7 @@ function WorldInstancesLayer({
       u = (mesh.uvs[i0 * 2]! + mesh.uvs[i1 * 2]! + mesh.uvs[i2 * 2]!) / 3;
       v = (mesh.uvs[i0 * 2 + 1]! + mesh.uvs[i1 * 2 + 1]! + mesh.uvs[i2 * 2 + 1]!) / 3;
     }
-    onPaintAt(objectId, u, v);
+    onPaintAt(objectId, u, v, origin);
   }, [onPaintAt]);
 
   return (
@@ -5962,7 +6006,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
     readonly event: { readonly shiftKey?: boolean; readonly ctrlKey?: boolean; readonly metaKey?: boolean };
   } | null>(null);
   const [voxelHoverOrigin, setVoxelHoverOrigin] = useState<readonly [number, number, number] | null>(null);
-  const [paintStrokeActive, setPaintStrokeActive] = useState(false);
   const catalogueDropPreview = useSyncExternalStore(
     subscribeWorldCatalogueDropPreview,
     () => getWorldCatalogueDropPreview(node.controllerId),
@@ -6825,12 +6868,34 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
   );
 
   const paintMode = selection.interactionMode === "paint";
-  const handlePaintAt = useCallback(
-    (objectId: string, u: number, v: number) => {
-      dispatch("paintAt", { objectId, u, v });
+  /** 🖌️ The paint gesture, stepped by `worldPaintStep`; the release and the cancels listen window-wide, so a release
+   * outside the canvas still commits and a blur or unmount mid-drag leaves zero trace. */
+  const paintGestureRef = useRef<WorldPaintGesture>(WORLD_PAINT_IDLE);
+  const stepPaintGesture = useCallback(
+    (event: WorldPaintEvent) => {
+      const next = worldPaintStep(paintGestureRef.current, event);
+      paintGestureRef.current = next.gesture;
+      if (next.dispatch) dispatch("paintAt", next.dispatch);
     },
     [dispatch],
   );
+  const stepPaintGestureRef = useRef(stepPaintGesture);
+  stepPaintGestureRef.current = stepPaintGesture;
+  const handlePaintAt = useCallback((objectId: string, u: number, v: number, origin: WorldPaintOrigin) => stepPaintGesture({ kind: "dab", origin, objectId, u, v }), [stepPaintGesture]);
+  useEffect(() => {
+    const onRelease = () => stepPaintGestureRef.current({ kind: "release" });
+    const onCancel = () => stepPaintGestureRef.current({ kind: "cancel", reason: "captureLost" });
+    const onBlur = () => stepPaintGestureRef.current({ kind: "cancel", reason: "blur" });
+    window.addEventListener("pointerup", onRelease);
+    window.addEventListener("pointercancel", onCancel);
+    window.addEventListener("blur", onBlur);
+    return () => {
+      window.removeEventListener("pointerup", onRelease);
+      window.removeEventListener("pointercancel", onCancel);
+      window.removeEventListener("blur", onBlur);
+      stepPaintGestureRef.current({ kind: "cancel", reason: "captureLost" });
+    };
+  }, []);
 
   // 🧭️ Completed user orbit/pan/zoom gesture (`WorldOrbitGated.onCamera`, fired on gesture end) — the only
   // camera-change handler wired to a real user interaction, so it's the only one that also dispatches.
@@ -7258,17 +7323,14 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           return;
         }
       }
-      if (paintMode) {
-        setPaintStrokeActive(true);
-        dispatch("paintStrokeBegin");
-      }
+      if (paintMode) stepPaintGesture({ kind: "press" });
       setMarqueeModifiers({ shiftKey: event.shiftKey, ctrlKey: event.ctrlKey, metaKey: event.metaKey });
       marqueeFinalizeOnceRef.current = false;
       const start = toLocalPoint(event);
       marqueeStartRef.current = start;
       setMarqueePath([start]);
     },
-    [beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
+    [beginRelocateDrag, dispatch, gestureRecognizer, handleVoxelPlace, node.surfaceId, paintMode, relocateMode, selection.engagementSessionActive, stepPaintGesture, toLocalPoint, volumeBrushMode, voxelGroundOriginAt, yieldToPinch],
   );
 
   const handlePointerMove = useCallback(
@@ -7404,10 +7466,6 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
           }
         }
       }
-      if (paintStrokeActive) {
-        dispatch("paintStrokeEnd");
-        setPaintStrokeActive(false);
-      }
       setMarqueePath([]);
       marqueeStartRef.current = null;
       setVortexPointerArm(null);
@@ -7417,7 +7475,7 @@ export function World3dHost({ node, onAction, requestContextMenu }: ComponentSce
         handleConnectDragCancel();
       }
     },
-    [gestureRecognizer, activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, paintStrokeActive, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
+    [gestureRecognizer, activeUtility, dispatch, endRelocateDrag, faceDragSession, finalizeMarqueeSelection, handleConnectDragCancel, handleInstancePointerDown, interactionDomainId, interactionGranularity, node.surfaceId, paintMode, persistentSelectionMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode, toLocalPoint],
   );
 
   useEffect(() => {

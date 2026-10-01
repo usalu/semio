@@ -65,7 +65,7 @@ Feature: Every bundled generation3d example evaluates to the geometry its commit
   located three defects; two are now fixed and their examples are `green`:
 
   - `blocked-on-extrude-orientation` (`📦️rectangle-extrude-volume`, `🧹️face-sweep-extrude`,
-    `🍄️hexagonal-mushroom-column`) — every PLANAR lateral face `➡️sweep`'s prism builder emitted was
+    `🍄️hexagonal-mushroom`) — every PLANAR lateral face `➡️sweep`'s prism builder emitted was
     oriented INWARD, so a watertight prism's soup integrated to `−V/3`. Fixed by deriving the lateral
     loop's own `(u, v)` winding and its `flipped` from the profile's winding and the sweep direction
     (`📓️sweep-kernel-2026-09-09.md`).

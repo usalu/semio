@@ -313,3 +313,40 @@ while a tool transaction is open, the store appends each tick's ops into the ope
 reverts the open edit (zero trace). The plugin runtime admits that shape (`tool_transaction_shape_fault` refines, not lifts).
 This is also the replacement for the static-key `Emit::amend` path that W3-T2-CLOSURE deletes. Owner: W1-G (store + runtime
 shape rule, Rust + TS twin, laws); W3-T2-STROKES converts remodel on top.
+
+## §16 Session-2 decisions (coordinator, 2026-10-01, from `📓️resume-gap.md`)
+
+1. **Blocking rule confirmed (G14).** The goal reads "the process is repeated until all downstream mutations are error
+   free": Error AND Fatal block finalize, Warnings never do (unchanged `ReplayReport::blocks_finalize`, hub check-in
+   strictness `MergePolicy::Normal`). UI copy names the rule ("Errors must be fixed or withdrawn before finalizing").
+2. **Generic labels (G7).** `ArtifactApp::mutation_label` defaults to `SemanticMutation::label` (en/de); per-app overrides
+   are deleted; a repo gate fails when any applied leaf resolves to the `print_op` fallback or lacks a `de` label.
+3. **Editable-everything gate (G8) + cross-plugin harness (G12).** Every `Mutation` aggregate has an input schema and a
+   generic payload round trip, or a declared + tested non-editable reason (`may_emit_foreign_steps`, inert `Restore`);
+   one generic runtime law per plugin runs begin → input → accept → finalize (overwrite + alternative) on a
+   representative editable leaf and compares the head with a fresh fold of the edited log.
+4. **Fatal loop by editing (G3).** Resolution by editing targets ("Use selection") is a first-class path next to Withdraw;
+   chips show entity labels (not raw ids) and the preview highlights the referenced entities.
+5. **Warnings introduced by an edit (G4).** `HistoryMutationEntry.introduced: bool` marks outcomes that are new relative
+   to the pre-edit outcome of the same mutation; warnings persist through finalize and reload.
+6. **Long-history share (G9).** `dry_run` and `reprojection_replay` become resumable jobs with progress + cancel; until the
+   paged ledger (separate ticket) lands, the 65th edit is refused with a localized notice naming the ceiling.
+
+## §17 Session-2 tool decisions (coordinator, 2026-10-01, from `📓️resume-tools.md` §8)
+
+1. **Forms:** one generic `change-block-field {blockId, field, value}` leaf (typed value union, hard bounds in the schema,
+   full `x-semio-ui`) replaces absolute `replace-block` for field edits; `replace-block` survives only where a whole block is
+   genuinely replaced by intent.
+2. **Raster:** parametric `paint-stroke {layer, tool, brush {size, hardness, opacity, color}, points[]}` with ONE deterministic
+   Rust rasterizer shared by both hosts (wasm) — history edits brush and points; replay re-rasterizes; PNG blobs are no
+   longer the mutation payload. Preview from the window transient during the stroke.
+3. **Typing runs:** accepted as designed (§13.2): commit on idle ≤ 1 s etc.; peers see the pending run via presence only.
+4. **CAD:** streamed gumball through a CAD window transient (stream/commit/abort like puzzle 2d); `CadEngagementScratch`
+   moves from window config into the window transient (per-frame state never lives in config).
+5. **Config lane at closure:** `amend_config` stays ONLY for pure view/config state that never appears as a history row
+   (camera, playback cursor, viewer camera); every artifact-lane `Emit::amend`, artifact `coalesce_key`, `AmendLast*` and
+   `UtilityPreviewContract` is deleted (CLOSURE).
+6. **Lowpoly:** relative leaves `move-selection` / `rotate-selection` / `scale-selection` (approved verbs, same shape as puzzle
+   2d / fem); `transform-mesh` is not used.
+7. **Fold footprint:** one framework helper derives a leaf's fold-footprint declaration from its inverse length, removing the
+   under-declared-footprint hazard class (owner: CLOSURE, with a law over every plugin).

@@ -90,6 +90,7 @@ pub fn encode_data_uri(media_type: &str, bytes: &[u8]) -> String {
 //#region 🔖️AccessorModel
 /// 🔢️ `accessor.componentType` — the 6 values glTF 2.0 permits (§5.1.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(dsl::DslScalar)]
 pub enum GltfComponentType {
     Byte,
     UnsignedByte,
@@ -153,6 +154,7 @@ impl GltfComponentType {
 
 /// 🔢️ `accessor.type` — the 7 shapes glTF 2.0 permits (§5.1.2).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(dsl::DslScalar)]
 pub enum GltfAccessorType {
     Scalar,
     Vec2,

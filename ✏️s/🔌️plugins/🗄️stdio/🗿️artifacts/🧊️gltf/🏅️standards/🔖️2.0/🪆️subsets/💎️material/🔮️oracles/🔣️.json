@@ -11,23 +11,23 @@
       "vectors": [
         {
           "mutationId": "change-material-alpha-mode",
-          "sourceMutationDirectoryName": "🌫️change-alpha",
-          "mutationDirectoryName": "🌫️change-alpha",
+          "sourceMutationDirectoryName": "🌫️change",
+          "mutationDirectoryName": "🌫️change",
           "scenarios": [
             {
               "id": "switches-the-default-material-from-opaque-to-mask",
-              "directoryName": "🎭️switches-the-79b834"
+              "directoryName": "🎭️switches"
             }
           ]
         },
         {
           "mutationId": "change-material-double-sided",
-          "sourceMutationDirectoryName": "🪞️change-sides",
-          "mutationDirectoryName": "🪞️change-sides",
+          "sourceMutationDirectoryName": "🪞️change",
+          "mutationDirectoryName": "🪞️change",
           "scenarios": [
             {
               "id": "makes-the-default-material-double-sided",
-              "directoryName": "🪞️makes-the-6261b2"
+              "directoryName": "🪞️makes"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-image-ahead-of-the-albedo-image",
-              "directoryName": "🖼️inserts-an-empty-e3b07a"
+              "directoryName": "🖼️inserts"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "inserts-a-default-material-ahead-of-the-glass-material",
-              "directoryName": "💎️inserts-a-5ae67c"
+              "directoryName": "💎️inserts"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "inserts-a-repeat-sampler-ahead-of-the-linear-sampler",
-              "directoryName": "🎛️inserts-a-repeat-512dbe"
+              "directoryName": "🎛️inserts"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-texture-ahead-of-the-albedo-texture",
-              "directoryName": "🎨️inserts-an-empty-736467"
+              "directoryName": "🎨️inserts"
             }
           ]
         },
@@ -82,7 +82,7 @@
           "scenarios": [
             {
               "id": "removes-the-albedo-image-and-renumbers-the-texture-source",
-              "directoryName": "🖼️removes-the-6557fc"
+              "directoryName": "🖼️removes"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "removes-the-linear-sampler-and-renumbers-the-texture",
-              "directoryName": "🚫️removes-the-6e2007"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "swaps-the-albedo-and-normal-images",
-              "directoryName": "🖼️swaps-the-albedo-6046c8"
+              "directoryName": "🖼️swaps"
             }
           ]
         },
@@ -137,7 +137,7 @@
           "scenarios": [
             {
               "id": "swaps-the-glass-and-steel-materials",
-              "directoryName": "🚚️swaps-the-glass-31a7a3"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "swaps-the-linear-and-clamped-samplers",
-              "directoryName": "🚚️swaps-the-linear-5f80f3"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -159,7 +159,7 @@
           "scenarios": [
             {
               "id": "swaps-the-albedo-and-normal-textures",
-              "directoryName": "🚚️swaps-the-albedo-e77287"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -170,7 +170,7 @@
           "scenarios": [
             {
               "id": "flips-the-albedo-and-normal-images",
-              "directoryName": "🖼️flips-the-albedo-17dec9"
+              "directoryName": "🖼️flips"
             }
           ]
         },
@@ -181,7 +181,7 @@
           "scenarios": [
             {
               "id": "flips-the-glass-and-steel-materials",
-              "directoryName": "🔀️flips-the-glass-98d5db"
+              "directoryName": "🔀️flips"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "flips-the-linear-and-clamped-samplers",
-              "directoryName": "🔀️flips-the-linear-952435"
+              "directoryName": "🔀️flips"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "flips-the-albedo-and-normal-textures",
-              "directoryName": "🔀️flips-the-albedo-fc33d9"
+              "directoryName": "🔀️flips"
             }
           ]
         }

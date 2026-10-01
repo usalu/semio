@@ -166,14 +166,20 @@ pub use super::scale_target_volume::mutation::{scale_target_volume, ScaleTargetV
 /// that order, ids in payload order); nothing left is `mutation.target-missing`; an `identity`
 /// transform, or survivors that do not move, is `mutation.no-op`. Every moved record is patched whole
 /// from the base, in document order, so the leaf replays on any base.
+///
+/// 🧲️ `follow` re-solves the attraction graph of a pose-changing leaf ([`puzzle3d_selection_follow`]): every
+/// unlocked object an attraction hangs off a moved object is re-placed from it, and every other attraction
+/// touching a moved object is re-derived from the moved poses — one Info-level `mutation.cascade` names both.
+/// A scaling moves no pose and passes `false`.
 pub fn puzzle3d_selection_diff(
     base: &Puzzle3dSnapshot,
     targets: &[String],
     identity: bool,
     object: impl Fn(&crate::Puzzle3dObject) -> crate::Puzzle3dObject,
     volume: impl Fn(&crate::Puzzle3dTargetVolume) -> crate::Puzzle3dTargetVolume,
+    follow: bool,
 ) -> protocol::MutationOutcome<Puzzle3dDiff> {
-    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
+    use crate::standards::v1::subsets::any::schema::diff::{Puzzle3dAttractionPatch, Puzzle3dAttractionPatchEntry, Puzzle3dAttractionsDelta, Puzzle3dObjectPatch, Puzzle3dObjectPatchEntry, Puzzle3dObjectsDelta, Puzzle3dTargetVolumePatch, Puzzle3dTargetVolumePatchEntry, Puzzle3dTargetVolumesDelta};
     if let Err(reason) = puzzle3d_targets_invariant(targets) {
         return protocol::MutationOutcome::fatal("mutation.invariant", reason, targets.to_vec());
     }
@@ -190,35 +196,39 @@ pub fn puzzle3d_selection_diff(
     if survivors.is_empty() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is an unlocked object or target volume", targets.len()), targets.to_vec());
     }
-    let partial: Vec<protocol::MutationMessage> = [(missing, "not in this scene"), (locked, "locked")]
+    let mut messages: Vec<protocol::MutationMessage> = [(missing, "not in this scene"), (locked, "locked")]
         .into_iter()
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let objects: Vec<Puzzle3dObjectPatchEntry> = if identity {
-        Vec::new()
-    } else {
-        base.objects.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(object(entry)).filter(|next| next != entry).map(|next| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next) } })).collect()
-    };
+    let solved = if identity { Puzzle3dSelectionFollow::default() } else { puzzle3d_selection_follow(base, targets, &survivors, &object, follow) };
+    let objects: Vec<Puzzle3dObjectPatchEntry> = base.objects.iter().zip(&solved.objects).filter_map(|(entry, moved)| moved.as_ref().filter(|next| *next != entry).map(|next| Puzzle3dObjectPatchEntry { id: entry.id.clone(), patch: Puzzle3dObjectPatch { replacement: Some(next.clone()) } })).collect();
     let volumes: Vec<Puzzle3dTargetVolumePatchEntry> = if identity {
         Vec::new()
     } else {
         base.target_volumes.iter().filter(|entry| survivors.contains(entry.id.as_str())).filter_map(|entry| Some(volume(entry)).filter(|next| next != entry).map(|next| Puzzle3dTargetVolumePatchEntry { id: entry.id.clone(), patch: Puzzle3dTargetVolumePatch { replacement: Some(next) } })).collect()
     };
-    if objects.is_empty() && volumes.is_empty() {
-        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    let attractions: Vec<Puzzle3dAttractionPatchEntry> = solved.attractions.into_iter().map(|next| Puzzle3dAttractionPatchEntry { id: next.id.clone(), patch: Puzzle3dAttractionPatch { replacement: Some(next) } }).collect();
+    if objects.is_empty() && volumes.is_empty() && attractions.is_empty() {
+        return protocol::MutationOutcome::new(Puzzle3dDiff::default()).absorb_messages(messages.into_iter().chain([protocol::MutationMessage::warn("mutation.no-op", "no changes to apply").at(targets.to_vec())]));
+    }
+    if !solved.followers.is_empty() || !attractions.is_empty() {
+        let cascade = solved.followers.iter().cloned().chain(attractions.iter().map(|entry| entry.id.clone())).collect::<Vec<_>>();
+        messages.push(protocol::MutationMessage::info("mutation.cascade", format!("{} attracted object(s) followed, {} attraction(s) re-derived", solved.followers.len(), attractions.len())).at(cascade));
     }
     protocol::MutationOutcome::new(Puzzle3dDiff {
         objects: (!objects.is_empty()).then(|| Puzzle3dObjectsDelta { patched: objects, ..Default::default() }),
         target_volumes: (!volumes.is_empty()).then(|| Puzzle3dTargetVolumesDelta { patched: volumes, ..Default::default() }),
+        attractions: (!attractions.is_empty()).then(|| Puzzle3dAttractionsDelta { patched: attractions, ..Default::default() }),
         ..Default::default()
     })
-    .absorb_messages(partial)
+    .absorb_messages(messages)
 }
 
 /// ↩️ Exact base-derived inverse of a selection transform: the absolute setters restoring every pose
-/// field its forward `outcome` changes — origin, orientation, scale — so an undo never accumulates the
-/// float error a negated offset, angle or factor would.
+/// field its forward `outcome` changes — origin, orientation, scale — and the whole geometry of every
+/// attraction it re-derives, so an undo never accumulates the float error a negated offset, angle or
+/// factor would.
 pub fn puzzle3d_selection_inverse(base: &Puzzle3dSnapshot, outcome: protocol::MutationOutcome<Puzzle3dDiff>) -> Vec<Puzzle3dMutation> {
     let (diff, _) = outcome.into_parts();
     let mut steps = Vec::new();
@@ -245,6 +255,10 @@ pub fn puzzle3d_selection_inverse(base: &Puzzle3dSnapshot, outcome: protocol::Mu
         if before.scale != after.scale {
             steps.push(scale_target_volume(before.id.clone(), before.scale));
         }
+    }
+    for entry in diff.attractions.iter().flat_map(|delta| &delta.patched) {
+        let Some(before) = base.attractions.iter().find(|attraction| attraction.id == entry.id) else { continue };
+        steps.push(replace_attraction_geometry(ReplaceAttractionGeometry { id: before.id.clone(), new_gap: before.gap, new_shift: before.shift, new_rise: before.rise, new_rotation: before.rotation, new_turn: before.turn, new_tilt: before.tilt, new_x: before.x, new_y: before.y }));
     }
     steps
 }
@@ -312,6 +326,304 @@ pub fn puzzle3d_scaled(scale: Option<crate::Puzzle3dScale>, factors: [f64; 3]) -
     crate::Puzzle3dScale::Vec3([current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]])
 }
 //#endregion 🔖️SelectionTransform
+
+//#region 🔖️AttractionPose
+/// ⭕️ The quaternion of no rotation, `[x, y, z, w]` — what a record without an orientation stands at.
+pub const PUZZLE3D_IDENTITY_QUATERNION: [f64; 4] = [0.0, 0.0, 0.0, 1.0];
+
+/// 🪡️ Below this cross length an attracted vortex counts as (anti)parallel to its attracting one — the compose
+/// kernel's own alignment tolerance.
+const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
+
+/// 🧾️ What one selection leaf's attraction re-solve moves, in document order: per object its new record (`None`
+/// for an unmoved object), the ids of the objects that only FOLLOWED, and every re-derived attraction whole.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct Puzzle3dSelectionFollow {
+    pub objects: Vec<Option<crate::Puzzle3dObject>>,
+    pub followers: Vec<String>,
+    pub attractions: Vec<crate::Puzzle3dAttraction>,
+}
+
+/// 🌲️ Re-solves the attraction graph of one selection move on `base`, with the document's own placement kernel
+/// ([`puzzle3d_attraction_child_pose`], the one the editor's resolve runs). Each surviving object target (payload
+/// order) takes its `object` transform; with `follow`, a breadth-first walk then re-places every UNLOCKED object an
+/// attraction hangs off a moved object (`attracting → attracted`, attractions in document order, first visit wins)
+/// from its moved parent and the attraction's unchanged parameters, so a moved attracting object carries its whole
+/// subtree exactly as resolving would. A locked object never follows, and neither does what hangs off it. Every
+/// other attraction touching a moved object gets its six connection parameters re-derived from the moved poses
+/// ([`derive_attraction_params`]), so resolving the document afterwards never snaps a moved object back. Without
+/// `follow` (a scaling) nothing follows and no attraction changes.
+pub fn puzzle3d_selection_follow(base: &Puzzle3dSnapshot, targets: &[String], survivors: &std::collections::BTreeSet<&str>, object: &dyn Fn(&crate::Puzzle3dObject) -> crate::Puzzle3dObject, follow: bool) -> Puzzle3dSelectionFollow {
+    let mut solved = Puzzle3dSelectionFollow { objects: vec![None; base.objects.len()], ..Default::default() };
+    let mut queue = std::collections::VecDeque::new();
+    for id in targets.iter().filter(|id| survivors.contains(id.as_str())) {
+        let Some(at) = base.objects.iter().position(|entry| &entry.id == id) else { continue };
+        if solved.objects[at].is_none() {
+            solved.objects[at] = Some(object(&base.objects[at]));
+            queue.push_back(at);
+        }
+    }
+    if !follow {
+        return solved;
+    }
+    let ports: std::collections::HashMap<String, (usize, usize)> = base.objects.iter().enumerate().flat_map(|(at, entry)| entry.vortices.iter().enumerate().map(move |(port, vortex)| (puzzle3d_vortex_full_id(&entry.id, &vortex.id), (at, port)))).collect();
+    let ends: Vec<Option<((usize, usize), (usize, usize))>> = base.attractions.iter().map(|attraction| Some((*ports.get(&attraction.attracting)?, *ports.get(&attraction.attracted)?)).filter(|(from, to)| from.0 != to.0)).collect();
+    let mut placing = vec![false; base.attractions.len()];
+    while let Some(parent) = queue.pop_front() {
+        for (index, ends) in ends.iter().enumerate() {
+            let Some((from, to)) = *ends else { continue };
+            if from.0 != parent || solved.objects[to.0].is_some() || base.objects[to.0].locked {
+                continue;
+            }
+            let (Some(attracting), attraction, attracted) = (solved.objects[parent].as_ref(), &base.attractions[index], &base.objects[to.0]) else { continue };
+            let (source, target) = (&attracting.vortices[from.1], &attracted.vortices[to.1]);
+            let (origin, orientation) = puzzle3d_attraction_child_pose(
+                attracting.origin,
+                attracting.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
+                source.position,
+                source.direction.unwrap_or([0.0, 0.0, -1.0]),
+                target.position,
+                target.direction.unwrap_or([0.0, 0.0, -1.0]),
+                attraction.gap,
+                attraction.shift,
+                attraction.rise,
+                attraction.rotation,
+                attraction.turn,
+                attraction.tilt,
+            );
+            solved.objects[to.0] = Some(crate::Puzzle3dObject { origin, orientation: Some(orientation), ..attracted.clone() });
+            solved.followers.push(attracted.id.clone());
+            placing[index] = true;
+            queue.push_back(to.0);
+        }
+    }
+    let pose = |at: usize| solved.objects[at].as_ref().unwrap_or(&base.objects[at]);
+    let attractions = base
+        .attractions
+        .iter()
+        .zip(&ends)
+        .zip(&placing)
+        .filter_map(|((attraction, ends), placing)| {
+            let (from, to) = (*ends)?;
+            if *placing || solved.objects[from.0].is_none() && solved.objects[to.0].is_none() {
+                return None;
+            }
+            let (attracting, attracted) = (pose(from.0), pose(to.0));
+            let (source, target) = (&attracting.vortices[from.1], &attracted.vortices[to.1]);
+            let (gap, shift, rise, rotation, turn, tilt) = derive_attraction_params(
+                attracting.origin,
+                attracting.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
+                source.position,
+                source.direction.unwrap_or([0.0, 0.0, -1.0]),
+                target.position,
+                target.direction.unwrap_or([0.0, 0.0, -1.0]),
+                attracted.origin,
+                attracted.orientation.unwrap_or(PUZZLE3D_IDENTITY_QUATERNION),
+            );
+            Some(crate::Puzzle3dAttraction { gap, shift, rise, rotation, turn, tilt, ..attraction.clone() }).filter(|next| next != attraction)
+        })
+        .collect();
+    solved.attractions = attractions;
+    solved
+}
+
+/// 🔗️ The full id an attraction endpoint names one vortex by: `<objectId>:<vortexId>`, or the vortex id itself
+/// when it already is a full id.
+pub fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
+    if vortex_id.contains(':') {
+        vortex_id.to_string()
+    } else {
+        format!("{object_id}:{vortex_id}")
+    }
+}
+
+/// ➖️ `a − b`.
+pub fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+}
+
+/// ➕️ `a + b`.
+pub fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+}
+
+/// ✳️ `a · s`.
+pub fn vec3_scale(a: [f64; 3], s: f64) -> [f64; 3] {
+    [a[0] * s, a[1] * s, a[2] * s]
+}
+
+/// ❎️ The cross product `a × b`.
+pub fn vec3_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
+    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+}
+
+/// ⚫️ The dot product `a · b`.
+pub fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
+    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+}
+
+/// 🦯️ The Euclidean length of `a`.
+pub fn vec3_len(a: [f64; 3]) -> f64 {
+    vec3_dot(a, a).sqrt()
+}
+
+/// 🎱️ `a` scaled to unit length; a vector shorter than `1e-12` stays as it is.
+pub fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
+    let len = vec3_len(a);
+    if len < 1e-12 {
+        a
+    } else {
+        vec3_scale(a, 1.0 / len)
+    }
+}
+
+/// 🔁️ Degrees to radians.
+pub fn deg_to_rad(deg: f64) -> f64 {
+    deg * std::f64::consts::PI / 180.0
+}
+
+/// 🔂️ Radians to degrees.
+pub fn rad_to_deg(rad: f64) -> f64 {
+    rad * 180.0 / std::f64::consts::PI
+}
+
+/// 🪞️ The conjugate of `q` — its inverse for a unit quaternion.
+pub fn quat_conjugate(q: [f64; 4]) -> [f64; 4] {
+    [-q[0], -q[1], -q[2], q[3]]
+}
+
+/// 🧼️ `q` scaled to unit length; a degenerate quaternion reads as the identity.
+pub fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
+    let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
+    if len < 1e-12 {
+        PUZZLE3D_IDENTITY_QUATERNION
+    } else {
+        [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
+    }
+}
+
+/// 🌐️ `vector` turned by the unit quaternion `quat` (`q · v · q⁻¹`).
+pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
+    let [x, y, z, w] = quat;
+    let vx = vector[0];
+    let vy = vector[1];
+    let vz = vector[2];
+    let ix = w * vx + y * vz - z * vy;
+    let iy = w * vy + z * vx - x * vz;
+    let iz = w * vz + x * vy - y * vx;
+    let iw = -x * vx - y * vy - z * vz;
+    [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]
+}
+
+/// 🎏️ The quaternion rotating unit vector `from` onto unit vector `to`.
+pub fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
+    let r = vec3_dot(from, to) + 1.0;
+    let quat = if r < 0.000_001 {
+        if from[0].abs() > from[2].abs() {
+            [-from[1], from[0], 0.0, 0.0]
+        } else {
+            [0.0, -from[2], from[1], 0.0]
+        }
+    } else {
+        let c = vec3_cross(from, to);
+        [c[0], c[1], c[2], r]
+    };
+    quat_normalize(quat)
+}
+
+/// 🧲️ The align-quaternion special case for when the attracted vortex is already (anti)parallel to the
+/// attracting vortex. Falls back to an alternate cross axis when the attracting direction is exactly
+/// ±Z — a double-degenerate corner the compose kernel's own branch doesn't otherwise guard.
+pub fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
+    let reverse_child = vec3_scale(child_dir, -1.0);
+    let cross_vec = vec3_cross(parent_dir, reverse_child);
+    if vec3_len(cross_vec) < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
+        if parent_dir[2].abs() < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
+            puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
+        } else {
+            let mut axis = vec3_cross([0.0, 0.0, 1.0], parent_dir);
+            if vec3_len(axis) < 1e-9 {
+                axis = vec3_cross([1.0, 0.0, 0.0], parent_dir);
+            }
+            let axis = vec3_normalize(axis);
+            let half = std::f64::consts::FRAC_PI_2;
+            quat_normalize([axis[0] * half.sin(), axis[1] * half.sin(), axis[2] * half.sin(), half.cos()])
+        }
+    } else {
+        puzzle3d_quaternion_from_unit_vectors(reverse_child, parent_dir)
+    }
+}
+
+/// 📐️ Forward attraction placement — given the attracting object's world pose (`t_a`/`q_a`), both
+/// vortices' LOCAL position/direction, and the 6 connection-style parameters (angles in degrees),
+/// returns the attracted object's world pose.
+#[allow(clippy::too_many_arguments)]
+pub fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
+    let parent_dir = vec3_normalize(d_a);
+    let child_dir = vec3_normalize(d_b);
+    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
+
+    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
+    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
+    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
+    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
+
+    let rotate_q = quat_from_axis_angle(parent_dir[0], parent_dir[1], parent_dir[2], -deg_to_rad(rotation_deg));
+    let turn_axis = quat_rotate_vector(rotate_q, raise_dir);
+    let tilt_axis = quat_rotate_vector(rotate_q, shift_dir);
+    let turn_q = quat_from_axis_angle(turn_axis[0], turn_axis[1], turn_axis[2], deg_to_rad(turn_deg));
+    let tilt_q = quat_from_axis_angle(tilt_axis[0], tilt_axis[1], tilt_axis[2], deg_to_rad(tilt_deg));
+
+    let mut orientation_local = quat_conjugate(align_q);
+    orientation_local = quat_mul(orientation_local, quat_conjugate(rotate_q));
+    orientation_local = quat_mul(orientation_local, quat_conjugate(turn_q));
+    orientation_local = quat_mul(orientation_local, quat_conjugate(tilt_q));
+    let orientation_local = quat_normalize(orientation_local);
+
+    let offset = vec3_add(vec3_add(t_a, p_a), vec3_add(vec3_add(vec3_scale(gap_dir, gap), vec3_scale(shift_dir, shift)), vec3_scale(raise_dir, rise)));
+    let t_b = vec3_sub(quat_rotate_vector(orientation_local, offset), p_b);
+    let q_b = quat_normalize(quat_mul(orientation_local, q_a));
+    (t_b, q_b)
+}
+
+/// 🔙️ Inverse of `puzzle3d_attraction_child_pose` — given the attracted object's CURRENT world pose,
+/// derives the 6 parameters that reproduce it exactly, so moving/rotating an attracted object never
+/// causes a resolve-triggered snap-back and creating an attraction never moves either endpoint.
+#[allow(clippy::too_many_arguments)]
+pub fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], t_b: [f64; 3], q_b: [f64; 4]) -> (f64, f64, f64, f64, f64, f64) {
+    let parent_dir = vec3_normalize(d_a);
+    let child_dir = vec3_normalize(d_b);
+    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
+    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
+    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
+    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
+    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
+
+    let orientation_local = quat_normalize(quat_mul(q_b, quat_conjugate(q_a)));
+
+    let offset = quat_rotate_vector(quat_conjugate(orientation_local), vec3_add(t_b, p_b));
+    let diff = vec3_sub(vec3_sub(offset, t_a), p_a);
+    let gap = vec3_dot(diff, gap_dir);
+    let shift = vec3_dot(diff, shift_dir);
+    let rise = vec3_dot(diff, raise_dir);
+
+    let residual = quat_mul(align_q, orientation_local);
+    let m = quat_mul(quat_mul(quat_conjugate(pq), residual), pq);
+    let col_x = quat_rotate_vector(m, [1.0, 0.0, 0.0]);
+    let col_y = quat_rotate_vector(m, [0.0, 1.0, 0.0]);
+
+    let clamp = |v: f64| v.clamp(-1.0, 1.0);
+    let tilt_rad = -(clamp(col_y[2])).asin();
+    let (rotation_rad, turn_rad) = if (col_y[2].abs() - 1.0).abs() < 1e-6 {
+        (col_x[1].atan2(col_x[0]), 0.0)
+    } else {
+        let col_z = quat_rotate_vector(m, [0.0, 0.0, 1.0]);
+        ((-col_x[2]).atan2(col_z[2]), col_y[0].atan2(col_y[1]))
+    };
+
+    (gap, shift, rise, rad_to_deg(rotation_rad), rad_to_deg(turn_rad), rad_to_deg(tilt_rad))
+}
+//#endregion 🔖️AttractionPose
 
 //#region 🔖️SnapshotDelta
 /// 🔀️ Diffs two typed snapshots into a minimal semantic mutation set — the single source of truth
@@ -569,6 +881,12 @@ impl Mutation<Value> for Puzzle3dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
     }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle3dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle3dSnapshot>::conflict_target(self)
+    }
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
@@ -768,6 +1086,12 @@ impl Mutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle3dSnapshot>::may_emit_foreign_steps(self)
     }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle3dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle3dSnapshot>::conflict_target(self)
+    }
 }
 
 /// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
@@ -796,4 +1120,7 @@ impl protocol::SemanticMutation<Puzzle3dPlaySnapshot> for Puzzle3dMutation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
+mod selection_time_travel;
 //#endregion 🧪️Tests

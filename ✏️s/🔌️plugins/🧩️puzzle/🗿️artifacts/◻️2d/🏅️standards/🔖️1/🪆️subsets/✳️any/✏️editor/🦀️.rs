@@ -137,13 +137,14 @@ pub struct Puzzle2dScene {
     pub interaction: Puzzle2dInteractionSnapshot,
 }
 
-/// 🕹️ One render's read of the live `vortex` domain: the selected ids (any granularity) and the
-/// `"pointer"` hover — the 2d twin of `Puzzle3dInteractionSnapshot`.
+/// 🕹️ One render's read of the live `vortex` domain: the selected ids (any granularity), the `"pointer"` hover and
+/// the ids the open time-travel draft references — the 2d twin of `Puzzle3dInteractionSnapshot`.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct Puzzle2dInteractionSnapshot {
     pub granularity: String,
     pub selected: Vec<String>,
     pub hovered: Vec<String>,
+    pub referenced: Vec<String>,
 }
 
 impl Puzzle2dInteractionSnapshot {
@@ -153,7 +154,7 @@ impl Puzzle2dInteractionSnapshot {
         let leftover_ids = interaction.leftover_selected_ids();
         let selected = if selection.ids.is_empty() { leftover_ids } else { selection.ids.clone() };
         let granularity = if !selection.granularity.is_empty() { selection.granularity.clone() } else if !selected.is_empty() { PUZZLE2D_GRANULARITY_NODE.to_string() } else { String::new() };
-        Self { granularity, selected, hovered: hover.ids.clone() }
+        Self { granularity, selected, hovered: hover.ids.clone(), referenced: interaction.draft_references(PUZZLE2D_INTERACTION_DOMAIN).to_vec() }
     }
 
     /// 🕹️ The retained-reducer twin over the raw `InteractionState`/hover map a retained job is handed.
@@ -163,7 +164,7 @@ impl Puzzle2dInteractionSnapshot {
         let leftover_ids: Vec<String> = state.selection.values().flat_map(|selection| selection.ids.iter().cloned()).collect();
         let selected = selection.filter(|selection| !selection.ids.is_empty()).map(|selection| selection.ids.clone()).unwrap_or(leftover_ids);
         let granularity = selection.map(|selection| selection.granularity.clone()).filter(|granularity| !granularity.is_empty()).unwrap_or_else(|| if selected.is_empty() { String::new() } else { PUZZLE2D_GRANULARITY_NODE.to_string() });
-        Self { granularity, selected, hovered }
+        Self { granularity, selected, hovered, referenced: Vec::new() }
     }
 
     pub fn selected_ids(&self) -> &[String] {
@@ -172,6 +173,11 @@ impl Puzzle2dInteractionSnapshot {
 
     pub fn selection_json(&self) -> String {
         serde_json::to_string(&self.selected).unwrap_or_else(|_| "[]".into())
+    }
+
+    /// 🔗️ The ids the board paints highlighted while a time-travel draft targets them, as the scene's JSON id array.
+    pub fn referenced_json(&self) -> String {
+        serde_json::to_string(&self.referenced).unwrap_or_else(|_| "[]".into())
     }
 
     /// 🐁️ The one `"pointer"`-channel hover id this render paints, whatever granularity resolved it
@@ -2395,7 +2401,7 @@ fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Op
 
 fn puzzle2d_config_store_edit(forward: Puzzle2dConfigMutation, inverse: Vec<Puzzle2dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle2dConfigMutation> {
     let id = format!("puzzle2d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -2572,7 +2578,7 @@ struct Puzzle2dArtifactStorePreparation {
 
 fn puzzle2d_artifact_store_edit(forward: Puzzle2dMutation, inverse: Vec<Puzzle2dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle2dMutation> {
     let id = format!("puzzle2d-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -2891,7 +2897,7 @@ fn puzzle2d_dispatch_emit(
     let before = document.value();
     let active_utility = active_utility.to_string();
     let runtime = window::runtime(config, window_config, window_transient, Some(window_kind));
-    let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), hovered: Vec::new() };
+    let interaction = Puzzle2dInteractionSnapshot { granularity: selection.granularity.clone(), selected: selection.ids.clone(), ..Default::default() };
     let mut scene = Puzzle2dPlayApp::scene_with(before.clone(), runtime, &active_utility, interaction);
     // 🛠️ A window that left the select utility retires the select tool: its in-flight gesture aborts with zero trace
     // at the first verb that may publish the window transient.
@@ -5161,12 +5167,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
         Ok(None)
     }
 
-    /// 🏷️ A document op's own localized label, so a select-tool transaction's history row reads its leaf —
-    /// "Drag 2 items by (80, 40)" / "2 Elemente um (80, 40) ziehen" — instead of the op's text line.
-    fn mutation_label(op: &Puzzle2dMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::<Puzzle2dPlaySnapshot>::label(op))
-    }
-
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Puzzle2dRetainedCommandProofs::bounded_first_step_tool_proofs();
         proofs.extend(Puzzle2dHostConfigurationProofs::bounded_first_step_tool_proofs());
@@ -5741,4 +5741,10 @@ mod lock_tests;
 #[cfg(test)]
 #[path = "🧪️tests/🧪️select-tool-transactions/🦀️.rs"]
 mod select_tool_transaction_tests;
+
+/// ⏪️ The select tool's leaves under time travel — the `🧫️select-tool-history` corpus through the app and a standalone
+/// store: every input editable, the preview and its highlight, blocking errors resolved by editing, warnings kept.
+#[cfg(test)]
+#[path = "🧪️tests/🧪️select-tool-history/🦀️.rs"]
+mod select_tool_history_tests;
 //#endregion 🧪️UnitTests

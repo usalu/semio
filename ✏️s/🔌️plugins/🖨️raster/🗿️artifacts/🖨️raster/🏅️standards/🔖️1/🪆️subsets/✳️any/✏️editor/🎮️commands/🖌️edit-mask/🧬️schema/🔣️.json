@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/raster/raster/editor/edit-mask.json",
   "title": "Edit Layer Mask",
-  "description": "Paints or fills effective mask coverage through alphaStroke or alphaFill. Imported luminance multiplied by alpha is normalized to white RGB and coverage alpha during bounded preparation; unselected coverage and exact undo are preserved.",
+  "description": "Fills effective mask coverage through alphaFill (brush and eraser strokes are the paint-stroke leaf). Imported luminance multiplied by alpha is normalized to white RGB and coverage alpha during bounded preparation; unselected coverage and exact undo are preserved.",
   "type": "object",
   "additionalProperties": false,
   "required": [

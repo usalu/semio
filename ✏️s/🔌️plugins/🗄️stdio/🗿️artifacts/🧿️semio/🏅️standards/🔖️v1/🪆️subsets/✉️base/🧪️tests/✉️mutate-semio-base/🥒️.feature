@@ -89,9 +89,9 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-differential
   Scenario: set-snapshot replaces the committed value-subset envelope wholesale
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️.json
-    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/📸️set-snapshot/✉️replaces/🦠️mutation/🔣️.json
+    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/➡️after/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     Then the envelope equals the committed after-envelope, still carries the value subset and raises no diagnostic
 
@@ -99,8 +99,8 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-property
   Scenario: Undoing set-snapshot restores the committed before-envelope
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/📸️set-snapshot/✉️replaces/🦠️mutation/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     And the mutation's own computed inverse is applied through apply_semio_mutation
     Then the envelope equals the committed before-envelope, still carries the value subset and raises no diagnostic
@@ -109,9 +109,9 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-differential
   Scenario: Reasserting the committed envelope through set-snapshot leaves it exactly as it stands
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/🦠️mutation/🔣️.json
-    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🪞️reasserts/🦠️mutation/🔣️.json
+    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/➡️after/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     Then the envelope equals the committed before-envelope, still carries the value subset and raises no diagnostic
 
@@ -119,8 +119,8 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-property
   Scenario: Undoing a reassertion is itself the identity
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/🦠️mutation/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🪞️reasserts/🦠️mutation/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     And the mutation's own computed inverse is applied through apply_semio_mutation
     Then the envelope equals the committed before-envelope, still carries the value subset and raises no diagnostic
@@ -129,9 +129,9 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-error
   Scenario: A wrapped image mutation against a value envelope is refused, not applied
-    Given the committed before-envelope shared://🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/🦠️mutation/🔣️.json
-    And the committed after-envelope shared://🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/🖼️apply-image/🚫️refuses/🦠️mutation/🔣️.json
+    And the committed after-envelope shared://🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/➡️after/🔣️.json
     When the wrapped image set-dimensions mutation is applied through apply_semio_mutation
     Then the outcome carries mutation.target-missing and the envelope equals the committed before-envelope
 
@@ -139,9 +139,9 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-exhaustive
   @mode-differential
   Scenario: Only set-snapshot can retype the envelope from one subset to another
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/📸️snapshot/⬅️before/🔣️.json
-    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/🦠️mutation/🔣️.json
-    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/📸️snapshot/➡️after/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/⬅️before/🔣️.json
+    And the committed mutation shared://🧬️mutations/📸️set-snapshot/🔁️retypes/🦠️mutation/🔣️.json
+    And the committed after-envelope shared://🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/➡️after/🔣️.json
     When set-snapshot is applied through apply_semio_mutation
     Then the envelope equals the committed empty image envelope, carries the image subset and raises no diagnostic
 
@@ -149,7 +149,7 @@ Feature: Route every typed semio ENVELOPE mutation over its JSON carrier, agains
   @level-long
   @mode-round-trip
   Scenario: Rebuild the committed envelope from an empty one, and reproduce the real envelope artifact byte for byte
-    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-envelope shared://🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/⬅️before/🔣️.json
     And the real committed text artifact asset://🌐️envelope/🗣️.dsl.semio
     And its committed binary twin asset://🌐️envelope/🎒️.pack.semio
     When the empty envelope is replaced with the committed one through apply_semio_mutation

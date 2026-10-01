@@ -14,6 +14,18 @@ type ExecaOracle = (file: string, args: readonly string[], options: { readonly e
 const execa: ExecaOracle = createRequire(import.meta.url)("execa");
 const budgetKeys = ["SEMIO_BUILD_BUDGET_MS", "SEMIO_CMD_BUDGET_MS", "SEMIO_ORCHESTRATOR_BUDGET_MS", "SEMIO_DAEMON_BUDGET_MS"];
 
+test("owned snapshot Cargo feature admission remains separate from the ordinary artifact suite",async()=>{
+ const corpus=JSON.parse(readFileSync(new URL("../../🧫️fixtures/🪶️snapshot-test-selection/🔣️.json",import.meta.url),"utf8"));
+ const artifactRoot=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifactRoot)throw Error("SEMIO_TEST_ARTIFACT_DIR must name the ticket generated directory");
+ const root=fileURLToPath(new URL("../../../../../../../",import.meta.url)),runner=fileURLToPath(new URL("../../⚡️caching/📦️artifacts/🦀️rust/🟦️.ts",import.meta.url));
+ for(const row of corpus.cases){const output=mkdtempSync(join(artifactRoot,"snapshot-features-"));
+  const code=`const{mock}=await import("bun:test");const library=await import(${JSON.stringify(libraryPath)});mock.module(${JSON.stringify(libraryPath)},()=>({...library,runCargoTestBudgeted:async(packages,cwd,args)=>{console.log(JSON.stringify({packages,cwd,args}));console.log("owned-assertions-complete")}}));process.argv=[process.execPath,"owned-route",...${JSON.stringify(row.command)}];const{runArtifactRustPackageMain}=await import(${JSON.stringify(runner)});await runArtifactRustPackageMain(${JSON.stringify(join(root,corpus.packageRoot))},${JSON.stringify(corpus.packageName)},{testFeatures:${JSON.stringify(corpus.ordinaryFeatures)},snapshotSqliteTestFeatures:${row.snapshotFeatures===undefined?"undefined":JSON.stringify(row.snapshotFeatures)},snapshotSqliteTests:["owned-test-source"]});`;
+  const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_TEST_ARTIFACT_DIR:output},timeout:10000,reject:false});if(result.code!==0)throw Error(`Owned feature route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);expect(result.stdout).toContain("owned-assertions-complete");
+  const call=JSON.parse(result.stdout.split(/\r?\n/u).find(line=>line.startsWith("{"))!);expect(call.packages).toEqual([corpus.packageName]);expect(call.cwd).toBe(root.replace(/[/\\]$/u,""));expect(call.args.flatMap((value:string,index:number)=>value==="--features"?[call.args[index+1]]:[])).toEqual(row.expectedFeatures);expect(call.args).toContain("--lib");
+
+ }
+},30000);
+
 /** 🧼️ Keeps the budget contract independent of the developer's launch environment. */
 function cleanEnv(): NodeJS.ProcessEnv {
   return { ...process.env, ...Object.fromEntries(budgetKeys.map(key => [key, undefined])), SEMIO_COVERAGE: "0" };
@@ -81,6 +93,7 @@ test("process budgets let captured nextest compilation finish before budgeted as
   const directory = mkdtempSync(join(artifactRoot, "unlimited-nextest-"));
   const code = `
     const { mock } = await import("bun:test");
+    const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);
     const native = await import("node:child_process");
     const spawn = native.spawn, spawnSync = native.spawnSync;
     mock.module("node:child_process", () => ({
@@ -100,7 +113,8 @@ for (const nextest of [true, false]) {
   test(`process budgets separate coverage compilation from assertions: nextest=${nextest}`, async () => {
     const code = `
       const { mock } = await import("bun:test");
-      const native = await import("node:child_process");
+      const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);
+    const native = await import("node:child_process");
       const spawn = native.spawn, spawnSync = native.spawnSync;
       mock.module("node:child_process", () => ({
         ...native,
@@ -143,9 +157,9 @@ test("process budgets bind nested native workspace profiles to the repository co
   const schema=JSON.parse(readFileSync(new URL("../../🧬️schema/⏱️process-budgets/native-profile.json",import.meta.url),"utf8"));
   expect(new Ajv({strict:true}).validate(schema,corpus)).toBe(true);
   for(const coverage of corpus.coverage){
-    const code=`const{mock}=await import("bun:test");const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runCargoTestBudgeted,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runCargoTestBudgeted([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
+    const code=`const{mock}=await import("bun:test");const preparePath=${JSON.stringify(fileURLToPath(new URL("../../🗂️workspaces/🦀️cargo/📜️script.ts",import.meta.url)))};const originalBunSpawnSync=Bun.spawnSync.bind(Bun);Bun.spawnSync=(args,options)=>args[1]===preparePath?{exitCode:0,stdout:new Uint8Array(),stderr:new Uint8Array()}:originalBunSpawnSync(args,options);const native=await import("node:child_process");const spawn=native.spawn,spawnSync=native.spawnSync;mock.module("node:child_process",()=>({...native,spawnSync:(cmd,args,opts)=>cmd==="cargo"?{status:0}:spawnSync(cmd,args,opts),spawn:(cmd,args,opts)=>{if(cmd!=="cargo")return spawn(cmd,args,opts);console.error(JSON.stringify(args));return spawn(process.execPath,["-e",args.includes("list")?"console.log('{}')":"console.log('native-complete')"],opts)}}));const{runCargoTestBudgeted,getWorkspaceRoot}=await import(${JSON.stringify(libraryPath)});console.error(JSON.stringify({root:getWorkspaceRoot()}));await runCargoTestBudgeted([${JSON.stringify(corpus.nativePackage.name)}],process.cwd());`;
     const result=await execa(process.execPath,["-e",code],{env:{...cleanEnv(),SEMIO_COVERAGE:coverage?"1":"0",SEMIO_TEST_LEVEL:corpus.profile},timeout:12000,reject:false});
-    expect(result.code,result.stderr).toBe(0);
+    if(result.code!==0)throw Error(`Native profile route failed: ${result.stdout}\n${result.stderr}`);expect(result.code).toBe(0);
     const records=result.stderr.replace(/\u001b\[[0-9;]*m/g,"").split(/\r?\n/u).map(line=>line.trim()).filter(line=>line.startsWith('["')||line.startsWith('{"root":')).map(line=>JSON.parse(line));
     const root=records.find(row=>!Array.isArray(row)).root;
     const calls=records.filter(row=>Array.isArray(row)&&row.includes("nextest"));
@@ -160,5 +174,5 @@ test("process native profiles belong to each physical Cargo workspace",async()=>
   const toml=createRequire(import.meta.url)("toml") as {parse:(source:string)=>any};
   const{discoverCargoWorkspaces,cargoWorkspaceMembers}=await import("../../🗂️workspaces/🦀️cargo/🟦️.ts");
   const scopes=discoverCargoWorkspaces(root);
-  for(const row of corpus.workspaces){const source=readFileSync(join(root,row.directory,corpus.configPath),"utf8");const config=Bun.TOML.parse(source);expect(config).toEqual(toml.parse(source));expect(config.profile.quick.overrides?.length??0).toBe(row.overrideCount);for(const[level,period]of Object.entries(corpus.periods))expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});const members=cargoWorkspaceMembers(root,scopes.find(scope=>scope.directory===row.directory)!);for(const entry of config.profile.quick.overrides??[]){const name=/^package\(([a-z0-9-]+)\)$/.exec(entry.filter)?.[1];expect(name).toBeDefined();expect(members.some(member=>member.name===name)).toBe(true);}}
+  for(const row of corpus.workspaces){const source=readFileSync(join(root,row.directory,corpus.configPath),"utf8");const config=Bun.TOML.parse(source) as {profile:Record<string,{overrides?:readonly {filter:string}[];"slow-timeout":{period:string;"terminate-after":number}}>};expect(config).toEqual(toml.parse(source));expect(config.profile.quick.overrides?.length??0).toBe(row.overrideCount);for(const[level,period]of Object.entries(corpus.periods)){if(typeof period!=="string")throw Error("Portable native profile period must be text");expect(config.profile[level]["slow-timeout"]).toEqual({period,"terminate-after":1});}const members=cargoWorkspaceMembers(root,scopes.find(scope=>scope.directory===row.directory)!);for(const entry of config.profile.quick.overrides??[]){const name=/^package\(([a-z0-9-]+)\)$/.exec(entry.filter)?.[1];expect(name).toBeDefined();expect(members.some(member=>member.name===name)).toBe(true);}}
 },30000);

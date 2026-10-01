@@ -1,0 +1,14 @@
+{"cases":[
+{"id":"binary-export","operation":"export-binary","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
+{"id":"text-export","operation":"export-text","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
+{"id":"binary-import","operation":"import-binary","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
+{"id":"text-import","operation":"import-text","value":7,"subset":"*","cancelPhase":null,"succeeds":true,"retirements":1},
+{"id":"cancel-before-decode","operation":"export-binary","value":7,"subset":"*","cancelPhase":"DecodeNative","succeeds":false,"retirements":0},
+{"id":"cancel-projection","operation":"export-text","value":7,"subset":"*","cancelPhase":"ProjectSnapshot","succeeds":false,"retirements":1},
+{"id":"cancel-before-reconstruction","operation":"import-binary","value":7,"subset":"*","cancelPhase":"ReconstructSnapshot","succeeds":false,"retirements":0},
+{"id":"cancel-after-reconstruction","operation":"import-text","value":7,"subset":"*","cancelPhase":"ProjectSnapshot","succeeds":false,"retirements":1},
+{"id":"cancel-encoding","operation":"import-binary","value":7,"subset":"*","cancelPhase":"EncodeNative","succeeds":false,"retirements":1},
+{"id":"reject-export-subset","operation":"export-text","value":7,"subset":"reject","cancelPhase":null,"succeeds":false,"retirements":1},
+{"id":"reject-import-subset","operation":"import-binary","value":7,"subset":"reject","cancelPhase":null,"succeeds":false,"retirements":1},
+{"id":"reject-native-encoding","operation":"import-binary","value":-2,"subset":"*","cancelPhase":null,"succeeds":false,"retirements":1}
+]}

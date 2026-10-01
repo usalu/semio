@@ -254,7 +254,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️inserts-room-c-at-the-sorted-position/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️inserts/🦀️.rs"]
                             mod tests_inserts_room_c_at_the_sorted_position;
                         }
                         #[path = "."]
@@ -267,7 +267,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🕳️removes-room-a-and-cascades-its-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🕳️removes/🦀️.rs"]
                             mod tests_removes_room_a_and_cascades_its_edge;
                         }
                         #[path = "."]
@@ -296,7 +296,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/✋️lifts-both-rooms-two-storeys/🦀️.rs"]
                             mod tests_lifts_both_rooms_two_storeys;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/⚠️skips-a-slot-the-corridor-lacks/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-slots/🧪️tests/⚠️skips/🦀️.rs"]
                             mod tests_skips_a_slot_the_corridor_lacks;
                         }
                         #[path = "."]
@@ -309,7 +309,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🧪️tests/🎯️sets-the-corridor-and-room-b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎯️set-slot-positions/🧪️tests/🎯️sets/🦀️.rs"]
                             mod tests_sets_the_corridor_and_room_b;
                         }
                         #[path = "."]
@@ -322,7 +322,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🧪️tests/📐️widens-room-a-to-a-double-bay/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-slot/🧪️tests/📐️widens/🦀️.rs"]
                             mod tests_widens_room_a_to_a_double_bay;
                         }
                         #[path = "."]
@@ -335,7 +335,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins-room-a-to-room-b-beside/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗️connect-slots/🧪️tests/🔗️joins/🦀️.rs"]
                             mod tests_joins_room_a_to_room_b_beside;
                         }
                         #[path = "."]
@@ -348,7 +348,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs-the-corridor-b-edge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-slots/🧪️tests/✂️severs/🦀️.rs"]
                             mod tests_severs_the_corridor_b_edge;
                         }
                         #[path = "."]
@@ -387,7 +387,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🧪️tests/🀄️adds-a-stair-tile-to-the-catalogue/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🀄️create-tile/🧪️tests/🀄️adds/🦀️.rs"]
                             mod tests_adds_a_stair_tile_to_the_catalogue;
                         }
                         #[path = "."]
@@ -400,7 +400,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🗑️drops-the-corridor-tile-and-its-rule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🗑️drops/🦀️.rs"]
                             mod tests_drops_the_corridor_tile_and_its_rule;
                         }
                         #[path = "."]
@@ -413,7 +413,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️raises-the-room-tile-selection-bias/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️raises/🦀️.rs"]
                             mod tests_raises_the_room_tile_selection_bias;
                         }
                         #[path = "."]
@@ -426,7 +426,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🧪️tests/🖼️swaps-the-corridor-box-for-a-wedge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-tile-media/🧪️tests/🖼️swaps/🦀️.rs"]
                             mod tests_swaps_the_corridor_box_for_a_wedge;
                         }
                         #[path = "."]
@@ -439,7 +439,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/🚦️forbids-two-rooms-side-by-side/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/🚦️forbids/🦀️.rs"]
                             mod tests_forbids_two_rooms_side_by_side;
                         }
                         #[path = "."]
@@ -452,7 +452,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🧪️tests/🚫️drops-the-room-corridor-pairing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-rule/🧪️tests/🚫️drops/🦀️.rs"]
                             mod tests_drops_the_room_corridor_pairing;
                         }
                         #[path = "."]
@@ -465,7 +465,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
                             mod tests_reseeds_the_solve_from_7_to_99;
                         }
                     }

@@ -39,8 +39,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA);
-    codec.extension = "bcf";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
+    codec.extension = "semio";
     codec
 }
 

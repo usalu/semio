@@ -1,0 +1,2 @@
+# 🩹️ Relative patch-working-nodes / PatchWorkingNodes payload.
+input PatchWorkingNodesInput { targets: [String!]!, field: String!, value: String! }

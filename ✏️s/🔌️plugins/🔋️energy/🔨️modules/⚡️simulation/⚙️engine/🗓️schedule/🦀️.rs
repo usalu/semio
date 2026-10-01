@@ -82,6 +82,15 @@ pub struct ScheduleSet {
     pub time_series: Vec<TimeSeriesSchedule>,
 }
 
+/// 📅️ Sunday-first index into [`WeeklySchedule::daily_schedule_ids`].
+///
+/// `day_of_week` is [`crate::calendar::SimDate::day_of_week`]: 1 = Sunday … 7 = Saturday,
+/// the EnergyPlus day type. The seven slots follow `Schedule:Week:Daily` and
+/// `CreateWeeklySchedule`: 0 = Sunday … 6 = Saturday.
+pub fn weekly_day_slot(day_of_week: u8) -> usize {
+    usize::from(day_of_week.saturating_sub(1)).min(6)
+}
+
 impl ScheduleSet {
     /// 🔎️ Whether any of the five schedule families defines this id — the referential-integrity
     /// question every `ScheduleId`-carrying mutation asks before it admits a payload, and the same
@@ -110,8 +119,7 @@ impl ScheduleSet {
 
     pub fn weekly_value(&self, id: ScheduleId, day_of_week: u8, hour: u8) -> Option<f64> {
         let weekly = self.weekly.iter().find(|w| w.id == id)?;
-        let dow = (day_of_week as usize).min(6);
-        self.daily_value(weekly.daily_schedule_ids[dow], hour)
+        self.daily_value(weekly.daily_schedule_ids[weekly_day_slot(day_of_week)], hour)
     }
 
     pub fn annual_value(&self, id: ScheduleId, year: u16, month: u8, day: u8, hour: u8) -> Option<f64> {

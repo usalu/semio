@@ -45,7 +45,7 @@ async fn artifact_kind_uses_the_fixture_schema() {
 
 #[test]
 fn layout_document_contract_json_text_pack_projection_and_identity() {
-    let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json");
+    let source = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧫️fixtures/🪪️document/🔣️.json");
     let fixture: serde_json::Value = serde_json::from_str(source).expect("language-neutral Layout document fixture");
     let document_json = serde_json::to_string(&fixture["document"]).expect("Layout document JSON");
     let snapshot: LayoutSnapshot = dsl::json::from_json_str(&document_json).expect("native Layout JSON decoder");

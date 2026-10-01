@@ -168,7 +168,7 @@ fn gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_gran
 
     let mutation = GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData {
         id: "position".repeat(32),
-        new_data: dsl::DslValue::Object(vec![("nested".repeat(32), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(128)), dsl::DslValue::String("tail".into())]))]),
+        new_data: dsl::DslValue::Object(vec![("nested".repeat(32), dsl::DslValue::Array(vec![dsl::DslValue::String("payload".repeat(128)), dsl::DslValue::Bytes(vec![7; 1024]), dsl::DslValue::String("tail".into())]))]),
     });
     drain(store::ArtifactOwnedValueRetirementFactory::retire_owned(&GisMapMutationRetirementFactory, mutation));
 }

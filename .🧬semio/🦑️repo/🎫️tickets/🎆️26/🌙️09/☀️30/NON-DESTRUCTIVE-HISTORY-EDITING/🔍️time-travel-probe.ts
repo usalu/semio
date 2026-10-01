@@ -123,7 +123,7 @@ const COPY = {
     severityError: /\b(Error|Fatal)\b/,
     stageEditing: "Editing a mutation",
     reviewReady: "Ready to finalize",
-    reviewBlocked: "Errors in later mutations block finalizing",
+    reviewBlocked: "Errors must be fixed or withdrawn before finalizing",
     dialogTitle: "Finish editing history",
     overwrite: "Overwrite",
     overwriteDescription: "Replaces the edited mutations in every alternative that contains them.",
@@ -145,7 +145,7 @@ const COPY = {
     severityError: /\b(Fehler|Kritisch)\b/,
     stageEditing: "Mutation wird bearbeitet",
     reviewReady: "Bereit zum Abschließen",
-    reviewBlocked: "Fehler in späteren Mutationen verhindern den Abschluss",
+    reviewBlocked: "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden",
     dialogTitle: "Verlaufsbearbeitung abschließen",
     overwrite: "Überschreiben",
     overwriteDescription: "Ersetzt die bearbeiteten Mutationen in jeder Alternative, die sie enthält.",
@@ -395,7 +395,7 @@ const BAND_WORDS: readonly (readonly [string, RegExp])[] = [
 ];
 const REVIEW_WORDS: readonly (readonly [string, RegExp])[] = [
   ["ready", /Ready to finalize|Bereit zum Abschließen/],
-  ["blocked", /Errors in later mutations block finalizing|Fehler in späteren Mutationen verhindern den Abschluss/],
+  ["blocked", /Errors must be fixed or withdrawn before finalizing|Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden/],
   ["needsReplay", /Replay needed|Neu anwenden nötig/],
   ["noChanges", /No changes: showing the current history|Keine Änderungen: aktueller Verlauf wird angezeigt/],
 ];

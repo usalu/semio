@@ -1615,7 +1615,7 @@ fn prepare_cad_config(base: &CadConfig, mutation: CadConfigMutation) -> Result<(
 
 fn cad_config_store_edit(forward: CadConfigMutation, inverse: Vec<CadConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadConfigMutation> {
     let id = format!("cad-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -1826,7 +1826,7 @@ fn prepare_cad_artifact(base: &CadSnapshot, mutation: CadMutation) -> Result<(Ca
 
 fn cad_artifact_store_edit(forward: CadMutation, inverse: Vec<CadMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<CadMutation> {
     let id = format!("cad-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

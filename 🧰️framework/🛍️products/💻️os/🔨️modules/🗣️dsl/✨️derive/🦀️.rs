@@ -1910,11 +1910,13 @@ fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSourceAuth
     })
 }
 
-/// ⚖️ The `#[cfg(test)]` editable-payload law `#[derive(Mutations)]` emits for a non-generic aggregate: every committed fixture
-/// under the aggregate's owner directory (the one holding its `🧬️schema`) that decodes as the aggregate and, when the aggregate's
-/// own file defines a top-level `demo_mutation_cases() -> Vec<Aggregate>`, every demo case must rebuild itself from its own
-/// editable payload (`::semio_framework_os_kernel::mutation_payload_round_trip_failures`). Nothing is emitted when the owner
-/// directory cannot be addressed from the compiling crate.
+/// ⚖️ The `#[cfg(test)]` editable-payload law `#[derive(Mutations)]` emits for a non-generic aggregate: every leaf publishes one
+/// payload schema (`::semio_framework_os_kernel::mutation_input_schema_failures`), and every committed fixture under the
+/// aggregate's owner directory (the one holding its `🧬️schema`) that decodes as the aggregate and, when the aggregate's own file
+/// defines a top-level `demo_mutation_cases() -> Vec<Aggregate>`, every demo case is labelled in every locale
+/// (`mutation_label_failures`) and rebuilds itself from its own editable payload or, when inert, refuses to
+/// (`mutation_payload_round_trip_failures`). Nothing is emitted when the owner directory cannot be addressed from the compiling
+/// crate.
 fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
     if !generics.params.is_empty() {
         return quote! {};
@@ -1938,8 +1940,10 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &syn::Type, authori
             let (mut ops, _) = ::semio_framework_os_kernel::mutation_fixture_ops::<#name>(&root);
             #demo_cases
             let count = ops.len();
-            let failures = ::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops);
-            assert!(failures.is_empty(), "{} of {} {} operations break the editable-payload law: {:#?}", failures.len(), count, ::core::stringify!(#name), failures);
+            let mut failures = ::semio_framework_os_kernel::mutation_input_schema_failures::<#snapshot_ty, #name>();
+            failures.extend(::semio_framework_os_kernel::mutation_label_failures::<#snapshot_ty, #name>(&ops));
+            failures.extend(::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
+            assert!(failures.is_empty(), "{} breaches of the editable-payload law over {} {} operations: {:#?}", failures.len(), count, ::core::stringify!(#name), failures);
         }
     }
 }

@@ -5,7 +5,7 @@ import { runInThisContext } from "node:vm";
 import Ajv from "ajv";
 import { produce } from "immer";
 import ts from "typescript";
-import { BundleScript } from "@semio-tech/repo-lib";
+import { BundleScript } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { OwnedResidentLedger } from "../../🟦️.ts";
 import * as resident from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔣️.json";

@@ -256,12 +256,12 @@
       "vectors": [
         {
           "mutationId": "change-material-base-color",
-          "sourceMutationDirectoryName": "🌈change-material-base-color",
-          "mutationDirectoryName": "🌈change-material-base-color",
+          "sourceMutationDirectoryName": "🌈change-material-base",
+          "mutationDirectoryName": "🌈change-material-base",
           "scenarios": [
             {
               "id": "repaints-the-material-from-red-to-blue",
-              "directoryName": "🔵️repaints-the-material-from-red-to-blue"
+              "directoryName": "🔵️repaints"
             }
           ]
         },
@@ -272,7 +272,7 @@
           "scenarios": [
             {
               "id": "raises-the-metallic-factor-to-fully-metallic",
-              "directoryName": "🪙️raises-the-metallic-factor-to-fully-metallic"
+              "directoryName": "🪙️raises"
             }
           ]
         },
@@ -283,7 +283,7 @@
           "scenarios": [
             {
               "id": "lowers-the-roughness-factor-to-a-quarter",
-              "directoryName": "🧱️lowers-the-roughness-factor-to-a-quarter"
+              "directoryName": "🧱️lowers"
             }
           ]
         },
@@ -294,7 +294,7 @@
           "scenarios": [
             {
               "id": "retags-the-texture-as-jpeg-without-touching-its-bytes",
-              "directoryName": "🖼️retags-the-texture-as-jpeg-without-touching-its-bytes"
+              "directoryName": "🖼️retags"
             }
           ]
         },
@@ -305,7 +305,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-material-at-the-end",
-              "directoryName": "🎨️adds-a-second-material-at-the-end"
+              "directoryName": "🎨️adds"
             }
           ]
         },
@@ -316,7 +316,7 @@
           "scenarios": [
             {
               "id": "adds-an-empty-second-mesh-at-the-end",
-              "directoryName": "🕸️adds-an-empty-second-mesh-at-the-end"
+              "directoryName": "🕸️adds"
             }
           ]
         },
@@ -327,7 +327,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-primitive-inside-the-existing-mesh",
-              "directoryName": "🔺️adds-a-second-primitive-inside-the-existing-mesh"
+              "directoryName": "🔺️adds"
             }
           ]
         },
@@ -338,7 +338,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-texture-at-the-end",
-              "directoryName": "🖼️adds-a-second-texture-at-the-end"
+              "directoryName": "🖼️adds"
             }
           ]
         },
@@ -349,7 +349,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-material-and-keeps-the-trailing-one",
-              "directoryName": "🚫️removes-the-leading-material-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -360,7 +360,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-mesh-and-keeps-the-trailing-one",
-              "directoryName": "🚫️removes-the-leading-mesh-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -371,7 +371,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-primitive-and-keeps-the-trailing-one",
-              "directoryName": "🚫️removes-the-leading-primitive-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -382,7 +382,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-texture-and-keeps-the-trailing-one",
-              "directoryName": "🚫️removes-the-leading-texture-and-keeps-the-trailing-one"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -393,7 +393,7 @@
           "scenarios": [
             {
               "id": "lifts-the-third-vertex-of-the-triangle",
-              "directoryName": "🎯️lifts-the-third-vertex-of-the-triangle"
+              "directoryName": "🎯️lifts"
             }
           ]
         },
@@ -404,7 +404,7 @@
           "scenarios": [
             {
               "id": "swaps-the-triangle-for-a-textured-quad",
-              "directoryName": "🔲️swaps-the-triangle-for-a-textured-quad"
+              "directoryName": "🔲️swaps"
             }
           ]
         },
@@ -415,7 +415,7 @@
           "scenarios": [
             {
               "id": "swaps-the-texture-payload-without-retagging-its-mime",
-              "directoryName": "📀️swaps-the-texture-payload-without-retagging-its-mime"
+              "directoryName": "📀️swaps"
             }
           ]
         },
@@ -426,7 +426,7 @@
           "scenarios": [
             {
               "id": "binds-the-primitive-to-the-existing-material",
-              "directoryName": "🔗️binds-the-primitive-to-the-existing-material"
+              "directoryName": "🔗️binds"
             }
           ]
         },
@@ -437,7 +437,7 @@
           "scenarios": [
             {
               "id": "switches-the-primitive-to-a-triangle-strip",
-              "directoryName": "🔀️switches-the-primitive-to-a-triangle-strip"
+              "directoryName": "🔀️switches"
             }
           ]
         }

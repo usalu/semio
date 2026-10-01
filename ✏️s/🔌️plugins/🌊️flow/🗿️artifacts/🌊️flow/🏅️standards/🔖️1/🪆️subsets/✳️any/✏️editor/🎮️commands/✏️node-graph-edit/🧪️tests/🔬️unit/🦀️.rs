@@ -325,4 +325,60 @@ async fn a_blocking_member_replay_refuses_to_finalize_and_exits_with_zero_trace(
     pump_time_travel(&mut app, |stage| stage.is_none()).await;
     assert_eq!(node_position(&content_snapshot(&app).await, &added), (50.0, 40.0), "exit leaves the committed member untouched");
 }
+/// 🎚️ One inline-slider dispatch of the press `gesture` (design §13.1): the absolute `setSlider` row with the press's own
+/// `gesture`, the release adding `commit`, a cancel naming its `abort` reason; settles whatever it published.
+async fn slide(app: &mut FlowApp, gesture: &str, value: Option<f64>, phase: Option<(&str, dsl::DslValue)>) {
+    let operations: Vec<serde_json::Value> = value.map(|value| serde_json::json!({ "operation": "setSlider", "widgetId": "slider", "value": value })).into_iter().collect();
+    let mut args = vec![("operations".to_string(), dsl::DslValue::from(serde_json::Value::Array(operations))), ("gesture".to_string(), dsl::DslValue::String(gesture.into()))];
+    args.extend(phase.map(|(key, value)| (key.to_string(), value)));
+    app.handle_action("nodeGraphEdit", Some(&dsl::DslValue::Object(args)), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("slider dispatch admission");
+    let _ = settle_registered_typed_operation(&mut **app, meta("local").instance_id).await;
+}
+
+fn slider_value(content: &SemioFlowSnapshot) -> Option<String> {
+    content.nodes.iter().find(|node| node.id == "slider").and_then(|node| node.params.iter().find(|param| param.key == "value")).map(|param| param.value.clone())
+}
+
+/// ⚖️ LAW (design §13.1, §12): a dragged inline slider's ticks stay provisional in the press, and the release lands ONE
+/// absolute `set-node-param` edit in the composed content child, stamped with the press's transaction and listed as ONE
+/// history row naming its member store; a press the host cancels leaves zero trace.
+#[semio_framework_async_macros::async_test]
+async fn a_dragged_inline_slider_is_one_child_transaction_and_a_cancel_leaves_zero_trace() {
+    let mut app = flow_app_closing().await;
+    let store = format!("content/{}", app.snapshot().expect("snapshot").content.child_id);
+    let start = slider_value(&content_snapshot(&app).await);
+    slide(&mut app, "slider:1", Some(4.0), None).await;
+    slide(&mut app, "slider:1", Some(5.0), None).await;
+    assert_eq!(slider_value(&content_snapshot(&app).await), start, "ticks publish nothing");
+    assert!(member_rows(&mut app).await.is_empty(), "ticks list no history row");
+    slide(&mut app, "slider:1", Some(6.0), Some(("commit", dsl::DslValue::Bool(true)))).await;
+    assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("6"), "the release lands the value the knob ended on");
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 1, "one press is one row: {rows:?}");
+    assert!(rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.flow.flow@1/*#editor#nodeGraphEdit"), "{:?}", rows[0].transaction);
+    assert_eq!(rows[0].mutations.len(), 1, "one absolute leaf: {:?}", rows[0].mutations);
+    assert_eq!(rows[0].mutations[0].store.as_deref(), Some(store.as_str()));
+    slide(&mut app, "slider:2", Some(9.0), None).await;
+    slide(&mut app, "slider:2", None, Some(("abort", dsl::DslValue::String("captureLost".into())))).await;
+    assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("6"), "a cancelled press leaves zero trace");
+    assert_eq!(member_rows(&mut app).await.len(), 1, "a cancelled press lists no row");
+}
+
+/// ⚖️ LAW (design §13.1): an inspector value edit is the ABSOLUTE `set-node-param` leaf of the content child — never a
+/// whole-content `set-snapshot`, never a coalesced amend — and a value the widget already holds is no edit.
+#[semio_framework_async_macros::async_test]
+async fn patching_a_widget_value_is_one_absolute_node_param_leaf() {
+    let mut app = flow_app_closing().await;
+    let patch = |value: &str| dsl::DslValue::from(serde_json::json!({ "widgetIds": ["slider"], "field": "value", "value": value }));
+    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("patch admission");
+    settle_registered_typed_operation(&mut **app, meta("local").instance_id).await.expect("patch publication");
+    assert_eq!(slider_value(&content_snapshot(&app).await).as_deref(), Some("7.5"));
+    let rows = member_rows(&mut app).await;
+    assert_eq!(rows.len(), 1, "{rows:?}");
+    assert_eq!(rows[0].mutations.len(), 1, "one leaf, not a whole-content snapshot: {:?}", rows[0].mutations);
+    assert!(rows[0].op_lines.iter().all(|line| !line.contains("set-snapshot")), "{:?}", rows[0].op_lines);
+    app.handle_action("patchFlowWidgets", Some(&patch("7.5")), &crate::editor::flow::unit_tests::context::flow_main_window_meta()).await.expect("unchanged patch admission");
+    let _ = settle_registered_typed_operation(&mut **app, meta("local").instance_id).await;
+    assert_eq!(member_rows(&mut app).await.len(), 1, "a value the widget already holds is no edit");
+}
 //#endregion 🔖️ComposedChildHistory

@@ -34,19 +34,19 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "rename-layer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames-shape-a-without-touching-its-id/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames-shape-a-without-touching-its-id/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames-shape-a-without-touching-its-id/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-locked" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks-shape-a/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔒️set-layer-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json"),
         ),
         "set-layer-visible" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides-shape-a/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides-shape-a/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides-shape-a/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/👁️set-layer-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-metadata: {other:?} is not a declared kind of this subset"),
     }

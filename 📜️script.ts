@@ -41,78 +41,8 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev`, `📜️script.ts dev mcp`).
  */
-import {
-  Script,
-  ScriptRouter,
-  dispatchOwnedScriptRoute,
-  buildBudgetMs,
-  canonicalFilenameForKind,
-  canonicalFilenamesForKind,
-  canonicalPrimaryFilenameForKind,
-  createTaxonomyPathMatcher,
-  createFixedContractResolver,
-  coverageDir,
-  coverageEnabled,
-  daemonBudgetOpts,
-  devToolingEnv,
-  discoverOwners,
-  discoverPackages,
-  discoverPackageProblems,
-  exactCargoGeneratedOutputHasLiveLease,
-  dispatchPolicyArgv,
-  dispatchSubcommand,
-  defineLint,
-  fixedContractFilename,
-  fixedDirectoryContractIdsForPath,
-  fixedFilenameContractIdsForPath,
-  loadTaxonomy,
-  resolveSchemaFacetKind,
-  schemaFacetFormatEntries,
-  semanticDirectoryKindId,
-  enforceCoverageThreshold,
-  frameworkOsPlaygroundDevEnv,
-  getWorkspaceRoot,
-  getRepoMetaDir,
-  getMapCacheDir,
-  getSemioRoot,
-  HUB_DATA_DIR_NAME,
-  MAP_CACHE_DIR_NAME,
-  REPO_META_DIR_NAME,
-  SPACE_DATA_DIR_NAME,
-  goCoverageArgs,
-  goLevelTestArgs,
-  goProfileToLcov,
-  loadFrameworkOsPlaygroundSelections,
-  mergeLcov,
-  orchestratorBudgetOpts,
-  parseLcov,
-  renderLcov,
-  resolveCliBin,
-  resolveMcpBin,
-  resolveFrameworkOsPlaygroundPlugin,
-  resolveTestLevel,
-  runCmd,
-  runCmdStatus,
-  runCanonicalGoBuild,
-  runCanonicalGoTests,
-  runProbe,
-  runTestBudgeted,
-  spawnDaemon,
-  summarizeCoverage,
-  semioShipEnv,
-  semioNxParallelFlag,
-  installMicroCommitGitHooks,
-  runCommit,
-  runMicroCommit,
-  runWorkspaceScriptMain,
-  TechnologyLinter,
-  TEST_LEVELS,
-  tryRun,
-  type BreachRecord,
-  type PackageRole,
-  type LcovFileRecord,
-  type TestLevel,
-} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute, buildBudgetMs, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, exactCargoGeneratedOutputHasLiveLease, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, loadFrameworkOsPlaygroundSelections, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, resolveFrameworkOsPlaygroundPlugin, resolveTestLevel, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runTestBudgeted, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, TEST_LEVELS, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord, type TestLevel } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import {
@@ -20976,11 +20906,15 @@ const POLICY_OUTCOME_RUST_BUILDER_RE = /\b(?:MutationOutcome::(error|fatal)|Muta
 const POLICY_OUTCOME_RUST_CHAIN_RE = /\.(info|warn)\s*\(\s*"([^"]*)"/g;
 /** 🔎️Apply-time rejections (`MutationOutcome::apply_to` persists them as `Fatal` messages): `MutationApplyError::new("…")`, `MutationApplyError { code: "…" }`. */
 const POLICY_OUTCOME_RUST_APPLY_RE = /\bMutationApplyError(?:::new\s*\(\s*|\s*\{\s*code:\s*)"([^"]*)"/g;
-/** 🔎️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages. */
-const POLICY_OUTCOME_TS_REFUSE_RE = /\brefuse\(\s*"(info|warning|error|fatal)"\s*,\s*"([^"]*)"/g;
-const POLICY_OUTCOME_TS_OBJECT_RE = /\blevel:\s*"(info|warning|error|fatal)"\s*,\s*code:\s*"(mutation\.[^"]*)"|\bcode:\s*"(mutation\.[^"]*)"\s*,\s*level:\s*"(info|warning|error|fatal)"/g;
+/** 🔎️TypeScript twins: `refuse("<level>", "<code>", ..)` and `{ level: "<level>", code: "mutation.…" }` messages (the retired `warn` spelling is matched so it is reported, never skipped). */
+const POLICY_OUTCOME_TS_REFUSE_RE = /\brefuse\(\s*"(info|warn|warning|error|fatal)"\s*,\s*"([^"]*)"/g;
+const POLICY_OUTCOME_TS_OBJECT_RE = /\blevel:\s*"(info|warn|warning|error|fatal)"\s*,\s*code:\s*"(mutation\.[^"]*)"|\bcode:\s*"(mutation\.[^"]*)"\s*,\s*level:\s*"(info|warn|warning|error|fatal)"/g;
 /** 🔎️Python second implementations: `("<level>", "<dotted-code>")` outcome tuples. */
-const POLICY_OUTCOME_PY_TUPLE_RE = /\(\s*"(info|warning|error|fatal)"\s*,\s*"([a-z0-9]+(?:[.-][a-z0-9]+)+)"\s*\)/g;
+const POLICY_OUTCOME_PY_TUPLE_RE = /\(\s*"(info|warn|warning|error|fatal)"\s*,\s*"([a-z0-9]+(?:[.-][a-z0-9]+)+)"\s*\)/g;
+/** 🔎️Gherkin outcome messages: `{level: <level>, code: mutation.…}`. */
+const POLICY_OUTCOME_FEATURE_MESSAGE_RE = /\blevel:\s*([a-z]+)\s*,\s*code:\s*(mutation\.[a-z0-9][a-z0-9.-]*[a-z0-9])(?![\w.<*-])/g;
+/** 🔎️A hand-written Rust level decoder admitting the retired `"warn"` spelling for `Severity::Warning` — the wire name is `warning` only. */
+const POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE = /(?:"[a-z]+"\s*\|\s*)*"warn"\s*(?:\|\s*"[a-z]+"\s*)*=>\s*(?:Ok\(|Some\()?(?:[A-Za-z_]\w*::)*Severity::Warning\b/g;
 /** 🔎️A complete string literal in the `mutation.` namespace — an outcome code wherever mutation leaves, diffs and oracles spell one. */
 const POLICY_OUTCOME_NAMESPACE_LITERAL_RE = /["'`](mutation\.[a-z0-9][a-z0-9.-]*)["'`]/g;
 /** 🔎️A `mutation.` token in a Gherkin specification (`mutation.apply.<detail>` placeholders excluded). */
@@ -21020,7 +20954,8 @@ function policyOutcomeFnBodyMask(content: string): Uint8Array {
  * Rust builders and the chainable shorthand inside outcome-building bodies (code + level), `MutationApplyError` codes
  * (`mutation.apply.<detail>`), `mutation.` literals in mutation leaves/diffs (Rust, TypeScript) and Python oracles, the
  * TypeScript twins' `refuse(..)`/`{ level, code }` messages, Python `(level, code)` tuples, committed `🎯️outcome` documents
- * (code + level) and Gherkin specifications. Non-outcome fault, diagnostic and command codes live in their own namespaces.
+ * (code + level), Gherkin specifications (codes and `{level, code}` messages) and hand-written Rust level decoders. A level
+ * has one spelling (`warning`, never `warn`). Non-outcome fault, diagnostic and command codes live in their own namespaces.
  */
 export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecord[] {
   const vocabulary = policyOutcomeVocabulary(repoRoot);
@@ -21063,6 +20998,19 @@ export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecor
           if (bodies[m.index] === 1) check(m[2]!, m[1] === "warn" ? "warning" : "info", m.index);
         });
       }
+      scan(POLICY_OUTCOME_RUST_LEVEL_ALIAS_RE, (m) => {
+        const line = policyLineOfIndex(content, m.index);
+        breaches.push({
+          id: `mutation-message-level-alias-${relPath}-${line}`,
+          summary: `"${relPath}:${line}" outcome level "warn" is a retired spelling of "warning"`,
+          kind: "mutation-migration/message-code",
+          scope: relPath,
+          line,
+          priority: "high",
+          reason: "An outcome level has one wire spelling (`info`, `warning`, `error`, `fatal` — `Severity`'s own encoding); a decoder that also admits `warn` lets a non-canonical document pass as valid.",
+          solution: 'Decode only "warning" (or use the `Severity` value decoder) and write "warning" in every committed outcome.',
+        });
+      });
     } else if (relPath.endsWith(".ts") || relPath.endsWith(".tsx")) {
       scan(POLICY_OUTCOME_TS_REFUSE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
       scan(POLICY_OUTCOME_TS_OBJECT_RE, (m) => check((m[2] ?? m[3])!, (m[1] ?? m[4]) as PolicyOutcomeLevel, m.index));
@@ -21075,6 +21023,7 @@ export function policyMutationMessageCodeBreaches(repoRoot: string): BreachRecor
       scan(POLICY_OUTCOME_FEATURE_TOKEN_RE, (m) => {
         if (!/\.(json|rs|ts|tsx|py|md|txt)$/.test(m[1]!)) check(m[1]!, null, m.index);
       });
+      scan(POLICY_OUTCOME_FEATURE_MESSAGE_RE, (m) => check(m[2]!, m[1] as PolicyOutcomeLevel, m.index));
     } else {
       let outcome: unknown;
       try {

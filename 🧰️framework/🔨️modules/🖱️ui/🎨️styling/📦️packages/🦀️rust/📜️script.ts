@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** ⚙️ Routes styling generation, verification, font acquisition, and tests. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 import { checkStylingArtifacts, generateStylingArtifacts, previewStylingArtifacts } from "../../📽️projection/🟦️.ts";
 import { collectStylingViolationsV1 } from "../../🛡️verification/🟦️.ts";
@@ -79,6 +81,15 @@ class RelativeSizingContractScript extends BundleScript {
   }
 }
 
+/** 🎭️ Executes authored color primitive and customization laws in the native browser. */
+class ColorPrimitivesContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-color-primitives accepts no arguments");
+    const { proveStylingColorPrimitivesV1 } = await import("../../🛡️verification/🧪️tests/🎭️color-primitives/🟦️.ts");
+    console.log("styling-color-primitives: " + await proveStylingColorPrimitivesV1() + " native assertions passed");
+  }
+}
+
 const router = new ScriptRouter(import.meta.dir)
   .register("generate", GenerateScript)
   .register("preview-generated", PreviewGeneratedScript)
@@ -88,6 +99,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-no-px", CheckNoPxScript)
   .register("check-no-raw-colors", CheckNoRawColorsScript)
   .register("test-verification-contract", VerificationContractScript)
-  .register("test-relative-sizing", RelativeSizingContractScript);
+  .register("test-relative-sizing", RelativeSizingContractScript)
+  .register("test-color-primitives", ColorPrimitivesContractScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+if (import.meta.main) await runScriptMain(router);

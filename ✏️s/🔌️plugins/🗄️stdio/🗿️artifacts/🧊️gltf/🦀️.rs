@@ -70,7 +70,6 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA);
     codec.extension = "gltf";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 
@@ -789,13 +788,13 @@ pub mod standards {
                         pub use component::*;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📸️snapshot/📸️set/🦀️.rs"]
                         pub mod set_snapshot;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🦀️.rs"]
                         pub mod add_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➕️add/🦀️.rs"]
                         pub mod add_used_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🦀️.rs"]
                         pub mod bind_default_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔗️bind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔗️bind/🦀️.rs"]
                         pub mod bind_morph_target_attribute;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/🔗️bind/🦀️.rs"]
                         pub mod bind_node_camera;
@@ -805,11 +804,11 @@ pub mod standards {
                         pub mod bind_node_mesh;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/🔗️bind/🦀️.rs"]
                         pub mod bind_node_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔗️bind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔗️bind/🦀️.rs"]
                         pub mod bind_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/🔗️bind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/🔗️bind/🦀️.rs"]
                         pub mod bind_primitive_indices;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/🔗️bind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/🔗️bind/🦀️.rs"]
                         pub mod bind_primitive_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔗️bind/🦀️.rs"]
                         pub mod bind_scene_root_node;
@@ -878,7 +877,7 @@ pub mod standards {
                         pub mod create_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🌱️create/🦀️.rs"]
                         pub mod create_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🌱️create/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🌱️create/🦀️.rs"]
                         pub mod create_morph_target;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌱️create/🦀️.rs"]
                         pub mod create_node;
@@ -908,7 +907,7 @@ pub mod standards {
                         pub mod delete_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🗑️delete/🦀️.rs"]
                         pub mod delete_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🗑️delete/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🗑️delete/🦀️.rs"]
                         pub mod delete_morph_target;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🗑️delete/🦀️.rs"]
                         pub mod delete_node;
@@ -938,9 +937,9 @@ pub mod standards {
                         pub mod move_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🚚️move/🦀️.rs"]
                         pub mod move_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🚚️move/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🚚️move/🦀️.rs"]
                         pub mod move_morph_target;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🚚️move/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🚚️move/🦀️.rs"]
                         pub mod move_morph_target_attribute;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🚚️move/🦀️.rs"]
                         pub mod move_node;
@@ -950,9 +949,9 @@ pub mod standards {
                         pub mod move_node_parent;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🚚️move/🦀️.rs"]
                         pub mod move_primitive;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🚚️move/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🚚️move/🦀️.rs"]
                         pub mod move_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/🚚️move/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🚚️move/🦀️.rs"]
                         pub mod move_required_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🚚️move/🦀️.rs"]
                         pub mod move_sampler;
@@ -964,11 +963,11 @@ pub mod standards {
                         pub mod move_skin;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🚚️move/🦀️.rs"]
                         pub mod move_texture;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🚚️move/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🚚️move/🦀️.rs"]
                         pub mod move_used_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➖️remove/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➖️remove/🦀️.rs"]
                         pub mod remove_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➖️remove/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➖️remove/🦀️.rs"]
                         pub mod remove_used_extension;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🔀️reorder/🦀️.rs"]
                         pub mod reorder_accessors;
@@ -986,19 +985,19 @@ pub mod standards {
                         pub mod reorder_materials;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🔀️reorder/🦀️.rs"]
                         pub mod reorder_meshs;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔀️reorder/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔀️reorder/🦀️.rs"]
                         pub mod reorder_morph_target_attributes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🔀️reorder/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🔀️reorder/🦀️.rs"]
                         pub mod reorder_morph_targets;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔀️reorder/🦀️.rs"]
                         pub mod reorder_node_children;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🔀️reorder/🦀️.rs"]
                         pub mod reorder_nodes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔀️reorder/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔀️reorder/🦀️.rs"]
                         pub mod reorder_primitive_attributes;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🔀️reorder/🦀️.rs"]
                         pub mod reorder_primitives;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/🔀️reorder/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🔀️reorder/🦀️.rs"]
                         pub mod reorder_required_extensions;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🔀️reorder/🦀️.rs"]
                         pub mod reorder_samplers;
@@ -1010,11 +1009,11 @@ pub mod standards {
                         pub mod reorder_skins;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🔀️reorder/🦀️.rs"]
                         pub mod reorder_textures;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🔀️reorder/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🔀️reorder/🦀️.rs"]
                         pub mod reorder_used_extensions;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🦀️.rs"]
                         pub mod unbind_default_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/✂️unbind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/✂️unbind/🦀️.rs"]
                         pub mod unbind_morph_target_attribute;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/✂️unbind/🦀️.rs"]
                         pub mod unbind_node_camera;
@@ -1024,11 +1023,11 @@ pub mod standards {
                         pub mod unbind_node_mesh;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/✂️unbind/🦀️.rs"]
                         pub mod unbind_node_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/✂️unbind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/✂️unbind/🦀️.rs"]
                         pub mod unbind_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/✂️unbind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/✂️unbind/🦀️.rs"]
                         pub mod unbind_primitive_indices;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/✂️unbind/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/✂️unbind/🦀️.rs"]
                         pub mod unbind_primitive_material;
                         #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🦀️.rs"]
                         pub mod unbind_scene_root_node;

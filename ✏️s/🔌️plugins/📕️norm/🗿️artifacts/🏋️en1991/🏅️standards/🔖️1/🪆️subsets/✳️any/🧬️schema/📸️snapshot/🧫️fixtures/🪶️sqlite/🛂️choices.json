@@ -1,0 +1,1 @@
+{"annex":["En","De"],"fireMode":["none","nominal","parametric"],"fireCurve":["standard","external","hydrocarbon","parametric"],"structureKind":["building","bridge"],"unsigned8Fields":["windZone","terrainCategory","mixedTerrainUpwind","thermalBridgeType","storeyCount","bridgeLane"],"invalidUnsigned8Values":[-1,256,1.25],"validUnsigned8Values":[0,1,254,255]}

@@ -53,6 +53,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/change-layer-adjustment-parameter/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/raster/raster/mutation/paint-stroke/schema.json"
     }
   ]
 }

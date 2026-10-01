@@ -1,7 +1,9 @@
-// ◻️ WFC 2D artifact — an arbitrary slot graph in the plane. TypeScript entry point.
-
-export * as v1 from "./🏅️standards/🔖️1/🟦️.ts";
-
-export const WFC_2D_DOCUMENT_SCHEMA = "s.wfc.wfc2d";
-export const WFC_2D_ARTIFACT_KIND = "2d.wfc2d";
-export const WFC_2D_INFERENCE_TOOL_ID = "s.wfc.wfc2d.solve";
+/** ◻️ Owned irregular two-dimensional WFC state and SQLite functions. */
+export * from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🟦️.ts";
+export * from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🪶️sqlite/🟦️.ts";
+export * from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts";
+export * from "./🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts";
+export * as terrainRing from "./🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🗺️terrain-ring/🟦️.ts";
+export * as twoRoomCorridor from "./🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🚪️two-room-corridor/🟦️.ts";
+export * as hexRing from "./🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🔷️hex-ring/🟦️.ts";
+export * as facadeStrip from "./🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🧱️wall-roof-facade-strip/🟦️.ts";

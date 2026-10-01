@@ -1,0 +1,51 @@
+{
+  "surface": "conformance.component.stepper-detents",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "numberStepper",
+        "value": 2.0,
+        "step": 1.0,
+        "uniform": true,
+        "precision": 1,
+        "unit": "mm",
+        "snaps": [
+          0.0,
+          5.0,
+          10.0
+        ],
+        "limits": {
+          "max": {
+            "value": 10.0,
+            "refusal": "Must be at most 10 mm"
+          }
+        }
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Gap"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setGap",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

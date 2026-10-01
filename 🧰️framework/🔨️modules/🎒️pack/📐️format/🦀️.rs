@@ -997,6 +997,9 @@ impl<S: PackSource> PackFile<S> {
         self.chunk_table.get(id.0 as usize).map(|entry| ByteRange { offset: entry.offset, len: entry.stored_len }).ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })
     }
 
+    /// 📏️ Declared decoded bytes let callers admit ownership before reading or decompressing a chunk.
+    pub fn chunk_decoded_len(&self,id:ChunkId)->Result<u64,PackError>{self.chunk_table.get(id.0 as usize).map(|entry|entry.raw_len).ok_or(PackError::Malformed{what:"chunk_id",offset:id.0 as u64,detail:"unknown chunk id".into()})}
+
     /// 🧩️ Opens an identity chunk without allocating or materializing its payload.
     pub fn identity_chunk_cursor(&self, id: ChunkId, verification: VerificationLevel) -> Result<PackIdentityChunkCursor<'_, S>, PackError> {
         let entry = self.chunk_table.get(id.0 as usize).cloned().ok_or(PackError::Malformed { what: "chunk_id", offset: id.0 as u64, detail: "unknown chunk id".to_string() })?;

@@ -109,13 +109,13 @@ Feature: Apply every typed semio TEXT mutation to a real published article, agai
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                  | dir                  | fixture                                       |
-      | insert-run          | 📥insert-run          | 📥️inserts-a-german-run-between-two-english-runs |
-      | remove-run          | 🗑️remove-run         | 🚫️removes-the-middle-run                        |
-      | edit-run            | ✏️edit-run           | ✍️rewrites-the-marked-runs-content              |
-      | change-run-language | 🌐change-run-language | 🇩🇪retags-the-second-run-as-german               |
-      | reorder-runs        | 🔀reorder-runs        | 🧭️moves-the-first-run-to-the-end                |
-      | add-mark            | ➕add-mark            | 🔗️adds-a-link-mark-ahead-of-the-bold-mark       |
-      | remove-mark         | ➖remove-mark         | ➖️detaches-the-italic-mark-from-the-run         |
+      | insert-run          | 📥insert-run          | 📥️inserts |
+      | remove-run          | 🗑️remove-run         | 🚫️removes                        |
+      | edit-run            | ✏️edit-run           | ✍️rewrites              |
+      | change-run-language | 🌐change-run-language | 🇩retags               |
+      | reorder-runs        | 🔀reorder-runs        | 🧭️moves                |
+      | add-mark            | ➕add-mark            | 🔗️adds       |
+      | remove-mark         | ➖remove-mark         | ➖️detaches         |
 
   @id-identity-round-trip
   @level-long

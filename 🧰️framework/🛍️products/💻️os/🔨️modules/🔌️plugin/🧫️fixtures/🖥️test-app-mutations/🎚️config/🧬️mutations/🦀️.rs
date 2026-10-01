@@ -1,4 +1,4 @@
-#[path = "📝️change-test-config-selection/🦀️.rs"]
+#[path = "📝️change-test-config/🦀️.rs"]
 pub mod change_test_config_selection;
 pub(crate) use change_test_config_selection::ChangeTestConfigSelection;
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, dsl::Mutations)]

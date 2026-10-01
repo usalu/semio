@@ -46,6 +46,10 @@ semio-framework-ui-contract = { path = "../../../../../../../🧰️framework/�
 semio-framework-job = { workspace = true }
 framework_hash = { package = "semio-framework-hash", path = "../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
 base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+# 🛠️ The brush and eraser are a `🔄️machine` statechart folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the kernel dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+semio-framework-tool-machine = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async = { workspace = true }

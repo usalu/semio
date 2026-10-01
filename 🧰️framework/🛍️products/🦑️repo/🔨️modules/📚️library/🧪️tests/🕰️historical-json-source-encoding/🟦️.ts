@@ -90,6 +90,18 @@ test("retirement is recorded evidence: every retired contract names its ticket a
   }
 });
 
+test("every live sealed document still matches its registered whole-document digest", () => {
+  const taxonomy = loadCatalogTaxonomy();
+  const sealed = [
+    ...Object.entries(taxonomy.frozenCoordinateEvidenceContracts).filter(([, contract]) => contract.retired === undefined).map(([id, contract]) => [id, contract.path, contract.sha256] as const),
+    ...Object.entries(taxonomy.frozenMarkdownCoordinateEvidenceContracts).map(([id, contract]) => [id, contract.path, contract.sha256] as const),
+    ...Object.entries(taxonomy.semanticPackageProjectionContracts).map(([id, contract]) => [id, contract.authorityCatalogPath, contract.authorityCatalogSha256] as const),
+    ...Object.entries(taxonomy.semanticOwnedFileProjectionContracts).flatMap(([id, contract]) => "authorityCatalogPath" in contract ? [[id, contract.authorityCatalogPath, contract.authorityCatalogSha256] as const] : []),
+  ];
+  expect(sealed.length).toBeGreaterThan(2);
+  for (const [id, path, digest] of sealed) expect([id, path, createHash("sha256").update(readFileSync(join(root, path))).digest("hex")]).toEqual([id, path, digest]);
+});
+
 test("a retirement record can never move the evidence seal", () => {
   const contracts = loadCatalogTaxonomy().frozenCoordinateEvidenceContracts;
   const sealed = sha(canonicalJson(frozenCoordinateEvidenceSeal(contracts)));

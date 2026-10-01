@@ -2,7 +2,9 @@
 /** layout TypeScript package */
 
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter, runCmd, resolveTestLevel, runVitest, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, resolveTestLevel, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments, "quick");
@@ -15,4 +17,4 @@ class TestScript extends BundleScript {
  console.log("layout ts ok"); }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

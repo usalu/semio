@@ -7,7 +7,9 @@ import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { decodePackValue, encodePackValue } from "../../../../../🧰️framework/🛍️products/💻️os/🟦️.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runBundleScriptMain, runCargoTestBudgeted, runCmd, runExactCargoLaws, runTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, devToolingEnv, resolveTestLevel, resolveWorkspaceBin, runCargoTestBudgeted, runCmd, runExactCargoLaws, runTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { prepareCargoWorkspaceInvocation } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
@@ -15,6 +17,7 @@ import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰�
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import { terminateOwnedChildTree } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts";
 import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
+import { admitCompositionParentRemovalV1 } from "../../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
 
 const PACKAGE_NAME = "semio-hub-stdio";
 const PLUGIN_ID = "stdio";
@@ -705,8 +708,8 @@ type HomeIoSurfaceFixture = {
   readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly componentAppAssembly: "component-app-assembly"; readonly spaceGuest: "space-guest" };
   readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
   readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
-  readonly fullArtifactCount: 36;
-  readonly nativeCodecCount: 29;
+  readonly fullArtifactCount: number;
+  readonly nativeCodecCount: number;
   readonly surfaceCases: readonly { readonly id: string; readonly selected: readonly string[]; readonly catalog: number; readonly apps: boolean; readonly exports: boolean }[];
 };
 
@@ -723,6 +726,7 @@ function cargoTomlFiles(directory: string, files: string[] = []): string[] {
 /** 🏠️ Proves Space selects only the four Home I/O families plus their exact shared codec closure. */
 class HomeIoSurfaceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    prepareStdioComposition(this.repoRoot, resolve(this.root, "../.."));
     await runDwgArtifactOwnership(this.root, this.repoRoot);
     const mode = segments[0] ?? "source";
     if (mode !== "source" && mode !== "native") throw new Error("home-io-surface expects source|native");
@@ -847,6 +851,7 @@ class HomeIoSurfaceScript extends BundleScript {
  * format, and every editor owns exactly one launchable playground row across them. */
 async function testEditorCatalogContract(packageRoot: string): Promise<void> {
   const root = resolve(packageRoot, "../..");
+  prepareStdioComposition(resolve(root, "../../.."), root);
   const fixture = JSON.parse(readFileSync(join(root, "🧫️fixtures/✏️editor-catalog/🔣️.json"), "utf8")) as { editorCount: number; formatCount: number; editorApps: string[]; actions: { id: string }[]; deployedComponents: { id: string; package: string; path: string; role: string; componentKind: string }[] };
   const schema = JSON.parse(readFileSync(join(root, "🧬️schema/✏️editor-catalog/🔣️.json"), "utf8"));
   const { default: Ajv } = await import("ajv");
@@ -862,7 +867,7 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
     if (row.id !== "stdio" && existsSync(resolve(root, "../../..", row.path.replace("🌎️hub/🧩️compositions/🗄️stdio", ARTIFACT_OWNER)))) throw new Error(`${row.id}: prior concrete deployment owner remains`);
   }
   if (new Set(fixture.actions.map((action) => action.id)).size !== fixture.actions.length) throw new Error("editor catalogue repeats an edit action");
-  const rust = readFileSync(join(root, "🧪️tests/✏️editor-catalog/🦀️.rs"), "utf8");
+  const rust = readFileSync(join(root, "🤖️generated/🧪️editor-laws/🦀️.rs"), "utf8");
   const roots = [...rust.matchAll(/^    \([a-z0-9_]+, [a-z0-9_]+, semio_s_artifact_stdio_/gm)].length;
   if (roots !== fixture.editorCount) throw new Error(`editor catalogue expects ${fixture.editorCount} editors; native acceptance covers ${roots}`);
   const formats = new Map<string, string>();
@@ -917,11 +922,79 @@ type StdioPackageManifest = {
   readonly package: { readonly name: string; readonly metadata: { readonly component: { readonly package: string }; readonly semio: { readonly playground?: readonly { readonly app: string }[] } } };
 };
 
+class MutationInventoryScript extends BundleScript {
+  run(args: string[]): void {
+    runCmd(process.execPath, [join(this.root, "../../🏭️bridge/📜️script.ts"), ...args], { cwd: this.repoRoot, budgetMs: buildBudgetMs() });
+  }
+}
+
 class CompositionScript extends BundleScript {
-  run(segments: string[]): void {
-    if (segments.length !== 1 || segments[0] !== "prepare") throw new Error("Unknown Stdio composition command");
-    const result = prepareStdioComposition(this.repoRoot, resolve(this.root, "../.."));
-    console.log(`stdio composition: contributions=${result.contributions} apps=${result.apps} receipts=${result.receipts}`);
+  async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "prepare") {
+      const result = prepareStdioComposition(this.repoRoot, resolve(this.root, "../.."));
+      console.log(`stdio composition: contributions=${result.contributions} apps=${result.apps} receipts=${result.receipts}`);
+      return;
+    }
+    if (segments.length !== 2 || !["removal-check", "removal-test-check"].includes(segments[0]!) || !isAbsolute(segments[1]!)) throw new Error("composition prepare|removal-check|removal-test-check <absolute-snapshot>");
+    const tests = segments[0] === "removal-test-check";
+    const snapshot = realpathSync(segments[1]!), artifact = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi";
+    const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+    if (!output || snapshot === realpathSync(this.repoRoot) || !pathIsWithin(realpathSync(resolve(this.repoRoot, output)), snapshot)) throw new Error("removal-check requires a copied workspace inside SEMIO_TEST_ARTIFACT_DIR");
+    const manifest = join(snapshot, relative(this.repoRoot, join(this.root, "Cargo.toml")));
+    assertContainedBounded(snapshot, manifest, "retained Stdio parent manifest");
+    if (existsSync(join(snapshot, artifact))) throw new Error("removal-check requires AVI to be physically absent");
+    const authorityFiles = ["📦️packages/🦀️rust/Cargo.toml", "🧩️composition/🔣️.json", "📜️artifact-definition.json"];
+    const scan = (root: string, expected: readonly string[] = []) => {
+      let directory = root;
+      for (const part of "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts".split("/")) {
+        directory = join(directory, part);
+        const info = lstatSync(directory);
+        if (info.isSymbolicLink() || !info.isDirectory()) throw new Error("Parent removal artifact ancestry is not a regular directory");
+      }
+      return readdirSync(directory, { withFileTypes: true }).filter(entry => entry.isSymbolicLink() || expected.includes(entry.name) || authorityFiles.some(path => {
+      try { lstatSync(join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts", entry.name, path)); return true; } catch { return false; }
+    })).map(entry => {
+      const owner = join(root, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts", entry.name);
+      const complete = authorityFiles.every(path => {
+        let current = owner;
+        try {
+          for (const part of path.split("/")) { current = join(current, part); if (lstatSync(current).isSymbolicLink()) return false; }
+          assertContainedBounded(root, current, "retained artifact authority");
+          return true;
+        } catch { return false; }
+      });
+      return { identity: entry.name, kind: entry.isSymbolicLink() ? "symlink" : entry.isDirectory() ? "directory" : "file", complete };
+      });
+    };
+    const reference = scan(this.repoRoot);
+    if (reference.some(owner => owner.kind !== "directory" || !owner.complete)) throw new Error("Live Stdio owner authority is partial or follows a symlink");
+    const identities = reference.map(owner => owner.identity);
+    const retained = admitCompositionParentRemovalV1({ schema: "semio.stdio.parent-removal-admission/v1", expected: identities, absent: "📼️avi", present: scan(snapshot, identities) });
+    const owners = retained.length;
+    const started = Date.now();
+    let interrupted = false, compiled = false, testsCompiled = false;
+    const runtimeLaws: string[] = [];
+    const interrupt = (): void => { interrupted = true; };
+    process.on("SIGINT", interrupt);
+    process.on("SIGTERM", interrupt);
+    const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
+    const env = devToolingEnv({ NX_WORKSPACE_ROOT: snapshot, CARGO_TARGET_DIR: join(snapshot, "target"), CARGO_BUILD_BUILD_DIR: join(snapshot, "target", "intermediate") });
+    try {
+      await runControlled("cargo", ["check", "--offline", "--manifest-path", manifest, "-p", PACKAGE_NAME, tests ? "--tests" : "--lib"], snapshot, env, control);
+      compiled = true;
+      if (tests) {
+        testsCompiled = true;
+        for (const [target, law] of [["native_openable_provider", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection"], ["editor_catalog", "neutral_catalog_requires_each_edit_operation_once"]]) {
+          await runControlled("cargo", ["test", "--offline", "--manifest-path", manifest, "-p", PACKAGE_NAME, "--test", target!, law!, "--", "--exact", "--nocapture"], snapshot, env, control);
+          runtimeLaws.push(law!);
+        }
+      }
+      console.log(`stdio parent removal: AVI absent; ${owners} artifact owners retained; default parent compiled`);
+    } finally {
+      writeFileSync(join(snapshot, tests ? "stdio-parent-removal-test-proof.json" : "stdio-parent-removal-proof.json"), JSON.stringify({ schema: "semio.stdio.parent-removal-proof/v1", absent: artifact, parent: PACKAGE_NAME, defaultFeatures: true, retainedOwnerIdentities: retained, compiled, testsCompiled, runtimeLaws }, null, 2) + "\n");
+      process.off("SIGINT", interrupt);
+      process.off("SIGTERM", interrupt);
+    }
   }
 }
 
@@ -1252,6 +1325,6 @@ class SnapshotSqliteTestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("composition", CompositionScript).register("snapshot-sqlite", SnapshotSqliteTestScript).register("editor-component-check", EditorComponentCheckScript).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
+const router = new ScriptRouter(import.meta.dir).register("composition", CompositionScript).register("mutation-inventory", MutationInventoryScript).register("snapshot-sqlite", SnapshotSqliteTestScript).register("editor-component-check", EditorComponentCheckScript).register("native-codec-projection", NativeCodecProjectionScript).register("test", TestScript).register("bench", BenchScript).register("catalog-root", CatalogRootScript).register("flow-retained-decode-check", FlowRetainedDecodeScript).register("artifact-directory-wiring", ArtifactDirectoryWiringScript).register("subset-directory-wiring", SubsetDirectoryWiringScript).register("home-io-surface", HomeIoSurfaceScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

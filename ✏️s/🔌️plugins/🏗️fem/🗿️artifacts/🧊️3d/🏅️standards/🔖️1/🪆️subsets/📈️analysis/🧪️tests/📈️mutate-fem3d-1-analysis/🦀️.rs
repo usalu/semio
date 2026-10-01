@@ -54,11 +54,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-7b5381/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem3d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }
@@ -76,11 +76,11 @@ fn canonical(text: &str) -> Json {
 fn hall_vector_of(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall-more-modes-ecbb5c/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🏗️hall/🎯️outcome/🔣️.json"),
         },
         other => panic!("📈️mutate-fem3d-1-analysis: no committed hall vector is registered for kind {other:?}"),
     }
@@ -95,18 +95,18 @@ const REJECT_VECTORS: &[&str] = &["same-settings-fdb832", "zero-modes-a27c74"];
 fn reject_vector_of(identifier: &str) -> Vector {
     match identifier {
         "same-settings-fdb832" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same-settings-fdb832/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/⏸️same/🎯️outcome/🔣️.json"),
         },
         "zero-modes-a27c74" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/📸️snapshot/➡️after/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/📸️snapshot/➡️after/🔣️.json"),
             diff: "{}",
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero-modes-a27c74/🎯️outcome/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🧨️zero/🎯️outcome/🔣️.json"),
         },
         other => panic!("📈️mutate-fem3d-1-analysis: no committed rejection vector is registered for {other:?}"),
     }

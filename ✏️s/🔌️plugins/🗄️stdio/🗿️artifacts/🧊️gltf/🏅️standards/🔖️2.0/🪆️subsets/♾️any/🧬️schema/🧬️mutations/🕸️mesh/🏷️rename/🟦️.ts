@@ -4,7 +4,7 @@ import { gltfWireIndex, gltfWireNullable, gltfWireObject, gltfWireRequired, gltf
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfChangeMeshNamePayload {
-  mesh: number;
+  mesh: bigint;
   value: string | null;
 }
 

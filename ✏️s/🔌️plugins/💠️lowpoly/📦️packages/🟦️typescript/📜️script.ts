@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** lowpoly TypeScript package */
-import { BundleScript, ScriptRouter, runCmd, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -31,11 +33,11 @@ type Fixture = {
 const ownKeys = (value: object, expected: string[]): boolean =>
   Object.keys(value).sort().join("\u0000") === [...expected].sort().join("\u0000");
 
-/** 🧮️ Every classified lowpoly verb: 46 since 2026-09-08 (`setActiveUtility` became framework-owned,
- * `setFixtureJson` became `replaceSnapshotJson`) plus the three 2026-09-18 media verbs
- * (`exportMesh`/`loadMeshRequest`/`importMeshFile`) and the two object verbs (`deleteSelection`/`duplicateObject`). The source's `.action_interactive_job` count is
- * checked against the fixture below, so this literal only pins the fixture's own shape. */
-const LOWPOLY_CLASSIFIED_ROUTES = 51;
+/** 🧮️ Every classified lowpoly verb: 51 until 2026-10-01, when the gumball and paint brackets (`transformBegin`/
+ * `transformEnd`/`paintStrokeBegin`/`paintStrokeEnd`) gave way to tool-machine phases and `canvasPointerUp` joined the
+ * paint verbs. The source's `.action_interactive_job` count is checked against the fixture below, so this literal only
+ * pins the fixture's own shape. */
+const LOWPOLY_CLASSIFIED_ROUTES = 48;
 
 const validateOwnedFixture = (value: unknown): value is Fixture => {
   if (typeof value !== "object" || value === null || !ownKeys(value, ["version", "owner", "maximumPollMicros", "maximumRawBytes", "maximumWorkItems", "artifactStoreMaximumBytes", "configStoreMaximumBytes", "routes"])) return false;
@@ -97,7 +99,7 @@ class TestScript extends BundleScript {
       "context.identity_digest() != self.context_identity",
       "ArtifactCommandWorkStep::Progress",
       "ArtifactCommandWorkStep::Replay",
-      "copy_from_slice(b\"LPC2\")",
+      "copy_from_slice(b\"LPC3\")",
       "fn begin_close(&mut self)",
       "fn close_step(&mut self",
       "build_artifact_store_one_item_preparation_factory",
@@ -107,15 +109,13 @@ class TestScript extends BundleScript {
       "const LOWPOLY_RETAINED_WORK_ITEMS: usize = 258",
       "const LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES: usize = 16 * 1024 * 1024",
       "const LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES: usize = 16_384",
-      "fn paint_end_step(&mut self",
-      "paint_replay_target",
-      "LOWPOLY_RETAINED_PAINT_CHUNK_BYTES",
+      "paint::lowpoly_paint_step(",
     ];
     for (const needle of structural) reject(source.includes(needle), `Lowpoly retained source missing ${needle}`);
     reject(!schemaSource.includes("OnceLock<(crate::artifacts::lowpoly::LowpolySnapshot"), "Lowpoly schema still owns a process-global ArtifactChild payload cache");
     reject(schemaSource.includes("pub fn default_owned_document() -> LowpolyOwnedDefaultDocument"), "Lowpoly schema lacks caller-owned default child payload construction");
-    reject(sessionSource.includes("pub(crate) fn stroke_diff_parts(&self)"), "Lowpoly session lacks borrowed paint diff ownership");
-    reject(sessionSource.includes("pub(crate) fn finish_stroke_drag(&self)"), "Lowpoly session lacks bounded transient completion");
+    reject(sessionSource.includes("pub fn lowpoly_paint_drive("), "Lowpoly session lacks the paint tool drive");
+    reject(sessionSource.includes("pub fn paint_preview(&self"), "Lowpoly session lacks the paint gesture preview");
     console.log(`lowpoly interactive-job owned source/fixture ok: ${fixture.routes.length} Migrated, 0 BatchOnlyPendingRewrite`);
 
     const ajv = new Ajv({ allErrors: true, strict: true, allowUnionTypes: true });
@@ -129,7 +129,7 @@ class TestScript extends BundleScript {
       // 🧬️ Every route is now Migrated (0 BatchOnlyPendingRewrite) — a non-null blocker on a Migrated
       // route is the equivalent hostile mutation the old "empty blocker on BatchOnly" case exercised.
       { ...structuredClone(fixture), routes: fixture.routes.map((route, index) => index === 0 ? { ...route, blocker: "unexpected" } : route) },
-      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.toolId === "paintStrokeEnd" ? { ...route, preparation: ["Config"] as ("Artifact" | "Config")[] } : route) },
+      { ...structuredClone(fixture), routes: fixture.routes.map((route) => route.toolId === "paintAt" ? { ...route, preparation: ["Config"] as ("Artifact" | "Config")[] } : route) },
     ];
     for (const hostile of hostiles) {
       reject(!validateOwnedFixture(hostile), "owned validator accepted hostile fixture");
@@ -141,4 +141,4 @@ class TestScript extends BundleScript {
 //#endregion 🧪️InteractiveJobSourceTest
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

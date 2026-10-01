@@ -1,3 +1,4 @@
+import { discoverMutationInventoryProvidersV1, selectMutationInventoryProviderV1, type MutationInventoryProviderV1 } from "../🔌️providers/🟦️.ts";
 import { matchesTarget, readSelectors } from "../../🔍️discovery/🎛️selection/🟦️.ts";
 import { type MutationManifest, type RuntimeMutationInventory, compareInventories, loadOracleRegistry, surfaceCoordinate, writeRuntimeInventory } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { Script, runProbe, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
@@ -12,7 +13,7 @@ import { join, relative, sep } from "node:path";
  */
 export const MUTATION_BRIDGE_REL = "🏭️bridge/📜️script.ts";
 
-export function mutationBridgeFor(repoRoot: string, owner: string, manifest: MutationManifest): { command: string; args: string[] } | null {
+export function mutationBridgeFor(repoRoot: string, owner: string, manifest: MutationManifest, providers: readonly MutationInventoryProviderV1[] = discoverMutationInventoryProvidersV1(repoRoot)): { command: string; args: string[] } | null {
   // 🧭️The bridge is looked up at the owner and then at each ancestor, so a subset inherits the one its
   // artifact publishes instead of every subset needing its own copy.
   let candidate = owner;
@@ -20,9 +21,12 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
     const abs = join(repoRoot, candidate, MUTATION_BRIDGE_REL);
     if (existsSync(abs)) return { command: "bun", args: [abs, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
     const parent = candidate.split("/").slice(0, -1).join("/");
-    if (parent === "" || parent === candidate) return null;
+    if (parent === "" || parent === candidate) break;
     candidate = parent;
   }
+  const supplied = selectMutationInventoryProviderV1(providers, join(repoRoot, owner));
+  if (supplied) return { command: "bun", args: [supplied.script, "list-mutations", manifest.artifact, manifest.standard, manifest.subset, ...(manifest.surface === undefined ? [] : [manifest.surface])] };
+  return null;
 }
 
 /**
@@ -35,6 +39,7 @@ export function mutationBridgeFor(repoRoot: string, owner: string, manifest: Mut
 export class InventoryScript extends Script {
   run(segments: string[]): void {
     const registry = loadOracleRegistry(this.repoRoot);
+    const providers = discoverMutationInventoryProvidersV1(this.repoRoot);
     const selectors = readSelectors(segments);
     const manifests = registry.contributions.flatMap((contribution) => contribution.mutationManifests.map((manifest) => ({ contribution, manifest }))).filter(({ manifest }) => matchesTarget(manifest, selectors));
     if (manifests.length === 0) {
@@ -44,7 +49,7 @@ export class InventoryScript extends Script {
     let failed = 0;
     for (const { contribution, manifest } of manifests) {
       const coordinate = surfaceCoordinate(manifest);
-      const bridge = mutationBridgeFor(this.repoRoot, contribution.owner, manifest);
+      const bridge = mutationBridgeFor(this.repoRoot, contribution.owner, manifest, providers);
       if (bridge === null) {
         console.error(`[inventory] ${coordinate}: no production mutation bridge — expected an executable at ${MUTATION_BRIDGE_REL} beside the owner`);
         failed += 1;

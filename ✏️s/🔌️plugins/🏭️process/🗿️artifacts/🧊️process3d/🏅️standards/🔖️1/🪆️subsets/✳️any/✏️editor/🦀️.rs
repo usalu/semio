@@ -791,7 +791,7 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: Process3dConfigMut
 
 fn process3d_config_store_edit(forward: Process3dConfigMutation, inverse: Vec<Process3dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dConfigMutation> {
     let id = format!("process3d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -1126,7 +1126,7 @@ fn prepare_process3d_document(base: &Process3dSnapshot, mutation: Process3dMutat
 
 fn process3d_document_store_edit(forward: Process3dMutation, inverse: Vec<Process3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Process3dMutation> {
     let id = format!("process3d-document-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

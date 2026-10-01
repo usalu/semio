@@ -5,7 +5,7 @@ use crate::editor::raster::config::{RasterConfig, RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer, flatten_raster_layers, layer_node_id, locate_layer};
 use crate::{RasterImageAsset, RasterLayerNode, RasterMutation, RasterSnapshot};
 use dsl::os_pack::json::Value;
-use semio_framework_pixels::{editing::{validate_extent, PixelAlphaBrush, PixelBrush, PixelEditJob, PixelOperation}, RasterImage};
+use semio_framework_pixels::{editing::{validate_extent, PixelEditJob, PixelOperation}, RasterImage};
 use semio_framework_pixels::png_encoding::{EncodedPngImage, PngEncodeJob};
 use semio_framework_plugin::{ArtifactView, ConfigView, EditorApp, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep};
@@ -53,31 +53,6 @@ pub fn parse_operation(json: &str) -> Result<PixelOperation, Fault> {
         Some("sharpen") => PixelOperation::Sharpen(amount()?),
         Some("crop") => PixelOperation::Crop { x: integer(&value, "x")?, y: integer(&value, "y")?, width: integer(&value, "width")?, height: integer(&value, "height")? },
         Some("resize") => PixelOperation::Resize { width: integer(&value, "width")?, height: integer(&value, "height")?, bilinear: match value["sampling"].as_str() { Some("nearest") => false, Some("bilinear") => true, _ => return Err(fault("Invalid resize sampling")) } },
-        Some("stroke" | "alphaStroke") => {
-            let points = value["points"].as_array().ok_or_else(|| fault("Missing stroke points"))?;
-            if !(1..=2048).contains(&points.len()) { return Err(fault("Stroke requires 1–2048 points")); }
-            let points = points.iter().map(|point| {
-                let point = point.as_array().filter(|point| point.len() == 2).ok_or_else(|| fault("Invalid stroke point"))?;
-                Ok([point[0].as_f64().ok_or_else(|| fault("Invalid stroke point"))?, point[1].as_f64().ok_or_else(|| fault("Invalid stroke point"))?])
-            }).collect::<Result<Vec<_>, Fault>>()?;
-            if value["kind"].as_str()==Some("alphaStroke") {
-                return Ok(PixelOperation::AlphaStroke(PixelAlphaBrush {points,
-                    size:value["size"].as_f64().ok_or_else(||fault("Missing brush size"))?,
-                    opacity:value["opacity"].as_f64().ok_or_else(||fault("Missing brush opacity"))?,
-                    hardness:value["hardness"].as_f64().ok_or_else(||fault("Missing brush hardness"))?,
-                    alpha:u8::try_from(integer(&value,"alpha")?).map_err(|_|fault("Invalid brush alpha"))?,
-                }));
-            }
-            let color_value = format!("{{\"kind\":\"fill\",\"color\":{}}}", value["color"]);
-            let PixelOperation::Fill(color) = parse_operation(&color_value)? else { return Err(fault("Invalid brush color")); };
-            PixelOperation::Stroke(PixelBrush {
-                points, color,
-                size: value["size"].as_f64().ok_or_else(|| fault("Missing brush size"))?,
-                opacity: value["opacity"].as_f64().ok_or_else(|| fault("Missing brush opacity"))?,
-                hardness: value["hardness"].as_f64().ok_or_else(|| fault("Missing brush hardness"))?,
-                erase: value["erase"].as_bool().ok_or_else(|| fault("Missing eraser flag"))?,
-            })
-        }
         Some("alphaFill") => PixelOperation::AlphaFill {alpha:u8::try_from(integer(&value,"alpha")?).map_err(|_|fault("Invalid fill alpha"))?,opacity:value["opacity"].as_f64().filter(|value|value.is_finite()&&(0.0..=1.0).contains(value)).ok_or_else(||fault("Invalid fill opacity"))?},
         Some("fill") => {
             let values = value["color"].as_array().ok_or_else(|| fault("Missing fill color"))?;

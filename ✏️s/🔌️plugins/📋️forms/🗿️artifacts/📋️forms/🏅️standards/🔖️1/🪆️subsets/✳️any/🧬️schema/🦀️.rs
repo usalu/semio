@@ -166,14 +166,25 @@ pub fn locate_question(spec: &FormsSnapshot, question_id: &str) -> Option<Questi
     None
 }
 
-/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `replace-block`
-/// operation that records the edit — the single seam every inspector/command patch flows through.
-/// Returns `None` if the question no longer exists.
-pub fn update_block_operation(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormMutation> {
+/// 🎛️ The leaves that carry `before` to `after` inside `step_id` — the single seam every inspector/command question edit
+/// flows through (design §17.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): one ABSOLUTE `change-block-field` per
+/// field that differs, so history edits exactly that value; a changed id or kind (a re-seeded question) is the one
+/// whole-question `replace-block`. Nothing when the edit changes nothing.
+pub fn question_edit_mutations(step_id: &str, before: &FormQuestion, after: &FormQuestion) -> Vec<FormMutation> {
+    use crate::mutations::change_block_field::mutation::{BlockField, ChangeBlockField};
+    if before.id != after.id || before.kind != after.kind {
+        return vec![FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: step_id.to_string(), block: after.clone() })];
+    }
+    BlockField::changes(before, after).into_iter().map(|change| FormMutation::ChangeBlockField(ChangeBlockField { block_id: after.id.clone(), change })).collect()
+}
+
+/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the [`question_edit_mutations`] that record
+/// the edit. Returns `None` if the question no longer exists.
+pub fn update_block_operations(spec: &FormsSnapshot, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<Vec<FormMutation>> {
     let location = locate_question(spec, question_id)?;
-    let mut question = location.question;
+    let mut question = location.question.clone();
     mutate(&mut question);
-    Some(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: question }))
+    Some(question_edit_mutations(&location.step_id, &location.question, &question))
 }
 //#endregion 🔖️QuestionLocation
 
@@ -285,5 +296,5 @@ pub use crate::FormStep;
 //#endregion 🔁️Re-exports
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;

@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_json::editor::json_any::JsonAnyEditor",
       "factory": "semio_s_artifact_stdio_json::editor::json_any::create_json_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "json_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_json_any_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -24,7 +28,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_json::viewer::json_any::JsonAnyViewer",
       "factory": "semio_s_artifact_stdio_json::viewer::json_any::create_json_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio",
@@ -33,7 +38,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_json::editor::json_i_json::JsonIJsonEditor",
       "factory": "semio_s_artifact_stdio_json::editor::json_i_json::create_json_i_json_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "json_i_json_editor",
+        "sqliteSnapshot": "sqlite_snapshot_json_i_json_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -42,34 +51,15 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_json::viewer::json_i_json::JsonIJsonViewer",
       "factory": "semio_s_artifact_stdio_json::viewer::json_i_json::create_json_i_json_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "json",
-      "factory_id": "stdio.native.json.v1",
-      "descriptor_codec_id": "s.stdio.json.standard.rfc8259.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.json.standard.rfc8259.codec.codec-stdio-json-extension-json.v1",
-      "artifact_kind": "s.stdio.json",
-      "artifact_schema": "stdio.json",
-      "extension": "json",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
-      "protocol_source_sha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [
     {
-      "artifactKind": "s.stdio.json",
-      "artifactSchema": "stdio.json",
-      "packSchemaHash": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a",
       "factoryId": "stdio.native.json.v1",
-      "extension": "json",
       "role": "editor",
-      "surfaceId": "stdio.json.editor",
-      "protocolSourceSha256": "5cea30cf9b0956e112863b9183e9bde32087a14faffc34cf2e017f8d2b86c71a"
+      "surfaceId": "stdio.json.editor"
     }
   ],
   "catalogFeatures": [],
@@ -97,6 +87,43 @@
         "react": 6215,
         "wgpu": 6315
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "JsonMutation",
+      "snapshot": "semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot",
+      "mutation": "semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::mutations::JsonMutation"
+    },
+    {
+      "name": "JsonIJsonMutation",
+      "snapshot": "semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::schema::snapshot::JsonSnapshot",
+      "mutation": "semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::i_json::schema::mutations::JsonIJsonMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.json",
+      "standard": "rfc8259",
+      "subset": "i-json",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🛜️i-json",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.json.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🏅️standards/🔖️rfc8259/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

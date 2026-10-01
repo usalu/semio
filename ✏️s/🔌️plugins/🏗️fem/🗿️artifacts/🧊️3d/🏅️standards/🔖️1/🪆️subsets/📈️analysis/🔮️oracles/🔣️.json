@@ -16,19 +16,19 @@
           "scenarios": [
             {
               "id": "zero-modes-a27c74",
-              "directoryName": "🧨️zero-modes-a27c74"
+              "directoryName": "🧨️zero"
             },
             {
               "id": "same-settings-fdb832",
-              "directoryName": "⏸️same-settings-fdb832"
+              "directoryName": "⏸️same"
             },
             {
               "id": "hall-more-modes-ecbb5c",
-              "directoryName": "🏗️hall-more-modes-ecbb5c"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "doubles-the-7b5381",
-              "directoryName": "🔢️doubles-the-7b5381"
+              "directoryName": "🔢️doubles"
             }
           ]
         }

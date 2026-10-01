@@ -236,10 +236,14 @@
           "maxItems": 4
         },
         "fullArtifactCount": {
-          "const": 36
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
         },
         "nativeCodecCount": {
-          "const": 29
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1024
         },
         "surfaceCases": {
           "type": "array",

@@ -55,8 +55,8 @@ const CSV_DIRECTORIES = {
 } as const;
 const JSON_DESTINATIONS = {
   "change-step-collapsed": { subset: "step", fixtures: stepFixtures, directory: "🗂️change-step-collapsed" },
-  "connect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "🔗️connect-steps" },
-  "disconnect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "✂️disconnect-steps" },
+  "connect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "🔗️connect" },
+  "disconnect-steps": { subset: "dependency", fixtures: dependencyFixtures, directory: "✂️disconnect" },
   "move-step": { subset: "step", fixtures: stepFixtures, directory: "📍️move-step" },
 } as const;
 //#endregion 🧭️Paths

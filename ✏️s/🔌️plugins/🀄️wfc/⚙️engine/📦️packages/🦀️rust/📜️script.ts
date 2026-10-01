@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🀄️ WFC engine crate router: `bun ./📜️script.ts check|test`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 //#region 🧪️Validation
 class CheckScript extends BundleScript {
@@ -15,5 +17,5 @@ class TestScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });
 //#endregion 🧪️Validation

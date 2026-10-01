@@ -60,7 +60,7 @@ pub mod create_widget {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🌱️create-widget/🧪️tests/📝️inserts-node-c-at-index-2/🦀️.rs"]
+    #[path = "🌱️create-widget/🧪️tests/📝️inserts/🦀️.rs"]
     mod tests_inserts_node_c_at_index_2;
 }
 
@@ -74,7 +74,7 @@ pub mod connect_synapse {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔗️connect-synapse/🧪️tests/🔌️wires-node-b-to-node-c-at-index-1/🦀️.rs"]
+    #[path = "🔗️connect-synapse/🧪️tests/🔌️wires/🦀️.rs"]
     mod tests_wires_node_b_to_node_c_at_index_1;
 }
 
@@ -88,49 +88,49 @@ pub mod create_generation {
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "➕create-generation/🧪️tests/🌱️appends-generation-2-and-moves-the-selection/🦀️.rs"]
+    #[path = "➕create-generation/🧪️tests/🌱️appends/🦀️.rs"]
     mod tests_appends_generation_2_and_moves_the_selection;
 }
 
 #[path = "."]
 pub mod delete_generation {
-    #[path = "🗑️delete-generation/🦀️.rs"]
+    #[path = "🗑️delete/🦀️.rs"]
     mod component;
-    #[path = "🗑️delete-generation/🔺️diff/🦀️.rs"]
+    #[path = "🗑️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🗑️delete-generation/↩️inverse/🦀️.rs"]
+    #[path = "🗑️delete/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🗑️delete-generation/🧪️tests/🚫️removes-the-selected-generation-2-and-falls-back/🦀️.rs"]
+    #[path = "🗑️delete/🧪️tests/🚫️removes/🦀️.rs"]
     mod tests_removes_the_selected_generation_2_and_falls_back;
 }
 
 #[path = "."]
 pub mod rename_generation {
-    #[path = "🏷️rename-generation/🦀️.rs"]
+    #[path = "🏷️rename/🦀️.rs"]
     mod component;
-    #[path = "🏷️rename-generation/🔺️diff/🦀️.rs"]
+    #[path = "🏷️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🏷️rename-generation/↩️inverse/🦀️.rs"]
+    #[path = "🏷️rename/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🏷️rename-generation/🧪️tests/🏷️retitles-generation-1-via-new-name/🦀️.rs"]
+    #[path = "🏷️rename/🧪️tests/🏷️retitles/🦀️.rs"]
     mod tests_retitles_generation_1_via_new_name;
 }
 
 #[path = "."]
 pub mod change_generation_value {
-    #[path = "🔧️change-generation-value/🦀️.rs"]
+    #[path = "🔧️change/🦀️.rs"]
     mod component;
-    #[path = "🔧️change-generation-value/🔺️diff/🦀️.rs"]
+    #[path = "🔧️change/🔺️diff/🦀️.rs"]
     pub mod diff;
-    #[path = "🔧️change-generation-value/↩️inverse/🦀️.rs"]
+    #[path = "🔧️change/↩️inverse/🦀️.rs"]
     pub mod inverse;
     pub use component::*;
     #[cfg(test)]
-    #[path = "🔧️change-generation-value/🧪️tests/🏢️raises-the-storeys-answer-in-generation-1/🦀️.rs"]
+    #[path = "🔧️change/🧪️tests/🏢️raises/🦀️.rs"]
     mod tests_raises_the_storeys_answer_in_generation_1;
 }
 

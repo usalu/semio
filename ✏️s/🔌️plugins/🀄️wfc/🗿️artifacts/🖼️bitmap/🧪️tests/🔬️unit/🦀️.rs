@@ -120,18 +120,18 @@ pub mod fixtures {
 
     pub fn cases() -> Vec<(&'static str, &'static str, BitmapSnapshot, BitmapMutation)> {
         vec![
-            ("🎲️change-seed", "🎲️reseeds-the-solve-from-7-to-99", base(), change_seed(99)),
-            ("📐️resize-input", "📐️grows-the-sample-to-6-by-4", base(), resize_input(6, 4)),
-            ("🖌️set-input-pixels", "🖌️paints-a-2-by-2-block-of-colour-1", base(), set_input_pixels(1, 0, 2, 2, encode_base64(&[1, 1, 1, 1]))),
-            ("🎨️add-palette-color", "🎨️appends-a-third-colour", base(), add_palette_color(2, BitmapColor::opaque(200, 60, 60))),
-            ("🖍️change-palette-color", "🖍️recolours-the-second-entry", base(), change_palette_color(1, BitmapColor::opaque(240, 230, 200))),
-            ("🧽️remove-palette-color", "🧽️drops-the-unused-third-colour", base_with_spare_colour(), remove_palette_color(2)),
-            ("🖼️resize-output", "🖼️shrinks-the-output-and-cascades-a-pin", base_with_pins(), resize_output(2, 2, true)),
-            ("⚙️change-model", "⚙️widens-the-window-to-three", base(), change_model(3, 4, false, Some(0))),
-            ("📌️pin-pixel", "📌️pins-the-origin-cell-to-colour-1", base(), pin_pixel(0, 0, 1)),
-            ("📍️unpin-pixel", "📍️releases-the-pinned-origin-cell", base_with_pins(), unpin_pixel(0, 0)),
-            ("✍️paint-input-stroke", "✍️paints-a-diagonal-stroke-in-colour-1", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 3, y: 2 }], 1)),
-            ("✍️paint-input-stroke", "⚠️clips-a-stroke-leaving-the-sample", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 2, y: 0 }, BitmapStrokePoint { x: 5, y: 0 }], 0)),
+            ("🎲️change-seed", "🎲️reseeds", base(), change_seed(99)),
+            ("📐️resize-input", "📐️grows", base(), resize_input(6, 4)),
+            ("🖌️set-input-pixels", "🖌️paints", base(), set_input_pixels(1, 0, 2, 2, encode_base64(&[1, 1, 1, 1]))),
+            ("🎨️add-palette-color", "🎨️appends", base(), add_palette_color(2, BitmapColor::opaque(200, 60, 60))),
+            ("🖍️change-palette-color", "🖍️recolours", base(), change_palette_color(1, BitmapColor::opaque(240, 230, 200))),
+            ("🧽️remove-palette-color", "🧽️drops", base_with_spare_colour(), remove_palette_color(2)),
+            ("🖼️resize-output", "🖼️shrinks", base_with_pins(), resize_output(2, 2, true)),
+            ("⚙️change-model", "⚙️widens", base(), change_model(3, 4, false, Some(0))),
+            ("📌️pin-pixel", "📌️pins", base(), pin_pixel(0, 0, 1)),
+            ("📍️unpin-pixel", "📍️releases", base_with_pins(), unpin_pixel(0, 0)),
+            ("✍️paint-input-stroke", "✍️paints", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 0, y: 0 }, BitmapStrokePoint { x: 3, y: 2 }], 1)),
+            ("✍️paint-input-stroke", "⚠️clips", base(), paint_input_stroke(vec![BitmapStrokePoint { x: 2, y: 0 }, BitmapStrokePoint { x: 5, y: 0 }], 0)),
         ]
     }
 }

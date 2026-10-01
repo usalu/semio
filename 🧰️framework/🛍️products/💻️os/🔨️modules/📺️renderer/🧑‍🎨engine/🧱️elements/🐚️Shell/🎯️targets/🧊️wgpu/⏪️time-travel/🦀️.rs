@@ -155,6 +155,72 @@ pub(crate) fn time_travel_chord_yields_to(focus: Option<RetainedNodeFocusKind>) 
 }
 //#endregion ⏪️TimeTravelControls
 
+//#region 🎯️TimeTravelFocus
+/// 🎯️ Where keyboard focus goes after a session change — React's `TimeTravelFocusTargetV1`: the first input of the draft
+/// editor, the band, or the finalize prompt.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) enum TimeTravelFocus {
+    Editor,
+    Band,
+    Dialog,
+}
+
+/// 🧭️ What one change of the focused program's session asks of the chrome — React's `TimeTravelTransitionV1`, pinned for
+/// both shells by the band corpus's `transitions`: `reveal` opens the History panel, `focus` moves keyboard focus.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct TimeTravelTransition {
+    pub reveal: bool,
+    pub focus: Option<TimeTravelFocus>,
+}
+
+/// ⏱️ How long a focus target may take to reach the screen before the move is given up — React retries across 30
+/// animation frames.
+pub(crate) const TIME_TRAVEL_FOCUS_SETTLE_MS: f64 = 1000.0;
+
+/// 🗝️ The history-body nodes the editor target resolves to: the inputs section, and the Accept button standing in when
+/// no input takes focus.
+pub(crate) const TIME_TRAVEL_EDITOR_INPUTS_KEY: &str = "framework.history.editor.inputs";
+pub(crate) const TIME_TRAVEL_EDITOR_ACCEPT_KEY: &str = "framework.history.editor.accept";
+
+/// 🧭️ The chrome's answer to the session moving from `previous` to `next` (`None` = no session) — React's
+/// `timeTravelTransitionV1`: the edge into a new session reveals the History panel (whoever began it — a person, a chord
+/// or an agent); a draft that starts (Begin, Next problem, another mutation) puts focus on its first input; a replay or
+/// a review puts it on the band; the finalize prompt takes it; a progress step, a draft edit, the commit and the close
+/// move nothing.
+pub(crate) fn time_travel_transition(previous: Option<&HistoryTimeTravel>, next: Option<&HistoryTimeTravel>) -> TimeTravelTransition {
+    let Some(next) = next else { return TimeTravelTransition { reveal: false, focus: None } };
+    let same = previous.is_some_and(|previous| previous.session_id == next.session_id);
+    let moved = !same || previous.is_some_and(|previous| previous.stage != next.stage);
+    let focus = match next.stage {
+        HistoryTimeTravelStage::Editing => (moved || previous.and_then(|previous| previous.target.as_ref()) != next.target.as_ref()).then_some(TimeTravelFocus::Editor),
+        HistoryTimeTravelStage::Replaying | HistoryTimeTravelStage::Reviewing => moved.then_some(TimeTravelFocus::Band),
+        HistoryTimeTravelStage::Choosing => moved.then_some(TimeTravelFocus::Dialog),
+        HistoryTimeTravelStage::Finalizing => None,
+    };
+    TimeTravelTransition { reveal: !same, focus }
+}
+
+/// 🗝️ Whether a projected node key names `key`: the key itself, or a surface-qualified `<surface>/<key>`.
+fn projected_key_is(projected: &str, key: &str) -> bool {
+    projected == key || projected.rsplit_once('/').is_some_and(|(_, tail)| tail == key)
+}
+
+/// 🎯️ The node of one retained window's accessibility projection the editor target resolves to — React's
+/// `timeTravelFocusElementV1("editor")`: the first enabled control under the draft editor's inputs section (a row is
+/// never the target), else its Accept button. `None` when the window does not show the editor.
+pub(crate) fn time_travel_editor_focus_node(nodes: &[ui_contract::AccessibilityProjectionNode]) -> Option<usize> {
+    let usable = |node: &ui_contract::AccessibilityProjectionNode| node.focusable && !node.disabled && !node.hidden;
+    nodes
+        .iter()
+        .position(|node| projected_key_is(&node.key, TIME_TRAVEL_EDITOR_INPUTS_KEY))
+        .and_then(|section| {
+            let depth = nodes[section].depth;
+            nodes[section + 1..].iter().take_while(|node| node.depth > depth).position(|node| usable(node) && node.role != "treeitem").map(|offset| section + 1 + offset)
+        })
+        .or_else(|| nodes.iter().position(|node| projected_key_is(&node.key, TIME_TRAVEL_EDITOR_ACCEPT_KEY) && usable(node)))
+}
+//#endregion 🎯️TimeTravelFocus
+
 //#region 🗣️TimeTravelCopy
 /// 🌐️ One `TimeTravelLabel` in `locale`.
 pub(crate) fn time_travel_label(label: TimeTravelLabel, locale: Locale) -> &'static str {
@@ -197,32 +263,11 @@ const HISTORY_REFUSALS: [(&str, &str, &str); 3] = [
     ("history.transition-refused", "The hub refused a history edit; the step was withdrawn.", "Der Hub hat eine Verlaufsbearbeitung abgelehnt; der Schritt wurde zurückgenommen."),
 ];
 
-/// 🛑️ A live session's refusal and fault codes — React's `ui.timeTravel.refusal.*`.
-const SESSION_REFUSALS: [&str; 7] = ["timeTravel.frozen", "timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty", "timeTravel.cancelled", "timeTravel.name-invalid"];
-
-/// 🗣️ One session refusal's text: the shared `⏪️time-travel` label where it has one (a cancelled replay through
-/// `TimeTravelLabel::for_fault`), else the shell's own copy.
-fn session_refusal_text(code: &str, locale: Locale) -> Option<&'static str> {
-    let label = match code {
-        "timeTravel.frozen" => TimeTravelLabel::Frozen,
-        "timeTravel.illegal" => TimeTravelLabel::RefusalIllegal,
-        "timeTravel.stale" => TimeTravelLabel::RefusalStale,
-        "timeTravel.blocked" => TimeTravelLabel::RefusalBlocked,
-        "timeTravel.empty" => TimeTravelLabel::RefusalEmpty,
-        "timeTravel.name-invalid" => {
-            return Some(match locale {
-                Locale::En => "Invalid alternative name: use 1 to 256 characters",
-                Locale::De => "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden",
-            })
-        }
-        other => TimeTravelLabel::for_fault(other)?,
-    };
-    Some(time_travel_label(label, locale))
-}
-
 /// 🛑️ The history-edit refusal one machine `code` is, as `(code, message, severity)` in `locale` — React's
-/// `historyRefusalCodeV1` over `HISTORY_REFUSAL_LABEL_KEYS`: a hub `history.*` transition refusal is an error, a session
-/// `timeTravel.*` refusal a warning (the verb was refused, nothing was lost). Only an exact code matches; prose never does.
+/// `historyRefusalCodeV1` over `HISTORY_REFUSAL_LABEL_KEYS`: a hub `history.*` transition refusal is an error; every
+/// `timeTravel.*` code the session, its hosting runtime or its driver answers (`TIME_TRAVEL_CODE_LABELS`, the framework's
+/// one vocabulary) is a warning, because the verb was refused or the replay stopped and nothing was lost. Only an exact
+/// code matches; prose never does.
 pub(crate) fn history_refusal_notice(code: &str, locale: Locale) -> Option<(&'static str, &'static str, semio_framework::Severity)> {
     let hub = HISTORY_REFUSALS.iter().find(|(known, _, _)| *known == code).map(|(known, en, de)| {
         (
@@ -234,7 +279,7 @@ pub(crate) fn history_refusal_notice(code: &str, locale: Locale) -> Option<(&'st
             semio_framework::Severity::Error,
         )
     });
-    hub.or_else(|| SESSION_REFUSALS.into_iter().find(|known| *known == code).and_then(|known| Some((known, session_refusal_text(known, locale)?, semio_framework::Severity::Warning))))
+    hub.or_else(|| semio_framework_time_travel::TIME_TRAVEL_CODE_LABELS.iter().find(|(known, _)| *known == code).map(|(known, label)| (*known, time_travel_label(*label, locale), semio_framework::Severity::Warning)))
 }
 
 /// 🔎️ The history-edit refusal a dispatch-fault string carries — React's `historyRefusalOfFaultV1`. The funnel's string is
@@ -344,51 +389,130 @@ pub(crate) struct TimeTravelBandButton {
     pub rect: Rect,
 }
 
-/// 📐️ The band laid out for one frame: its box, the message and the width it may take, the replay progress track
-/// with its filled share, and the buttons right-aligned in stage order.
+/// 📐️ The band laid out for one frame: its box, the message's lines, the replay progress track with its filled share,
+/// and the buttons in stage order.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct TimeTravelBandPlan {
     pub band: Rect,
-    pub message: String,
-    pub message_x: f32,
-    pub message_w: f32,
+    pub lines: Vec<ChromeBandLine>,
     pub progress: Option<(Rect, f32)>,
     pub buttons: Vec<TimeTravelBandButton>,
 }
 
-/// 📐️ Lays the band out bottom-centre, `TIME_TRAVEL_BAND_GAP` above the footer — away from the transient notice
-/// stack at the top, so a notice raised while time travelling never covers it. Widths use the same monospace estimate
-/// every shell band uses; the renderer measures glyphs only while painting them.
-pub(crate) fn time_travel_band_plan(status: &HistoryTimeTravel, message: String, buttons: Vec<(TimeTravelControl, String)>, width: f32, height: f32, theme: &Theme) -> TimeTravelBandPlan {
+/// 📏️ One line of a laid-out chrome band: its text and the box it paints in (its baseline centred in the box).
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ChromeBandLine {
+    pub text: String,
+    pub rect: Rect,
+}
+
+/// 📐️ A bottom-centre chrome band laid out: its box, the message's lines and one rect per button in the order given.
+#[derive(Clone, Debug, PartialEq)]
+pub(crate) struct ChromeBandLayout {
+    pub band: Rect,
+    pub lines: Vec<ChromeBandLine>,
+    pub buttons: Vec<Rect>,
+}
+
+/// 🧵️ The message's lines within `width`: whole `separator` segments joined while they fit, a segment wider than a line
+/// broken at its words, a word wider than a line on a line of its own (clipped when painted).
+fn chrome_band_wrap(message: &str, separator: &str, width: f32, glyph_w: impl Fn(&str) -> f32) -> Vec<String> {
+    let mut lines = Vec::new();
+    let mut line = String::new();
+    let push = |piece: &str, joint: &str, line: &mut String, lines: &mut Vec<String>| {
+        let joined = if line.is_empty() { piece.to_string() } else { format!("{line}{joint}{piece}") };
+        if line.is_empty() || glyph_w(&joined) <= width {
+            *line = joined;
+        } else {
+            lines.push(std::mem::replace(line, piece.to_string()));
+        }
+    };
+    for segment in message.split(separator) {
+        if glyph_w(segment) <= width {
+            push(segment, separator, &mut line, &mut lines);
+            continue;
+        }
+        for (index, word) in segment.split(' ').enumerate() {
+            push(word, if index == 0 { separator } else { " " }, &mut line, &mut lines);
+        }
+    }
+    if !line.is_empty() || lines.is_empty() {
+        lines.push(line);
+    }
+    lines
+}
+
+/// 📐️ Lays a chrome band out bottom-centre, [`TIME_TRAVEL_BAND_GAP`] above `floor`, the way React's bottom bands wrap
+/// (`max-w-[90vw] flex-wrap`): one row — the message, then the buttons right-aligned — while it fits `max_w` and 90 % of
+/// the viewport; else compact for a phone-width viewport: the message wrapped over full-width lines
+/// ([`chrome_band_wrap`] at `separator`), the buttons flowing in rows below it. Widths use the monospace estimate every
+/// shell band uses; the renderer measures glyphs only while painting them.
+pub(crate) fn chrome_band_layout(message: &str, separator: &str, buttons: &[&str], floor: f32, width: f32, max_w: f32, theme: &Theme) -> ChromeBandLayout {
     let (pad, gap, small) = (theme.padding_standard, theme.gap_standard, theme.font_size_small);
     let glyph_w = |text: &str| text.chars().count() as f32 * small * 0.6;
     let button_w = |label: &str| glyph_w(label) + pad * 2.0;
-    let buttons_w: f32 = buttons.iter().map(|(_, label)| button_w(label) + gap).sum();
-    let band_w = (pad * 2.0 + glyph_w(&message) + gap + buttons_w).min(TIME_TRAVEL_BAND_MAX_WIDTH).min((width - pad * 2.0).max(1.0));
-    let band_h = small * 1.6 + pad * 2.0;
-    let band = Rect::new(((width - band_w) * 0.5).max(0.0), (height - theme.footer_height - TIME_TRAVEL_BAND_GAP - band_h).max(0.0), band_w, band_h);
-    let mut right = band.x + band.w - pad;
-    let mut laid: Vec<TimeTravelBandButton> = buttons
-        .into_iter()
-        .rev()
-        .map(|(control, label)| {
-            let w = button_w(&label);
-            right -= w;
-            let rect = Rect::new(right, band.y + pad * 0.5, w, band.h - pad);
-            right -= gap;
-            TimeTravelBandButton { control, label, rect }
-        })
-        .collect();
-    laid.reverse();
-    let message_x = band.x + pad;
-    let message_w = (right - message_x).max(1.0);
+    let available = (width * 0.9).min(max_w).max(1.0);
+    let row_h = small * 1.6 + pad * 2.0;
+    let buttons_w: f32 = buttons.iter().map(|label| button_w(*label) + gap).sum();
+    let single_w = pad * 2.0 + glyph_w(message) + gap + buttons_w;
+    if single_w <= available {
+        let band = Rect::new(((width - single_w) * 0.5).max(0.0), (floor - TIME_TRAVEL_BAND_GAP - row_h).max(0.0), single_w, row_h);
+        let mut right = band.x + band.w - pad;
+        let mut rects: Vec<Rect> = buttons
+            .iter()
+            .rev()
+            .map(|label| {
+                right -= button_w(*label);
+                let rect = Rect::new(right, band.y + pad * 0.5, button_w(*label), band.h - pad);
+                right -= gap;
+                rect
+            })
+            .collect();
+        rects.reverse();
+        let line = ChromeBandLine { text: message.to_string(), rect: Rect::new(band.x + pad, band.y, (right - band.x - pad).max(1.0), band.h) };
+        return ChromeBandLayout { band, lines: vec![line], buttons: rects };
+    }
+    let inner = (available - pad * 2.0).max(1.0);
+    let line_h = small * 1.6;
+    let button_h = small * 1.6 + pad;
+    let wrapped = chrome_band_wrap(message, separator, inner, glyph_w);
+    let mut placed = Vec::with_capacity(buttons.len());
+    let (mut x, mut row) = (0.0_f32, 0_usize);
+    for label in buttons {
+        let w = button_w(*label).min(inner);
+        if x > 0.0 && x + w > inner {
+            (x, row) = (0.0, row + 1);
+        }
+        placed.push((x, row, w));
+        x += w + gap;
+    }
+    let rows = placed.last().map_or(0, |(_, row, _)| row + 1);
+    let lines_h = wrapped.len() as f32 * line_h;
+    let buttons_h = rows as f32 * button_h + rows.saturating_sub(1) as f32 * gap * 0.5;
+    let band_h = pad + lines_h + if rows > 0 { gap * 0.5 + buttons_h } else { 0.0 };
+    let band = Rect::new(((width - available) * 0.5).max(0.0), (floor - TIME_TRAVEL_BAND_GAP - band_h).max(0.0), available, band_h);
+    let lines = wrapped.into_iter().enumerate().map(|(index, text)| ChromeBandLine { text, rect: Rect::new(band.x + pad, band.y + pad * 0.5 + index as f32 * line_h, inner, line_h) }).collect();
+    let top = band.y + pad * 0.5 + lines_h + gap * 0.5;
+    let buttons = placed.into_iter().map(|(x, row, w)| Rect::new(band.x + pad + x, top + row as f32 * (button_h + gap * 0.5), w, button_h)).collect();
+    ChromeBandLayout { band, lines, buttons }
+}
+
+/// 📐️ Lays the band out bottom-centre above the footer through [`chrome_band_layout`] — away from the transient notice
+/// stack at the top, so a notice raised while time travelling never covers it — with the replay track along its lower
+/// edge. Its message wraps at the " · " between its lines on a phone-width viewport.
+pub(crate) fn time_travel_band_plan(status: &HistoryTimeTravel, message: String, buttons: Vec<(TimeTravelControl, String)>, width: f32, height: f32, theme: &Theme) -> TimeTravelBandPlan {
+    let labels: Vec<&str> = buttons.iter().map(|(_, label)| label.as_str()).collect();
+    let layout = chrome_band_layout(&message, " · ", &labels, height - theme.footer_height, width, TIME_TRAVEL_BAND_MAX_WIDTH, theme);
+    let band = layout.band;
+    let pad = theme.padding_standard;
     let progress = match (status.stage, status.total) {
         (HistoryTimeTravelStage::Replaying, Some(total)) if total > 0 => {
             Some((Rect::new(band.x + pad, band.y + band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.0, band.w - pad * 2.0, TIME_TRAVEL_PROGRESS_TRACK), (status.done.unwrap_or(0) as f32 / total as f32).clamp(0.0, 1.0)))
         }
         _ => None,
     };
-    TimeTravelBandPlan { band, message, message_x, message_w, progress, buttons: laid }
+    let buttons = buttons.into_iter().zip(layout.buttons).map(|((control, label), rect)| TimeTravelBandButton { control, label, rect }).collect();
+    TimeTravelBandPlan { band, lines: layout.lines, progress, buttons }
 }
 //#endregion 📐️TimeTravelBand
 
@@ -461,13 +585,73 @@ pub(crate) fn time_travel_peer_presence<'a>(editing: impl IntoIterator<Item = (&
 
 impl ShellState {
     /// ⏪️ Takes the session status one history patch carries (absent = no session). The edge into a session reveals
-    /// the History panel tab, whose Rust-built body holds the editor — the twin of the tool-run panel reveal.
+    /// the History panel tab, whose Rust-built body holds the editor — the twin of the tool-run panel reveal — and every
+    /// edge names where keyboard focus goes ([`time_travel_focus_target`]); [`Self::resolve_time_travel_focus`] moves it
+    /// once the target is on screen. A closed session drops a focus still waiting.
     pub(crate) fn observe_history_time_travel(&mut self, time_travel: Option<&HistoryTimeTravel>) {
         let began = self.history_time_travel.is_none() && time_travel.is_some();
+        if let Some(focus) = time_travel_focus_target(self.history_time_travel.as_ref(), time_travel) {
+            self.time_travel_focus = Some((focus, chrome_now_ms() + TIME_TRAVEL_FOCUS_SETTLE_MS));
+        } else if time_travel.is_none() {
+            self.time_travel_focus = None;
+        }
         self.history_time_travel = time_travel.cloned();
         if began {
             self.reveal_dock_tab(FRAMEWORK_PANEL_TAB_HISTORY_ID);
+            if self.mobile_panel_active() {
+                self.reveal_mobile_panel_tab(FRAMEWORK_PANEL_TAB_HISTORY_ID);
+            }
         }
+    }
+
+    /// 📱️ Opens the one mobile panel on `tab_id` — the phone-width twin of the anchor reveal, since below the mobile
+    /// breakpoint no anchor paints and the History body (the editor) lives in that panel.
+    fn reveal_mobile_panel_tab(&mut self, tab_id: &str) {
+        let Some((_, path)) = self.dock_tabs.locate(tab_id) else { return };
+        self.mobile_panel_path = mobile_panel_reconcile_path(&self.mobile_panel_tabs(), &path);
+        self.mobile_panel_visible = true;
+    }
+
+    /// 🎯️ Moves keyboard focus to the waiting time-travel target the moment a presented frame shows it, so the ARIA
+    /// mirror (which follows the projected `focused` node) and the keyboard ring land on it together: a band control
+    /// becomes the focused chrome control, the editor or Next problem receives an accessibility focus in its retained
+    /// window, and the open finalize prompt already focuses its first stop. A target that has not appeared within
+    /// [`TIME_TRAVEL_FOCUS_SETTLE_MS`] takes its band fallback, else focus stays.
+    pub(crate) fn resolve_time_travel_focus(&mut self, input: &mut InputState<ActionDescriptor>) {
+        let Some((focus, deadline)) = self.time_travel_focus else { return };
+        let moved = match focus {
+            TimeTravelFocus::Control(verb) => self.focus_time_travel_control(verb, input),
+            TimeTravelFocus::Dialog => self.chrome_build.dialog_open(),
+            TimeTravelFocus::Editor | TimeTravelFocus::NextProblem => {
+                let target = crate::interpreter::visible_retained_accessibility_target(|nodes| time_travel_focus_node(focus, nodes));
+                target.is_some_and(|target| self.focus_retained_accessibility_target(&target, input))
+            }
+        };
+        if moved {
+            self.time_travel_focus = None;
+        } else if chrome_now_ms() >= deadline {
+            self.time_travel_focus = focus.fallback().map(|verb| (TimeTravelFocus::Control(verb), f64::INFINITY)).filter(|_| self.history_time_travel.is_some());
+        }
+    }
+
+    /// 🔘️ Focuses one band control when this frame registered it; `false` while it is not on screen.
+    fn focus_time_travel_control(&mut self, verb: TimeTravelVerb, input: &mut InputState<ActionDescriptor>) -> bool {
+        let control_id = verb.control_id();
+        if self.chrome_build.dialog_open() || !input.hits().iter().any(|hit| hit.control_id.as_deref() == Some(control_id)) {
+            return false;
+        }
+        input.blur_input();
+        self.accessibility_focused_control_id = Some(control_id.to_string());
+        true
+    }
+
+    /// 🎯️ Gives one retained node the same accessibility focus a reader's focus would give it, and hands the keyboard
+    /// to its window; `false` when the node's window no longer presents it.
+    fn focus_retained_accessibility_target(&mut self, target: &ui_render::AccessibilityTarget, input: &mut InputState<ActionDescriptor>) -> bool {
+        let Some(commands) = crate::interpreter::dispatch_accessibility_event(&target.window_id, target.window_generation, target.node_id, &target.node_key, ui_wgpu::wgpu::AccessibilityUiEvent::Focus, input) else { return false };
+        self.chrome_build.note_content_focus_commands(&commands);
+        self.accessibility_focused_control_id = None;
+        true
     }
 
     /// ⏪️ The live session status, if a history edit is open.
@@ -558,10 +742,10 @@ impl ShellState {
     }
 
     /// ⏪️ Paints the persistent time-travel band, one scalar, glyph run or hit per opportunity: fill, edges, the replay
-    /// track and its fill, the message, then per button its fill, caption and hit. An enabled button's hit carries its
-    /// verb, so a click, the keyboard ring and an assistive technology all dispatch it the same way; a disabled one
-    /// paints muted, dispatches nothing and names the refusal that disables it. No button registers while a modal
-    /// dialog (the finalize prompt) owns the pointer.
+    /// track and its fill, each line of the message, then per button its fill, caption and hit. An enabled button's hit
+    /// carries its verb, so a click, the keyboard ring and an assistive technology all dispatch it the same way; a
+    /// disabled one paints muted, dispatches nothing and names the refusal that disables it. No button registers while a
+    /// modal dialog (the finalize prompt) owns the pointer.
     pub(super) fn render_time_travel_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let Some(status) = self.history_time_travel.clone() else { return true };
         let plan = self.time_travel_band_plan_for(&status, theme);
@@ -569,6 +753,7 @@ impl ShellState {
         let band = plan.band;
         let hair = theme.stroke_hairline;
         let baseline = |rect: Rect| rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0;
+        let buttons_from = 7 + plan.lines.len();
         match cursor.scalar {
             0 => overlay.push_rounded([band.x, band.y, band.w, band.h], fill, theme.border_radius),
             1..=4 => {
@@ -590,18 +775,21 @@ impl ShellState {
                     overlay.push_solid([track.x, track.y, track.w * share, track.h], theme.progress);
                 }
             }
-            7 => match chrome_text_complete_step(overlay, atlas, &plan.message, plan.message_x, baseline(band), plan.message_w, theme.font_size_small, text_color, &mut cursor.glyph) {
-                Ok(false) => return false,
-                Ok(true) => {}
-                Err(()) => {
-                    self.error = Some("Shell time-travel band text exceeded the retained glyph boundary".to_string());
-                    cursor.glyph.reset();
+            scalar if scalar < buttons_from => {
+                let line = &plan.lines[scalar - 7];
+                match chrome_text_complete_step(overlay, atlas, &line.text, line.rect.x, baseline(line.rect), line.rect.w, theme.font_size_small, text_color, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell time-travel band text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
                 }
-            },
+            }
             scalar => {
-                let Some(button) = plan.buttons.get((scalar - 8) / 3) else { return true };
+                let Some(button) = plan.buttons.get((scalar - buttons_from) / 3) else { return true };
                 let enabled = button.control.disabled_by.is_none();
-                match (scalar - 8) % 3 {
+                match (scalar - buttons_from) % 3 {
                     0 => overlay.push_rounded([button.rect.x, button.rect.y, button.rect.w, button.rect.h], if enabled { theme.button } else { theme.button.with_alpha(theme.button.a * 0.5) }, theme.border_radius),
                     1 => {
                         let ink = if enabled { theme.text } else { theme.text_muted };

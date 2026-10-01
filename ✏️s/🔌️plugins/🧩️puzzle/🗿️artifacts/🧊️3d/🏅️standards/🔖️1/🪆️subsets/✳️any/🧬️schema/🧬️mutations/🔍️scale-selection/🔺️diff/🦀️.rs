@@ -11,6 +11,6 @@ pub fn diff(payload: &super::mutation::ScaleSelection, base: &Puzzle3dSnapshot) 
         return protocol::MutationOutcome::fatal("mutation.invariant", "every scale factor must be a finite number greater than 0", payload.targets.clone());
     }
     let factors = payload.factors;
-    puzzle3d_selection_diff(base, &payload.targets, factors == [1.0; 3], |entry: &Puzzle3dObject| Puzzle3dObject { scale: Some(puzzle3d_scaled(entry.scale, factors)), ..entry.clone() }, |entry: &Puzzle3dTargetVolume| Puzzle3dTargetVolume { scale: Some(puzzle3d_scaled(entry.scale, factors)), ..entry.clone() })
+    puzzle3d_selection_diff(base, &payload.targets, factors == [1.0; 3], |entry: &Puzzle3dObject| Puzzle3dObject { scale: Some(puzzle3d_scaled(entry.scale, factors)), ..entry.clone() }, |entry: &Puzzle3dTargetVolume| Puzzle3dTargetVolume { scale: Some(puzzle3d_scaled(entry.scale, factors)), ..entry.clone() }, false)
 }
 //#endregion 🔖️Diff

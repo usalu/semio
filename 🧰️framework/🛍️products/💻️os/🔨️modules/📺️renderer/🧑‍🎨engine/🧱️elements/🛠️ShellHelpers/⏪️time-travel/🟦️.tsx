@@ -167,6 +167,95 @@ export function timeTravelPeerPresenceV1(
   return { peers: chips, overlay: notes.size === 0 ? EMPTY_PEER_OVERLAY : { byKey: new Map([...notes].map(([key, lines]): [string, UiPresenceOverlayEntry] => [key, { notes: lines }])) } };
 }
 
+/** 🎯️ Where keyboard focus belongs after a session change: the first input of the draft editor, the band, or the
+ * finalize prompt. */
+export type TimeTravelFocusTargetV1 = "editor" | "band" | "dialog";
+
+/** 🧭️ What one change of the focused program's session asks of the chrome: `reveal` opens the History panel, `focus`
+ * moves keyboard focus. */
+export type TimeTravelTransitionV1 = { readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null };
+
+/** 🧭️ The chrome's answer to the session moving from `previous` to `next` (`null` = no session): the edge into a new
+ * session reveals the History panel (whoever began it — a person, a chord or an agent); a draft that starts (Begin, Next
+ * problem, another mutation) puts focus on its first input; a replay or a review puts it on the band; the finalize
+ * prompt takes it; a progress step, the commit and the close move nothing. */
+export function timeTravelTransitionV1(previous: HistoryTimeTravel | null, next: HistoryTimeTravel | null): TimeTravelTransitionV1 {
+  if (next === null) return { reveal: false, focus: null };
+  const same = previous !== null && previous.sessionId === next.sessionId;
+  const moved = !same || previous.stage !== next.stage;
+  switch (next.stage) {
+    case "editing":
+      return { reveal: !same, focus: moved || previous?.target !== next.target ? "editor" : null };
+    case "replaying":
+    case "reviewing":
+      return { reveal: !same, focus: moved ? "band" : null };
+    case "choosing":
+      return { reveal: !same, focus: moved ? "dialog" : null };
+    case "finalizing":
+      return { reveal: !same, focus: null };
+  }
+}
+
+const FOCUSABLE_SELECTOR = 'input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),button:not([disabled]),[tabindex]:not([tabindex="-1"]),[contenteditable]:not([contenteditable="false"])';
+const EDITABLE_SELECTOR = 'input,select,textarea,[contenteditable]:not([contenteditable="false"])';
+const HISTORY_PANEL_ID_PART = "framework.panel.history";
+
+/** 🔎️ `element` itself when it takes focus, else its first focusable descendant. */
+function focusableWithin(element: Element): HTMLElement | null {
+  return element.matches(FOCUSABLE_SELECTOR) ? (element as HTMLElement) : element.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+}
+
+/** 🎯️ The element that takes focus for `target` under `root`: the first focusable control of the editor's input rows
+ * (`…/framework.history.editor.input.<pointer>`), else its Accept (the button, or the activatable row a lone button
+ * becomes); the band (`[data-semio-time-travel]`); the open dialog's first control. `null` while it is not mounted yet. */
+export function timeTravelFocusElementV1(root: ParentNode, target: TimeTravelFocusTargetV1): HTMLElement | null {
+  switch (target) {
+    case "band":
+      return root.querySelector<HTMLElement>("[data-semio-time-travel]");
+    case "dialog": {
+      const dialog = root.querySelector('[role="dialog"]');
+      return dialog === null ? null : focusableWithin(dialog);
+    }
+    case "editor": {
+      for (const element of root.querySelectorAll('[id*="/framework.history.editor.input."]')) {
+        const key = element.id.slice(element.id.lastIndexOf("/") + 1);
+        if (!key.startsWith("framework.history.editor.input.") || key.endsWith(".row")) continue;
+        const control = focusableWithin(element);
+        if (control !== null) return control;
+      }
+      const accept = root.querySelector('[id$="/framework.history.editor.accept"], [id$="/framework.history.editor.accept.row"]');
+      return accept === null ? null : focusableWithin(accept);
+    }
+  }
+}
+
+/** ✋️ Whether moving focus now would take it from someone typing elsewhere: an editable field outside the History
+ * panel and the finalize prompt keeps its focus. */
+export function timeTravelFocusIsHeldV1(active: Element | null): boolean {
+  if (active === null || !active.matches(EDITABLE_SELECTOR)) return false;
+  return active.closest('[role="dialog"]') === null && !active.id.includes(HISTORY_PANEL_ID_PART) && active.closest(`[id*="${HISTORY_PANEL_ID_PART}"]`) === null;
+}
+
+/** 🎯️ Moves focus to `target` under the shell's `root` (the prompt anywhere in its document, being portalled) once it is
+ * mounted, retried across animation frames while the panel or the prompt mounts; a focus already inside the prompt stays,
+ * and a person typing elsewhere keeps theirs. Answers the cancel. */
+export function scheduleTimeTravelFocusV1(root: Element, target: TimeTravelFocusTargetV1, frames = 30): () => void {
+  const document = root.ownerDocument;
+  let handle = 0;
+  let remaining = frames;
+  const attempt = () => {
+    if (timeTravelFocusIsHeldV1(document.activeElement)) return;
+    const element = timeTravelFocusElementV1(target === "dialog" ? document : root, target);
+    if (element !== null) {
+      if (!(target === "dialog" && element.closest('[role="dialog"]')?.contains(document.activeElement))) element.focus();
+      return;
+    }
+    if (remaining-- > 0) handle = requestAnimationFrame(attempt);
+  };
+  handle = requestAnimationFrame(attempt);
+  return () => cancelAnimationFrame(handle);
+}
+
 /** 🏳️ The props both chrome pieces read: the live session, the program it edits and the shell's label axes. */
 export type TimeTravelChromePropsV1 = { readonly session: HistoryTimeTravel; readonly terminology: string; readonly locale: string };
 
@@ -198,7 +287,7 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.discard, () => dispatch("discard"), { enabled: offered("discard"), preventDefault: true }, [session, controllerId]);
   useControlKeybinding(TIME_TRAVEL_CHORD_IDS.exit, () => dispatch("exit"), { enabled: offered("exit"), preventDefault: true }, [session, controllerId]);
   return (
-    <div role="status" aria-live="polite" aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent bg-menu px-double py-single text-sm shadow-sm">
+    <div role="status" aria-live="polite" tabIndex={-1} aria-label={String(shellLabel("ui.timeTravel.band"))} data-semio-time-travel={session.stage} data-time-travel-generation={session.generation} className="pointer-events-auto flex max-w-[90vw] flex-wrap items-center gap-single rounded-sm border border-accent bg-menu px-double py-single text-sm shadow-sm">
       <Icon icon="clock" size="small" />
       <strong data-semio-time-travel-stage="">{text.stage}</strong>
       {text.target === null ? null : <span data-semio-time-travel-target="">{text.target}</span>}
@@ -216,7 +305,7 @@ export function TimeTravelBand({ session, terminology, locale, controllerId, onA
         <button
           key={entry.control}
           type="button"
-          className="underline disabled:opacity-50 disabled:no-underline"
+          className="min-h-medium px-tiny underline disabled:opacity-50 disabled:no-underline"
           data-semio-time-travel-control={entry.control}
           disabled={entry.disabledBy !== null}
           title={entry.disabledBy === null ? undefined : String(shellLabel(entry.disabledBy))}

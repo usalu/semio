@@ -7,18 +7,18 @@
     {
       "artifactKind": "s.stdio.avi",
       "artifactSchema": "stdio.avi",
-      "packSchemaHash": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5",
+      "packSchemaHash": "9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640",
       "factoryId": "stdio.native.avi.v1",
       "extension": "semio",
-      "protocolSourceSha256": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5"
+      "protocolSourceSha256": "eefb4af45d9e8b52391906c37aa22f4b96569ed277167233a7be4d0806c0bcc4"
     },
     {
       "artifactKind": "s.stdio.bcf",
       "artifactSchema": "stdio.bcf",
-      "packSchemaHash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
+      "packSchemaHash": "3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0",
       "factoryId": "stdio.native.bcf.v1",
-      "extension": "bcf",
-      "protocolSourceSha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc"
+      "extension": "semio",
+      "protocolSourceSha256": "0bbdaddd4fc8c6cb6735daac4bacdb23f48289904231f262ffa1e33cb572419d"
     },
     {
       "artifactKind": "s.stdio.csv",
@@ -66,7 +66,7 @@
       "packSchemaHash": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8",
       "factoryId": "stdio.native.gltf.v1",
       "extension": "gltf",
-      "protocolSourceSha256": "b10e15cf930fe4e7e99655f70bd3087d1ba2bb6fbb53345fe0a9924bdcd202d8"
+      "protocolSourceSha256": "61c5bbfcfc6428c9a2032ed51b3137d916b8b28375ee1e7e6f0300ce9ea2a6fb"
     },
     {
       "artifactKind": "s.stdio.html",
@@ -103,10 +103,10 @@
     {
       "artifactKind": "s.stdio.md",
       "artifactSchema": "stdio.md",
-      "packSchemaHash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
+      "packSchemaHash": "b1abe95d764849c42fc6c74af61b4efccbaf64881007bf05094c887643a0bbbe",
       "factoryId": "stdio.native.md.v1",
       "extension": "md",
-      "protocolSourceSha256": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa"
+      "protocolSourceSha256": "2abff1e8d39aeeeb1067c166667790ec13740f25310e455c55faac3f743e0a05"
     },
     {
       "artifactKind": "s.stdio.mp3",
@@ -122,7 +122,7 @@
       "packSchemaHash": "9dad46e23ba09d65169082c99bb33dfccf19ea9047d383ebf7b8f9242e25028d",
       "factoryId": "stdio.native.mp4.v1",
       "extension": "semio",
-      "protocolSourceSha256": "3dd6f57488121f469eaa871386c4842c322c25dbfa417b79342d2e547c57a915"
+      "protocolSourceSha256": "abb0d207fb6351f6a77ea1ca6ba7ecbb8cfce88d449ab4ba5dfd9a23ba4f8c9c"
     },
     {
       "artifactKind": "s.stdio.obj",

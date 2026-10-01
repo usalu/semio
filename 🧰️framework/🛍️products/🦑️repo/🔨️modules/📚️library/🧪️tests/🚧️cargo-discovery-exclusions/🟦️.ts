@@ -1,26 +1,18 @@
 import { expect, test } from "bun:test";
-import { readFileSync } from "node:fs";
+import { readFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import TOML from "@iarna/toml";
+import { discoverCargoWorkspaces, cargoWorkspaceMembers } from "../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { dirname, join, relative, resolve } from "node:path";
 import { transformSync } from "esbuild";
 import glob from "fast-glob";
 import { parse as parseJsonc } from "jsonc-parser";
 import ts from "typescript";
-import { taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
+import { isDiscoverySkipDirectory, taxonomyRelativePathIsExcluded } from "../../🔍️discovery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const vector = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json"), "utf8")) as { schemaVersion: number; opaquePaths: string[]; virtualRoots: string[]; traversal: { enumeration: string; metadata: string; symlinks: string }; symlinks: string[]; manifests: { path: string; package: string; admitted: boolean }[]; execution: { target: string; command: string; launchName: string; launchCommand: string; launchGroup: string; launchOrder: number } };
 const taxonomy = JSON.parse(readFileSync(join(repoRoot, library, "🔣️taxonomy.json"), "utf8"));
-const source = ts.createSourceFile("./🟦️.ts", readFileSync(join(repoRoot, library, "📦️packages/🟦️typescript/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
-const names = ["generateCargoVariants", "getCargoWorkspaceIndex"];
-const declarations = names.map((name) => {
-  const rows = source.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === name);
-  if (rows.length !== 1) throw new Error(`Expected one actual ${name} implementation`);
-  return rows[0]!.getText(source);
-}).join("\n");
-const prefix = source.statements.filter(ts.isVariableStatement).flatMap((node) => [...node.declarationList.declarations]).find((node) => node.name.getText(source) === "CARGO_PREFIX_WORDS")!;
-const code = `const ${prefix.getText(source)};\n${declarations}`;
-
 /** 🧫️ Models filesystem entries in memory and rejects any attempt to touch an opaque path. */
 function virtualFilesystem(root: string, namesOnly = false): { api: any; reads: string[]; fileReads: string[]; content: Map<string, string> } {
   const content = new Map(vector.manifests.map((row) => [row.path, `[package]\nname = "${row.package}"\n`]));
@@ -43,7 +35,7 @@ function virtualFilesystem(root: string, namesOnly = false): { api: any; reads: 
       const children = [...new Set([...directories, ...content.keys(), ...vector.symlinks])].filter((child) => child !== local && dirname(child).replaceAll("\\", "/").replace(/^\.$/u, "") === local).sort();
       return options?.withFileTypes ? children.map((child) => ({ name: child.split("/").at(-1)!, ...kind(child) })) : children.map((child) => child.split("/").at(-1)!);
     },
-    readFileSync(path: string) { const local = locate(path); fileReads.push(local); if (!content.has(local)) throw new Error(`Unknown virtual file: ${local}`); return content.get(local)!; },
+    readFileSync(path: string) { const local = locate(path); fileReads.push(local); if (!content.has(local)) throw new Error(`Unknown virtual file: ${local}`); return Buffer.from(content.get(local)!); },
     statSync: inspect,
     lstatSync: inspect,
   };
@@ -57,34 +49,26 @@ test("Cargo discovery shares the exact schema-owned lexical exclusions", () => {
   for (const row of vector.manifests) for (const path of [row.path, row.path.replaceAll("/", "\\")]) expect(taxonomyRelativePathIsExcluded(path, taxonomy)).toBe(!row.admitted);
 });
 
-for (const name of vector.virtualRoots) test(`Cargo discovery never touches excluded virtual trees: ${name}`, () => {
-  const root = join(repoRoot, name), expected = vector.manifests.filter((row) => row.admitted).map((row) => row.package).sort();
-  const oracleFs = virtualFilesystem(root);
-  const files = glob.sync("**/Cargo.toml", { cwd: root, onlyFiles: true, dot: true, followSymbolicLinks: false, ignore: vector.opaquePaths.flatMap((path) => [path, `${path}/**`]), fs: oracleFs.api });
-  expect(files.sort()).toEqual(vector.manifests.filter((row) => row.admitted).map((row) => row.path).sort());
-  for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code]) {
-    const fs = virtualFilesystem(root, true), cache = { current: null };
-    let taxonomyReads = 0;
-    const implementation = new Function("cachedCrateIndex", "getWorkspaceRoot", "readdirSync", "readFileSync", "lstatSync", "join", "dirname", "relative", "loadTaxonomy", "taxonomyRelativePathIsExcluded", `${compiled}\nreturn getCargoWorkspaceIndex;`)(cache, () => root, fs.api.readdirSync, fs.api.readFileSync, fs.api.lstatSync, join, dirname, relative, () => { taxonomyReads++; return taxonomy; }, taxonomyRelativePathIsExcluded);
-    const result = implementation(root);
-    expect([...result.exactPkgNames].sort()).toEqual(expected);
-    expect([...result.exactPkgNames].sort()).toEqual(files.map((path) => /name = "([^"]+)"/u.exec(oracleFs.content.get(path)!)![1]).sort());
-    expect(taxonomyReads).toBe(1);
-    expect(implementation(root)).toBe(result);
-    expect(taxonomyReads).toBe(1);
-    expect(fs.reads.every((path) => !vector.opaquePaths.some((opaque) => path === opaque || path.startsWith(`${opaque}/`)))).toBe(true);
-    expect(fs.fileReads.some((path) => vector.symlinks.includes(path))).toBe(false);
-  }
+for(const name of vector.virtualRoots)test(`native Cargo source recipes preserve lexical exclusions: ${name}`,()=>{
+ const output=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!output)throw new Error("SEMIO_TEST_ARTIFACT_DIR required");mkdirSync(output,{recursive:true});const root=mkdtempSync(join(output,"cargo-source-exclusions-")),members=vector.manifests.filter(row=>row.admitted).map(row=>dirname(row.path).replaceAll("\\","/"));
+ writeFileSync(join(root,"Cargo.toml"),'[workspace]\nresolver="2"\nmembers='+JSON.stringify(members)+'\nexclude='+JSON.stringify(vector.opaquePaths)+'\n[workspace.metadata.semio.repository]\nschema-version=1\nmember-manifests=["**/Cargo.toml"]\n');
+ for(const row of vector.manifests){mkdirSync(dirname(join(root,row.path)),{recursive:true});writeFileSync(join(root,row.path),'[package]\nname='+JSON.stringify(row.package)+'\nversion="0.1.0"\nedition="2021"\n[lib]\npath="🦀️.rs"\n');writeFileSync(join(root,dirname(row.path),"🦀️.rs"),"pub fn law() {}\n");}
+ const own=discoverCargoWorkspaces(root)[0]!,actual=cargoWorkspaceMembers(root,own);expect(actual.map(row=>row.name).sort()).toEqual(vector.manifests.filter(row=>row.admitted).map(row=>row.package).sort());
+ const independent=glob.sync("**/Cargo.toml",{cwd:root,onlyFiles:true,followSymbolicLinks:false,ignore:["Cargo.toml",...vector.opaquePaths.map(path=>path+"/**")]});expect(actual.map(row=>row.manifest).sort()).toEqual(independent.sort());
+ for(const row of actual)expect(Bun.TOML.parse(readFileSync(join(root,row.manifest),"utf8"))).toEqual(TOML.parse(readFileSync(join(root,row.manifest),"utf8")));
+ const native=Bun.spawnSync(["cargo","metadata","--offline","--no-deps","--format-version","1","--manifest-path",join(root,"Cargo.toml")],{cwd:root,stdout:"pipe",stderr:"pipe"});expect(native.exitCode,native.stderr.toString()).toBe(0);expect(JSON.parse(native.stdout.toString()).workspace_members.length).toBe(actual.length);
 });
 
 test("registry catalog filesystem excludes opaque names before metadata enumeration", () => {
   const discovery = ts.createSourceFile("discovery.ts", readFileSync(join(repoRoot, library, "🔍️discovery/🟦️.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const nodes = discovery.statements.filter((node): node is ts.FunctionDeclaration => ts.isFunctionDeclaration(node) && node.name?.text === "registryCatalogInputView");
   expect(nodes).toHaveLength(1);
-  const code = nodes[0]!.getText(discovery).replace(/^export /u, "");
+  const helpers = ["retryOnEintr", "readdirVanishing"].map(name => discovery.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === name));
+  for (const helper of helpers) expect(helper).toBeDefined();
+  const code = helpers.map(helper => helper!.getText(discovery)).join("\n") + "\n" + nodes[0]!.getText(discovery).replace(/^export /u, "");
   for (const rootName of vector.virtualRoots) for (const compiled of [new Bun.Transpiler({ loader: "ts" }).transformSync(code), transformSync(code, { loader: "ts", target: "es2022" }).code]) {
     const root = join(repoRoot, rootName), fs = virtualFilesystem(root, true);
-    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); }, () => new Set<string>());
+    const factory = new Function("lstatSync", "readdirSync", "readFileSync", "resolve", "relative", "dirname", "join", "pathIsExcluded", "registryCatalogGitlinkBoundaries", "isDiscoverySkipDirectory", compiled + "\nreturn registryCatalogInputView;")(fs.api.lstatSync, fs.api.readdirSync, fs.api.readFileSync, resolve, relative, dirname, join, (workspace: string, path: string) => { const local = relative(workspace, path).replaceAll("\\", "/"); return local !== "" && taxonomyRelativePathIsExcluded(local, taxonomy); }, () => new Set<string>(), isDiscoverySkipDirectory);
     const view = factory(root, taxonomy);
     const files: string[] = [], links: string[] = [];
     const walk = (path: string): void => {

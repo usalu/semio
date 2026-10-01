@@ -1,9 +1,9 @@
-//! 🔧️ 🔧️ DAG play app commands command — `patch-dag-nodes`.
+//! 🔧️ 🔧️ DAG play app commands command — `patch-dag-nodes`: the inspector's name and slider fields.
 
 use crate::editor::dag::config::{DagConfig, DagConfigMutation};
-use crate::mutations::{change_node_name, replace_node_kind, resize_node};
+use crate::mutations::{change_node_name, set_slider, DagSliderField};
 use crate::op::DagMutation;
-use crate::DagSnapshot;
+use crate::{DagNodeKind, DagSnapshot};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 
 #[derive(Clone, Debug, PartialEq, dsl::ToValue, dsl::FromValue, dsl::DslRecord)]
@@ -14,35 +14,27 @@ pub struct PatchDagNodes {
     pub value: String,
 }
 
+/// 🩹️ `name` renames every addressed node whose name differs; `value`/`min`/`max` yield the ABSOLUTE `set-slider` leaf per
+/// addressed slider. A held number field carries its press as the dispatch's top-level `gesture`/`commit`, so the
+/// framework scrub machine keeps every tick provisional and commits the release as ONE edit; this handler never reads a
+/// gesture and the same dispatch serves a one-shot (MCP, keyboard) unchanged.
 pub fn handle(payload: &PatchDagNodes, doc: &ArtifactView<'_, DagSnapshot>, _cfg: &ConfigView<'_, DagConfig>) -> Result<Emit<DagMutation, DagConfigMutation>, Fault> {
-    let document = doc.snapshot;
-    // 🩹️ `node_patch_for_field` only ever fills `name` (a scalar rename) or `kind`+`width`+
-    // `height` together (a Slider's live-dragged value/min/max, which also refits the widget
-    // size) — re-expressed here as the matching targeted mutations instead of a generic patch.
-    let nodes = document.nodes();
-    let operations: Vec<DagMutation> = nodes
-        .iter()
-        .filter(|node| payload.node_ids.contains(&node.id))
-        .flat_map(|node| {
-            let patch = crate::schema::node_patch_for_field(node, &payload.field, Some(payload.value.as_str()));
-            let mut ops = Vec::new();
-            if let Some(patch) = patch {
-                if let Some(name) = patch.name {
-                    ops.push(change_node_name(node.id.clone(), name));
-                }
-                if let Some(kind) = patch.kind {
-                    ops.push(replace_node_kind(node.id.clone(), kind));
-                }
-                if let (Some(width), Some(height)) = (patch.width, patch.height) {
-                    ops.push(resize_node(node.id.clone(), width, height));
-                }
-            }
-            ops
-        })
-        .collect();
-    if operations.is_empty() {
-        Ok(Emit::default())
-    } else {
-        Ok(Emit::amend(operations, format!("patch-{}-{}", payload.field, payload.node_ids.join(","))))
-    }
+    let nodes = doc.snapshot.nodes();
+    let addressed = nodes.iter().filter(|node| payload.node_ids.contains(&node.id));
+    let operations: Vec<DagMutation> = match (payload.field.as_str(), DagSliderField::parse(&payload.field), payload.value.trim().parse::<f64>().ok().filter(|value| value.is_finite())) {
+        ("name", _, _) => addressed.filter(|node| node.name != payload.value).map(|node| change_node_name(node.id.clone(), payload.value.clone())).collect(),
+        (_, Some(field), Some(value)) => addressed
+            .filter(|node| match node.kind {
+                DagNodeKind::Slider { value: current, min, max, .. } => match field {
+                    DagSliderField::Value => current != value,
+                    DagSliderField::Min => min != value,
+                    DagSliderField::Max => max != value,
+                },
+                _ => false,
+            })
+            .map(|node| set_slider(node.id.clone(), field, value))
+            .collect(),
+        _ => Vec::new(),
+    };
+    Ok(Emit::mutations(operations))
 }

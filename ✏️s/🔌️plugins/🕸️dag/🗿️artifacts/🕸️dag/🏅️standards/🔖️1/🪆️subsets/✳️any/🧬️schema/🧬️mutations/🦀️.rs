@@ -40,6 +40,9 @@ pub enum DagMutation {
     ReorderNodes(ReorderNodes),
     ConnectNodes(ConnectNodes),
     DisconnectNodes(DisconnectNodes),
+    MoveNodes(MoveNodes),
+    SetNodePositions(SetNodePositions),
+    SetSlider(SetSlider),
 }
 //#endregion 🔖️Mutations
 
@@ -52,11 +55,14 @@ pub use super::create_node::mutation::{create_node, create_node_at, CreateNode};
 pub use super::delete_node::mutation::{delete_node, DeleteNode};
 pub use super::disconnect_nodes::mutation::{disconnect_nodes, DisconnectNodes};
 pub use super::move_node::mutation::{move_node, MoveNode};
+pub use super::move_nodes::mutation::{move_nodes, MoveNodes};
 pub use super::rename_node::mutation::{rename_node, RenameNode};
 pub use super::reorder_nodes::mutation::{reorder_nodes, ReorderNodes};
 pub use super::replace_node_kind::mutation::{replace_node_kind, ReplaceNodeKind};
 pub use super::replace_node_properties::mutation::{replace_node_properties, ReplaceNodeProperties};
 pub use super::resize_node::mutation::{resize_node, ResizeNode};
+pub use super::set_node_positions::mutation::{set_node_positions, DagNodePosition, SetNodePositions};
+pub use super::set_slider::mutation::{set_slider, DagSliderField, SetSlider};
 
 /// 🏷️ Kebab-case spelling of every [`DagMutation`] variant, in declaration order — the vocabulary
 /// the `dag-1-any` mutation catalog (`../../🔣️oracle.json`) declares and `🌳️mutate-dag-1`'s
@@ -80,7 +86,58 @@ pub const KINDS: &[&str] = &[
     "reorder-nodes",
     "connect-nodes",
     "disconnect-nodes",
+    "move-nodes",
+    "set-node-positions",
+    "set-slider",
 ];
+
+//#region 🔖️GestureLeaves
+/// 🔢️ A label number in both languages: at most three decimals, a decimal comma in German.
+pub(crate) fn dag_label_number(value: f64) -> (String, String) {
+    let english = format!("{}", (value * 1_000.0).round() / 1_000.0);
+    let german = english.replace('.', ",");
+    (english, german)
+}
+
+/// 🧱️ The payload-intrinsic target law every multi-node leaf states in its schema: at least one id, each once.
+pub(crate) fn dag_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() || targets.iter().any(String::is_empty) {
+        return Err("a multi-node leaf names at least one non-empty node");
+    }
+    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
+        return Err("a multi-node leaf names each node once");
+    }
+    Ok(())
+}
+
+/// 🩹️ The `mutation.partial` warning of the nodes a multi-node leaf skipped, or nothing.
+pub(crate) fn dag_partial(skipped: Vec<String>, total: usize, reason: &str) -> Option<protocol::MutationMessage> {
+    (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {total} node(s) skipped ({reason}): {}", skipped.len(), skipped.join(", "))).at(skipped))
+}
+
+/// 📏️ How far two drag offsets may differ and still be one drag: a host moves every dragged node by one world delta, and
+/// recomputing `after - before` per node only differs by rounding.
+const DAG_DRAG_OFFSET_TOLERANCE: f64 = 1e-6;
+
+/// 🚚️ The relative `move-nodes` leaves that carry every node of `before` to its position in `after`: nodes moved by one
+/// offset (within [`DAG_DRAG_OFFSET_TOLERANCE`]) share ONE leaf, in first-moved order, so a released drag of a selection
+/// is one intent row and a relayout is one row per distinct offset.
+pub fn dag_move_leaves(before: &[crate::DagNodeSpec], after: &[crate::DagNodeSpec]) -> Vec<DagMutation> {
+    let mut groups: Vec<(f64, f64, Vec<String>)> = Vec::new();
+    for node in after {
+        let Some(prior) = before.iter().find(|entry| entry.id == node.id) else { continue };
+        let (dx, dy) = (node.x - prior.x, node.y - prior.y);
+        if (dx, dy) == (0.0, 0.0) || !dx.is_finite() || !dy.is_finite() {
+            continue;
+        }
+        match groups.iter_mut().find(|(gx, gy, _)| (gx - dx).abs() <= DAG_DRAG_OFFSET_TOLERANCE && (gy - dy).abs() <= DAG_DRAG_OFFSET_TOLERANCE) {
+            Some((_, _, ids)) => ids.push(node.id.clone()),
+            None => groups.push((dx, dy, vec![node.id.clone()])),
+        }
+    }
+    groups.into_iter().map(|(dx, dy, ids)| move_nodes(ids, dx, dy)).collect()
+}
+//#endregion 🔖️GestureLeaves
 
 //#region 🌉️ExternalCodecBridge
 /// 📥️ Decodes this facet's internally-tagged (`{"mutation": "moveNode", …}`, camelCase payload
@@ -140,7 +197,8 @@ pub fn inverse_dag_mutation(snapshot: &DagSnapshot, mutation: &DagMutation) -> V
 /// former whole-collection and whole-document replacement call sites (whole-fixture paste,
 /// auto-reorganize) now go through instead of a snapshot swap. Doesn't detect node id renames
 /// (shows as a delete+create pair); `🎮️commands/➕️add-node::rename_dag_node` uses the dedicated
-/// `rename-node` mutation directly for that gesture instead of this generic differ.
+/// `rename-node` mutation directly for that gesture instead of this generic differ. Position changes
+/// are intent: the relative `move-nodes` leaves of [`dag_move_leaves`], never one absolute move per node.
 pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<DagMutation> {
     let before_nodes = before.nodes();
     let after_nodes = after.nodes();
@@ -159,9 +217,6 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
             Some(prior) => {
                 if prior.name != node.name {
                     mutations.push(change_node_name(node.id.clone(), node.name.clone()));
-                }
-                if prior.x != node.x || prior.y != node.y {
-                    mutations.push(move_node(node.id.clone(), node.x, node.y));
                 }
                 if prior.width != node.width || prior.height != node.height {
                     mutations.push(resize_node(node.id.clone(), node.width, node.height));
@@ -184,6 +239,7 @@ pub fn dag_snapshot_mutations(before: &DagSnapshot, after: &DagSnapshot) -> Vec<
             }
         }
     }
+    mutations.extend(dag_move_leaves(&before_nodes, &after_nodes));
     for edge in &after_edges {
         if before_edges.iter().find(|entry| entry.id == edge.id).is_none_or(|prior| changed(prior)) {
             mutations.push(connect_nodes(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone()));

@@ -3,7 +3,9 @@
 import Ajv from "ajv";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo, runCargoTestBudgeted } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🧭️ The committed projection the mutation derive macros read (`MUTATION_AUTHORITY_LOCATOR` in `✨️derive/🦀️.rs`). */
 const MUTATION_AUTHORITY_PATH = join(import.meta.dir, "../../🔣️mutation-authority.json");
@@ -92,4 +94,4 @@ class SourceAuthorityTestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("preview-generated", PreviewGeneratedScript).register("check-generated", CheckGeneratedScript).register("test", TestScript).register("test-exports", ExportTestScript).register("test-exports-source", ExportSourceTestScript).register("test-source-authority-source", SourceAuthorityTestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

@@ -128,7 +128,7 @@ impl<O: WindowConfigOwner> store::ArtifactStoreOneItemPreparation<O::State, O::M
         }
         let authority = self.authority.as_ref().ok_or_else(|| "window config preparation lost its live authority".to_string())?;
         let id = format!("window-config-{}-{}", authority.operation().0, authority.next_sequence_number());
-        let edit = protocol::Edit {
+        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![mutation.clone()],

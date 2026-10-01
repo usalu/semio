@@ -1,0 +1,50 @@
+{
+  "schema": "semio.repository.mutation-inventory-provider-vectors/v1",
+  "cases": [
+    {
+      "value": {
+        "script": "../runner/📜️script.ts",
+        "roots": [
+          "../../alpha"
+        ]
+      },
+      "valid": true
+    },
+    {
+      "value": {
+        "script": "../runner/📜️script.ts",
+        "roots": [
+          "../../alpha",
+          "../../alpha"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "script": "/external",
+        "roots": [
+          "alpha"
+        ]
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "script": "../runner/📜️script.ts",
+        "roots": []
+      },
+      "valid": false
+    },
+    {
+      "value": {
+        "script": "../runner/📜️script.ts",
+        "roots": [
+          "alpha"
+        ],
+        "fallback": true
+      },
+      "valid": false
+    }
+  ]
+}

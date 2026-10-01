@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible",
+  "semanticKind": "change-material-visible-absorptance",
+  "displayName": "Change Material Visible Absorptance",
+  "emoji": "👁️",
+  "aggregateVariant": "ChangeMaterialVisibleAbsorptance",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "change-material-visible-absorptance",
+  "binaryTag": 69,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

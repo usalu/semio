@@ -16,15 +16,15 @@
           "scenarios": [
             {
               "id": "adds-a-vertical-6161a1",
-              "directoryName": "🛞️adds-a-vertical-6161a1"
+              "directoryName": "🛞️adds"
             },
             {
               "id": "props-the-canopy-b9d719",
-              "directoryName": "🔻️props-the-canopy-b9d719"
+              "directoryName": "🔻️props"
             },
             {
               "id": "rejects-a-dangling-b0d60b",
-              "directoryName": "🚫️rejects-a-dangling-b0d60b"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -39,11 +39,11 @@
             },
             {
               "id": "frees-the-roof-tie-44562b",
-              "directoryName": "🕊️frees-the-roof-tie-44562b"
+              "directoryName": "🕊️frees"
             },
             {
               "id": "rejects-a-missing-23f3c3",
-              "directoryName": "⛔️rejects-a-missing-23f3c3"
+              "directoryName": "⛔️rejects"
             }
           ]
         },
@@ -54,23 +54,23 @@
           "scenarios": [
             {
               "id": "upgrades-the-834e4a",
-              "directoryName": "🔒️upgrades-the-834e4a"
+              "directoryName": "🔒️upgrades"
             },
             {
               "id": "pins-the-left-base-7891ec",
-              "directoryName": "🔩️pins-the-left-base-7891ec"
+              "directoryName": "🔩️pins"
             },
             {
               "id": "rejects-a-missing-afbf6d",
-              "directoryName": "⛔️rejects-a-missing-afbf6d"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "denies-rename-63ec90",
-              "directoryName": "🪪️denies-rename-63ec90"
+              "directoryName": "🪪️denies"
             },
             {
               "id": "dangling-node-98d979",
-              "directoryName": "👻️dangling-node-98d979"
+              "directoryName": "👻️dangling"
             }
           ]
         }

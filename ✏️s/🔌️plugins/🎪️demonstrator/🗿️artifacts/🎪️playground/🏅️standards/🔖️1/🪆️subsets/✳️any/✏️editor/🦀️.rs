@@ -154,7 +154,7 @@ fn playground_mutation_bytes(mutation: &PlaygroundMutation) -> Result<usize, Str
 
 fn playground_store_edit(forward: PlaygroundMutation, inverse: Vec<PlaygroundMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PlaygroundMutation> {
     let id = format!("playground-schema-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

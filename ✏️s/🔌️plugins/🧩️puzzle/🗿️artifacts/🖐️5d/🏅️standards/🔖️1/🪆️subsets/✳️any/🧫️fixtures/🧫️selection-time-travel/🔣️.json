@@ -1,0 +1,4685 @@
+{
+  "$schema": "../../🧬️schema/🔣️selection-time-travel/🔣️.json",
+  "artifact": "puzzle.5d",
+  "cases": [
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "A board drag is edited from (5, -2.5) to (10, 0); the downstream world drag replays its board pin on top.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "dx": 10.0,
+          "dy": 0.0,
+          "mutation": "dragSelection2d",
+          "targets": [
+            "part-a",
+            "part-b"
+          ]
+        }
+      },
+      "id": "drag2d-offset",
+      "log": [
+        {
+          "dx": 5.0,
+          "dy": -2.5,
+          "mutation": "dragSelection2d",
+          "targets": [
+            "part-a",
+            "part-b"
+          ]
+        },
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 10.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 20.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 58.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 20.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "The board drag is re-targeted to `part-b` alone.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "dx": 5.0,
+          "dy": -2.5,
+          "mutation": "dragSelection2d",
+          "targets": [
+            "part-b"
+          ]
+        }
+      },
+      "id": "drag2d-targets",
+      "log": [
+        {
+          "dx": 5.0,
+          "dy": -2.5,
+          "mutation": "dragSelection2d",
+          "targets": [
+            "part-a",
+            "part-b"
+          ]
+        },
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 15.0,
+              "y": 17.5
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 48.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                1.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 15.0,
+              "y": 17.5
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "A world drag is edited from (1, 0, 0) to (0, 2, 0); its board pin moves with it and the downstream turn replays.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "mutation": "dragSelection3d",
+          "offset": [
+            0.0,
+            2.0,
+            0.0
+          ],
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        }
+      },
+      "id": "drag3d-offset",
+      "log": [
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        },
+        {
+          "angle": 1.5707963267948966,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": -96.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                2.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              2.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": -96.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.7071067811865475,
+                0.7071067811865476
+              ],
+              "origin": [
+                0.0,
+                2.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              2.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "A world turn is edited from a quarter to a half turn; the downstream scaling replays.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "angle": 3.141592653589793,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        }
+      },
+      "id": "rotate3d-angle",
+      "log": [
+        {
+          "angle": 1.5707963267948966,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        },
+        {
+          "factors": [
+            2.0,
+            1.0,
+            1.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                1.0,
+                6.123233995736766e-17
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              1.0,
+              6.123233995736766e-17
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                1.0,
+                6.123233995736766e-17
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": [
+                4.0,
+                2.0,
+                2.0
+              ]
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              1.0,
+              6.123233995736766e-17
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "The world turn is re-targeted to `part-b` and the locked `part-c`: the lock is a Warning-level `mutation.partial`.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "angle": 1.5707963267948966,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-b",
+            "part-c"
+          ]
+        }
+      },
+      "id": "rotate3d-targets",
+      "log": [
+        {
+          "angle": 1.5707963267948966,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        },
+        {
+          "factors": [
+            2.0,
+            1.0,
+            1.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [
+            "mutation.partial"
+          ],
+          "worst": "warning"
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "orientation": [
+                0.0,
+                0.0,
+                0.7071067811865475,
+                0.7071067811865476
+              ],
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": [
+                4.0,
+                2.0,
+                2.0
+              ]
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "orientation": [
+                0.0,
+                0.0,
+                0.7071067811865475,
+                0.7071067811865476
+              ],
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "A world scaling is edited from (2, 1, 1) to (1, 1, 3); the downstream drag replays.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "factors": [
+            1.0,
+            1.0,
+            3.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        }
+      },
+      "id": "scale3d-factors",
+      "log": [
+        {
+          "factors": [
+            2.0,
+            1.0,
+            1.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        },
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": [
+                2.0,
+                2.0,
+                6.0
+              ]
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              6.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": [
+                2.0,
+                2.0,
+                6.0
+              ]
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              6.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": false,
+      "description": "The world scaling is re-targeted to `volume-1` alone.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "factors": [
+            2.0,
+            1.0,
+            1.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "volume-1"
+          ]
+        }
+      },
+      "id": "scale3d-targets",
+      "log": [
+        {
+          "factors": [
+            2.0,
+            1.0,
+            1.0
+          ],
+          "mutation": "scaleSelection3d",
+          "targets": [
+            "part-a",
+            "volume-1"
+          ]
+        },
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [],
+          "worst": null
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              4.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                1.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              4.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "base": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "blocksFinalize": true,
+      "description": "The edited world drag is re-targeted to a ghost: Error-level `mutation.target-missing` blocks finalizing, and the downstream turn still replays.",
+      "edit": {
+        "at": 0,
+        "replacement": {
+          "mutation": "dragSelection3d",
+          "offset": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "targets": [
+            "part-ghost"
+          ]
+        }
+      },
+      "id": "downstream-missing",
+      "log": [
+        {
+          "mutation": "dragSelection3d",
+          "offset": [
+            1.0,
+            0.0,
+            0.0
+          ],
+          "targets": [
+            "part-a"
+          ]
+        },
+        {
+          "angle": 1.5707963267948966,
+          "axis": [
+            0.0,
+            0.0,
+            1.0
+          ],
+          "mutation": "rotateSelection3d",
+          "targets": [
+            "part-a"
+          ]
+        }
+      ],
+      "outcomes": [
+        {
+          "at": 0,
+          "codes": [
+            "mutation.target-missing"
+          ],
+          "worst": "error"
+        },
+        {
+          "at": 1,
+          "codes": [],
+          "worst": null
+        }
+      ],
+      "preview": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      },
+      "replayed": {
+        "domain": "architecture",
+        "fasteners": [
+          {
+            "fastenerKind": "fastener-kind-a",
+            "gap": 1.0,
+            "id": "fast-1",
+            "rise": 0.0,
+            "rotation": 0.0,
+            "shift": 0.0,
+            "source": "part-a:grip-1",
+            "target": "part-b:grip-2",
+            "tilt": 0.0,
+            "turn": 0.0,
+            "x": 0.0,
+            "y": 0.0
+          }
+        ],
+        "kindCompatibility": [
+          {
+            "bidirectional": true,
+            "important": false,
+            "source": "grip-kind-a",
+            "specificity": "general",
+            "target": "grip-kind-b"
+          }
+        ],
+        "label": "Fixture Base",
+        "meta": {
+          "description": "Two parts joined by one fastener."
+        },
+        "parts": [
+          {
+            "2d": {
+              "iconKind": "icon-alpha",
+              "radius": 10.0,
+              "shape": "circle",
+              "text": "Alpha",
+              "x": 0.0,
+              "y": 0.0
+            },
+            "3d": {
+              "label": "Alpha 3d",
+              "meshUrl": "mesh://alpha",
+              "orientation": [
+                0.0,
+                0.0,
+                0.7071067811865475,
+                0.7071067811865476
+              ],
+              "origin": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "scale": 2.0
+            },
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-1"
+              },
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-a",
+                "id": "grip-spare"
+              }
+            ],
+            "id": "part-a",
+            "partKind": "part-kind-a"
+          },
+          {
+            "2d": {
+              "x": 10.0,
+              "y": 20.0
+            },
+            "3d": {
+              "origin": [
+                1.0,
+                2.0,
+                3.0
+              ]
+            },
+            "anchor": "derived",
+            "grips": [
+              {
+                "2d": {
+                  "angle": 0.0
+                },
+                "3d": {
+                  "position": [
+                    0.0,
+                    0.0,
+                    0.0
+                  ]
+                },
+                "gripKind": "grip-kind-b",
+                "id": "grip-2"
+              }
+            ],
+            "id": "part-b",
+            "partKind": "part-kind-b"
+          },
+          {
+            "2d": {
+              "locked": true,
+              "x": 80.0,
+              "y": 0.0
+            },
+            "3d": {
+              "origin": [
+                8.0,
+                0.0,
+                0.0
+              ]
+            },
+            "grips": [],
+            "id": "part-c",
+            "partKind": "part-kind-b"
+          }
+        ],
+        "schema": "puzzle.5d",
+        "targetVolumes": [
+          {
+            "hidden": false,
+            "id": "volume-1",
+            "locked": false,
+            "orientation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "origin": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "scale": [
+              2.0,
+              2.0,
+              2.0
+            ]
+          },
+          {
+            "hidden": false,
+            "id": "volume-2",
+            "locked": true,
+            "origin": [
+              6.0,
+              0.0,
+              0.0
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "description": "Time travel over the puzzle 5d selection leaves: each case edits ONE recorded gesture's inputs; `preview` is the state right before it plus the draft (nothing downstream), `replayed` the fresh fold of the edited log, `outcomes` the per-mutation outcomes of the Report replay from the edited gesture on."
+}

@@ -11,11 +11,11 @@ use crate::standards::v1::subsets::presentation::schema::diff::SemioPresentation
 use crate::standards::v1::subsets::presentation::schema::mutations::{apply_semio_presentation_mutation, SemioPresentationMutation};
 use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses/🎯️outcome/🔣️.json");
 
 fn before() -> SemioPresentationSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before presentation snapshot decodes")

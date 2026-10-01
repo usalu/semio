@@ -3,7 +3,7 @@ import { loadDevContribution, resolveDevContributionFile } from "../🧩️contr
 import { frameworkOsLockedPrefsEnv } from "../../../../🦑️repo/🔨️modules/📚️library/🎮️playground/🔒️preferences/🟦️.ts";
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { Script, ScriptRouter } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { buildViteArtifact } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import { playgroundReactReleaseOutputPath } from "./📍️output/🟦️.ts";

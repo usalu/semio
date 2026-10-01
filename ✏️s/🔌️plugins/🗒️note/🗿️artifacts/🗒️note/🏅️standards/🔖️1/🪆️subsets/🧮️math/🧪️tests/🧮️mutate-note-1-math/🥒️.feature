@@ -30,7 +30,7 @@ Feature: Apply every typed note document math mutation twice — once in Rust, o
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id              | vector                                                     |
-      | edit-block-math | 🧮️edit-block-math/📐️replaces-the-tex-with-pythagoras |
+      | edit-block-math | 🧮️edit-block-math/📐️replaces |
 
   @id-inverse
   @level-exhaustive
@@ -45,4 +45,4 @@ Feature: Apply every typed note document math mutation twice — once in Rust, o
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id              | vector                                                     |
-      | edit-block-math | 🧮️edit-block-math/📐️replaces-the-tex-with-pythagoras |
+      | edit-block-math | 🧮️edit-block-math/📐️replaces |

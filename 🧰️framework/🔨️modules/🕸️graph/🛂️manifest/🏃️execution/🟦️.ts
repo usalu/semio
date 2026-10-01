@@ -1,7 +1,8 @@
 /** 🏃️ Graph generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
 import { basename, join, relative, resolve } from "node:path";
-import { BundleScript, getWorkspaceRoot, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd, runCargo } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, runCargoLint, runCargoTestBudgeted, resolveTestLevel, runCmd, runCargo } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { readGraphOutputCatalog } from "../📇️catalog/🟦️.ts";
 import { renderGraphArtifacts } from "../📽️projection/🟦️.ts";
 import { graphOutputInventory, graphOutputNodes, writeGraphArtifacts } from "../📤️publication/🟦️.ts";

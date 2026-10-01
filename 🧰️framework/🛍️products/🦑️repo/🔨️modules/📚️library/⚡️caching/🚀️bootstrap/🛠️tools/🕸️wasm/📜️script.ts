@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
 import { open } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
-import { Script, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";
 import { withResourceLeases } from "../../../🔒️leases/🟦️.ts";
 import { runTool } from "../../📦️dependencies/📜️script.ts";

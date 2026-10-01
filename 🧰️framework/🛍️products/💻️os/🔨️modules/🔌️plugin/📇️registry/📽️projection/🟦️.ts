@@ -3,7 +3,8 @@ import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, readSync, 
 import { dirname, join, relative, sep } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import type { RegistryCatalogInputView } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverCatalogPackages, discoverPackageProblems, getWorkspaceRoot, parseRegistryCatalogProjection, registryCatalogInputView, registryCatalogProjectedInputView, validateGeneratorContractsAgainstWorkspace } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { declaredProjectTargets, generateLaunchJson, LAUNCH_OUTPUT_REL_PATH } from "../🚀️launch/🟦️.ts";
 import { MODULE_BRIDGE_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { validateDescriptors } from "../🛂️descriptor-verification/🟦️.ts";
@@ -14,7 +15,7 @@ import { buildPlaygroundSession } from "../🎮️playground/🧭️session/🟦
 import { type GeneratedCatalogProjection, filterProjectedPluginRegistry, readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
 import { findNewContractPluginRoots, validatePlaygroundRegistry, validateTaxonomyTree } from "../🗿️taxonomy-validation/🟦️.ts";
 import { publicationComponentAdmission, renderOwnerPublications } from "../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/📣️publication/🟦️.ts";
-import { publicationWasmPath } from "../🛂️descriptor-verification/🟦️.ts";
+import { publicationWasmPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 
 export function emitTypeScript(entries: DeployedRegistryEntryV1[]): string {

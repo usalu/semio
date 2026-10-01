@@ -1,0 +1,39 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/html/5/any/net-leaves/schema.json",
+  "title": "HtmlNetLeavesFixture",
+  "description": "Language-neutral corpus of the net node leaves one explicit Apply of the HTML window means.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "note", "cases"],
+  "properties": {
+    "schema": { "const": "semio.stdio.html.net-leaves.v1" },
+    "note": { "type": "string" },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "before", "after", "leaves"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "before": { "type": "string" },
+          "after": { "type": "string" },
+          "leaves": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["kind", "at"],
+              "properties": {
+                "kind": { "enum": ["set-snapshot", "set-doctype", "insert-node", "remove-node", "set-element-name", "set-attribute", "set-text", "set-comment", "set-raw-text"] },
+                "at": { "type": "array", "items": { "type": "integer", "minimum": 0 } }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

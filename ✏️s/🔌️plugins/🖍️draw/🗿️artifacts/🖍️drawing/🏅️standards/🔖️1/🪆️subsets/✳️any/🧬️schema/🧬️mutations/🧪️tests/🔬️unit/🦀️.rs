@@ -130,9 +130,9 @@ async fn dispatch_registers_semantic_descriptors() {
     register_drawing_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     for kind in DrawingMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
-        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", _ => "layer" });
+        assert_eq!(kind.entity, match kind.kind { "update-path-geometry" => "path", "update-text" => "text", "set-group-isolation" => "group", "drag-layers" | "rotate-layers" | "scale-layers" => "layers", "drag-path-points" => "path-points", _ => "layer" });
     }
-    assert_eq!(DrawingMutation::kinds().len(), 18);
+    assert_eq!(DrawingMutation::kinds().len(), KINDS.len());
 }
 
 #[test]
@@ -218,3 +218,92 @@ fn all_inspector_blend_modes_preserve_other_fields_and_undo() {
         assert_eq!(document, original, "{mode}");
     }
 }
+
+//#region ⏪️TimeTravel
+/// 🗺️ A drawing with two rects and a two-anchor path, plus the selection-transform log the canvas tool would have
+/// committed over it — one leaf of every relative kind, then a downstream drag that depends on all of them.
+fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
+    let mut base = base_document();
+    base.layers.push(create_drawing_shape_layer_rect("Other"));
+    base.layers.push(create_drawing_path_layer("Spine", vec![crate::PathSegment::Move { to: [0.0, 0.0] }, crate::PathSegment::Line { to: [10.0, 0.0] }]));
+    let [_, rect, other, spine] = [0, 1, 2, 3].map(|index| crate::schema::layer_id(&base.layers[index]).to_string());
+    let anchor = DrawingPathPointTarget { layer_id: spine.clone(), index: 1, point: crate::schema::geometry::editing::PathPoint::Anchor };
+    let log = vec![
+        drag_layers(vec![rect.clone()], 10.0, 0.0),
+        rotate_layers(vec![rect.clone(), other.clone()], 0.0, 0.0, std::f64::consts::FRAC_PI_2),
+        scale_layers(vec![other], 0.0, 0.0, 2.0, 2.0),
+        drag_path_points(vec![anchor], 0.0, 5.0),
+        drag_layers(vec![rect, spine], 1.0, 1.0),
+    ];
+    (base, log)
+}
+
+/// ⏪️ Opens a standalone store over `base`, commits `log` one edit per leaf, supersedes the leaf at `index` with
+/// `edited` and drives the Report replay to its end: the preview base is the fold of the prefix, the replay is the
+/// fresh fold of the edited log, and an overwrite finalizes exactly that state. Returns the report.
+async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], index: usize, edited: &DrawingMutation) -> protocol::ReplayReport {
+    use protocol::OpBinary;
+    let mut store = store::ArtifactStore::new(store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(crate::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None)).await.expect("the store opens");
+    store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
+    for mutation in log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a selection transform applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[index].clone(), protocol::InputReplacement::Input { schema: crate::DRAWING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let mut prefix = base.clone();
+    for mutation in &log[..index] {
+        apply_drawing_mutation(&mut prefix, mutation).expect("the prefix folds");
+    }
+    let preview = store.state_before(&ids[index], &drafts).expect("the preview base folds");
+    assert_eq!(preview.as_ref(), &prefix, "the preview base is the state right before the edited leaf, nothing downstream");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[index])).expect("the replay begins at the edited leaf");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    let report = store.replay_report(&result).expect("report");
+    let mut fresh = base.clone();
+    for (position, mutation) in log.iter().enumerate() {
+        let mutation = if position == index { edited } else { mutation };
+        if !mutation.diff(&fresh).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+            apply_drawing_mutation(&mut fresh, mutation).expect("the edited log folds");
+        }
+    }
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    if !report.blocks_finalize() {
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    }
+    store::os_store::test_support::close_plain_test_store(&mut store);
+    report
+}
+
+/// ⏪️ Time travel edits each relative selection leaf's inputs, never the canvas tool: re-offsetting the drag,
+/// re-pivoting the rotation, re-factoring the scale and re-offsetting the path-point drag each replay every downstream
+/// transform onto the edited state — exactly the fresh fold of the edited log — and never block finalizing.
+#[semio_framework_async_macros::async_test]
+async fn every_selection_leaf_edited_in_history_replays_its_downstream() {
+    let (base, log) = selection_history();
+    let DrawingMutation::DragPathPoints(points) = &log[3] else { panic!("the fourth leaf drags path points") };
+    let edits = [
+        (0, drag_layers(vec![crate::schema::layer_id(&base.layers[1]).into()], -4.0, 3.0)),
+        (1, rotate_layers(vec![crate::schema::layer_id(&base.layers[1]).into(), crate::schema::layer_id(&base.layers[2]).into()], 5.0, 5.0, std::f64::consts::PI)),
+        (2, scale_layers(vec![crate::schema::layer_id(&base.layers[2]).into()], 1.0, 1.0, 0.5, 3.0)),
+        (3, drag_path_points(points.targets.clone(), 7.0, -2.0)),
+    ];
+    for (index, edited) in &edits {
+        let report = replay_history_edit(&base, &log, *index, edited).await;
+        assert!(!report.blocks_finalize(), "a re-parametrised {} never blocks finalizing: {report:?}", edited.label().resolve(protocol::Terminology::Native, protocol::Locale::En));
+        assert_eq!(report.outcomes.len(), log.len() - index, "the replay reports the edited leaf and every downstream one");
+    }
+}
+
+/// 🚨️ An edit that retargets a drag onto a layer that does not exist reports the edited leaf's own
+/// `mutation.target-missing` Error, which blocks finalizing until it is edited again or withdrawn.
+#[semio_framework_async_macros::async_test]
+async fn a_drag_retargeted_onto_a_missing_layer_blocks_finalizing() {
+    let (base, log) = selection_history();
+    let report = replay_history_edit(&base, &log, 0, &drag_layers(vec!["ghost".into()], 10.0, 0.0)).await;
+    assert!(report.blocks_finalize(), "{report:?}");
+    assert!(report.outcomes[0].messages.iter().any(|message| message.code.0 == "mutation.target-missing"), "{report:?}");
+}
+//#endregion ⏪️TimeTravel

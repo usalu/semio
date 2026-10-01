@@ -109,6 +109,9 @@ mod generated_plugin_hosts;
 #[path = "../../../🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs"]
 pub mod scenes;
 
+#[path = "../../../🧱️elements/📐️Canvas2dHost/🎯️targets/🧊️wgpu/🦀️.rs"]
+pub(crate) mod canvas2d_gumball;
+
 #[cfg(not(target_arch = "wasm32"))]
 #[path = "../🕰️native-temporal/🦀️.rs"]
 mod native_temporal;

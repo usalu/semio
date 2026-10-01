@@ -574,6 +574,12 @@ impl Mutation<Value> for Puzzle5dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle5dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle5dSnapshot>::conflict_target(self)
+    }
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
@@ -749,6 +755,12 @@ impl Mutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle5dSnapshot>::may_emit_foreign_steps(self)
     }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle5dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle5dSnapshot>::conflict_target(self)
+    }
 }
 
 /// 🪪️ `kinds`/`semantics`/`label`/`target` are projection-independent (the derive-generated
@@ -777,6 +789,9 @@ impl protocol::SemanticMutation<Puzzle5dPlaySnapshot> for Puzzle5dMutation {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🧪️selection-time-travel/🦀️.rs"]
+mod selection_time_travel;
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️committed-fixtures/🦀️.rs"]

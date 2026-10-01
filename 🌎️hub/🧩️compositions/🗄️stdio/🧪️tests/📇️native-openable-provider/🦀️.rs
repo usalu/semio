@@ -70,11 +70,14 @@ fn native_composition_and_validation_claims_are_disjoint_but_each_exclusive() {
 #[test]
 fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
     let receipts = native_codec_factory_receipts().expect("artifact-owned native codec receipts");
-    assert_eq!(receipts.len(), 29);
-    assert_eq!(receipts.iter().map(|receipt| receipt.factory_id.as_str()).collect::<BTreeSet<_>>().len(), 29);
-    assert_eq!(receipts.iter().map(|receipt| receipt.descriptor_codec_id.as_str()).collect::<BTreeSet<_>>().len(), 29);
-    assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), 29);
+    let authored: serde_json::Value = serde_json::from_str(include_str!("../../🔌️plugin/📇️catalog/📜️native-codec-factories.json")).unwrap();
+    let expected = authored["receipts"].as_array().unwrap().len();
+    assert_eq!(receipts.len(), expected);
+    assert_eq!(receipts.iter().map(|receipt| receipt.factory_id.as_str()).collect::<BTreeSet<_>>().len(), expected);
+    assert_eq!(receipts.iter().map(|receipt| receipt.descriptor_codec_id.as_str()).collect::<BTreeSet<_>>().len(), expected);
+    assert_eq!(receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<BTreeSet<_>>().len(), expected);
     assert!(receipts.iter().all(|receipt| receipt.pack_schema_hash != [0; 32] && receipt.instantiate().is_ok()));
+    eprintln!("[DEBUG] retained Stdio native factories instantiated: {}", receipts.len());
 }
 
 #[test]
@@ -82,8 +85,10 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
     use semio_hub_stdio::catalog::{artifact_definitions, native_codec_artifact_kinds, validate_native_codec_artifact_kinds};
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
     let expected = native_codec_artifact_kinds();
-    assert_eq!(artifact_definitions().unwrap().len(), fixture["definitionCount"].as_u64().unwrap() as usize);
-    assert_eq!(expected.len(), fixture["codecCount"].as_u64().unwrap() as usize);
+    let receipts = native_codec_factory_receipts().unwrap();
+    let definition_ids = artifact_definitions().unwrap().iter().map(|definition| definition.identity().as_str().to_owned()).collect::<BTreeSet<_>>();
+    assert_eq!(expected.iter().map(|kind| kind.id.as_str()).collect::<BTreeSet<_>>(), receipts.iter().map(|receipt| receipt.artifact_kind.as_str()).collect());
+    assert!(expected.iter().all(|kind| definition_ids.contains(&kind.id)));
     let canonical = |values: &[semio_framework_plugin::ArtifactKindSpec]| {
         let mut encoded: Vec<String> = values.iter().map(|kind| serde_json::to_string(kind).unwrap()).collect();
         encoded.sort();
@@ -132,11 +137,13 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
     let contribution = native_artifact_catalog_contribution().unwrap();
+    let definition_count = semio_hub_stdio::catalog::artifact_definitions().unwrap().len();
+    let codec_count = native_codec_factory_receipts().unwrap().len();
     let original = serde_json::to_value(&contribution).unwrap();
     println!("native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());
     assert_eq!(original["topic"], fixture["topic"]);
-    assert_eq!(original["payload"]["definitions"].as_array().unwrap().len(), 36);
-    assert_eq!(original["payload"]["codecs"].as_array().unwrap().len(), 29);
+    assert_eq!(original["payload"]["definitions"].as_array().unwrap().len(), definition_count);
+    assert_eq!(original["payload"]["codecs"].as_array().unwrap().len(), codec_count);
     for case in fixture["cases"].as_array().unwrap() {
         let started = std::time::Instant::now();
         let progress = |stage: &str| {

@@ -8,8 +8,8 @@ use sequence_json::{apply, build_seed, project, KINDS};
 fn destination(kind: &str) -> (&'static str, &'static str) {
     match kind {
         "change-step-collapsed" => ("🪜️step", "🗂️change-step-collapsed"),
-        "connect-steps" => ("🔗️dependency", "🔗️connect-steps"),
-        "disconnect-steps" => ("🔗️dependency", "✂️disconnect-steps"),
+        "connect-steps" => ("🔗️dependency", "🔗️connect"),
+        "disconnect-steps" => ("🔗️dependency", "✂️disconnect"),
         "move-step" => ("🪜️step", "📍️move-step"),
         _ => unreachable!("unknown JSON fixture kind"),
     }

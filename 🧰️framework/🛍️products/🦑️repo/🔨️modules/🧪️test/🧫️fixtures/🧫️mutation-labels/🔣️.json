@@ -1,0 +1,65 @@
+{
+  "description": "Rust label sources and the verdict the `schema mutation-labels` gate reaches on each (design §16.2): a leaf label is `LocalizedLabel::native(en, de)` with two non-empty locales or forwards to another label; locale-invariant data, an empty locale, an operation's text line, an unreadable body and an app overriding the leaf label are findings. The token gate and an independent tree-sitter-rust oracle must both reach exactly these verdicts.",
+  "cases": [
+    {
+      "id": "native-format-templates",
+      "rust": "impl protocol::MutationKind<Snap, Op> for RenameNode {\n    fn label(&self) -> protocol::LocalizedLabel {\n        protocol::LocalizedLabel::native(&format!(\"Rename {} to {}\", self.id, self.name), &format!(\"{} in {} umbenennen\", self.id, self.name))\n    }\n}\n",
+      "sites": [{ "trait": "MutationKind", "implementor": "RenameNode", "verdict": "native", "texts": [["Rename {} to {}", "{} in {} umbenennen"]] }]
+    },
+    {
+      "id": "native-in-every-match-arm",
+      "rust": "impl MutationKind<Snap, Op> for Toggle {\n    fn label(&self) -> LocalizedLabel {\n        match self.on {\n            true => LocalizedLabel::native(\"Show\", \"Einblenden\"),\n            false => LocalizedLabel::native(\"Hide\", \"Ausblenden\"),\n        }\n    }\n}\n",
+      "sites": [{ "trait": "MutationKind", "implementor": "Toggle", "verdict": "native", "texts": [["Show", "Einblenden"], ["Hide", "Ausblenden"]] }]
+    },
+    {
+      "id": "composite-native",
+      "rust": "impl CompositeMutationKind<Counter, CounterMutation> for AddTwice {\n    fn label(&self) -> crate::LocalizedLabel {\n        crate::LocalizedLabel::native(\"Add twice\", \"Zweimal hinzufügen\")\n    }\n}\n",
+      "sites": [{ "trait": "CompositeMutationKind", "implementor": "AddTwice", "verdict": "native", "texts": [["Add twice", "Zweimal hinzufügen"]] }]
+    },
+    {
+      "id": "empty-german-locale",
+      "rust": "impl SemanticMutation<Counter> for Unpublished {\n    fn label(&self) -> crate::LocalizedLabel {\n        crate::LocalizedLabel::native(\"Add to the counter\", \"\")\n    }\n}\n",
+      "sites": [{ "trait": "SemanticMutation", "implementor": "Unpublished", "verdict": "labelLocaleEmpty", "texts": [["Add to the counter", ""]] }]
+    },
+    {
+      "id": "locale-invariant-data",
+      "rust": "impl MutationKind<Snap, Op> for SetName {\n    fn label(&self) -> LocalizedLabel {\n        LocalizedLabel::data(self.name.clone())\n    }\n}\n",
+      "sites": [{ "trait": "MutationKind", "implementor": "SetName", "verdict": "labelLocaleInvariant", "texts": [] }]
+    },
+    {
+      "id": "operation-text-line",
+      "rust": "impl MutationKind<Snap, Op> for Patch {\n    fn label(&self) -> LocalizedLabel {\n        LocalizedLabel::native(&self.print_op(), &self.print_op())\n    }\n}\n",
+      "sites": [{ "trait": "MutationKind", "implementor": "Patch", "verdict": "labelOpText", "texts": [[null, null]] }]
+    },
+    {
+      "id": "forward-to-the-derived-label",
+      "rust": "impl protocol::SemanticMutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {\n    fn label(&self) -> protocol::LocalizedLabel {\n        <Self as protocol::SemanticMutation<Puzzle2dSnapshot>>::label(self)\n    }\n}\n",
+      "sites": [{ "trait": "SemanticMutation", "implementor": "Puzzle2dMutation", "verdict": "forward", "texts": [] }]
+    },
+    {
+      "id": "uninhabited-lane",
+      "rust": "impl protocol::SemanticMutation<NoConfig> for NoConfigMutation {\n    fn label(&self) -> LocalizedLabel {\n        match *self {}\n    }\n}\n",
+      "sites": [{ "trait": "SemanticMutation", "implementor": "NoConfigMutation", "verdict": "forward", "texts": [] }]
+    },
+    {
+      "id": "unreadable-helper",
+      "rust": "impl MutationKind<Snap, Op> for Storey {\n    fn label(&self) -> LocalizedLabel {\n        crate::labels::storey(self)\n    }\n}\n",
+      "sites": [{ "trait": "MutationKind", "implementor": "Storey", "verdict": "labelUnresolved", "texts": [] }]
+    },
+    {
+      "id": "app-override",
+      "rust": "impl ArtifactEditor for HtmlEditor {\n    fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {\n        Some(protocol::SemanticMutation::label(op))\n    }\n}\n",
+      "sites": [{ "trait": "ArtifactEditor", "implementor": "HtmlEditor", "verdict": "labelOverride", "texts": [] }]
+    },
+    {
+      "id": "text-line-fallback-row",
+      "rust": "fn row_label<Mu: OpText>(op: &Mu) -> LocalizedLabel {\n    LocalizedLabel::data(op.print_op())\n}\n",
+      "sites": [{ "trait": "data", "implementor": "", "verdict": "labelOpText", "texts": [] }]
+    },
+    {
+      "id": "unrelated-label-functions",
+      "rust": "impl Widget for Slider {\n    fn label(&self) -> LocalizedLabel {\n        LocalizedLabel::data(\"x\")\n    }\n}\n",
+      "sites": []
+    }
+  ]
+}

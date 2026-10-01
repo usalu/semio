@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6ff80a19c1da757c89d79f4e492e798241d4aa82a7e793bece527b84c53f75ae",
           "bytes": 30
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6d2c9af5219ecbefc65d1b16725acf6a8b77af745fb0f029a603c339eb353b0d",
           "bytes": 63
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e535c9996b23817b1f8b0d5bad875b0497e599c76c0d019752616f2f71a52d5e",
           "bytes": 42
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e535c9996b23817b1f8b0d5bad875b0497e599c76c0d019752616f2f71a52d5e",
           "bytes": 42
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-preview-eval/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

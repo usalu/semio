@@ -1,3 +1,4 @@
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 // 🗺️ Example `terrain-ring` — the TypeScript twin of `🦀️.rs`'s builder, including the same
 // palette-indexed 8×8 raster payloads (built the same way, so the base64 matches byte for byte).
 
@@ -20,12 +21,12 @@ function bandedTile(id: string, label: string, weight: number, top: Wfc2dColor, 
     for (let column = 0; column < TILE_PIXELS; column += 1) indices.push(row >= horizon ? 1 : 0);
   }
   const pixels = btoa(String.fromCharCode(...indices));
-  return { id, label, weight, media: { Bitmap: { width: TILE_PIXELS, height: TILE_PIXELS, palette: [top, bottom], pixels } } };
+  return { id, label, weight: binary64(weight), media: { Bitmap: { width: TILE_PIXELS, height: TILE_PIXELS, palette: [top, bottom], pixels } } };
 }
 
 function hexSlot(index: number): Wfc2dSlot {
   const angle = (Math.PI / 3) * index;
-  return { id: `hex-${index}`, x: round(RADIUS * Math.cos(angle)), y: round(RADIUS * Math.sin(angle)), width: SLOT_SIZE, height: SLOT_SIZE };
+  return { id: `hex-${index}`, x: binary64(round(RADIUS * Math.cos(angle))), y: binary64(round(RADIUS * Math.sin(angle))), width: binary64(SLOT_SIZE), height: binary64(SLOT_SIZE) };
 }
 
 function ringEdge(index: number): Wfc2dSlotEdge {
@@ -40,7 +41,7 @@ export function document(): Wfc2dSnapshot {
   const indices = [0, 1, 2, 3, 4, 5];
   return {
     schema: WFC_2D_DOCUMENT_SCHEMA,
-    seed: SEED,
+    seed: BigInt(SEED),
     slots: indices.map(hexSlot),
     edges: indices.map(ringEdge),
     tiles: [

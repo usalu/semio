@@ -16,12 +16,14 @@ macro_rules! ui_typed_field_catalog {
         $visitor!(TextProps { 0 => value: Label, 1 => emphasize: Option<bool>, 2 => data_attributes: Option<UiFixedMap<UiText>> });
         $visitor!(ButtonProps { 0 => icon: UiText, 1 => label: Label });
         $visitor!(SeparatorProps {});
-        $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64> });
+        $visitor!(InputProps { 0 => kind: InputKind, 1 => value: UiText, 2 => placeholder: Option<Label>, 3 => commit: Option<UiText>, 4 => min: Option<f64>, 5 => max: Option<f64>, 6 => step: Option<f64>, 7 => accept: Option<UiText>, 8 => precision: Option<u16>, 9 => snaps: UiFixedList<f64>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits> });
         $visitor!(SelectProps { 0 => value: UiText, 1 => items: UiFixedList<SelectItem>, 2 => placeholder: Option<Label> });
         $visitor!(ToggleProps { 0 => on: bool, 1 => icon: UiText, 2 => text: Option<Label>, 3 => appearance: ToggleAppearance });
         $visitor!(KeyValueListProps { 0 => entries: UiFixedList<KeyValueEntry> });
-        $visitor!(SliderProps { 0 => value: f64, 1 => min: f64, 2 => max: f64, 3 => step: f64, 4 => unit: Option<UiText>, 5 => snaps: UiFixedList<f64> });
-        $visitor!(NumberStepperProps { 0 => value: f64, 1 => step: f64, 2 => uniform: bool, 3 => min: Option<f64>, 4 => max: Option<f64>, 5 => precision: Option<u16> });
+        $visitor!(UiNumberBound { 0 => value: f64, 1 => exclusive: bool, 2 => refusal: Option<Label> });
+        $visitor!(UiNumberLimits { 0 => min: Option<UiNumberBound>, 1 => max: Option<UiNumberBound> });
+        $visitor!(SliderProps { 0 => value: f64, 1 => min: f64, 2 => max: f64, 3 => step: f64, 4 => unit: Option<UiText>, 5 => snaps: UiFixedList<f64>, 6 => appearance: SliderAppearance, 7 => scale: UiNumberScale, 8 => precision: Option<u16>, 9 => display_unit: Option<UiText>, 10 => display_factor: Option<f64>, 11 => limits: Option<UiNumberLimits> });
+        $visitor!(NumberStepperProps { 0 => value: f64, 1 => step: f64, 2 => uniform: bool, 3 => min: Option<f64>, 4 => max: Option<f64>, 5 => precision: Option<u16>, 6 => snaps: UiFixedList<f64>, 7 => unit: Option<UiText>, 8 => display_unit: Option<UiText>, 9 => display_factor: Option<f64>, 10 => limits: Option<UiNumberLimits> });
         $visitor!(RingProps { 0 => orb_id: UiText, 1 => t: f64 });
         $visitor!(IconSelectProps { 0 => value: UiText, 1 => uniform: bool, 2 => classifier_kind: UiText });
         $visitor!(ProgressProps { 0 => completed: f64, 1 => total: Option<f64>, 2 => value_text: Label });

@@ -5,7 +5,9 @@ import { tmpdir } from "node:os";
 import { basename, dirname, join, relative } from "node:path";
 import assert from "node:assert/strict";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, runCargo, runCargoTestBudgeted, runCmdStatus, resolveTestLevel, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 function exactCargoStageEnvironments() {
   return {
@@ -333,4 +335,4 @@ class PreviewGeneratedScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("worker-maintenance-check", WorkerMaintenanceCheckScript).register("worker-deferred-wake-check", WorkerDeferredWakeCheckScript).register("worker-parking-check", WorkerParkingCheckScript).register("worker-pool-use-check", WorkerPoolUseCheckScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

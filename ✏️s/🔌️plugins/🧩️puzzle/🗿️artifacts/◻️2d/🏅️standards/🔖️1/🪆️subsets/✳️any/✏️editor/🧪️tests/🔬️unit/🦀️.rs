@@ -501,8 +501,8 @@ async fn three_nudges_are_three_transactions_and_one_undo_takes_back_the_last() 
 /// budget: a session of ordinary small edits must reach it and refuse HONESTLY (a named fault the
 /// caller sees), never corrupt the store or die silently. This pins where that wall stands so a
 /// gesture that quietly spends 100 slots (a per-placement fill) cannot creep back in unnoticed. The refusal
-/// is the store's own `batched publication requires preinstalled fixed applied and revision capacity`
-/// (`🏪️store/🦀️.rs`), the one sentence the batched ledger answers at its wall.
+/// is the store's typed `VcsError::HistoryFull` (fault code `history.full`, `🌿️vcs/🦀️.rs`), which names the ceiling and
+/// which the shells show as a localized notice.
 #[semio_framework_async_macros::async_test]
 async fn sequential_small_edits_honour_the_fixed_edit_ledger_ceiling() {
     let mut app = app_with_registry();
@@ -522,7 +522,7 @@ async fn sequential_small_edits_honour_the_fixed_edit_ledger_ceiling() {
     close_app(&mut app);
     assert!(undone.is_ok(), "the store stays usable at the ceiling: {:?}", undone.err());
     assert!(committed >= 64, "the ledger must admit its full 64 slots, admitted {committed}");
-    assert!(refusal.as_deref().is_none_or(|fault| fault.contains("applied and revision capacity")), "past the ceiling the refusal must name the exhausted applied ledger, got {refusal:?}");
+    assert!(refusal.as_deref().is_none_or(|fault| fault.contains("history.full")), "past the ceiling the refusal must be the typed full-history fault, got {refusal:?}");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -835,7 +835,7 @@ fn every_declared_action_resolves_to_a_command() {
                 || semio_framework_plugin::is_tool_run_action_id(id)
                 || semio_framework_plugin::is_time_travel_action_id(id)
                 || id == semio_framework_plugin::app::CANCEL_TYPED_OPERATION_ACTION_ID
-                || matches!(id, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID);
+                || matches!(id, semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID | semio_framework::HOST_EVENT_ACTION_ID);
             if !reserved && Puzzle2dCommand::try_from_action(id, None, None).is_none() {
                 unresolved.push(id.to_string());
             }
@@ -1145,7 +1145,7 @@ fn hover_id_reaches_the_board_scene_for_every_granularity_and_pane() {
     let handle_id = fixture_nodes(&fixture).iter().filter_map(|node| node.get("handles").and_then(Value::as_array)).flatten().filter_map(|handle| handle.get("id").and_then(Value::as_str)).next().expect("handle id").to_string();
     let edge_id = fixture_edges(&fixture)[0].get("id").and_then(Value::as_str).expect("edge id").to_string();
     for (granularity, hovered) in [(PUZZLE2D_GRANULARITY_NODE, &node_id), (PUZZLE2D_GRANULARITY_HANDLE, &handle_id), (PUZZLE2D_GRANULARITY_EDGE, &edge_id)] {
-        let interaction = Puzzle2dInteractionSnapshot { granularity: granularity.into(), selected: Vec::new(), hovered: vec![hovered.clone()] };
+        let interaction = Puzzle2dInteractionSnapshot { granularity: granularity.into(), hovered: vec![hovered.clone()], ..Default::default() };
         assert_eq!(interaction.hovered_id().as_deref(), Some(hovered.as_str()), "{granularity} hover must resolve an id");
         let envelope = Puzzle2dScene { fixture: fixture.clone(), runtime: Default::default(), active_utility: "select".into(), interaction };
         for pane in PUZZLE2D_PANES {

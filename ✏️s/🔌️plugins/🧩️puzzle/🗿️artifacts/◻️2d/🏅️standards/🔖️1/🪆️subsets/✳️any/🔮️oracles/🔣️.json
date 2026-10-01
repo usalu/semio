@@ -294,7 +294,7 @@
           "scenarios": [
             {
               "id": "adds-a-third-slot-door-to-the-tambour",
-              "directoryName": "➕️adds-a-third-slot-door-to-the-tambour"
+              "directoryName": "➕️adds"
             },
             {
               "id": "appends-handle-3-to-node-b",
@@ -302,7 +302,7 @@
             },
             {
               "id": "rejects-adding-a-door-to-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "zero-radius-handle",
@@ -317,7 +317,7 @@
           "scenarios": [
             {
               "id": "kinds-a-capsule-door-edge-as-a-link",
-              "directoryName": "🏷️kinds-a-capsule-door-edge-as-a-link"
+              "directoryName": "🏷️kinds"
             },
             {
               "id": "rekinds-edge-1",
@@ -325,7 +325,7 @@
             },
             {
               "id": "rejects-kinding-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-kinding-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -340,11 +340,11 @@
             },
             {
               "id": "locks-the-base-to-tambour-edge",
-              "directoryName": "🔒️locks-the-base-to-tambour-edge"
+              "directoryName": "🔒️locks"
             },
             {
               "id": "rejects-locking-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-locking-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -359,11 +359,11 @@
             },
             {
               "id": "tips-a-capsule-door-edge",
-              "directoryName": "🖇️tips-a-capsule-door-edge"
+              "directoryName": "🖇️tips"
             },
             {
               "id": "rejects-tipping-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-tipping-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -374,7 +374,7 @@
           "scenarios": [
             {
               "id": "hides-a-capsule-door-edge",
-              "directoryName": "🙈️hides-a-capsule-door-edge"
+              "directoryName": "🙈️hides"
             },
             {
               "id": "hides-edge-1",
@@ -382,7 +382,7 @@
             },
             {
               "id": "rejects-hiding-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-hiding-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -397,7 +397,7 @@
             },
             {
               "id": "repoints-the-tower-at-its-example-manifest",
-              "directoryName": "📦️repoints-the-tower-at-its-example-manifest"
+              "directoryName": "📦️repoints"
             }
           ]
         },
@@ -408,7 +408,7 @@
           "scenarios": [
             {
               "id": "derives-a-capsule-pose-from-its-door-edge",
-              "directoryName": "⚓️derives-a-capsule-pose-from-its-door-edge"
+              "directoryName": "⚓️derives"
             },
             {
               "id": "fixed-to-derived",
@@ -416,7 +416,7 @@
             },
             {
               "id": "rejects-anchoring-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-anchoring-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -435,7 +435,7 @@
             },
             {
               "id": "rejects-reiconing-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-reiconing-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -446,15 +446,15 @@
           "scenarios": [
             {
               "id": "rekinds-a-capsule-j-as-a-capsule-l",
-              "directoryName": "🏗️rekinds-a-capsule-j-as-a-capsule-l"
+              "directoryName": "🏗️rekinds"
             },
             {
               "id": "reassigns-node-a-kind",
-              "directoryName": "🏷️reassigns-node-a-kind"
+              "directoryName": "🏷️reassigns"
             },
             {
               "id": "rejects-rekinding-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-rekinding-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -469,11 +469,11 @@
             },
             {
               "id": "locks-the-first-storey-tambour",
-              "directoryName": "🔒️locks-the-first-storey-tambour"
+              "directoryName": "🔒️locks"
             },
             {
               "id": "rejects-locking-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-locking-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -488,11 +488,11 @@
             },
             {
               "id": "promotes-the-base-to-root",
-              "directoryName": "🌳️promotes-the-base-to-root"
+              "directoryName": "🌳️promotes"
             },
             {
               "id": "rejects-rooting-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-rooting-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -511,7 +511,7 @@
             },
             {
               "id": "rejects-hiding-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-hiding-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -522,11 +522,11 @@
           "scenarios": [
             {
               "id": "hides-region-1",
-              "directoryName": "🙈️hides-region-1"
+              "directoryName": "🙈️hides"
             },
             {
               "id": "rejects-hiding-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-hiding-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -537,11 +537,11 @@
           "scenarios": [
             {
               "id": "locks-region-1",
-              "directoryName": "🔏️locks-region-1"
+              "directoryName": "🔏️locks"
             },
             {
               "id": "rejects-locking-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-locking-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -552,7 +552,7 @@
           "scenarios": [
             {
               "id": "keeps-an-edge-the-tower-already-holds",
-              "directoryName": "⏸️keeps-an-edge-the-tower-already-holds"
+              "directoryName": "⏸️keeps"
             },
             {
               "id": "adds-second-edge",
@@ -560,7 +560,7 @@
             },
             {
               "id": "rewires-the-capsule-the-subgraph-left-loose",
-              "directoryName": "🪢️rewires-the-capsule-the-subgraph-left-loose"
+              "directoryName": "🪢️rewires"
             }
           ]
         },
@@ -571,11 +571,11 @@
           "scenarios": [
             {
               "id": "adds-handle-kind-pair",
-              "directoryName": "🤝️adds-handle-kind-pair"
+              "directoryName": "🤝️adds"
             },
             {
               "id": "admits-the-reverse-tambour-circular-pair",
-              "directoryName": "🤝️admits-the-reverse-tambour-circular-pair"
+              "directoryName": "🤝️admits"
             }
           ]
         },
@@ -586,7 +586,7 @@
           "scenarios": [
             {
               "id": "appends-a-capsule-to-the-tower",
-              "directoryName": "🌱️appends-a-capsule-to-the-tower"
+              "directoryName": "🌱️appends"
             },
             {
               "id": "appends-node-c",
@@ -594,7 +594,7 @@
             },
             {
               "id": "rejects-a-capsule-id-the-tower-already-holds",
-              "directoryName": "🚫️rejects-a-capsule-id-the-tower-already-holds"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "zero-width-node",
@@ -613,11 +613,11 @@
             },
             {
               "id": "paints-a-tower-footprint",
-              "directoryName": "🌍️paints-a-tower-footprint"
+              "directoryName": "🌍️paints"
             },
             {
               "id": "rejects-a-region-id-the-board-already-holds",
-              "directoryName": "🚫️rejects-a-region-id-the-board-already-holds"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -628,15 +628,15 @@
           "scenarios": [
             {
               "id": "deletes-the-tambour-and-severs-its-ten-edges",
-              "directoryName": "🚫️deletes-the-tambour-and-severs-its-ten-edges"
+              "directoryName": "🚫️deletes"
             },
             {
               "id": "rejects-deleting-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-deleting-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "removes-node-a-and-severs-edge",
-              "directoryName": "🚫️removes-node-a-and-severs-edge"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -651,7 +651,7 @@
             },
             {
               "id": "rejects-deleting-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-deleting-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -662,11 +662,11 @@
           "scenarios": [
             {
               "id": "severs-a-capsule-from-the-first-storey-tambour",
-              "directoryName": "✂️severs-a-capsule-from-the-first-storey-tambour"
+              "directoryName": "✂️severs"
             },
             {
               "id": "rejects-severing-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-severing-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "removes-edge-1",
@@ -681,15 +681,15 @@
           "scenarios": [
             {
               "id": "withdraws-the-tambour-rectangular-pair",
-              "directoryName": "💔️withdraws-the-tambour-rectangular-pair"
+              "directoryName": "💔️withdraws"
             },
             {
               "id": "rejects-withdrawing-a-pair-the-relation-never-held",
-              "directoryName": "🚫️rejects-withdrawing-a-pair-the-relation-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "removes-handle-kind-pair",
-              "directoryName": "🚫️removes-handle-kind-pair"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -731,7 +731,7 @@
           "scenarios": [
             {
               "id": "recodes-a-capsule-id-code",
-              "directoryName": "✏️recodes-a-capsule-id-code"
+              "directoryName": "✏️recodes"
             },
             {
               "id": "retitles-node-a",
@@ -739,7 +739,7 @@
             },
             {
               "id": "rejects-recoding-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-recoding-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -750,11 +750,11 @@
           "scenarios": [
             {
               "id": "renames-region-1",
-              "directoryName": "🖋️renames-region-1"
+              "directoryName": "🖋️renames"
             },
             {
               "id": "rejects-renaming-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-renaming-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -765,7 +765,7 @@
           "scenarios": [
             {
               "id": "moves-a-capsule-across-the-shaft",
-              "directoryName": "📍️moves-a-capsule-across-the-shaft"
+              "directoryName": "📍️moves"
             },
             {
               "id": "moves-node-a",
@@ -773,7 +773,7 @@
             },
             {
               "id": "rejects-moving-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-moving-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -788,7 +788,7 @@
             },
             {
               "id": "rejects-moving-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-moving-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -799,15 +799,15 @@
           "scenarios": [
             {
               "id": "rejects-removing-a-door-the-tambour-never-had",
-              "directoryName": "🚫️rejects-removing-a-door-the-tambour-never-had"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "removes-a-tambour-door-and-severs-its-capsule-edge",
-              "directoryName": "🚫️removes-a-tambour-door-and-severs-its-capsule-edge"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "removes-handle-2-and-severs-edge",
-              "directoryName": "🚫️removes-handle-2-and-severs-edge"
+              "directoryName": "🚫️removes2"
             }
           ]
         },
@@ -822,11 +822,11 @@
             },
             {
               "id": "rejects-reposing-an-edge-the-board-never-held",
-              "directoryName": "🚫️rejects-reposing-an-edge-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "reposes-a-capsule-door-edge",
-              "directoryName": "🧮️reposes-a-capsule-door-edge"
+              "directoryName": "🧮️reposes"
             }
           ]
         },
@@ -837,15 +837,15 @@
           "scenarios": [
             {
               "id": "installs-handle-kind-catalog",
-              "directoryName": "📇️installs-handle-kind-catalog"
+              "directoryName": "📇️installs"
             },
             {
               "id": "installs-the-tower-handle-catalog",
-              "directoryName": "📇️installs-the-tower-handle-catalog"
+              "directoryName": "📇️installs2"
             },
             {
               "id": "clears-the-installed-handle-catalog",
-              "directoryName": "🗑️clears-the-installed-handle-catalog"
+              "directoryName": "🗑️clears"
             },
             {
               "id": "off-rim-template",
@@ -860,15 +860,15 @@
           "scenarios": [
             {
               "id": "circle-to-rectangle",
-              "directoryName": "🔳️circle-to-rectangle"
+              "directoryName": "🔳️circle"
             },
             {
               "id": "squares-the-concrete-forest-seed",
-              "directoryName": "🔳️squares-the-concrete-forest-seed"
+              "directoryName": "🔳️squares"
             },
             {
               "id": "rejects-reshaping-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-reshaping-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "negative-radius",
@@ -883,11 +883,11 @@
           "scenarios": [
             {
               "id": "rekinds-an-unconnected-tambour-door",
-              "directoryName": "🔌️rekinds-an-unconnected-tambour-door"
+              "directoryName": "🔌️rekinds"
             },
             {
               "id": "rejects-replacing-a-door-the-tambour-never-had",
-              "directoryName": "🚫️rejects-replacing-a-door-the-tambour-never-had"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "negative-scale",
@@ -906,7 +906,7 @@
             },
             {
               "id": "rejects-resizing-a-region-the-board-never-held",
-              "directoryName": "🚫️rejects-resizing-a-region-the-board-never-held"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -952,11 +952,11 @@
             },
             {
               "id": "scales-a-capsule-by-three-halves",
-              "directoryName": "📏️scales-a-capsule-by-three-halves"
+              "directoryName": "📏️scales"
             },
             {
               "id": "rejects-scaling-a-capsule-the-board-never-held",
-              "directoryName": "🚫️rejects-scaling-a-capsule-the-board-never-held"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "zero-scale",

@@ -284,6 +284,29 @@ fn dag_command_from_action(action: &str, args: Option<&dsl::DslValue>) -> Result
         "nodeGraphViewport" => Ok(DagCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport {
             viewport: semio_framework_os_kernel::Viewport2d { x: number(&["x"]).unwrap_or_default(), y: number(&["y"]).unwrap_or_default(), zoom: number(&["zoom"]).unwrap_or(1.0) },
         })),
+        "nodeGraphEdit" => node_graph_edit::NodeGraphEdit::from_action_args(args).map(DagCommand::NodeGraphEdit),
+        "moveMediaNode" => match (number(&["x"]), number(&["y"])) {
+            (Some(x), Some(y)) => Ok(DagCommand::MoveMediaNode(move_media_node::MoveMediaNode { node_id: text(&["nodeId", "node_id", "id"], ""), x, y })),
+            _ => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("dag.move-media-node.malformed"), "moveMediaNode needs a numeric x and y")),
+        },
+        "patchDagNodes" => Ok(DagCommand::PatchDagNodes(patch_dag_nodes::PatchDagNodes {
+            node_ids: match lookup(&["nodeIds", "node_ids"]) {
+                Some(dsl::DslValue::Array(ids)) => ids.iter().filter_map(dsl::DslValue::as_str).map(str::to_string).collect(),
+                _ => Vec::new(),
+            },
+            field: text(&["field"], ""),
+            value: match lookup(&["value"]) {
+                Some(dsl::DslValue::Number(value)) => value.as_f64().to_string(),
+                _ => text(&["value"], ""),
+            },
+        })),
+        "renameDagNode" => Ok(DagCommand::RenameDagNode(rename_dag_node::RenameDagNode { old_id: text(&["oldId", "old_id"], ""), value: text(&["value"], "") })),
+        "connectMediaPorts" => Ok(DagCommand::ConnectMediaPorts(connect_media_ports::ConnectMediaPorts {
+            source_node_id: text(&["sourceNodeId"], ""),
+            source_port_id: text(&["sourcePortId"], "out"),
+            target_node_id: text(&["targetNodeId"], ""),
+            target_port_id: text(&["targetPortId"], "in"),
+        })),
         other => Err(Fault::new(
             semio_framework_plugin::FaultOrigin::App,
             semio_framework_plugin::FaultCode::new("dag.unhandled-action"),
@@ -418,7 +441,7 @@ fn prepare_dag_config(base: &DagConfig, mutation: DagConfigMutation) -> Result<(
 
 fn dag_config_edit(forward: DagConfigMutation, inverse: Vec<DagConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<DagConfigMutation> {
     let id = format!("dag-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

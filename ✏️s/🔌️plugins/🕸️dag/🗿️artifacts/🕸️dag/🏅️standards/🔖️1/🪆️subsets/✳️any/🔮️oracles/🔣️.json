@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "rejects-reabbreviating-a-missing-node",
-              "directoryName": "🧪️rejects-reabbreviating-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "rejects-reiconing-a-missing-node",
-              "directoryName": "🧪️rejects-reiconing-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "rejects-renaming-the-label-of-a-missing-node",
-              "directoryName": "🧪️rejects-renaming-the-label-of-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "rejects-rebinding-the-operator-of-a-missing-node",
-              "directoryName": "🧪️rejects-rebinding-the-operator-of-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "rejects-a-missing-source-node",
-              "directoryName": "🧪️rejects-a-missing-source-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-node-id",
-              "directoryName": "🧪️rejects-a-duplicate-node-id"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-missing-node",
-              "directoryName": "🧪️rejects-deleting-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "rejects-disconnecting-a-missing-edge",
-              "directoryName": "🧪️rejects-disconnecting-a-missing-edge"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "rejects-renaming-a-missing-node",
-              "directoryName": "🧪️rejects-renaming-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-id-in-the-order",
-              "directoryName": "🧪️rejects-a-duplicate-id-in-the-order"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "rejects-rekinding-a-missing-node",
-              "directoryName": "🧪️rejects-rekinding-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "rejects-repropertying-a-missing-node",
-              "directoryName": "🧪️rejects-repropertying-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "rejects-resizing-a-missing-node",
-              "directoryName": "🧪️rejects-resizing-a-missing-node"
+              "directoryName": "🧪️rejects"
             }
           ]
         }
@@ -227,7 +227,15 @@
         "replace-node-properties",
         "reorder-nodes",
         "connect-nodes",
-        "disconnect-nodes"
+        "disconnect-nodes",
+        "move-nodes",
+        "set-node-positions",
+        "set-slider"
+      ],
+      "deferredKinds": [
+        "move-nodes",
+        "set-node-positions",
+        "set-slider"
       ]
     }
   ],
@@ -427,6 +435,27 @@
           ]
         },
         {
+          "id": "move-nodes",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-nodes",
+            "bridgeVersion": 1,
+            "variant": "MoveNodes"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
           "id": "rename-node",
           "capability": "dag-1-mutate",
           "payloadSchema": "🧬️.schema.json",
@@ -523,6 +552,48 @@
             "operation": "resize-node",
             "bridgeVersion": 1,
             "variant": "ResizeNode"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-node-positions",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-node-positions",
+            "bridgeVersion": 1,
+            "variant": "SetNodePositions"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "dag-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "set-slider",
+          "capability": "dag-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-slider",
+            "bridgeVersion": 1,
+            "variant": "SetSlider"
           },
           "oracleRequirements": [
             {

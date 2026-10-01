@@ -753,11 +753,43 @@ LABELS = [
     ("alternativeNameDefault", "Edited history", "Bearbeiteter Verlauf"),
     ("noChanges", "No changes: showing the current history", "Keine Änderungen: aktueller Verlauf wird angezeigt"),
     ("needsReplay", "Replay needed: later mutations are not checked yet", "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft"),
-    ("reportBlocking", "Errors in later mutations block finalizing", "Fehler in späteren Mutationen verhindern den Abschluss"),
+    ("reportBlocking", "Errors must be fixed or withdrawn before finalizing", "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden"),
     ("readyToFinalize", "Ready to finalize", "Bereit zum Abschließen"),
     ("replayCancelled", "Replay cancelled", "Neu anwenden abgebrochen"),
     ("actionRerun", "Replay again", "Erneut anwenden"),
     ("replayProgressValueText", "Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet"),
+    ("refusalBusy", "History editing is busy: finish the running tool or the other history edit first", "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"),
+    ("refusalUnknownMutation", "This mutation is no longer in the history", "Diese Mutation ist nicht mehr im Verlauf"),
+    ("refusalNotEditable", "The inputs of this mutation cannot be edited", "Die Eingaben dieser Mutation können nicht bearbeitet werden"),
+    ("refusalUnknownInput", "This input does not exist in the mutation", "Diese Eingabe gibt es in der Mutation nicht"),
+    ("refusalInvalidInput", "Invalid value: the input keeps its previous value", "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"),
+    ("refusalNoSelection", "Nothing suitable is selected for this input", "Für diese Eingabe ist nichts Passendes ausgewählt"),
+    ("refusalNameRequired", "Name the new alternative", "Einen Namen für die neue Alternative eingeben"),
+    ("refusalNameInvalid", "Invalid alternative name: use 1 to 256 characters", "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"),
+    ("refusalSchemaUnavailable", "The input schema of this mutation is unavailable", "Das Eingabeschema dieser Mutation ist nicht verfügbar"),
+    ("replayFaulted", "Replay failed: later mutations could not be checked", "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"),
+    ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
+    ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
+]
+
+CODE_LABELS = [
+    ("timeTravel.frozen", "frozen"),
+    ("timeTravel.illegal", "refusalIllegal"),
+    ("timeTravel.stale", "refusalStale"),
+    ("timeTravel.blocked", "refusalBlocked"),
+    ("timeTravel.empty", "refusalEmpty"),
+    ("timeTravel.cancelled", "replayCancelled"),
+    ("timeTravel.busy", "refusalBusy"),
+    ("timeTravel.unknown-mutation", "refusalUnknownMutation"),
+    ("timeTravel.not-editable", "refusalNotEditable"),
+    ("timeTravel.unknown-input", "refusalUnknownInput"),
+    ("timeTravel.invalid-input", "refusalInvalidInput"),
+    ("timeTravel.no-selection", "refusalNoSelection"),
+    ("timeTravel.name-required", "refusalNameRequired"),
+    ("timeTravel.name-invalid", "refusalNameInvalid"),
+    ("timeTravel.schema-unavailable", "refusalSchemaUnavailable"),
+    ("timeTravel.replay-faulted", "replayFaulted"),
+    ("timeTravel.commit-failed", "commitFailed"),
 ]
 
 FIXTURE = {
@@ -779,6 +811,7 @@ FIXTURE = {
     "scenarios": SCENARIOS,
     "invariants": [{"id": id, "statement": statement, "violation": violation} for id, statement, violation in INVARIANTS],
     "labels": [{"key": key, "en": en, "de": de} for key, en, de in LABELS],
+    "codeLabels": [{"code": code, "key": key} for code, key in CODE_LABELS],
 }
 
 OUT.parent.mkdir(parents=True, exist_ok=True)

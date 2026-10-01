@@ -16,6 +16,7 @@ async fn import_frame_payload_creates_a_stream_and_asset() {
 /// 🎞️ In-process video import (the `ImportVideoBytesPayload` fallback path): a tiny synthesized
 /// MJPEG mp4 must decode into a new video stream whose frame count matches what was muxed in.
 #[semio_framework_async_macros::async_test]
+#[cfg(feature = "video-mp4")]
 async fn import_video_bytes_payload_extracts_frames_in_process() {
     let mut app = app().await;
     // 🎯️ `IngestParams::default().frame_sample_stride == 5`; force stride 1 so all 5 synthesized

@@ -1,6 +1,6 @@
 /** 🔒️ Persisted layer protection and inherited command capabilities. */
 import {expect,test} from "bun:test";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {hierarchy} from "d3-hierarchy";
 import valueSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️schema/🔣️.json";
 import fixture from "../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json";
@@ -26,8 +26,8 @@ test("Lock mutation schema requires the expected state and a boolean replacement
 });
 
 test("Native lock fixture layers validate through the shared JSON schema",async()=>{
-  const before=(await import("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/📸️snapshot/⬅️before/🔣️.json")).default;
-  const after=(await import("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/📸️snapshot/➡️after/🔣️.json")).default;
+  const before=(await import("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/⬅️before/🔣️.json")).default;
+  const after=(await import("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/➡️after/🔣️.json")).default;
   const validate=semioSchemaAjvV1({allErrors:true}).addSchema(valueSchema).addSchema({$id:schema.$id,$defs:schema.$defs}).compile({$ref:schema.$id+"#/$defs/RasterLayerNode"});
   for(const document of [before,after])for(const layer of document.layers){expect(validate(layer)).toBe(true);expect(parseRasterLayerNode(layer).locked).toBe(layer.locked);}
   expect({...before.layers[0],locked:true}).toEqual(after.layers[0]);

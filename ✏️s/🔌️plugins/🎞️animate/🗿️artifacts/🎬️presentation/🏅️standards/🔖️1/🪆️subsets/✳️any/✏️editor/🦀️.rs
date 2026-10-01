@@ -454,7 +454,7 @@ struct AnimatePresentationConfigPreparation {
 
 fn animate_presentation_config_edit(forward: PresentationConfigMutation, inverse: PresentationConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<PresentationConfigMutation> {
     let id = format!("animate-presentation-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

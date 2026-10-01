@@ -4,10 +4,10 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateBufferViewPayload {
-  position: number;
-  buffer: number;
-  byteOffset: number;
-  byteLength: number;
+  position: bigint;
+  buffer: bigint;
+  byteOffset: bigint;
+  byteLength: bigint;
 }
 
 export type CreateBufferViewMutation = GltfPhase<GltfCreateBufferViewPayload, GltfDiff>;

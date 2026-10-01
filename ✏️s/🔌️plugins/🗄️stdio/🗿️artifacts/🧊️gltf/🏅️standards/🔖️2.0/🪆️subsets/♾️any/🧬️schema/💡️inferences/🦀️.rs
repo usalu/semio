@@ -911,11 +911,11 @@ pub fn gltf_artifact_inference_descriptors() -> Vec<framework_schema::ArtifactIn
         framework_schema::ArtifactInferenceDescriptor {
             id: "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
             inference: framework_schema::FacetLeaves {
-                rust: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🦀️.rs"),
-                typescript: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🟦️.ts"),
-                graphql: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🔗️.graphql"),
-                json_schema: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🔣️.json"),
-                proto: include_str!("🌊️roughness/🧽️deviation-from-smoothed-geometry/🛰️.proto"),
+                rust: include_str!("🌊️roughness/🧽️deviation-from-smoothed/🦀️.rs"),
+                typescript: include_str!("🌊️roughness/🧽️deviation-from-smoothed/🟦️.ts"),
+                graphql: include_str!("🌊️roughness/🧽️deviation-from-smoothed/🔗️.graphql"),
+                json_schema: include_str!("🌊️roughness/🧽️deviation-from-smoothed/🔣️.json"),
+                proto: include_str!("🌊️roughness/🧽️deviation-from-smoothed/🛰️.proto"),
             },
         },
         framework_schema::ArtifactInferenceDescriptor {

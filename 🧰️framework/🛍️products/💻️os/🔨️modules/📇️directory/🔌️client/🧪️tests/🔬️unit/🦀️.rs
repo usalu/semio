@@ -6,6 +6,17 @@ use std::collections::VecDeque;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 
+#[test]
+fn intrinsic_bytes_in_decoded_credentials_are_wiped_in_place() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
+        let mut value = DslValue::Bytes(bytes.clone());
+        assert_eq!(wipe_dsl_value(&mut value), bytes.len());
+        assert_eq!(value, DslValue::Bytes(vec![0; bytes.len()]));
+    }
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct RecordedRequest {
     pub method: HttpMethod,

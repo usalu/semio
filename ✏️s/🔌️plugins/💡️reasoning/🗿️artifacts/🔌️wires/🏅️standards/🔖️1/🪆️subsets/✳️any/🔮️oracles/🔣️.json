@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-the-kind-already-reads-topic",
-              "directoryName": "🧪️reports-a-no-op-when-the-kind-already-reads-topic"
+              "directoryName": "🧪️reports"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-the-shape-already-reads-circle",
-              "directoryName": "🧪️reports-a-no-op-when-the-shape-already-reads-circle"
+              "directoryName": "🧪️reports"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "rejects-an-edge-whose-source-node-is-absent",
-              "directoryName": "🧪️rejects-an-edge-whose-source-node-is-absent"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "rejects-a-node-id-the-board-already-holds",
-              "directoryName": "🧪️rejects-a-node-id-the-board-already-holds"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -108,7 +108,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-node-the-board-never-held",
-              "directoryName": "🧪️rejects-deleting-a-node-the-board-never-held"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "rejects-cutting-an-edge-the-board-never-carried",
-              "directoryName": "🧪️rejects-cutting-an-edge-the-board-never-carried"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-the-label-is-retyped-verbatim",
-              "directoryName": "🧪️reports-a-no-op-when-the-label-is-retyped-verbatim"
+              "directoryName": "🧪️reports"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero",
-              "directoryName": "🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero"
+              "directoryName": "🧪️reports"
             }
           ]
         },
@@ -152,7 +152,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-the-radius-already-matches",
-              "directoryName": "🧪️reports-a-no-op-when-the-radius-already-matches"
+              "directoryName": "🧪️reports"
             }
           ]
         },
@@ -163,7 +163,7 @@
           "scenarios": [
             {
               "id": "reports-a-no-op-when-an-unflagged-node-is-set-to-not-root",
-              "directoryName": "🧪️reports-a-no-op-when-an-unflagged-node-is-set-to-not-root"
+              "directoryName": "🧪️reports"
             }
           ]
         }

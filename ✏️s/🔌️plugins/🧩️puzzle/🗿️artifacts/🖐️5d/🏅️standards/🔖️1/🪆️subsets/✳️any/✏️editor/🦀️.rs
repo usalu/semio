@@ -4983,28 +4983,37 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle5dTransformStage {
     Read,
+    Scan,
     Commit,
     Complete,
     Closing,
 }
 
+/// 🎞️ What `Read` states for one transform: the finished record, or the world drop whose proximity scan `Scan` pages.
+enum Puzzle5dTransformGesture {
+    Stated(world3d::utilities::transform::Puzzle5dSelectionRecord),
+    Scanning(world3d::utilities::transform::Puzzle5dRelocateScan),
+}
+
 /// 🛠️ The ONE retained work of every selection transform — a gumball translate/rotate/scale, a target-volume
 /// gumball relocate, a world drop, an inspector `x`/`y`/origin nudge. `Read` states the gesture as ONE
-/// [`world3d::utilities::transform::Puzzle5dSelectionRecord`] (the gesture's own ids, else the live selection),
-/// and `Commit` runs it through the transform tool: one `ToolTransaction` whose parametric leaves publish as ONE
-/// edit stamped with the ref minted from the admission's `authoring_seed`. A gesture that moves nothing leaves
+/// [`world3d::utilities::transform::Puzzle5dSelectionRecord`] (the gesture's own ids, else the live selection);
+/// a world drop's proximity scan then runs page by page in `Scan` (one progress report per page, cancellable between
+/// pages), and `Commit` runs the record through the transform tool: one `ToolTransaction` whose parametric leaves
+/// publish as ONE edit stamped with the ref minted from the admission's `authoring_seed`. A gesture that moves nothing leaves
 /// zero trace; nothing addressed, or everything addressed locked, is one localized refusal.
 struct Puzzle5dTransformWork {
     tool_id: &'static str,
     authoring_seed: String,
     stage: Puzzle5dTransformStage,
     record: Option<world3d::utilities::transform::Puzzle5dSelectionRecord>,
+    scan: Option<world3d::utilities::transform::Puzzle5dRelocateScan>,
     view_state: Option<semio_framework_plugin::ViewModel>,
 }
 
 impl Puzzle5dTransformWork {
     fn new(tool_id: &'static str, authoring_seed: String) -> Self {
-        Self { tool_id, authoring_seed, stage: Puzzle5dTransformStage::Read, record: None, view_state: None }
+        Self { tool_id, authoring_seed, stage: Puzzle5dTransformStage::Read, record: None, scan: None, view_state: None }
     }
 
     /// 🕹️ The parts a selection-scoped verb addresses: the command's own `ids`, else the live part selection.
@@ -5029,22 +5038,22 @@ impl Puzzle5dTransformWork {
     }
 
     /// 🎬️ The gesture this command states on `document`, `None` when it states none.
-    fn read(&self, command: &Puzzle5dCommand, document: &Puzzle5dSnapshot, config: &Puzzle5dConfig, interaction: &protocol::InteractionState) -> Option<world3d::utilities::transform::Puzzle5dSelectionRecord> {
+    fn read(&self, command: &Puzzle5dCommand, document: &Puzzle5dSnapshot, config: &Puzzle5dConfig, interaction: &protocol::InteractionState) -> Option<Puzzle5dTransformGesture> {
         use semio_s_artifact_puzzle_3d::editor::puzzle3d::modes::edit::windows::main::utilities::transform::Puzzle3dSelectionRecord;
-        use world3d::utilities::transform::{puzzle5d_relocate_record, Puzzle5dSelectionRecord};
+        use world3d::utilities::transform::{Puzzle5dRelocateScan, Puzzle5dSelectionRecord};
         let args = command.args();
         match self.tool_id {
             "translateSelection" | "rotateSelection" | "scaleSelection" => {
                 let targets = [Self::addressed(command, interaction), Self::selected(interaction, PUZZLE5D_GRANULARITY_TARGET_VOLUME)].concat();
-                Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets).map(Puzzle5dSelectionRecord::world)
+                Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets).map(|record| Puzzle5dTransformGesture::Stated(Puzzle5dSelectionRecord::world(record)))
             }
-            "relocateTargetVolume" => Puzzle3dSelectionRecord::from_pose_delta(args).map(Puzzle5dSelectionRecord::world),
+            "relocateTargetVolume" => Puzzle3dSelectionRecord::from_pose_delta(args).map(|record| Puzzle5dTransformGesture::Stated(Puzzle5dSelectionRecord::world(record))),
             "worldRelocate" => {
                 let part_id = args.and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
                 let position = args.and_then(|args| args.get("position")).and_then(puzzle5d_value_as_f64_3)?;
-                puzzle5d_relocate_record(document, part_id, position, config.proximity_radius)
+                Puzzle5dRelocateScan::begin(document, part_id, position, config.proximity_radius).map(Puzzle5dTransformGesture::Scanning)
             }
-            _ => puzzle5d_inspector_nudge(args).map(|motion| Puzzle5dSelectionRecord::new(Self::patched(command), motion)),
+            _ => puzzle5d_inspector_nudge(args).map(|motion| Puzzle5dTransformGesture::Stated(Puzzle5dSelectionRecord::new(Self::patched(command), motion))),
         }
     }
 
@@ -5076,9 +5085,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         self.view_state = view_state;
     }
 
-    fn extent(&self, command: &Puzzle5dCommand, _snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    /// 🔢️ `Read` + `Commit`, plus one `Scan` step per page of parts a world drop measures.
+    fn extent(&self, command: &Puzzle5dCommand, snapshot: &Puzzle5dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
         let addressed = Self::addressed(command, interaction).len().checked_add(Self::selected(interaction, PUZZLE5D_GRANULARITY_TARGET_VOLUME).len())?.checked_add(Self::patched(command).len())?;
-        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2)
+        let pages = if self.tool_id == "worldRelocate" { snapshot.typed().parts.len().div_ceil(world3d::utilities::transform::PUZZLE5D_RELOCATE_SCAN_PAGE).max(1) } else { 0 };
+        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2 + pages)
     }
 
     fn step(
@@ -5091,9 +5102,21 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
     ) -> Result<crate::retained_command::PuzzleCommandWorkStep<EditorApp<Puzzle5dPlayApp>>, Fault> {
         match self.stage {
             Puzzle5dTransformStage::Read => {
-                self.record = self.read(command, snapshot.typed(), config, interaction);
-                self.stage = Puzzle5dTransformStage::Commit;
+                match self.read(command, snapshot.typed(), config, interaction) {
+                    Some(Puzzle5dTransformGesture::Stated(record)) => self.record = Some(record),
+                    Some(Puzzle5dTransformGesture::Scanning(scan)) => self.scan = Some(scan),
+                    None => {}
+                }
+                self.stage = if self.scan.is_some() { Puzzle5dTransformStage::Scan } else { Puzzle5dTransformStage::Commit };
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle5d-transform-read", en: "Reading the gesture", de: "Geste wird gelesen" })
+            }
+            Puzzle5dTransformStage::Scan => {
+                let scan = self.scan.as_mut().ok_or_else(|| Fault::from("puzzle5d-transform-scan-owner"))?;
+                if scan.step(snapshot.typed(), world3d::utilities::transform::PUZZLE5D_RELOCATE_SCAN_PAGE) {
+                    self.record = self.scan.take().map(world3d::utilities::transform::Puzzle5dRelocateScan::finish);
+                    self.stage = Puzzle5dTransformStage::Commit;
+                }
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle5d-transform-scan", en: "Measuring nearby grips", de: "Nahe Griffe werden gemessen" })
             }
             Puzzle5dTransformStage::Commit => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.commit(snapshot))),
             Puzzle5dTransformStage::Complete => Err(Fault::from("puzzle5d-transform-complete-repolled")),
@@ -5109,14 +5132,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle5dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.record.take().is_some() || self.view_state.take().is_some() {
+        if self.record.take().is_some() || self.scan.take().is_some() || self.view_state.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle5dTransformStage::Closing && self.record.is_none() && self.view_state.is_none()
+        self.stage == Puzzle5dTransformStage::Closing && self.record.is_none() && self.scan.is_none() && self.view_state.is_none()
     }
 }
 
@@ -8503,7 +8526,7 @@ fn puzzle5d_store_edit(
     authority: &store::ArtifactStoreOneItemLiveAuthority,
 ) -> protocol::Edit<Puzzle5dMutation> {
     let id = format!("puzzle5d-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -8530,12 +8553,28 @@ fn puzzle5d_store_edit(
     }
 }
 
+/// 🪢️ Inverse rows a removal may restore: the record itself plus the fasteners it severs, bounded like puzzle 2d's
+/// edges per node.
+const PUZZLE5D_REMOVAL_INVERSE_ROWS: usize = 1 + 64;
+
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle5dPlaySnapshot, Puzzle5dMutation> for Puzzle5dStorePreparationFactory {
-    fn preflight(&self, _mutation: &Puzzle5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    /// 🧾️ `work_items` counts staged edit ROWS — the forward row plus every row the inverse yields: a selection leaf
+    /// restores up to one setter per changed pose field of each target (a part's board position, world origin,
+    /// orientation, scale), a removal restores the record and the fasteners it severed, every other kind is
+    /// point-invertible.
+    fn preflight(&self, mutation: &Puzzle5dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle5d Store preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        let retained = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+        Ok(match mutation {
+            Puzzle5dMutation::DragSelection2d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
+            Puzzle5dMutation::DragSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(2 * payload.targets.len(), retained),
+            Puzzle5dMutation::RotateSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
+            Puzzle5dMutation::ScaleSelection3d(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
+            Puzzle5dMutation::DeletePart(_) | Puzzle5dMutation::RemovePartGrip(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE5D_REMOVAL_INVERSE_ROWS, retained),
+            _ => store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained),
+        })
     }
 
     fn begin(
@@ -8706,7 +8745,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle5dConfig, Puzzle5dConfigMutati
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|_| "Puzzle5d config mutation could not produce its post root".to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Puzzle5d config preparation lost its Store authority".to_string())?;
         let id = format!("puzzle5d-config-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit {
+        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![mutation],

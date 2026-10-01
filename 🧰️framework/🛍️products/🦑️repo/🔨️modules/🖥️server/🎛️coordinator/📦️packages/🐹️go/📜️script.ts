@@ -2,7 +2,9 @@
 /** 🧭️ `@semio-tech/repo-coordinator-go` router: `bun ./📜️script.ts build|test|run`. */
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript, ScriptRouter, buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runCmd, runCmdStatus, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runCmd, runCmdStatus, runTestBudgeted } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const PACKAGE_DIR = import.meta.dir;
 const BINARY_DIR = join(PACKAGE_DIR, "📦️main");
@@ -44,4 +46,4 @@ class RunScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

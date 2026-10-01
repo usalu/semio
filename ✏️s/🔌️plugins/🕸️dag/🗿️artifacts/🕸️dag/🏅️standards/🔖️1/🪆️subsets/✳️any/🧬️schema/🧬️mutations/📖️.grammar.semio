@@ -8,6 +8,7 @@ mutation = op-line+
 op-line = create-node | delete-node | rename-node | change-node-name | move-node | resize-node
         | change-node-icon | change-node-abbreviation | change-node-operator-kind
         | replace-node-kind | replace-node-properties | reorder-nodes | connect-nodes | disconnect-nodes
+        | move-nodes | set-node-positions | set-slider
 
 create-node = "create-node" "node" "=" JSON ("index" "=" INT)?
 delete-node = "delete-node" "id" "=" IDENT
@@ -23,7 +24,11 @@ replace-node-properties = "replace-node-properties" "id" "=" IDENT "new-properti
 reorder-nodes = "reorder-nodes" "order" "=" "[" IDENT* "]"
 connect-nodes = "connect-nodes" "id" "=" IDENT "source" "=" wire-endpoint "target" "=" wire-endpoint route-style edge-props? ("index" "=" INT)?
 disconnect-nodes = "disconnect-nodes" "id" "=" IDENT
+move-nodes = "move-nodes" "ids" "=" "[" IDENT+ "]" "dx" "=" FLOAT "dy" "=" FLOAT
+set-node-positions = "set-node-positions" "positions" "=" JSON
+set-slider = "set-slider" "id" "=" IDENT "field" "=" slider-field "value" "=" FLOAT
 
+slider-field = "value" | "min" | "max"
 wire-endpoint = IDENT
 route-style = IDENT
 edge-props = "{" edge-field* "}"

@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🎟️ Runs the input oracle or delegates native filters to the shared budget. */
 class TestScript extends BundleScript {
@@ -40,4 +42,4 @@ class CheckWasmScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript).register("check-wasm", CheckWasmScript);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+if (import.meta.main) await runScriptMain(router);

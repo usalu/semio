@@ -654,7 +654,7 @@ fn the_demo_run_job_traces_every_node_settles_and_stays_under_the_interactive_ce
             hops_performed += 1;
             let doc = ArtifactView::new(&*snapshot, &history);
             let cfg = ConfigView { snapshot: &config, window: None };
-            let (emit, transient) = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, &tick, &doc, &cfg)).expect("the hop runs");
+            let (emit, transient) = handle.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, &tick, &doc, &doc, &cfg, 0)).expect("the hop runs");
             assert!(emit.extension_invocations.is_empty() && transient.is_empty(), "an uncontributed document target parks nothing and publishes no transient");
         }
         assert!(ticks.len() < 10_000, "the run must settle");

@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import fg from "fast-glob";
 import { applyPatch } from "fast-json-patch";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
@@ -61,7 +61,7 @@ export function testSemioKitDocumentContract(): void {
     "../../../../✉️base/🧬️schema/🪆️child/🔣️.json",
     "../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json",
   ]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
+  const fixtures = read("../../🧫️fixtures/🪪️document/🔣️.json");
   const snapshotSchema = ajv.compile(read("../../📸️snapshot/🔣️.json"));
   const artifactSchema = ajv.compile(read("../../🔣️.json"));
   const diffSchema = ajv.compile(read("../../🔺️diff/🔣️.json"));

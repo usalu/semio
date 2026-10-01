@@ -1,11 +1,11 @@
-//! 🎭️ `change-material-alpha-mode` implementation case `🎭️switches-the-79b834`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/💎️material/🌫️change-alpha/🎭️switches-the-79b834/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! 🎭️ `change-material-alpha-mode` implementation case `🎭️switches`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/💎️material/🌫️change-alpha/🎭️switches/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeMaterialAlphaModeMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-material-alpha-mode");
-    super::super::component::fixture_corpus_tests::assert_case("💎️material/🌫️change-alpha/🎭️switches-the-79b834");
+    super::super::component::fixture_corpus_tests::assert_case("💎️material/🌫️change-alpha/🎭️switches");
 }
 
 #[semio_framework_async_macros::async_test]

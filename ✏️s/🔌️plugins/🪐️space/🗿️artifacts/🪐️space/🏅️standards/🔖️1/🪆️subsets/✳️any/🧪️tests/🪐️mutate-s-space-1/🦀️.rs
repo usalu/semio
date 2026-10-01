@@ -60,18 +60,18 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "create-artifact" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends-artifact-3-to-the-index/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends-artifact-3-to-the-index/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends-artifact-3-to-the-index/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends-artifact-3-to-the-index/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends-artifact-3-to-the-index/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🌱create-artifact/🧪️appends/🎯️outcome/🔣️.json"),
         },
         "delete-artifact" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes-artifact-2-from-the-index/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-artifact/🧪️removes/🎯️outcome/🔣️.json"),
         },
         "rename-artifact" => Vector {
             before: include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/📸️snapshot/⬅️before/🔣️.json"),
@@ -81,11 +81,11 @@ fn vector(kind: &str) -> Vector {
             outcome: include_str!("../../🧫️fixtures/🧬️mutations/🏷️rename-artifact/🧪️renames-artifact-1/🎯️outcome/🔣️.json"),
         },
         "touch-artifact" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps-artifact-1-with-a-new-editor/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🕒touch-artifact/🧪️stamps/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-s-space-1: no committed specification vector is registered for kind {other:?}"),
     }

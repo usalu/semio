@@ -122,3 +122,43 @@ async fn the_drag_leaf_replays_its_edited_offset_relative_to_any_base() {
     let moved = apply(&base, &ShootingMutation::DragAssets(crate::mutations::drag_assets::DragAssets { asset_ids: vec![asset_id], dx: 0.0, dy: 7.0, dz: 0.0 }));
     assert_eq!(apply(&moved, &edited).assets[0].origin, [start[0] + 5.0, start[1] + 7.0, start[2]], "the edited offset replays relative to a moved base");
 }
+
+/// ⏪️ LAW: a gumball drag edited in history replays its downstream through the store: the preview base is the state
+/// right before the drag, and the Report replay re-applies the downstream relative turn and scaling onto the edited
+/// drag — exactly the fresh fold of the edited log; overwrite commits it.
+#[semio_framework_async_macros::async_test]
+async fn a_gumball_drag_edited_in_history_replays_its_downstream() {
+    use crate::mutations::{drag_assets::DragAssets, rotate_assets::RotateAssets, scale_assets::ScaleAssets};
+    use protocol::OpBinary;
+    let base = crate::standards::v1::subsets::any::schema::default_snapshot();
+    let asset_ids = vec![base.assets[0].id.clone()];
+    let drag = |dx: f64, dy: f64| ShootingMutation::DragAssets(DragAssets { asset_ids: asset_ids.clone(), dx, dy, dz: 0.0 });
+    let log = [drag(1.0, 0.0), ShootingMutation::RotateAssets(RotateAssets { asset_ids: asset_ids.clone(), ax: 0.0, ay: 0.0, az: 1.0, angle: 0.5 }), ShootingMutation::ScaleAssets(ScaleAssets { asset_ids: asset_ids.clone(), sx: 2.0, sy: 1.0, sz: 1.0 })];
+    let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope::<ShootingSnapshot, ShootingMutation>(crate::SHOOTING_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<ShootingSnapshot, ShootingMutation>());
+    for mutation in &log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let edited = drag(-2.0, 4.0);
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::SHOOTING_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited drag");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset drag never blocks finalizing");
+    let fold = |mutations: &[ShootingMutation]| mutations.iter().fold(base.clone(), |snapshot, mutation| crate::mutations::apply_shooting_mutation(&snapshot, mutation).expect("the log folds"));
+    let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
+    assert_ne!(fresh, fold(&log), "the edit changes the outcome");
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<ShootingSnapshot, ShootingMutation>();
+    for _ in 0..4_096 {
+        if disposer.terminal_is_empty(&store) {
+            break;
+        }
+        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+    }
+    assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
+}

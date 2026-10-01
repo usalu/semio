@@ -1,6 +1,6 @@
 /** 🎭️ Persisted mask metadata checked against the shared schema through Ajv. */
 import {expect,test} from "bun:test";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import sharp from "sharp";
 import schema from "../../🔣️.json";
 import fixture from "../../🧫️fixtures/🎭️mask/🔣️.json";

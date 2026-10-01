@@ -1,0 +1,1 @@
+CREATE TABLE retained_value (id INTEGER PRIMARY KEY, value INTEGER NOT NULL);

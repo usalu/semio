@@ -111,7 +111,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "flow-graph"
           ]
         }
       }
@@ -130,7 +131,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "flow-graph-wire"
           ]
         }
       }

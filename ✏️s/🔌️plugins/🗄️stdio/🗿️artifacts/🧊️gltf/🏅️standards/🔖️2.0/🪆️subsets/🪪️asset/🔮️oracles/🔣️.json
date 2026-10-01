@@ -11,8 +11,8 @@
       "vectors": [
         {
           "mutationId": "change-asset-descriptive-metadata",
-          "sourceMutationDirectoryName": "📝️change-description",
-          "mutationDirectoryName": "📝️change-description",
+          "sourceMutationDirectoryName": "📝️change",
+          "mutationDirectoryName": "📝️change",
           "scenarios": [
             {
               "id": "restamps-generator-copyright-and-min-version",
@@ -22,8 +22,8 @@
         },
         {
           "mutationId": "change-asset-extension-data",
-          "sourceMutationDirectoryName": "🧩️change-extensions",
-          "mutationDirectoryName": "🧩️change-extensions",
+          "sourceMutationDirectoryName": "🧩️change",
+          "mutationDirectoryName": "🧩️change",
           "scenarios": [
             {
               "id": "attaches-an-xmp-extension-object-to-the-asset-block",
@@ -49,14 +49,14 @@
           "scenarios": [
             {
               "id": "raises-the-asset-version-to-2-point-1",
-              "directoryName": "🔖️raises-the-asset-f95b77"
+              "directoryName": "🔖️raises"
             }
           ]
         },
         {
           "mutationId": "change-document-extension-data",
-          "sourceMutationDirectoryName": "🧩️change-extensions",
-          "mutationDirectoryName": "🧩️change-extensions",
+          "sourceMutationDirectoryName": "🧩️change",
+          "mutationDirectoryName": "🧩️change",
           "scenarios": [
             {
               "id": "attaches-punctual-lights-extension-to-document-root",
@@ -66,8 +66,8 @@
         },
         {
           "mutationId": "change-document-extra-data",
-          "sourceMutationDirectoryName": "📝️change-extras",
-          "mutationDirectoryName": "📝️change-extras",
+          "sourceMutationDirectoryName": "📝️change",
+          "mutationDirectoryName": "📝️change",
           "scenarios": [
             {
               "id": "attaches-an-exporter-extras-object-to-the-document-root",
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-required-extension-declarations",
-              "directoryName": "🔌️flips-the-two-c3ca1e"
+              "directoryName": "🔌️flips"
             }
           ]
         },
@@ -126,7 +126,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-used-extension-declarations",
-              "directoryName": "🔌️flips-the-two-d1aa6d"
+              "directoryName": "🔌️flips"
             }
           ]
         },

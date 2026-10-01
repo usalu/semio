@@ -11,7 +11,7 @@ use semio_framework_plugin::{artifact_app_laws, ActionMeta, PluginApp, ViewModel
 /// host supplies and the bare `dispatch` helper does not: the manifest registry (the verb is a
 /// `Migrated` row there), a bound live instance, a `ViewModel` naming the Blueprint window the
 /// command addresses (the retained work's `extent` refuses a command without one), and the host's
-/// settle protocol (`settle_registered_typed_operation`) — exactly `🧪️tests/🔬️window-ownership`'s
+/// settle protocol (`settle_registered_typed_operation`) — exactly `🧪️tests/🔬️window`'s
 /// recipe. Fails-before: the effect rode the receipt's `effects` to the host and selection landed
 /// one guest round trip later.
 #[semio_framework_async_macros::async_test]

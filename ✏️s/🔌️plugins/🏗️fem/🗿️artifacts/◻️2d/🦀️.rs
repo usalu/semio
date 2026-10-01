@@ -589,7 +589,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/⛔️rejects-a-missing-429801/🦀️.rs"]
                             mod tests_rejects_deleting_a_node_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚫️removes-node-n3-without-6eab3f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🕳️delete-node/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_node_n3_without_cascading_to_its_support;
                         }
                         #[path = "."]
@@ -602,13 +602,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends-bar-e2-between-fc1c09/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/➖️appends/🦀️.rs"]
                             mod tests_appends_bar_e2_between_n2_and_n3;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/📐️braces-the-upper-d96634/🦀️.rs"]
                             mod tests_braces_the_upper_storey_with_a_chs_diagonal;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🚫️rejects-a-dangling-b9e64c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧩️create-element/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_an_element_whose_start_node_is_missing;
                         }
                         #[path = "."]
@@ -630,7 +630,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/⛔️rejects-a-missing-611215/🦀️.rs"]
                             mod tests_rejects_deleting_an_element_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚫️removes-bar-e2-and-3c0260/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗑️delete-element/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_bar_e2_and_keeps_its_end_nodes;
                         }
                         #[path = "."]
@@ -643,7 +643,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/♻️converts-beam-e1-into-a-5d21f5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/♻️converts/🦀️.rs"]
                             mod tests_converts_beam_e1_into_a_bar_in_place;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🪪️denies-rename-0d46d8/🦀️.rs"]
@@ -652,7 +652,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🚫️dangling-start-cda887/🦀️.rs"]
                             mod tests_refuses_to_replace_the_brace_onto_a_start_node_that_does_not_exist;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🔧️regrades-the-roof-fb20eb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/🔧️regrades/🦀️.rs"]
                             mod tests_regrades_the_roof_beam_onto_the_ipe270_profile;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/♻️replace-element/🧪️tests/⛔️rejects-a-missing-bd448c/🦀️.rs"]
@@ -668,16 +668,16 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️adds-the-c25-slab-11d8df/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🏗️adds/🦀️.rs"]
                             mod tests_adds_the_c25_30_material_for_the_ground_slab;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧱️appends-concrete-c30/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🧱️appends/🦀️.rs"]
                             mod tests_appends_concrete_c30;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/⚗️denies-poisson-329e35/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/⚗️denies/🦀️.rs"]
                             mod tests_refuses_an_elastomeric_bearing_at_the_incompressible_poisson_limit;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚫️rejects-a-duplicate-f3220b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🌱️create-material/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_material_id_on_the_steel_frame;
                         }
                         #[path = "."]
@@ -690,13 +690,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🗑️drops-the-spare-00e964/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🗑️drops/🦀️.rs"]
                             mod tests_drops_the_unreferenced_s235_material_from_the_steel_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🔗️blocks-in-use-e99619/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🔗️blocks/🦀️.rs"]
                             mod tests_refuses_to_delete_the_s355_grade_seven_members_are_made_of;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛔️rejects-a-missing-d5b18f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_material_the_steel_frame_never_had;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🗑️delete-material/🧪️tests/🚫️removes-the-30f7a2/🦀️.rs"]
@@ -712,19 +712,19 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️cracks-the-c30-b2b220/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/📉️cracks/🦀️.rs"]
                             mod tests_cracks_the_c30_37_stiffness_in_half_for_the_infill_panel;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⚗️denies-zero-modulus-71e69a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⚗️denies/🦀️.rs"]
                             mod tests_refuses_a_concrete_row_whose_modulus_was_left_at_zero;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️denies-rename-a0d7aa/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🪪️denies/🦀️.rs"]
                             mod tests_refuses_to_regrade_the_concrete_by_renaming_it_through_a_replace;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⛔️rejects-a-missing-b3adee/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_material_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️restates-steel-7c22bc/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️material/🧬️schema/🧬️mutations/🔁️replace-material/🧪️tests/🏗️restates/🦀️.rs"]
                             mod tests_restates_steel_as_s355_in_its_original_slot;
                         }
                         #[path = "."]
@@ -740,13 +740,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/➕️adds-the-hea220-dfdf34/🦀️.rs"]
                             mod tests_adds_the_hea220_profile_to_the_steel_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/📐️appends-the-ipe300-profile/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/📐️appends/🦀️.rs"]
                             mod tests_appends_the_ipe300_profile;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/⚗️denies-zero-area-58b5ca/🦀️.rs"]
                             mod tests_refuses_an_ipe_100_profile_whose_area_was_left_at_zero;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🚫️rejects-a-duplicate-e91bc7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📐️create-section/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_section_id_on_the_steel_frame;
                         }
                         #[path = "."]
@@ -787,13 +787,13 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🪪️denies-rename-1d02dd/🦀️.rs"]
                             mod tests_refuses_to_rename_the_roof_beam_profile_through_a_replace_section;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/⛔️rejects-a-missing-b468f4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_section_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/💪️stiffens-ipe200-with-5e9c08/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/💪️stiffens/🦀️.rs"]
                             mod tests_stiffens_ipe200_with_a_reinforced_profile;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🛠️thickens-the-chs-e235a5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/📏️replace-section/🧪️tests/🛠️thickens/🦀️.rs"]
                             mod tests_thickens_the_chs_brace_wall_to_five_millimetres;
                         }
                         #[path = "."]
@@ -806,13 +806,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds-a-vertical-6161a1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🛞️adds/🦀️.rs"]
                             mod tests_adds_a_vertical_roller_at_node_n2;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props-the-canopy-b9d719/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🔻️props/🦀️.rs"]
                             mod tests_props_the_canopy_tip_on_a_vertical_roller;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects-a-dangling-b0d60b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🛡️create-support/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_support_on_a_node_the_steel_frame_never_had;
                         }
                         #[path = "."]
@@ -825,10 +825,10 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees-the-roof-tie-44562b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🕊️frees/🦀️.rs"]
                             mod tests_frees_the_roof_level_lateral_tie_of_the_steel_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects-a-missing-23f3c3/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_support_the_steel_frame_never_had;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🗑️delete-support/🧪️tests/🔓️releases-the-82b34f/🦀️.rs"]
@@ -844,19 +844,19 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins-the-left-base-7891ec/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔩️pins/🦀️.rs"]
                             mod tests_pins_the_left_column_base_by_releasing_its_rotation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling-node-98d979/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/👻️dangling/🦀️.rs"]
                             mod tests_refuses_to_move_the_roof_tie_onto_a_node_that_does_not_exist;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies-rename-63ec90/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🪪️denies/🦀️.rs"]
                             mod tests_refuses_to_rename_the_roof_tie_support_through_a_replace_support;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects-a-missing-afbf6d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_support_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades-the-834e4a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🛡️boundary/🧬️schema/🧬️mutations/🔁️replace-support/🧪️tests/🔒️upgrades/🦀️.rs"]
                             mod tests_upgrades_the_roller_at_n2_to_a_full_fixity;
                         }
                         #[path = "."]
@@ -881,7 +881,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🕳️denies-loose-hole-d9efa1/🦀️.rs"]
                             mod tests_refuses_an_upper_bay_panel_whose_door_opening_lies_outside_it;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🚫️rejects-a-duplicate-11ca0d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🗺️create-region/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_region_id_on_the_steel_frame;
                         }
                         #[path = "."]
@@ -903,7 +903,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/⛔️rejects-a-missing-a83a6d/🦀️.rs"]
                             mod tests_rejects_deleting_a_region_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🚫️removes-the-slab-and-5b301a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🚫️delete-region/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_slab_and_keeps_its_material;
                         }
                         #[path = "."]
@@ -919,7 +919,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪜️punches-a-stair-f7b3b1/🦀️.rs"]
                             mod tests_punches_a_stair_opening_through_the_slab;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/📐️denies-zero-thick-7d805e/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/📐️denies/🦀️.rs"]
                             mod tests_refuses_an_infill_panel_whose_thickness_was_set_to_zero;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪪️denies-rename-574c91/🦀️.rs"]
@@ -931,7 +931,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/⛔️rejects-a-missing-6e0d70/🦀️.rs"]
                             mod tests_rejects_replacing_a_region_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪟️widens-the-window-09a8ec/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🔄️replace-region/🧪️tests/🪟️widens/🦀️.rs"]
                             mod tests_widens_the_window_opening_in_the_infill_wall_panel;
                         }
                         #[path = "."]
@@ -944,13 +944,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends-a-live-case-59118a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/📍️appends/🦀️.rs"]
                             mod tests_appends_a_live_case_carrying_one_nodal_load;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends-the-snow-4c007c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/❄️appends/🦀️.rs"]
                             mod tests_appends_the_snow_case_over_the_roof_beam;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects-a-dangling-4904f4/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/📋️create-load-case/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_load_case_whose_udl_names_a_missing_element;
                         }
                         #[path = "."]
@@ -963,16 +963,16 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops-the-spare-49435f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🗑️drops/🦀️.rs"]
                             mod tests_drops_the_spare_snow_case_with_its_single_load;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🔗️blocks-in-use-7cdc5f/🦀️.rs"]
                             mod tests_refuses_to_delete_the_dead_case_three_combinations_still_weight;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects-a-missing-79ed15/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_load_case_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes-the-live-06415d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🗑️delete-load-case/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_live_case_together_with_its_loads;
                         }
                         #[path = "."]
@@ -985,7 +985,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends-a-member-udl-to-the-dead-case/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/📏️appends/🦀️.rs"]
                             mod tests_appends_a_member_udl_to_the_dead_case;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➕️add-load/🧪️tests/💨️pushes-a-wind-load-5c3f1e/🦀️.rs"]
@@ -1010,7 +1010,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/⛔️rejects-a-missing-1a8a80/🦀️.rs"]
                             mod tests_rejects_removing_a_load_the_dead_case_never_carried;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips-the-trailing-member-133914/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/➖️strips/🦀️.rs"]
                             mod tests_strips_the_trailing_member_udl_from_the_dead_case;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/➖️remove-load/🧪️tests/✂️strips-the-roof-udl-0c1b3c/🦀️.rs"]
@@ -1026,13 +1026,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps-self-weight-ff696b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🔁️keeps/🦀️.rs"]
                             mod tests_keeps_self_weight_on_for_the_dead_case;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches-self-abbff2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/⚖️switches/🦀️.rs"]
                             mod tests_switches_self_weight_on_for_the_dead_case;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches-self-5977a5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/⚖️change-load-case-self-weight/🧪️tests/🏋️switches/🦀️.rs"]
                             mod tests_switches_self_weight_on_for_the_imposed_case;
                         }
                         #[path = "."]
@@ -1045,13 +1045,13 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends-an-uls-0c18bb/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🔗️appends/🦀️.rs"]
                             mod tests_appends_an_uls_combination_over_both_cases;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends-the-6-10a-eefe01/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/➕️appends/🦀️.rs"]
                             mod tests_appends_the_six_ten_a_combination_over_dead_and_snow;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects-a-dangling-2aa3ea/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔗️create-combination/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_combination_term_naming_a_load_case_that_is_absent;
                         }
                         #[path = "."]
@@ -1064,16 +1064,16 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops-the-spare-60fda7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🗑️drops/🦀️.rs"]
                             mod tests_drops_the_spare_uls_combination_from_the_steel_frame;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/🔗️blocks-in-use-0b898b/🦀️.rs"]
                             mod tests_refuses_to_delete_an_uls_combination_a_design_envelope_nests;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects-a-missing-d4bc03/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_combination_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes-the-uls-438c0c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/✂️delete-combination/🧪️tests/✂️removes/🦀️.rs"]
                             mod tests_removes_the_uls_combination_and_keeps_both_cases;
                         }
                         #[path = "."]
@@ -1086,16 +1086,16 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles-the-modal-3fbb1a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔢️doubles/🦀️.rs"]
                             mod tests_doubles_the_modal_count_and_halves_the_deformation_scale;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps-the-analysis-196e4a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🔁️keeps/🦀️.rs"]
                             mod tests_keeps_the_analysis_settings_exactly_as_they_are;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises-the-mode-908c2b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🎚️raises/🦀️.rs"]
                             mod tests_raises_the_mode_counts_and_tightens_the_deformation_scale;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies-zero-modes-babc1d/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📈️analysis/🧬️schema/🧬️mutations/🎛️update-analysis-settings/🧪️tests/🚫️denies/🦀️.rs"]
                             mod tests_refuses_an_analysis_configured_to_extract_zero_modal_modes;
                         }
                         #[path = "."]
@@ -1133,7 +1133,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🧭️shifts-the-slab-3f8df5/🦀️.rs"]
                             mod tests_shifts_the_first_floor_slab_and_its_corner_nodes_right_and_up;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/📏️stretches-the-panel-b4f68b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/📏️stretches/🦀️.rs"]
                             mod tests_stretches_the_spare_panel_and_the_canopy_tip_to_twice_their_width;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⛔️rejects-a-missing-f9c98d/🦀️.rs"]
@@ -1142,10 +1142,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/⏸️moves-nothing-f724d6/🦀️.rs"]
                             mod tests_an_identity_transform_moves_nothing;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🫓️denies-a-flat-scale-49b312/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🫓️denies/🦀️.rs"]
                             mod tests_refuses_a_scale_that_flattens_the_wall_to_zero_height;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔁️denies-a-twice-named-61d178/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🕸️mesh/🧬️schema/🧬️mutations/🧭️move-selection/🧪️tests/🔁️denies/🦀️.rs"]
                             mod tests_refuses_a_transform_that_names_a_node_twice;
                         }
                         #[path = "."]
@@ -1161,7 +1161,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/🏋️retunes-the-live-f6fd49/🦀️.rs"]
                             mod tests_retunes_the_live_point_load_on_the_timber_portal_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/💨️strengthens-the-wind-21b88a/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/💨️strengthens/🦀️.rs"]
                             mod tests_strengthens_the_wind_point_load_on_the_braced_steel_frame;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-load/🧪️tests/⛔️rejects-a-missing-7a1e1f/🦀️.rs"]
@@ -1183,16 +1183,16 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🏷️renames-the-live-7dce39/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🏷️renames/🦀️.rs"]
                             mod tests_renames_the_live_case_of_the_timber_portal_frame_to_imposed_load;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/✏️renames-the-wind-61757b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/✏️renames/🦀️.rs"]
                             mod tests_renames_the_wind_case_of_the_braced_steel_frame_to_its_code_clause;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/⛔️rejects-a-missing-fc0343/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_renaming_a_load_case_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🔁️keeps-the-name-4fa89f/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🏷️change-load-case-name/🧪️tests/🔁️keeps/🦀️.rs"]
                             mod tests_keeps_the_dead_case_of_the_steel_frame_named_exactly_as_it_is;
                         }
                         #[path = "."]
@@ -1205,19 +1205,19 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⚖️reweights-the-uls-8b17b7/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⚖️reweights/🦀️.rs"]
                             mod tests_adds_a_snow_term_to_the_uls_combination_of_the_timber_portal_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🔗️adds-a-wind-term-6525d5/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🔗️adds/🦀️.rs"]
                             mod tests_adds_a_wind_term_to_the_uls_combination_of_the_braced_steel_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⛔️rejects-a-missing-b32308/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/⛔️rejects/🦀️.rs"]
                             mod tests_rejects_replacing_a_combination_the_steel_frame_never_had;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️denies-rename-a96d3c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/🪪️denies/🦀️.rs"]
                             mod tests_refuses_to_relabel_a_combination_through_a_replace_combination;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️dangling-case-65b8a8/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️dangling/🦀️.rs"]
                             mod tests_refuses_a_uls_term_weighting_a_case_the_steel_frame_never_had;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/🏋️load/🧬️schema/🧬️mutations/🔁️replace-combination/🧪️tests/👻️self-term-0f54d1/🦀️.rs"]

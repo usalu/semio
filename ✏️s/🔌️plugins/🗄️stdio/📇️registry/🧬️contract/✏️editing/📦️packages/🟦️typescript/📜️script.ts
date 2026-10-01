@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** ✏️ Stdio snapshot editing TypeScript package router. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class TestScript extends BundleScript {
   run(): void {
     const root = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing");
@@ -9,4 +11,4 @@ class TestScript extends BundleScript {
     runCmd(process.execPath, ["test", join(root, "🧪️tests/🔬️unit/🟦️.test.ts"), join(root, "🩹️patch/🧪️tests/🟦️.test.ts")]);
   }
 }
-await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), import.meta.url, { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { defaultCommand: "test" });

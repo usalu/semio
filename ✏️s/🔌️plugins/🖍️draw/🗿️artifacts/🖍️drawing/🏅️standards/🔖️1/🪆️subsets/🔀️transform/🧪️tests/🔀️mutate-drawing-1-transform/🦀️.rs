@@ -34,19 +34,19 @@ const UNOBSERVABLE: &[&str] = &[];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "set-layer-boolean-operation" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean-operation/➖️union-to-subtract/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean-operation/➖️union-to-subtract/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean-operation/➖️union-to-subtract/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔀set-layer-boolean/➖️union/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-layer-trace-params" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer-trace-params/🔍️sharpens-the-trace/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer-trace-params/🔍️sharpens-the-trace/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer-trace-params/🔍️sharpens-the-trace/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔍️update-layer/🔍️sharpens/📸️snapshot/➡️after/🔣️.json"),
         ),
         "update-layer-transform" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer-transform/📐️translates-and-scales-shape-a/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔄️update-layer/📐️translates/📸️snapshot/➡️after/🔣️.json"),
         ),
         "drag-layers" => (
             include_str!("../../🧫️fixtures/🧬️mutations/✋️drag-layers/✋️drags-a-child/📸️snapshot/⬅️before/🔣️.json"),
@@ -59,14 +59,14 @@ fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
             include_str!("../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/📸️snapshot/➡️after/🔣️.json"),
         ),
         "scale-layers" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/📸️snapshot/➡️after/🔣️.json"),
         ),
         "drag-path-points" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags-two-anchors/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📍️drag-path-points/📍️drags/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-transform: {other:?} is not a declared kind of this subset"),
     }

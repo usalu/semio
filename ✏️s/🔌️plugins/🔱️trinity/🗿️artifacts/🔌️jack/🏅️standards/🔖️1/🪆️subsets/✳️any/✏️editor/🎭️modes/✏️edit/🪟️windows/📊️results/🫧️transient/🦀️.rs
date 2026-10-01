@@ -176,7 +176,7 @@ fn results_window_transient_transfer(mutation: JackResultsWindowTransientMutatio
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧩️bounded-publication/🦀️.rs"]
+#[path = "🧪️tests/🧩️bounded/🦀️.rs"]
 mod bounded_publication_tests;
 
 pub struct JackResultsWindowTransientOwner;

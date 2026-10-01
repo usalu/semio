@@ -1,0 +1,15 @@
+{
+  "mutation": "changeBlockField",
+  "blockId": "q-area",
+  "field": "options",
+  "value": [
+    {
+      "value": "small",
+      "label": "Small"
+    },
+    {
+      "value": "large",
+      "label": "Large"
+    }
+  ]
+}

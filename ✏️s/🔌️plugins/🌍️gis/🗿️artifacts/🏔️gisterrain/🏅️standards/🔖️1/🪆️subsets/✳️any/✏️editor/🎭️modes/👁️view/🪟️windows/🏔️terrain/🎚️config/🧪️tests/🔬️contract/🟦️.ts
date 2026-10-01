@@ -7,7 +7,7 @@ import { parseGisTerrainWindowConfig } from "../../🧬️schema/🟦️.ts";
 /** 🧪️ Compares the production parser and independent Ajv validation for exact Terrain-window camera ownership. */
 export function testGisTerrainWindowConfigContract(): void {
   const here = fileURLToPath(new URL(".", import.meta.url));
-  const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️window-config-ownership/🔣️.json`, "utf8")) as {
+  const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️window/🔣️.json`, "utf8")) as {
     windowKindId: string;
     base: unknown;
     accepted: unknown[];

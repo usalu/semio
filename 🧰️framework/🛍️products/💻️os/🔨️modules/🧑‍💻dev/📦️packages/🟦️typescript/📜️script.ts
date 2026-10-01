@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭️ Routes OS development commands to their semantic owners. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🔬️ Checks neutral development process and local-session contracts against independent oracles. */
 class CanonicalArchitectureScript extends BundleScript {
@@ -127,4 +128,4 @@ const router = new ScriptRouter(import.meta.dir)
     }
   });
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "dev" });

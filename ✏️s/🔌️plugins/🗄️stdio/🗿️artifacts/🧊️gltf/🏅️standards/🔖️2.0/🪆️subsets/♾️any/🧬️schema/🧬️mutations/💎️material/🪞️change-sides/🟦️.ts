@@ -4,7 +4,7 @@ import { gltfWireBoolean, gltfWireIndex, gltfWireObject, gltfWireRequired } from
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfChangeMaterialDoubleSidedPayload {
-  material: number;
+  material: bigint;
   doubleSided: boolean;
 }
 

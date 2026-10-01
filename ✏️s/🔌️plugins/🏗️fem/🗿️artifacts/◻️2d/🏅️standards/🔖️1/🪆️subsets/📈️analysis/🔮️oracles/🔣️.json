@@ -16,19 +16,19 @@
           "scenarios": [
             {
               "id": "doubles-the-modal-3fbb1a",
-              "directoryName": "🔢️doubles-the-modal-3fbb1a"
+              "directoryName": "🔢️doubles"
             },
             {
               "id": "keeps-the-analysis-196e4a",
-              "directoryName": "🔁️keeps-the-analysis-196e4a"
+              "directoryName": "🔁️keeps"
             },
             {
               "id": "raises-the-mode-908c2b",
-              "directoryName": "🎚️raises-the-mode-908c2b"
+              "directoryName": "🎚️raises"
             },
             {
               "id": "denies-zero-modes-babc1d",
-              "directoryName": "🚫️denies-zero-modes-babc1d"
+              "directoryName": "🚫️denies"
             }
           ]
         }

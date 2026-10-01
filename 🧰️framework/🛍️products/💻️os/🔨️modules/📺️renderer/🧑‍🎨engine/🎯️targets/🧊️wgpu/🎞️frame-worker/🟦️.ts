@@ -1,3 +1,4 @@
+import { publishedPageUrl } from "../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { admitWgpuPluginRegistrySelection } from "../🧩️plugin-modules/🛂️admission/🟦️.ts";
 import { admitWgpuPluginModules, prepareWgpuPluginModules, assertWgpuPluginPlan, type WgpuPluginModule } from "../🧩️plugin-modules/🟦️.ts";
 import { BrowserMediaRegistry, type BrowserMediaCommand } from "../../../🎬️media/🌐️browser/🟦️.ts";
@@ -797,7 +798,7 @@ async function pumpAsset(): Promise<void> {
     responseController = new AbortController();
     assetAbort = responseController;
     const responseCurrent = (): void => assertBrowserAssetResponseContinuation(responseController!, () => ownedStep("asset-response-current", () => runtime!.assetResponseCurrent()));
-    const response = await monitoredSuspension("asset-fetch", () => fetch(meshAssetTransportUrl(request.url!), { signal: responseController!.signal }));
+    const response = await monitoredSuspension("asset-fetch", () => fetch(publishedPageUrl(meshAssetTransportUrl(request.url!)), { signal: responseController!.signal }));
     responseCurrent();
     if (!response.ok || !response.body) throw new Error(`asset-fetch-status: ${response.status}`);
     const declaredHeader = ownedStep("asset-response-headers", () => response.headers.get("content-length"));

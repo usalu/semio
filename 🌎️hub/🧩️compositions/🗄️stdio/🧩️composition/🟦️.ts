@@ -2,10 +2,10 @@
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, relative, resolve, sep } from "node:path";
-import { admitCompositionContributionV1, selectCompositionContributionsV1, type CompositionContributionV1 } from "../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
+import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
 
 type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
-type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string> };
+type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
 const boundary = 4 * 1024 * 1024;
 
 function physical(root: string, path: string, file = true): string {
@@ -81,15 +81,22 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
       if (contribution.package !== packageManifest.package.name) throw new Error(`Contribution package does not match its physical Cargo owner: ${entry.name}`);
       const prefix = contribution.package.replaceAll("-", "_") + "::";
       if (contribution.apps.some((app) => !app.type.startsWith(prefix) || !app.factory.startsWith(prefix))) throw new Error(`Contribution app symbols escape their Cargo owner: ${entry.name}`);
-      for (const receipt of contribution.nativeReceipts) {
-        if (receipt.artifact !== contribution.artifact) throw new Error(`Native receipt escapes its artifact contribution: ${entry.name}`);
-        capture(resolve(repoRoot, receipt.protocol_path));
-        if (observed.get(resolve(repoRoot, receipt.protocol_path)) !== receipt.protocol_source_sha256) throw new Error(`Native receipt source proof is stale: ${receipt.factory_id}`);
-        const definition = JSON.parse(capture(resolve(repoRoot, receipt.definition_path)));
-        const bound = definition.codecs?.find((codec: any) => codec.native_factory?.factory_id === receipt.factory_id)?.native_factory;
-        if (!bound || bound.pack_schema_hash !== receipt.pack_schema_hash || bound.artifact_kind !== receipt.artifact_kind || bound.artifact_schema !== receipt.artifact_schema || bound.runtime_capability_id !== receipt.runtime_capability_id || bound.extension !== receipt.extension) throw new Error(`Native receipt definition authority is stale: ${receipt.factory_id}`);
-      }
-      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, observed });
+      const ownInput = (path: string): string => {
+        const absolute = resolve(repoRoot, path), local = relative(artifactRoot, absolute);
+        if (local === ".." || local.startsWith(".." + sep)) throw new Error("Native factory export escapes its actual artifact owner");
+        return absolute;
+      };
+      const nativeReceipts = resolveCompositionNativeFactoriesV1(contribution, (path, factoryId) => {
+        const definition = JSON.parse(capture(ownInput(path)));
+        const matches = definition.codecs?.filter((codec: any) => codec.native_factory?.factory_id === factoryId);
+        if (!matches || matches.length !== 1 || matches[0].status !== "implemented" || matches[0].executable_registration !== true) throw new Error(`Native factory export is missing, ambiguous or unavailable: ${factoryId}`);
+        return { descriptorCodecId: matches[0].id, factory: matches[0].native_factory };
+      }, path => {
+        const absolute = ownInput(path);
+        capture(absolute);
+        return observed.get(absolute)!;
+      });
+      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, observed, nativeReceipts });
     }
   }
   selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full");
@@ -98,7 +105,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
 
 /** 📦️ Refreshes only this composition's authored output regions and source projections. */
 export function prepareStdioComposition(repoRoot: string, hubRoot: string): { contributions: number; apps: number; receipts: number } {
-  const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full");
+  const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");
   const outputs = new Map<string, { previous: string | undefined; next: string }>();
@@ -127,11 +134,39 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   }
   const selected = (selection: string) => `vec![${selectCompositionContributionsV1(inputs.map((input) => input.contribution), selection).map((row) => `${row.package.replaceAll("-", "_")}::contribution()`).join(", ")}]`;
   publish("🤖️generated/🧩️composition/🦀️.rs", `#[cfg(feature = "full-artifact-catalog")]\nfn selected_contributions() -> Vec<ArtifactContribution> { ${selected("full")} }\n#[cfg(all(feature = "home-io", not(feature = "full-artifact-catalog")))]\nfn selected_contributions() -> Vec<ArtifactContribution> { ${selected("home")} }\n#[cfg(not(any(feature = "full-artifact-catalog", feature = "home-io")))]\nfn selected_contributions() -> Vec<ArtifactContribution> { Vec::new() }\n`);
+  const mutationDescriptors = rows.flatMap(row => row.mutationDescriptors);
+  for (const row of rows) {
+    const prefix = row.package.replaceAll("-", "_") + "::";
+    if (row.mutationDescriptors.some(entry => !entry.snapshot.startsWith(prefix) || !entry.mutation.startsWith(prefix))) throw new Error("Mutation descriptor escapes its actual artifact package");
+    for (const coordinate of row.mutationCoordinates) {
+      const directory = physical(repoRoot, coordinate.owner, false);
+      const source = inputs.find(input => input.contribution.package === row.package)!;
+      const local = relative(source.directory, directory);
+      if (local === ".." || local.startsWith(".." + sep)) throw new Error("Mutation coordinate escapes its actual artifact owner");
+      if (!lstatSync(directory).isDirectory() || coordinate.artifact !== row.nativeReceipts[0]?.artifact_kind && coordinate.artifact !== `s.stdio.${row.artifact}`) throw new Error("Invalid artifact-owned mutation coordinate");
+    }
+  }
+  const aggregates = mutationDescriptors.map(entry => `    (${JSON.stringify(entry.name)}, descriptors::<${entry.snapshot}, ${entry.mutation}>),`).join("\n");
+  const coordinates = rows.flatMap(row => row.mutationCoordinates).map(entry => `    (${[entry.artifact, entry.standard, entry.subset, entry.surface, entry.owner, entry.prefix].map(value => JSON.stringify(value)).join(", ")}),`).join("\n");
+  publish("🤖️generated/🧩️mutations/🦀️.rs", `const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[\n${aggregates}\n];\nconst COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[\n${coordinates}\n];\n`);
+  const editors = rows.flatMap(row => row.apps).filter(app => app.role === "editor");
+  const editorLaws = editors.map(app => `    (${app.laws!.editing}, ${app.laws!.sqliteSnapshot}, ${app.type}, ${app.factory}),`).join("\n");
+  publish("🤖️generated/🧪️editor-laws/🦀️.rs", editors.length ? `editor_catalog_laws! {\n${editorLaws}\n}\n` : "const EDITOR_COUNT: usize = 0;\n");
+  const editorFixture = JSON.parse(read(hubRoot, "🧫️fixtures/✏️editor-catalog/🔣️.json"));
+  editorFixture.editorCount = editors.length;
+  editorFixture.formatCount = rows.length;
+  editorFixture.editorApps = rows.flatMap(row => row.playgrounds.map(playground => playground.app));
+  publish("🧫️fixtures/✏️editor-catalog/🔣️.json", JSON.stringify(editorFixture, null, 2) + "\n");
   const receipts = rows.flatMap((row) => row.nativeReceipts).sort((a, b) => Buffer.compare(Buffer.from(a.factory_id), Buffer.from(b.factory_id)));
+  const homeFixture = JSON.parse(read(hubRoot, "🧫️fixtures/🏠️home-io-surface/🔣️.json"));
+  homeFixture.fullArtifactCount = rows.length;
+  homeFixture.nativeCodecCount = receipts.length;
+  for (const vector of homeFixture.surfaceCases) vector.catalog = vector.selected.every((feature: string) => feature === "home-io") ? selectCompositionContributionsV1(inputs.map(input => input.contribution), "home").length : rows.length;
+  publish("🧫️fixtures/🏠️home-io-surface/🔣️.json", JSON.stringify(homeFixture, null, 2) + "\n");
   publish("🔌️plugin/📇️catalog/📜️native-codec-factories.json", JSON.stringify({ schema: "semio.stdio.native-openable-catalog-provider/v1", provider_id: "stdio/native-codecs/v1", plugin_id: "stdio", package_id: "semio:stdio", receipts }, null, 2) + "\n");
   const payload = JSON.parse(read(hubRoot, "📇️publication/📜️native-catalog.json"));
   payload.nativeCodecs = receipts.map((row) => ({ artifactKind: row.artifact_kind, artifactSchema: row.artifact_schema, packSchemaHash: row.pack_schema_hash, factoryId: row.factory_id, extension: row.extension, protocolSourceSha256: row.protocol_source_sha256 }));
-  payload.openTargets = rows.flatMap((row) => row.openTargets);
+  payload.openTargets = resolveCompositionOpenTargetsV1(rows, receipts);
   publish("📇️publication/📜️native-catalog.json", JSON.stringify(payload, null, 2) + "\n");
   const declaration = JSON.parse(read(hubRoot, "📇️publication/🔣️.json"));
   const publication = declaration.publications.find((row: { id: string }) => row.id === "stdio-native-codecs");

@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧠️ Neural engine native and language-neutral lifecycle validation. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 //#region 🧪️Validation
 class TestScript extends BundleScript {
@@ -13,5 +15,5 @@ class SourceTestScript extends BundleScript {
   async run(): Promise<void> { await import("../../🧵️retirement/🧪️tests/🧪️source-contract/🟦️.ts"); }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-source", SourceTestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });
 //#endregion 🧪️Validation

@@ -1,0 +1,24 @@
+{
+  "sqliteDialect": {
+    "artifactKind": "s.stdio.md",
+    "standard": "commonmark",
+    "subset": "*"
+  },
+  "invalidSqliteDialects": [
+    {
+      "artifactKind": "s.stdio.txt",
+      "standard": "commonmark",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.md",
+      "standard": "gfm",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "gfm"
+    }
+  ]
+}

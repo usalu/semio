@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
-import { BundleScript } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import plugin from "../../../🟨️.mjs";
 import type { InventoryProject } from "../../📇️inventory/🟦️.ts";
 import { sourceFiles } from "../../🔍️discovery/📂️source/🟦️.ts";

@@ -3492,8 +3492,7 @@ impl WorldInteractionIntentQueue {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum WorldFlatActionKind {
     PaintAt,
-    PaintStrokeBegin,
-    PaintStrokeEnd,
+    PaintCommit,
     VortexSelect,
     VortexHover,
     SurfacePlace,
@@ -6712,7 +6711,13 @@ impl WorldInteractionAuthority {
                         }
                     }
                 }
-                if let Some(plan) = plan_world3d_paint_stroke(state, generation, intent.down, intent.button) {
+                if intent.down && intent.button == 0 && state.interaction_mode == "paint" && !state.paint_stroke_active {
+                    // 🖌️ A press opens the paint gesture and dabs where it lands (a `paintAt` stream tick when the ray hits
+                    // a mesh); the moves stream the drag's dabs and the release commits them as ONE edit.
+                    state.paint_stroke_active = true;
+                    state.interaction_revision = state.interaction_revision.wrapping_add(1);
+                    WorldRayPickCursor::new(state, generation, WorldRayPickPurpose::Paint, intent.x, intent.y).map(|cursor| WorldInteractionActive::Pick { cursor, retirement: None })
+                } else if let Some(plan) = (!intent.down).then(|| plan_world3d_paint_release(state, generation, intent.button)).flatten() {
                     Some(WorldInteractionActive::Plan { plan, retirement: None })
                 } else if !intent.down && intent.button == 0 && state.active_utility == "surfaceBrush" {
                     WorldRayPickCursor::new(state, generation, WorldRayPickPurpose::Surface, intent.x, intent.y).map(|cursor| WorldInteractionActive::Pick { cursor, retirement: None })
@@ -7369,18 +7374,16 @@ pub fn plan_world3d_drag(state: &World3dState, generation: u64, dx: f32, dy: f32
     plan.push_action(action).then_some(plan)
 }
 
-pub fn plan_world3d_paint_stroke(state: &World3dState, generation: u64, down: bool, button: i16) -> Option<WorldInteractionPlan> {
-    if state.interaction_mode != "paint" || button != 0 || state.paint_stroke_active == down {
+/// 🖌️ The release of a paint gesture: ONE `paintAt` with `phase: "commit"` that commits the app's open paint transaction,
+/// clearing `paint_stroke_active` only once the action is reserved. `None` outside an open left-button paint gesture.
+pub fn plan_world3d_paint_release(state: &World3dState, generation: u64, button: i16) -> Option<WorldInteractionPlan> {
+    if state.interaction_mode != "paint" || button != 0 || !state.paint_stroke_active {
         return None;
     }
     let mut plan = WorldInteractionPlan::new(state.interaction_revision, generation);
     let controller = plan.push_string(&state.controller_id)?;
     let surface = plan.push_string(&state.surface_id)?;
-    let action = WorldFlatAction {
-        kind: if down { WorldFlatActionKind::PaintStrokeBegin } else { WorldFlatActionKind::PaintStrokeEnd },
-        strings: [Some(controller), Some(surface), None, None, None, None, None, None],
-        numbers: [if down { 1.0 } else { 0.0 }, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-    };
+    let action = WorldFlatAction { kind: WorldFlatActionKind::PaintCommit, strings: [Some(controller), Some(surface), None, None, None, None, None, None], numbers: [0.0; 10] };
     plan.push_action(action).then_some(plan)
 }
 
@@ -7539,19 +7542,19 @@ pub fn publish_world3d_plan_step(
             builder.end_container()?;
             reservation.publish()?;
         }
-        WorldFlatActionKind::PaintStrokeBegin | WorldFlatActionKind::PaintStrokeEnd => {
+        WorldFlatActionKind::PaintCommit => {
             let controller = plan.string(action.strings[0].expect("paint controller span"));
             let surface = plan.string(action.strings[1].expect("paint surface span"));
-            let action_id = if action.kind == WorldFlatActionKind::PaintStrokeBegin { "paintStrokeBegin" } else { "paintStrokeEnd" };
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface])?;
+            let action_id = "paintAt";
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "phase", "commit"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
             builder.string(Some("surfaceId"), surface)?;
+            builder.string(Some("phase"), "commit")?;
             builder.end_container()?;
-            let active = action.numbers[0] != 0.0;
             reservation.publish_with(|| {
-                state.paint_stroke_active = active;
+                state.paint_stroke_active = false;
                 state.interaction_revision = state.interaction_revision.wrapping_add(1);
             })?;
         }
@@ -7560,7 +7563,7 @@ pub fn publish_world3d_plan_step(
             let surface = plan.string(action.strings[1].expect("paint surface span"));
             let object = plan.string(action.strings[2].expect("paint object span"));
             let action_id = "paintAt";
-            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "u", "v"])?;
+            let bytes = ui_wgpu::wgpu::checked_action_string_bytes(&[controller, action_id, "surfaceId", surface, "objectId", object, "u", "v", "phase", "stream"])?;
             let mut reservation = input.reserve_action(controller, action_id, bytes)?;
             let builder = reservation.builder();
             builder.begin_object(None)?;
@@ -7568,6 +7571,7 @@ pub fn publish_world3d_plan_step(
             builder.string(Some("objectId"), object)?;
             builder.number(Some("u"), action.numbers[0])?;
             builder.number(Some("v"), action.numbers[1])?;
+            builder.string(Some("phase"), "stream")?;
             builder.end_container()?;
             reservation.publish()?;
         }
@@ -10753,46 +10757,45 @@ fn append_gumball_geometry(
 
 #[cfg(test)]
 fn apply_gumball_preview(state: &mut World3dState) {
-    if state.gumball_handle.is_none() {
+    let Some(handle) = state.gumball_handle else {
         return;
-    }
-    let pivot = state.gumball_pivot;
+    };
     for draw in &mut state.draws {
         for instance in &mut draw.instances {
-            if !state.selected_ids.iter().any(|id| id == &instance.id) {
-                continue;
-            }
-            let translation = instance.model.cols[3];
-            let base = Vec3::new(translation[0], translation[1], translation[2]);
-            if state.gumball_preview_translate.length() > 1e-4 {
-                let next = base.add(state.gumball_preview_translate);
-                instance.model.cols[3] = [next.x, next.y, next.z, 1.0];
-            } else if state.gumball_preview_angle.abs() > 1e-6 {
-                if let Some(handle) = state.gumball_handle {
-                    if let Some(axis) = handle.axis_dir() {
-                        let offset = base.sub(pivot);
-                        let rotated = rotate_vector(offset, axis, state.gumball_preview_angle);
-                        let next = pivot.add(rotated);
-                        instance.model.cols[3] = [next.x, next.y, next.z, 1.0];
-                    }
-                }
-            } else if (state.gumball_preview_scale.x - 1.0).abs() > 1e-6 || (state.gumball_preview_scale.y - 1.0).abs() > 1e-6 || (state.gumball_preview_scale.z - 1.0).abs() > 1e-6 {
-                if let Some(handle) = state.gumball_handle {
-                    if let Some(axis) = handle.axis_dir() {
-                        let offset = base.sub(pivot);
-                        let scale = match handle {
-                            GumballHandle::ScaleX => state.gumball_preview_scale.x,
-                            GumballHandle::ScaleY => state.gumball_preview_scale.y,
-                            GumballHandle::ScaleZ => state.gumball_preview_scale.z,
-                            _ => 1.0,
-                        };
-                        let scaled = pivot.add(axis.scale(offset.dot(axis) * (scale - 1.0)).add(offset));
-                        instance.model.cols[3] = [scaled.x, scaled.y, scaled.z, 1.0];
-                    }
-                }
+            if state.selected_ids.iter().any(|id| id == &instance.id) {
+                instance.model = gumball_preview_in_place(instance.model, handle, state.gumball_preview_translate, state.gumball_preview_angle, state.gumball_preview_scale);
             }
         }
     }
+}
+
+/// 🎚️ One selected instance's gumball preview, exactly as the release commits it: a move translates the instance, a
+/// turn rotates its basis about the handle's world axis IN PLACE — its own origin stays, because every 3D gumball
+/// verb's leaf (puzzle `rotate-selection`, shooting `rotate-assets`, …) turns each target about its own origin — and
+/// a scale stretches the instance's own local axis, as the per-axis factors of the scale leaves do. The gumball pivot
+/// only anchors the widget; the selection never orbits it, so the multi-object preview equals the committed state.
+fn gumball_preview_in_place(model: Mat4, handle: GumballHandle, translate: Vec3, angle: f32, scale: Vec3) -> Mat4 {
+    let mut preview = model;
+    if translate.length() > 1e-4 {
+        let next = Vec3::new(model.cols[3][0], model.cols[3][1], model.cols[3][2]).add(translate);
+        preview.cols[3] = [next.x, next.y, next.z, model.cols[3][3]];
+    } else if angle.abs() > 1e-6 {
+        if let Some(axis) = handle.axis_dir() {
+            for column in 0..3 {
+                let turned = rotate_vector(Vec3::new(model.cols[column][0], model.cols[column][1], model.cols[column][2]), axis, angle);
+                preview.cols[column] = [turned.x, turned.y, turned.z, model.cols[column][3]];
+            }
+        }
+    } else {
+        let (column, factor) = match handle {
+            GumballHandle::ScaleX => (0, scale.x),
+            GumballHandle::ScaleY => (1, scale.y),
+            GumballHandle::ScaleZ => (2, scale.z),
+            _ => return preview,
+        };
+        preview.cols[column] = [model.cols[column][0] * factor, model.cols[column][1] * factor, model.cols[column][2] * factor, model.cols[column][3]];
+    }
+    preview
 }
 
 fn retained_gumball_gesture(state: &World3dState) -> Option<&WorldGumballGesture> {
@@ -10814,26 +10817,7 @@ fn retained_gumball_preview_model(state: &World3dState, draw_index: usize, insta
     if !selected {
         return model;
     }
-    let mut preview = model;
-    let translation = model.cols[3];
-    let base = Vec3::new(translation[0], translation[1], translation[2]);
-    let next = if gesture.translate.length() > 1e-4 {
-        base.add(gesture.translate)
-    } else if gesture.angle.abs() > 1e-6 {
-        gesture.handle.axis_dir().map_or(base, |axis| gesture.pivot.add(rotate_vector(base.sub(gesture.pivot), axis, gesture.angle)))
-    } else if let Some(axis) = gesture.handle.axis_dir() {
-        let factor = match gesture.handle {
-            GumballHandle::ScaleX => gesture.scale.x,
-            GumballHandle::ScaleY => gesture.scale.y,
-            GumballHandle::ScaleZ => gesture.scale.z,
-            _ => 1.0,
-        };
-        gesture.pivot.add(axis.scale(base.sub(gesture.pivot).dot(axis) * (factor - 1.0)).add(base.sub(gesture.pivot)))
-    } else {
-        base
-    };
-    preview.cols[3] = [next.x, next.y, next.z, 1.0];
-    preview
+    gumball_preview_in_place(model, gesture.handle, gesture.translate, gesture.angle, gesture.scale)
 }
 
 #[cfg(test)]
@@ -13408,6 +13392,7 @@ fn handle_world3d_pointer_move(state: &mut World3dState, x: f32, y: f32, down: b
                         "objectId": object_id,
                         "u": u,
                         "v": v,
+                        "phase": "stream",
                     })),
                 });
             }
@@ -13446,6 +13431,7 @@ fn handle_world3d_paint_actions(state: &mut World3dState, x: f32, y: f32, down: 
                 "objectId": object_id,
                 "u": u,
                 "v": v,
+                "phase": "stream",
             })),
         }];
     }
@@ -13469,7 +13455,8 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
             }
             if state.interaction_mode == "paint" {
                 state.paint_stroke_active = true;
-                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeBegin".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id })) });
+                let (object_id, u, v) = pick_paint_hit(state, x, y, inner)?;
+                return Some(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintAt".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id, "objectId": object_id, "u": u, "v": v, "phase": "stream" })) });
             }
             if state.active_utility == "brush" || (state.active_utility == "select" && state.granularity == "vertex") {
                 if let Some(full_id) = pick_vortex_at(state, x, y, inner) {
@@ -13534,7 +13521,7 @@ fn handle_world3d_pointer_button(state: &mut World3dState, x: f32, y: f32, down:
     if button == 0 && state.interaction_mode == "paint" && state.paint_stroke_active {
         state.paint_stroke_active = false;
         let mut actions = Vec::new();
-        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintStrokeEnd".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id })) });
+        actions.push(ActionDescriptor { controller_id: state.controller_id.clone(), action: "paintAt".into(), args: Some(semio_framework::dsl_value!({ "surfaceId": state.surface_id, "phase": "commit" })) });
         return actions.first().cloned();
     }
     if button == 0 {

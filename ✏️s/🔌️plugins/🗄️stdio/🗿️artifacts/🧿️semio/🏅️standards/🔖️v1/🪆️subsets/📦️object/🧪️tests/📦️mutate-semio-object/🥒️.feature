@@ -105,14 +105,14 @@ Feature: Apply every typed semio OBJECT mutation to the real committed crate obj
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                | dir                  | fixture                                                       |
-      | move-object       | 🚚move-object        | 🚚️moves-the-object-to-a-new-translation                         |
-      | rotate-object     | 🔄rotate-object      | 🔄️rotates-the-object-a-half-turn-about-z                        |
-      | scale-object      | 📏scale-object       | 📏️scales-the-object-non-uniformly                               |
-      | create-brep       | 🧱create-brep        | 🧱️attaches-a-brep-child-to-an-object-that-has-none              |
-      | delete-brep       | 💥delete-brep        | 💥️detaches-the-brep-child-and-leaves-the-mesh-child-alone       |
-      | create-mesh       | 🕸️create-mesh       | 🕸️attaches-a-mesh-child-to-an-object-that-has-none              |
-      | delete-mesh       | 🧨delete-mesh        | 🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone       |
-      | create-properties | 🏷️create-properties | 🏷️attaches-a-properties-child-to-an-object-that-has-none        |
+      | move-object       | 🚚move-object        | 🚚️moves                         |
+      | rotate-object     | 🔄rotate-object      | 🔄️rotates                        |
+      | scale-object      | 📏scale-object       | 📏️scales                               |
+      | create-brep       | 🧱create-brep        | 🧱️attaches              |
+      | delete-brep       | 💥delete-brep        | 💥️detaches       |
+      | create-mesh       | 🕸️create-mesh       | 🕸️attaches              |
+      | delete-mesh       | 🧨delete-mesh        | 🧨️detaches       |
+      | create-properties | 🏷️create-properties | 🏷️attaches        |
       | delete-properties | 🚫delete-properties  | 🚫️detaches-the-properties-child-and-leaves-the-mesh-child-alone |
 
   @id-identity-round-trip

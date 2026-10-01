@@ -1,0 +1,5 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.mutation.set_rule_layout_points;
+// set-rule-layout-points / SetRuleLayoutPoints
+message RuleLayoutPlacement { string key = 1; double x = 2; double y = 3; }
+message SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated string cleared = 2; }

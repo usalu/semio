@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_txt::editor::txt::TxtEditor",
       "factory": "semio_s_artifact_stdio_txt::editor::txt::create_txt_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "txt_editor",
+        "sqliteSnapshot": "sqlite_snapshot_txt_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -24,22 +28,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_txt::viewer::txt::TxtViewer",
       "factory": "semio_s_artifact_stdio_txt::viewer::txt::create_txt_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "txt",
-      "factory_id": "stdio.native.txt.v1",
-      "descriptor_codec_id": "s.stdio.txt.standard.utf-8.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.txt.standard.utf-8.codec.codec-stdio-txt-extension-txt.v1",
-      "artifact_kind": "s.stdio.txt",
-      "artifact_schema": "stdio.txt",
-      "extension": "txt",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
-      "protocol_source_sha256": "d416b7a0cf81eff01de894166b9c30e77106920a106bc8406807f9187b519536",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -56,6 +46,30 @@
         "react": 6211,
         "wgpu": 6311
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "TxtMutation",
+      "snapshot": "semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::snapshot::TxtSnapshot",
+      "mutation": "semio_s_artifact_stdio_txt::standards::v_utf_8::subsets::any::schema::mutations::TxtMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.txt",
+      "standard": "utf-8",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.txt.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🏅️standards/🔖️utf-8/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

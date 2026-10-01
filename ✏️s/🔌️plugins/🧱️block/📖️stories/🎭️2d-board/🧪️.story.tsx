@@ -124,7 +124,7 @@ export const HexagonalCutConcreteForestLeft: Story = {
   },
 };
 
-/** ➡️ The `➡️hexagonal-cut-concrete-forest-right` example — the same 6 handle kinds with a mirrored kind assignment on `h4`/`h5`/`h6`. */
+/** ➡️ The `➡️hexagonal-cut-concrete-forest` example — the same 6 handle kinds with a mirrored kind assignment on `h4`/`h5`/`h6`. */
 export const HexagonalCutConcreteForestRight: Story = {
   args: {
     initialExampleId: "hexagonal-cut-concrete-forest-right",

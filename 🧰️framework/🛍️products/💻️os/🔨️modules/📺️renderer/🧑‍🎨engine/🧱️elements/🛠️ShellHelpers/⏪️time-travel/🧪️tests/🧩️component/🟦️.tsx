@@ -3,9 +3,14 @@
  * session generation, the remappable chords (never Escape, never from a form field) published on `aria-keyshortcuts`, the
  * window indicator's accessible name, the framework history body rendered through the interpreter instead of a
  * host-built tab, and peers' open history edits against the peers corpus the wgpu shell asserts too
- * (`🧫️time-travel-peers`). Third-party oracles: Ajv validates the corpus against its schema and the kernel's own
- * `HistoryTimeTravel` wire schema, `dom-accessibility-api` names the indicator, `@testing-library/user-event` types the
- * chords, and the `⏪️time-travel` module's `TIME_TRAVEL_LABELS` is the independent source of every stage and refusal text. */
+ * (`🧫️time-travel-peers`). The corpus's `transitions` pin when the History panel is revealed and where focus moves; the
+ * Rust-shaped draft editor (band, editor and input rows holding a stepper, a slider with snaps, a select and a reference
+ * list) is operated by keyboard alone, every control is named, its outcome rows say their severity in words, icon and tone,
+ * and every ARIA attribute is one its role allows; no checkpoint reaches a frozen history (e2e R2-6). Third-party oracles:
+ * Ajv validates the corpus against its schema and the kernel's own `HistoryTimeTravel` wire schema, `dom-accessibility-api`
+ * names every control, `aria-query` (the WAI-ARIA role model) lists the attributes each role supports,
+ * `@testing-library/user-event` types the chords and tabs through the editor, and the `⏪️time-travel` module's
+ * `TIME_TRAVEL_LABELS` is the independent source of every stage and refusal text. */
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -14,19 +19,20 @@ import { createRequire } from "node:module";
 import type * as AccessibilityOracle from "dom-accessibility-api" with { "resolution-mode": "require" };
 import userEvent from "@testing-library/user-event";
 import { afterAll, afterEach, describe, expect, it } from "vitest";
-import { createElement, Fragment } from "react";
+import { createElement, Fragment, useState } from "react";
 import { act, cleanup, render } from "@semio-tech/ui-react/test";
 import { composeControlKeybindings, PresenceBar, SHELL_KEYBINDINGS, UiKeybindingsProvider } from "@semio-tech/ui-react";
 import { encodePresenceHistoryEdit, encodePresenceInteraction, encodePresenceToolRun } from "@semio-tech/framework-replication";
-import type { ActionDescriptor, BuiltNode, HistoryPatch, HistoryTimeTravel, UiIntent } from "@semio-tech/framework";
+import type { ActionDescriptor, BuiltNode, HistoryEntry, HistoryPatch, HistoryTimeTravel, UiIntent } from "@semio-tech/framework";
 import "../../../../🐚️Shell/🟦️.tsx";
 import { builtNodeToSnapshot, UiDocumentStore } from "../../../../📃️UiDocumentStore/🟦️.tsx";
-import { checkinSubmitMessageV1, presenceEphemeralPeerFieldsV1, EMPTY_SHELL_HISTORY_PROJECTION_V1, FRAMEWORK_CHECKIN_CONTROLLER_ID, HISTORY_REFUSAL_LABEL_KEYS, historyPatchShouldApplyV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfOutputV1, operationProgressPartsV1, panelActionRoutesThroughHostV1, panelTabDefinitionToNode, shellHistoryProjectionAfterPatchV1, shellLabel, syncShellLabelLocale, type ShellHistoryProjectionV1 } from "../../../🟦️.tsx";
-import { TIME_TRAVEL_CHORD_IDS, TimeTravelBand, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator } from "../../🟦️.tsx";
-import { UiPresenceOverlayContext } from "../../../../🗣️Interpreter/🟦️.tsx";
-import { TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
+import { checkinSubmitMessageV1, checkpointGateV1, checkpointOnCloseKeyV1, presenceEphemeralPeerFieldsV1, EMPTY_SHELL_HISTORY_PROJECTION_V1, FRAMEWORK_CHECKIN_CONTROLLER_ID, HISTORY_REFUSAL_LABEL_KEYS, historyPatchShouldApplyV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfOutputV1, operationProgressPartsV1, panelActionRoutesThroughHostV1, panelTabDefinitionToNode, shellHistoryCursorDomV1, shellHistoryProjectionAfterPatchV1, shellLabel, syncShellLabelLocale, useCheckpointOnCloseV1, type ShellHistoryProjectionV1 } from "../../../🟦️.tsx";
+import { scheduleTimeTravelFocusV1, TIME_TRAVEL_CHORD_IDS, TimeTravelBand, timeTravelBandControlsV1, timeTravelBandTextV1, timeTravelControlActionV1, timeTravelFocusElementV1, timeTravelFocusIsHeldV1, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator, type TimeTravelFocusTargetV1 } from "../../🟦️.tsx";
+import { TREE_ROW_TONE_CLASSES, UiPresenceOverlayContext } from "../../../../🗣️Interpreter/🟦️.tsx";
+import { TIME_TRAVEL_CODE_LABELS, TIME_TRAVEL_LABELS } from "../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts";
 
-const { computeAccessibleName }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+const { computeAccessibleName, getRole }: typeof AccessibilityOracle = createRequire(import.meta.url)("dom-accessibility-api");
+const { roles: ariaRoles, aria: ariaProperties } = createRequire(import.meta.url)("aria-query") as { readonly roles: ReadonlyMap<string, { readonly props: Readonly<Record<string, unknown>> }>; readonly aria: ReadonlyMap<string, unknown> };
 const here = dirname(fileURLToPath(import.meta.url));
 const shellHelpers = join(here, "..", "..", "..");
 const framework = join(here, "..", "..", "..", "..", "..", "..", "..", "..", "..", "..");
@@ -120,7 +126,7 @@ describe("⏪️ time-travel band corpus", () => {
       syncShellLabelLocale(locale);
       for (const row of refusals) expect(historyRefusalNoticeV1(historyRefusalCodeV1(row.code)!), `${row.code} (${locale})`).toEqual({ text: row.text[locale], kind: row.severity, code: row.code });
     }
-    expect([historyRefusalOfOutputV1({ rejected: "timeTravel.name-invalid" }), historyRefusalOfOutputV1({ rejected: "timeTravel.busy" }), historyRefusalOfOutputV1({ timeTravel: "reviewing" }), historyRefusalOfOutputV1(null)]).toEqual(["timeTravel.name-invalid", null, null, null]);
+    expect([historyRefusalOfOutputV1({ rejected: "timeTravel.name-invalid" }), historyRefusalOfOutputV1({ rejected: "timeTravel.busy" }), historyRefusalOfOutputV1({ rejected: "timeTravel.unheard-of" }), historyRefusalOfOutputV1({ timeTravel: "reviewing" }), historyRefusalOfOutputV1(null)]).toEqual(["timeTravel.name-invalid", "timeTravel.busy", null, null, null]);
   });
 
   it("names the window indicator by what the window shows, in words and not by colour", () => {
@@ -261,19 +267,48 @@ describe("🗣️ the time-travel bundle texts are the ⏪️time-travel module'
       for (const [key, label] of pairs) expect(String(shellLabel(key)), `${key} (${locale})`).toBe(TIME_TRAVEL_LABELS[label][locale]);
     }
   });
+
+  it("names every timeTravel.* code the vocabulary lists, byte for byte in both languages", () => {
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      for (const [code, label] of TIME_TRAVEL_CODE_LABELS) {
+        const known = historyRefusalCodeV1(code);
+        expect(known, code).not.toBeNull();
+        expect(historyRefusalNoticeV1(known!).text, `${code} (${locale})`).toBe(TIME_TRAVEL_LABELS[label][locale]);
+      }
+    }
+    expect(Object.keys(HISTORY_REFUSAL_LABEL_KEYS).filter((code) => code.startsWith("timeTravel.")).sort()).toEqual(TIME_TRAVEL_CODE_LABELS.map(([code]) => code).sort());
+  });
 });
+
+/** 🌲️ Rust-shaped history-body nodes (`🔌️plugin/🦀️.rs` `ui_history_panel`, `⏪️time-travel` band and editor sections), built
+ * the way the guest's `BuiltNode` arrives: every input row holds one control, every button row one button. */
+const STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
+const ACCESSIBILITY = { label: null, description: null, live: "off", shortcut: null, hidden: false };
+const LEAF = { kind: "leaf", width: "hug", height: "hug" };
+type NodeExtra = { readonly tone?: string; readonly label?: string; readonly disabled?: boolean };
+const node = (key: string, component: Record<string, unknown>, children: readonly BuiltNode[] = [], bindings: readonly unknown[] = [], extra: NodeExtra = {}): BuiltNode => ({ key, component, layout: LEAF, style: { ...STYLE, tone: extra.tone ?? "neutral" }, activity: "idle", disabled: extra.disabled ?? false, accessibility: { ...ACCESSIBILITY, label: extra.label ?? null }, bindings: [...bindings], menu: null, children: [...children] }) as unknown as BuiltNode;
+const bind = (scope: string, name: string, args: Record<string, unknown> | null = null, trigger = "activate") => ({ trigger, action: { scope, name, version: 1 }, args });
+const treeItem = (key: string, label: string, children: readonly BuiltNode[], row: { readonly description?: string; readonly icon?: string; readonly tone?: string; readonly open?: boolean } = {}) => node(key, { type: "treeItem", label, description: row.description ?? null, icon: row.icon ?? null, defaultOpen: row.open ?? null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null }, children, [], { tone: row.tone });
+const section = (key: string, label: string, children: readonly BuiltNode[]) => node(key, { type: "treeSection", label, defaultOpen: true, headerToolbar: null, window: null }, children);
+const button = (key: string, label: string, binding: unknown, extra: NodeExtra = {}) => node(key, { type: "button", label, icon: "" }, [], [binding], extra);
+const controller = "toy.controller";
+const overlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} };
+const historyTab = { kind: { kind: "app" as const, id: "framework.panel.history" }, label: { native: { en: "History", de: "Verlauf" }, reuse: { en: "History", de: "Verlauf" } }, group: "settings" as const, bodyKey: "framework.body.history", children: [] };
+
+/** 🌲️ Renders `body` as the History leaf exactly as the shell mounts it, dispatching into `onAction`. */
+function mountHistoryBody(body: BuiltNode, onAction: (action: ActionDescriptor) => void) {
+  const store = new UiDocumentStore("panel:framework.panel.history");
+  store.loadSnapshot(builtNodeToSnapshot("panel:framework.panel.history", body));
+  const leaf = panelTabDefinitionToNode(historyTab as Parameters<typeof panelTabDefinitionToNode>[0], "settings", { "framework.panel.history": store }, onAction, 1, overlay);
+  if (leaf.kind !== "leaf") throw new Error("history tab is a leaf");
+  const source = leaf.trees[0]!.tree;
+  const config = "resolveTree" in source ? source.resolveTree() : source;
+  return render(createElement(Fragment, null, config.emptyState));
+}
 
 describe("🕰️ the framework history body renders through the interpreter", () => {
   afterEach(() => cleanup());
-  const STYLE = { variant: "plain", size: "md", density: "standard", tone: "neutral", emphasis: "regular" };
-  const ACCESSIBILITY = { label: null, description: null, live: "off", shortcut: null, hidden: false };
-  const LEAF = { kind: "leaf", width: "hug", height: "hug" };
-  const node = (key: string, component: Record<string, unknown>, children: readonly BuiltNode[] = [], bindings: readonly unknown[] = []): BuiltNode => ({ key, component, layout: LEAF, style: STYLE, activity: "idle", disabled: false, accessibility: ACCESSIBILITY, bindings: [...bindings], menu: null, children: [...children] }) as unknown as BuiltNode;
-  const bind = (scope: string, name: string, args: Record<string, unknown> | null = null) => ({ trigger: "activate", action: { scope, name, version: 1 }, args });
-  const treeItem = (key: string, label: string, children: readonly BuiltNode[]) => node(key, { type: "treeItem", label, description: null, icon: null, defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [], target: null }, children);
-  const section = (key: string, label: string, children: readonly BuiltNode[]) => node(key, { type: "treeSection", label, defaultOpen: true, headerToolbar: null, window: null }, children);
-  const button = (key: string, label: string, binding: unknown) => node(key, { type: "button", label, icon: "" }, [], [binding]);
-  const controller = "toy.controller";
   const body = node("framework.history", { type: "tree", interactionDomain: null }, [
     section("framework.history.actions", "Actions", [
       treeItem("framework.history.undo", "Undo", [button("framework.history.undo.run", "Undo", bind(controller, "undo"))]),
@@ -283,7 +318,6 @@ describe("🕰️ the framework history body renders through the interpreter", (
       treeItem("framework.history.entry.4", "Drag selection", [button("framework.history.entry.4.edit", "Edit", bind(controller, "historyEditBegin", { mutationId: "m-2" }))]),
     ]),
   ]);
-  const overlay = { windowKindLabels: {}, panelTabLabels: {}, modeLabels: {}, actionLabels: {}, utilityLabels: {}, exampleLabels: {}, actionArgLabels: {}, dialogLabels: {}, introductionLabels: {}, groupLabels: {} };
 
   it("mounts the guest's body on the History leaf and dispatches its authored verbs, a row's lone button becoming the row's activation", () => {
     const store = new UiDocumentStore("panel:framework.panel.history");
@@ -375,3 +409,303 @@ describe("🕰️ the framework history body renders through the interpreter", (
     for (const gone of ["HISTORY_PANEL_LABELS", "SHELL_OWNED_PANEL_TAB_IDS", "shellRendersPanelTabItself"]) expect(helpers.includes(gone), gone).toBe(false);
   });
 });
+
+//#region ⏪️DraftEditor
+/** ✏️ The Rust-shaped body while a draft is open (`time_travel_band_section`, `time_travel_editor_sections`,
+ * `ui_history_panel`): the band and editor sections, one row per input — a stepper, a slider with snaps, a select and a
+ * reference list with "Use selection" — and a history row whose mutation rows carry their outcome. */
+const GENERATION = 7;
+const draftArgs = (path: string, value?: unknown) => ({ generation: GENERATION, path, ...(value === undefined ? {} : { value }) });
+const container = (key: string, role: string, label: string | null, children: readonly BuiltNode[]) => node(key, { type: "container", role, label, description: null, required: null, error: null, defaultOpen: null, dropOverlay: null }, children);
+const draftBody = (inputs: boolean): BuiltNode =>
+  node("framework.history", { type: "tree", interactionDomain: null }, [
+    section("framework.history.timeTravel", "History editing", [
+      treeItem("framework.history.timeTravel.status", "Editing a mutation: Drag selection · Error", [], { icon: "clock", tone: "danger" }),
+      treeItem("framework.history.timeTravel.exit.row", "Exit time travel", [button("framework.history.timeTravel.exit", "Exit time travel", bind(controller, "historyEditExit"))]),
+    ]),
+    section("framework.history.editor", "Drag selection", [
+      treeItem("framework.history.editor.target", "Draft: Drag selection · Error: Target missing", [], { icon: "alert-circle", tone: "danger" }),
+      ...(["Accept", "Discard", "Withdraw"] as const).map((verb) => treeItem(`framework.history.editor.${verb.toLowerCase()}.row`, verb, [button(`framework.history.editor.${verb.toLowerCase()}`, verb, bind(controller, `historyEdit${verb}`, { generation: GENERATION }))])),
+    ]),
+    ...(inputs
+      ? [
+          section("framework.history.editor.inputs", "Inputs", [
+            treeItem("framework.history.editor.input.dx.row", "dx", [node("framework.history.editor.input.dx", { type: "numberStepper", value: 80, step: 1, uniform: true, min: -1000, max: 1000, precision: null }, [], [bind(controller, "historyEditInput", draftArgs("/dx"), "change")], { label: "dx" })]),
+            treeItem("framework.history.editor.input.angle.row", "Angle", [node("framework.history.editor.input.angle", { type: "slider", value: 0, min: -180, max: 180, step: 1, unit: "°", snaps: [-90, 0, 90] }, [], [bind(controller, "historyEditInput", draftArgs("/angle"), "change")], { label: "Angle" })]),
+            treeItem("framework.history.editor.input.mode.row", "Mode", [node("framework.history.editor.input.mode", { type: "select", value: "pivot", items: [{ value: "pivot", label: "Pivot" }, { value: "centroid", label: "Centroid" }], placeholder: null }, [], [bind(controller, "historyEditInput", draftArgs("/mode"), "change")], { label: "Mode" })]),
+            treeItem("framework.history.editor.input.pivot.row", "Pivot", [
+              container("framework.history.editor.input.pivot", "group", "Pivot", (["x", "y"] as const).map((axis, index) =>
+                node(`framework.history.editor.input.pivot.${index}.axis`, { type: "container", role: "field", label: axis, description: "mm", required: null, error: null, defaultOpen: null, dropOverlay: null }, [
+                  node(`framework.history.editor.input.pivot.${index}`, { type: "input", kind: "number", value: String(index * 10), placeholder: null, commit: "blur", min: -500, max: 500, step: 0.5, accept: null, precision: 1, snaps: [0] }, [], [bind(controller, "historyEditInput", draftArgs(`/pivot/${index}`), "commit")], { label: axis }),
+                ]),
+              )),
+            ]),
+            treeItem("framework.history.editor.input.targets.row", "Targets", [
+              container("framework.history.editor.input.targets", "group", "Targets", [
+                container("framework.history.editor.input.targets.chips", "toolbar", "Targets", [
+                  button("framework.history.editor.input.targets.chip.0", "node-1", bind(controller, "historyEditInput", draftArgs("/targets", ["node-2"])), { label: "Remove node-1" }),
+                  button("framework.history.editor.input.targets.chip.1", "node-2", bind(controller, "historyEditInput", draftArgs("/targets", ["node-1"])), { label: "Remove node-2" }),
+                ]),
+                container("framework.history.editor.input.targets.actions", "plain", null, [button("framework.history.editor.input.targets.useSelection", "Use selection", bind(controller, "historyEditUseSelection", draftArgs("/targets")), { label: "Use selection" })]),
+              ]),
+            ]),
+          ]),
+        ]
+      : []),
+    section("framework.history.alternatives", "Alternatives", [
+      treeItem("framework.history.alternative.trunk", "Main line", [], { description: "Current", icon: "check" }),
+      node("framework.history.alternative.alt-1", { type: "treeItem", label: "Variant", description: "Branched by Ada at 2026-10-01 09:12 UTC · Edited history", icon: "git-branch", defaultOpen: null, draggable: null, dragData: null, dimmed: null, window: null, granularity: null, inlineToolbar: null, detail: null, rowActions: [{ icon: "git-branch", label: "Switch", verb: "switchAlternative", placement: "row", disabled: false }], target: { scope: controller, version: 1, args: { alternativeId: "alt-1" }, activation: "switchAlternative" } }),
+    ]),
+    section("framework.history.commands", "Commands", [
+      treeItem(
+        "framework.history.entry.4",
+        "Drag 2 items by (80, 40)",
+        [
+          treeItem("framework.history.mutation.m-2", "Drag selection", [], { description: "Edited", icon: "edit" }),
+          treeItem("framework.history.mutation.m-3", "Drag selection", [], { description: "Warning: Partially applied", icon: "triangle-alert", tone: "warning" }),
+          treeItem("framework.history.mutation.m-4", "Drag selection", [], { description: "Error: Target missing", icon: "alert-circle", tone: "danger" }),
+        ],
+        { open: true },
+      ),
+    ]),
+  ]);
+const editingSession = cases.find((entry) => entry.session.stage === "editing" && entry.session.fault === undefined)!.session;
+const byIdSuffix = (root: ParentNode, key: string): HTMLElement | null => [...root.querySelectorAll<HTMLElement>("[id]")].find((element) => element.id.endsWith(`/${key}`)) ?? null;
+const nextFrames = (count: number) => act(async () => {
+  for (let frame = 0; frame < count; frame += 1) await new Promise((resolve) => requestAnimationFrame(() => resolve(null)));
+});
+type Transition = { readonly name: string; readonly from: HistoryTimeTravel | null; readonly to: HistoryTimeTravel | null; readonly reveal: boolean; readonly focus: TimeTravelFocusTargetV1 | null };
+
+describe("🧭️ a session change reveals the History panel and moves focus where the session continues", () => {
+  afterEach(() => cleanup());
+
+  it("reveals and focuses exactly as the shared corpus's transitions say", () => {
+    const transitions = corpus.transitions as readonly Transition[];
+    expect(new Set(transitions.map((row) => row.focus))).toEqual(new Set(["editor", "band", "dialog", null]));
+    for (const row of transitions) expect(timeTravelTransitionV1(row.from, row.to), row.name).toEqual({ reveal: row.reveal, focus: row.focus });
+  });
+
+  it("finds the draft's first input, else its Accept, the band and the prompt in the shell's own DOM", () => {
+    const withInputs = mountHistoryBody(draftBody(true), () => undefined);
+    expect(timeTravelFocusElementV1(withInputs.container, "editor")?.id.endsWith("/framework.history.editor.input.dx")).toBe(true);
+    withInputs.unmount();
+    const withoutInputs = mountHistoryBody(draftBody(false), () => undefined);
+    const accept = timeTravelFocusElementV1(withoutInputs.container, "editor");
+    expect([accept?.tagName, accept?.closest("[id]")?.id.endsWith("/framework.history.editor.accept.row"), accept === null ? "" : computeAccessibleName(accept)]).toEqual(["BUTTON", true, "Accept"]);
+    withoutInputs.unmount();
+    const view = mountBand(editingSession, "en");
+    expect(timeTravelFocusElementV1(view.container, "band")).toBe(band(view.container));
+    expect([band(view.container).tabIndex, timeTravelFocusElementV1(view.container, "dialog")]).toEqual([-1, null]);
+    const prompt = document.createElement("div");
+    prompt.setAttribute("role", "dialog");
+    prompt.innerHTML = '<p>Finish editing history</p><input id="prompt-name"><button type="button">Back</button>';
+    view.container.append(prompt);
+    expect(timeTravelFocusElementV1(view.container, "dialog")?.id).toBe("prompt-name");
+  });
+
+  it("moves focus once its target mounts, keeps the prompt's own focus and never takes it from someone typing elsewhere", async () => {
+    const root = document.createElement("div");
+    document.body.append(root);
+    const cancel = scheduleTimeTravelFocusV1(root, "band");
+    await nextFrames(2);
+    root.innerHTML = '<div data-semio-time-travel="editing" role="status" tabindex="-1"></div>';
+    await nextFrames(2);
+    expect(document.activeElement).toBe(root.firstElementChild);
+    cancel();
+    const chat = document.createElement("input");
+    document.body.append(chat);
+    chat.focus();
+    scheduleTimeTravelFocusV1(root, "band");
+    await nextFrames(2);
+    expect([document.activeElement === chat, timeTravelFocusIsHeldV1(chat)]).toEqual([true, true]);
+    const historyField = document.createElement("input");
+    historyField.id = "panel:framework.panel.history/framework.history.editor.input.dx";
+    const promptField = document.createElement("input");
+    const prompt = document.createElement("div");
+    prompt.setAttribute("role", "dialog");
+    prompt.append(promptField);
+    root.append(historyField, prompt);
+    expect([timeTravelFocusIsHeldV1(historyField), timeTravelFocusIsHeldV1(promptField), timeTravelFocusIsHeldV1(document.createElement("button")), timeTravelFocusIsHeldV1(null)]).toEqual([false, false, false, false]);
+    promptField.focus();
+    scheduleTimeTravelFocusV1(root, "dialog");
+    await nextFrames(2);
+    expect(document.activeElement).toBe(promptField);
+    chat.remove();
+    root.remove();
+  });
+});
+
+describe("♿️ the draft editor is named, operable by keyboard alone and says each outcome in words, icon and tone", () => {
+  afterEach(() => cleanup());
+
+  it("names every input control and dispatches each one's draft verb with the session generation", async () => {
+    const dispatched: ActionDescriptor[] = [];
+    const view = mountHistoryBody(draftBody(true), (action) => {
+      dispatched.push(action);
+      return Promise.resolve();
+    });
+    const dx = byIdSuffix(view.container, "framework.history.editor.input.dx") as HTMLInputElement;
+    const slider = view.container.querySelector<HTMLElement>('[role="slider"]')!;
+    const mode = byIdSuffix(view.container, "framework.history.editor.input.mode")!;
+    const chip = byIdSuffix(view.container, "framework.history.editor.input.targets.chip.0")!;
+    const useSelection = byIdSuffix(view.container, "framework.history.editor.input.targets.useSelection")!;
+    expect([computeAccessibleName(dx), [dx.min, dx.max, dx.step], computeAccessibleName(slider), slider.getAttribute("aria-valuetext"), view.container.querySelectorAll('[data-slot="slider-tick"]').length, computeAccessibleName(mode), computeAccessibleName(chip), computeAccessibleName(useSelection)]).toEqual(["dx", ["-1000", "1000", "1"], "Angle", "0 °", 3, "Mode", "Remove node-1", "Use selection"]);
+    const user = userEvent.setup();
+    await act(async () => {
+      dx.focus();
+      await user.keyboard("{ArrowUp}");
+      dx.blur();
+    });
+    await act(async () => {
+      await user.click(chip);
+      await user.click(useSelection);
+    });
+    const pivotX = byIdSuffix(view.container, "framework.history.editor.input.pivot.0") as HTMLInputElement;
+    expect([computeAccessibleName(pivotX), pivotX.min, pivotX.max, pivotX.step]).toEqual(["x", "-500", "500", "0.5"]);
+    await act(async () => {
+      await user.clear(pivotX);
+      await user.type(pivotX, "12.5{Enter}");
+    });
+    const drafts = dispatched.map(({ action, args }) => ({ action, path: (args as { path?: string }).path, value: (args as { value?: unknown }).value, generation: (args as { generation?: number }).generation }));
+    expect(drafts.filter((draft) => draft.path === "/pivot/0")).toEqual([{ action: "historyEditInput", path: "/pivot/0", value: 12.5, generation: GENERATION }]);
+    expect(drafts.filter((draft) => draft.path === "/dx").at(-1)).toEqual({ action: "historyEditInput", path: "/dx", value: 81, generation: GENERATION });
+    expect(drafts.filter((draft) => draft.path === "/targets")).toEqual([
+      { action: "historyEditInput", path: "/targets", value: ["node-2"], generation: GENERATION },
+      { action: "historyEditUseSelection", path: "/targets", value: undefined, generation: GENERATION },
+    ]);
+  });
+
+  it("lists the main line and each alternative, says which is current in words, and switches by a named button", async () => {
+    const dispatched: ActionDescriptor[] = [];
+    const view = mountHistoryBody(draftBody(true), (action) => {
+      dispatched.push(action);
+      return Promise.resolve();
+    });
+    const text = view.container.textContent ?? "";
+    expect(["Main line", "Current", "Variant", "Edited history"].every((line) => text.includes(line))).toBe(true);
+    const variant = byIdSuffix(view.container, "framework.history.alternative.alt-1")!;
+    const switches = [...variant.querySelectorAll<HTMLButtonElement>("button")].filter((element) => computeAccessibleName(element) === "Switch");
+    expect([switches.length, byIdSuffix(view.container, "framework.history.alternative.trunk")!.querySelectorAll("button").length > 0 && [...byIdSuffix(view.container, "framework.history.alternative.trunk")!.querySelectorAll("button")].some((element) => computeAccessibleName(element) === "Switch")]).toEqual([1, false]);
+    await act(async () => {
+      await userEvent.setup().click(switches[0]!);
+    });
+    expect(dispatched.map(({ controllerId, action, args }) => ({ controllerId, action, args }))).toEqual([{ controllerId: controller, action: "switchAlternative", args: { alternativeId: "alt-1" } }]);
+  });
+
+  it("reaches every editor control by Tab, in row order", async () => {
+    const view = mountHistoryBody(draftBody(true), () => undefined);
+    const user = userEvent.setup();
+    const wanted = ["framework.history.editor.accept", "framework.history.editor.input.dx", "framework.history.editor.input.mode", "framework.history.editor.input.pivot.0", "framework.history.editor.input.pivot.1", "framework.history.editor.input.targets.chip.0", "framework.history.editor.input.targets.chip.1", "framework.history.editor.input.targets.useSelection"];
+    const reached: string[] = [];
+    for (let step = 0; step < 40 && reached.length < wanted.length + 1; step += 1) {
+      await act(async () => {
+        await user.tab();
+      });
+      const active = document.activeElement as HTMLElement | null;
+      const owner = active?.id ? active.id : (active?.closest("[id]")?.id ?? "");
+      const key = active?.getAttribute("role") === "slider" ? "slider" : (wanted.find((candidate) => owner.endsWith(`/${candidate}`) || owner.endsWith(`/${candidate}.row`)) ?? null);
+      if (key !== null && !reached.includes(key)) reached.push(key);
+    }
+    expect(reached).toEqual([wanted[0], wanted[1], "slider", ...wanted.slice(2)]);
+    view.unmount();
+  }, 30_000);
+
+  it("says each outcome in words and icon and tones its row by severity, never by colour alone", () => {
+    const view = mountHistoryBody(draftBody(true), () => undefined);
+    const rowOf = (text: string) => [...view.container.querySelectorAll<HTMLElement>("*")].find((element) => element.childElementCount === 0 && element.textContent === text) ?? null;
+    const toneOf = (text: string) => Object.values(TREE_ROW_TONE_CLASSES).find((name) => rowOf(text)?.closest(`.${name}`)) ?? null;
+    expect(["Warning: Partially applied", "Error: Target missing", "Edited", "Draft: Drag selection · Error: Target missing", "Editing a mutation: Drag selection · Error"].map(toneOf)).toEqual(["text-warning", "text-destructive", null, "text-destructive", "text-destructive"]);
+    for (const text of ["Warning: Partially applied", "Error: Target missing"]) expect(rowOf(text)?.closest("[id]")?.querySelector("svg"), text).not.toBeNull();
+  });
+
+  it("fits a phone: the band wraps within 90 % of the viewport and every control is a touch-size target", () => {
+    for (const entry of cases) {
+      const view = mountBand(entry.session, "en");
+      const status = band(view.container);
+      expect([status.classList.contains("max-w-[90vw]"), status.classList.contains("flex-wrap")], entry.name).toEqual([true, true]);
+      for (const control of status.querySelectorAll("button")) expect(control.classList.contains("min-h-medium"), `${entry.name}: ${control.textContent}`).toBe(true);
+      view.unmount();
+    }
+  });
+
+  it("uses only ARIA attributes each role supports, references only ids that exist and names every control", () => {
+    const view = mountBand(editingSession, "en");
+    const body = mountHistoryBody(draftBody(true), () => undefined);
+    const roots = [view.container, body.container];
+    const findings: string[] = [];
+    const ids = new Map<string, number>();
+    for (const root of roots) {
+      for (const element of root.querySelectorAll<HTMLElement>("*")) {
+        if (element.id) ids.set(element.id, (ids.get(element.id) ?? 0) + 1);
+        const role = getRole(element);
+        for (const { name, value } of [...element.attributes]) {
+          if (!name.startsWith("aria-")) continue;
+          if (!ariaProperties.has(name)) findings.push(`${element.tagName}#${element.id}: unknown ${name}`);
+          else if (role !== null && ariaRoles.get(role) !== undefined && !(name in ariaRoles.get(role)!.props) && name !== "aria-hidden") findings.push(`${role}#${element.id}: ${name} not supported`);
+          if ((name === "aria-describedby" || name === "aria-labelledby") && value.split(/\s+/u).some((id) => id !== "" && document.getElementById(id) === null)) findings.push(`${role}#${element.id}: ${name} → missing ${value}`);
+        }
+        const interactive = element.matches('button, input, select, textarea, [role="slider"], [role="combobox"], [role="spinbutton"]') && element.closest('[aria-hidden="true"]') === null;
+        if (interactive && computeAccessibleName(element).trim() === "") findings.push(`${role}#${element.id}: no accessible name`);
+      }
+    }
+    for (const [id, count] of ids) if (count > 1) findings.push(`duplicate id ${id}`);
+    expect(findings).toEqual([]);
+  });
+});
+//#endregion ⏪️DraftEditor
+
+//#region 📌️FrozenCheckIn
+describe("📌️ no checkpoint reaches a frozen history (e2e R2-6)", () => {
+  afterEach(() => cleanup());
+
+  it("dispatches a checkpoint only outside a session: an automatic one waits, an explicit one is told why", () => {
+    for (const entry of cases) expect([checkpointGateV1(entry.session, "auto"), checkpointGateV1(entry.session, "check-in")], entry.name).toEqual(["wait", "frozen"]);
+    expect([checkpointGateV1(null, "auto"), checkpointGateV1(null, "release")]).toEqual(["dispatch", "dispatch"]);
+  });
+
+  it("checkpoints the document being left once, and never on a new session object of the same program", () => {
+    const sent: string[] = [];
+    type ProbeProps = { readonly session: { readonly pluginId: string; readonly instanceId: number; readonly viewState: string }; readonly documentId: string | null; readonly editor: boolean; readonly timeTravel: HistoryTimeTravel | null };
+    function Probe({ session, documentId, editor, timeTravel }: ProbeProps) {
+      const [opened] = useState(() => session.viewState);
+      useCheckpointOnCloseV1(checkpointOnCloseKeyV1(editor, session, documentId), () => {
+        if (checkpointGateV1(timeTravel, "auto") === "dispatch") sent.push(`${session.pluginId}#${session.instanceId}@${documentId}:${opened}`);
+      });
+      return null;
+    }
+    const program = { pluginId: "puzzle", instanceId: 3 };
+    const view = render(createElement(Probe, { session: { ...program, viewState: "before-finalize" }, documentId: "doc-1", editor: true, timeTravel: null }));
+    view.rerender(createElement(Probe, { session: { ...program, viewState: "after-new-alternative-submit" }, documentId: "doc-1", editor: true, timeTravel: null }));
+    expect(sent, "the New-alternative submit mints a new session object of the same program").toEqual([]);
+    view.rerender(createElement(Probe, { session: { ...program, viewState: "after-new-alternative-submit" }, documentId: "doc-2", editor: true, timeTravel: editingSession }));
+    expect(sent, "leaving doc-1 checkpoints it with the closure that opened it").toEqual(["puzzle#3@doc-1:before-finalize"]);
+    view.rerender(createElement(Probe, { session: { ...program, viewState: "x" }, documentId: "doc-3", editor: true, timeTravel: null }));
+    expect(sent, "leaving doc-2 while its history was being edited dispatches nothing").toEqual(["puzzle#3@doc-1:before-finalize"]);
+    view.unmount();
+    expect(sent).toEqual(["puzzle#3@doc-1:before-finalize", "puzzle#3@doc-3:before-finalize"]);
+    expect([checkpointOnCloseKeyV1(false, program, "doc-1"), checkpointOnCloseKeyV1(true, null, "doc-1"), checkpointOnCloseKeyV1(true, program, ""), checkpointOnCloseKeyV1(true, program, "doc-1")]).toEqual([null, null, null, "puzzle#3@doc-1"]);
+  });
+});
+//#endregion 📌️FrozenCheckIn
+
+//#region 🗃️RestoredHistory
+describe("🗃️ a restored document's history replaces the displaced rows and reads every label in each language (R2-2, G5)", () => {
+  afterAll(() => syncShellLabelLocale("en"));
+
+  it("lists every row of the read-back snapshot, none of the displaced document's, and draws each label from its LocalizedLabel, never from op text", () => {
+    const reload = readJson(join(shellHelpers, "..", "..", "..", "..", "🔌️plugin", "🧫️fixtures", "🧫️history-label-reload", "🔣️.json")) as { readonly cases: readonly { readonly id: string; readonly expected: { readonly en: string; readonly de: string } }[] };
+    const localized = (text: { readonly en: string; readonly de: string }) => ({ native: text, reuse: text });
+    const row = (seq: number, editId: string, label: { readonly en: string; readonly de: string }) => ({ seq, editId, actionId: "apply", label: localized(label), kind: "mutation", timestamp: "t", opLines: [`set ${editId}`], opCount: 1, applied: true, revertible: true, count: 1, mutations: [] }) as unknown as HistoryEntry;
+    const displaced = shellHistoryProjectionAfterPatchV1(EMPTY_SHELL_HISTORY_PROJECTION_V1, { cursor: 1, upserts: [row(1, "fresh-instance", { en: "Set Active Example", de: "Aktives Beispiel festlegen" })], canUndo: true }, true);
+    const restored = shellHistoryProjectionAfterPatchV1(displaced, { cursor: reload.cases.length, upserts: reload.cases.map((entry, index) => row(index + 1, entry.id, entry.expected)), canUndo: true, currentCheckpointId: "cp-restored" }, true);
+    expect(Object.keys(restored.entries).sort()).toEqual(reload.cases.map((entry) => `edit:${entry.id}`).sort());
+    for (const locale of LOCALES) {
+      syncShellLabelLocale(locale);
+      const dom = shellHistoryCursorDomV1(restored, { terminology: "native", locale }) as { readonly labels: readonly string[]; readonly undoLabel: string | null; readonly currentCheckpointId: string | null };
+      expect(dom.labels, locale).toEqual(reload.cases.map((entry) => entry.expected[locale]));
+      expect([dom.undoLabel, dom.currentCheckpointId], locale).toEqual([reload.cases.at(-1)!.expected[locale], "cp-restored"]);
+      expect(dom.labels.some((label) => label.startsWith("set ")), `${locale}: no op text`).toBe(false);
+    }
+  });
+});
+//#endregion 🗃️RestoredHistory

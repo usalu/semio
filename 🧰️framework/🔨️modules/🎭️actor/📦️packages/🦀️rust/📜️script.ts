@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🦀️ Registers the actor package tasks and semantic typegen commands. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { PreviewGeneratedScript, TypegenScript } from "../../🧬️typegen/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -23,4 +25,4 @@ class WasmScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typegen", TypegenScript).register("preview-generated", PreviewGeneratedScript).register("wasm", WasmScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

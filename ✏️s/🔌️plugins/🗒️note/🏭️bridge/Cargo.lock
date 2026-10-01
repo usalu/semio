@@ -40,9 +40,6 @@ name = "arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
-dependencies = [
- "derive_arbitrary",
-]
 
 [[package]]
 name = "arrayref"
@@ -472,17 +469,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bef552e6f588e446098f6ba40d89ac146c8c7b64aade83c051ee00bb5d2bc18d"
 dependencies = [
  "uuid",
-]
-
-[[package]]
-name = "derive_arbitrary"
-version = "1.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1e567bd82dcff979e4b03460c307b3cdc9e96fde3d73bed1496d2bc75d9dd62a"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn 2.0.119",
 ]
 
 [[package]]
@@ -1626,6 +1612,9 @@ name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
  "semio-framework-geometry",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-mesh-engine",
  "semio-framework-number",
  "semio-framework-pack",
  "semio-framework-replication",
@@ -1708,6 +1697,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-machine"
+version = "0.1.0"
+dependencies = [
+ "js-sys",
+ "semio-framework-dispatch-macros",
+ "semio-framework-machine-derive",
+ "serde",
+ "serde_json",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-machine-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.119",
+]
+
+[[package]]
 name = "semio-framework-math"
 version = "0.1.0"
 dependencies = [
@@ -1731,7 +1741,6 @@ version = "0.1.0"
 name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
- "png",
  "resvg",
  "semio-framework",
  "semio-framework-actor",
@@ -1739,6 +1748,7 @@ dependencies = [
  "semio-framework-async",
  "semio-framework-io-base64",
  "semio-framework-os-kernel",
+ "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
  "semio-framework-ui",
@@ -1769,12 +1779,14 @@ dependencies = [
  "futures",
  "js-sys",
  "semio-framework-async",
+ "semio-framework-deflate",
  "semio-framework-hash",
  "semio-framework-io-base64",
  "semio-framework-job",
  "semio-framework-os-kernel-dsl-derive",
  "semio-framework-pack",
  "semio-framework-replication",
+ "semio-framework-schema-registry",
  "semio-framework-trace",
  "semio-framework-ui-viewport",
  "semio-framework-value-derive",
@@ -1783,7 +1795,6 @@ dependencies = [
  "tokio",
  "wasm-bindgen",
  "web-sys",
- "zip",
 ]
 
 [[package]]
@@ -1825,6 +1836,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-pixels"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-deflate",
+]
+
+[[package]]
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
@@ -1836,6 +1854,8 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-schema",
+ "semio-framework-time-travel",
+ "semio-framework-tool-machine",
  "semio-framework-tool-run",
  "semio-framework-trace",
  "semio-framework-ui",
@@ -1888,6 +1908,7 @@ dependencies = [
 name = "semio-framework-schema"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-async",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-schema-derive",
@@ -1906,6 +1927,22 @@ dependencies = [
 [[package]]
 name = "semio-framework-schema-registry"
 version = "0.1.0"
+
+[[package]]
+name = "semio-framework-time-travel"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-replication",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-tool-machine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-machine",
+ "semio-framework-replication",
+]
 
 [[package]]
 name = "semio-framework-tool-run"
@@ -2002,10 +2039,12 @@ dependencies = [
  "semio-framework",
  "semio-framework-dispatch-macros",
  "semio-framework-job",
+ "semio-framework-machine",
  "semio-framework-os",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-tool-machine",
  "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-dwg",
@@ -2024,6 +2063,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -2037,9 +2077,12 @@ name = "semio-s-artifact-stdio-contract"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-plugin",
+ "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
 ]
 
@@ -2177,6 +2220,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-dispatch-macros",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-pack",
@@ -2209,9 +2253,11 @@ name = "semio-s-artifact-stdio-zip"
 version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin",
  "semio-framework-schema",
+ "semio-framework-ui-contract",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
@@ -3714,23 +3760,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "zip"
-version = "2.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fabe6324e908f85a1c52063ce7aa26b68dcb7eb6dbc83a2d148403c9bc3eba50"
-dependencies = [
- "arbitrary",
- "crc32fast",
- "crossbeam-utils",
- "displaydoc",
- "flate2",
- "indexmap",
- "memchr",
- "thiserror 2.0.21",
- "zopfli",
-]
-
-[[package]]
 name = "zlib-rs"
 version = "0.6.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3741,18 +3770,6 @@ name = "zmij"
 version = "1.0.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "29666d0abbfad1e3dc4dcf6144730dd3a3ab225bbbdac83319345b1b44ccfc1b"
-
-[[package]]
-name = "zopfli"
-version = "0.8.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f05cd8797d63865425ff89b5c4a48804f35ba0ce8d125800027ad6017d2b5249"
-dependencies = [
- "bumpalo",
- "crc32fast",
- "log",
- "simd-adler32",
-]
 
 [[package]]
 name = "zstd"

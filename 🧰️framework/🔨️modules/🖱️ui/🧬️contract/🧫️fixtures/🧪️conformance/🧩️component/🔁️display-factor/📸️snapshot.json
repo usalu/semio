@@ -1,0 +1,45 @@
+{
+  "surface": "conformance.component.display-factor",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "numberStepper",
+        "value": 0.7853981633974483,
+        "step": 0.017453292519943295,
+        "uniform": true,
+        "unit": "rad",
+        "displayUnit": "°",
+        "displayFactor": 57.29577951308232,
+        "snaps": [
+          0.0,
+          1.5707963267948966
+        ]
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Heading"
+      },
+      "bindings": [
+        {
+          "trigger": "change",
+          "action": {
+            "scope": "app",
+            "name": "setHeading",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -112,3 +112,73 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
+
+//#region 🧮️NetLeafLaws
+const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
+
+/// 🧾️ A leaf as the net-leaves corpus names it: kind, container path, index.
+fn net_leaf_summary(leaf: &MdMutation) -> serde_json::Value {
+    let step = |step: &MdPathStep| match step {
+        MdPathStep::BlockQuote { index } => format!("quote:{index}"),
+        MdPathStep::ListItem { index, item } => format!("item:{index}:{item}"),
+    };
+    let (path, index) = match leaf {
+        MdMutation::InsertBlock(leaf) => (leaf.path.iter().map(step).collect::<Vec<_>>(), leaf.index),
+        MdMutation::RemoveBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
+        MdMutation::ReplaceBlock(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
+        MdMutation::SetInlines(leaf) => (leaf.path.iter().map(step).collect(), leaf.index),
+        MdMutation::SetSnapshot(_) => (Vec::new(), 0),
+    };
+    serde_json::json!({ "kind": protocol::SemanticMutation::<MdSnapshot>::semantics(leaf).kind, "path": path, "index": index })
+}
+
+/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`): an applied markdown text is exactly the corpus's net block leaves; applied in
+/// order they carry the committed document to exactly the applied text, and every leaf undoes with ONE row of its own, so the
+/// edit reverts leaf by leaf back to the committed document.
+#[test]
+fn an_applied_text_is_its_net_block_leaves_and_they_reach_exactly_that_text() {
+    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let (base, next) = (MdSnapshot::from_text(case["before"].as_str().expect("before")), MdSnapshot::from_text(case["after"].as_str().expect("after")));
+        let leaves = md_net_mutations(&base, &next);
+        assert_eq!(serde_json::Value::Array(leaves.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the net leaves");
+        let mut state = base.clone();
+        let mut undo = Vec::new();
+        for leaf in &leaves {
+            let inverse = protocol::Mutation::inverse(leaf, &state);
+            assert_eq!(inverse.len(), 1, "{id}: {leaf:?} undoes with exactly one row");
+            undo.extend(inverse);
+            assert!(crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf).messages().iter().all(|message| message.level != protocol::Severity::Fatal), "{id}: {leaf:?} applies");
+        }
+        assert_eq!(state, next, "{id}: the net leaves reach exactly the applied text");
+        for leaf in undo.iter().rev() {
+            crate::standards::v_commonmark::subsets::any::schema::mutations::apply_md_mutation(&mut state, leaf);
+        }
+        assert_eq!(state, base, "{id}: undoing every leaf restores the committed document");
+    }
+}
+
+/// ⚖️ LAW: the kit verb applies CommonMark source — the text the main window shows and edits — as ONE edit of its net leaves:
+/// one changed paragraph is one `set-inlines` row labelled from the leaf, the document reads exactly the applied text, and ONE
+/// undo restores the committed document.
+#[semio_framework_async_macros::async_test]
+async fn one_applied_markdown_text_is_one_edit_of_its_net_leaves() {
+    use semio_framework_plugin::PluginApp;
+    let before = "# Title\n\nFirst.\n\nSecond.\n";
+    let after = "# Title\n\nFirst, edited.\n\nSecond.\n";
+    let mut app = kit_fixture_holding(&MdSnapshot::from_text(before)).await;
+    let edits = app.edit_transactions().len();
+    dispatch_settled(&mut app, "textEdit", &[("text", after)]).await.expect("the applied markdown settles");
+    assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(after));
+    assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
+    let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
+    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied text's row");
+    assert_eq!(row.mutations.len(), 1, "one changed paragraph is one net leaf: {:?}", row.mutations);
+    assert_eq!(row.mutations[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Set inlines");
+    assert_eq!(row.mutations[0].label.resolve(protocol::Terminology::Native, protocol::Locale::De), "Inline-Elemente setzen");
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    assert_eq!(app.snapshot().expect("md snapshot"), MdSnapshot::from_text(before), "one undo restores the committed document");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🧮️NetLeafLaws

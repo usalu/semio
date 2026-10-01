@@ -2,7 +2,7 @@
 
 use crate::editor::forms::config::{FormsConfig, FormsConfigMutation};
 use crate::editor::forms::questions::patch_question;
-use crate::schema::{locate_question, value_to_dsl};
+use crate::schema::{locate_question, question_edit_mutations, value_to_dsl};
 use crate::{op::FormMutation, FormsSnapshot};
 use dsl::os_pack::json::Value;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -41,9 +41,7 @@ pub fn handle(payload: &PatchQuestions, doc: &ArtifactView<'_, FormsSnapshot>, _
         } else {
             patch_question(&location.question, &payload.field, &raw_value).map_err(|error| Fault::from(format!("forms.patch.{error}")))?
         };
-        if next != location.question {
-            operations.push(FormMutation::ReplaceBlock(crate::mutations::replace_block::mutation::ReplaceBlock { step_id: location.step_id, block: next }));
-        }
+        operations.extend(question_edit_mutations(&location.step_id, &location.question, &next));
     }
     Ok(Emit::mutations(operations))
 }

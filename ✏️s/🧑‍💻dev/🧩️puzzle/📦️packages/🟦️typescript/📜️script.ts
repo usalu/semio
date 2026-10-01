@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { interactivityPuzzleFillP4eSelfTests } from "../../../../🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-p4e/🟦️.ts";
 import { interactivityPuzzleFillRunJobSelfTests } from "../../../../🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-run-job/🟦️.ts";
 import { interactivityPuzzleFillTraceSelfTests } from "../../../../🔌️plugins/🧩️puzzle/🧪️tests/🔬️interactivity-puzzle-fill-trace/🟦️.ts";
@@ -17,4 +18,4 @@ class VerifyScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("verify", VerifyScript);
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

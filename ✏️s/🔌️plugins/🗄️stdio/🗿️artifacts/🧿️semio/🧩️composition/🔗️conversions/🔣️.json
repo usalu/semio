@@ -1,5 +1,5 @@
 {
-  "schema": "semio.stdio.conversion-links/v1",
+  "schema": "semio.repository.cargo-capability-links/v1",
   "groups": [
     {
       "feature": "conversion-animation",
@@ -8,17 +8,20 @@
         {
           "package": "semio-s-artifact-stdio-gif",
           "manifest": "../🎞️gif/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-animation-gif"
+          "feature": "conversion-animation-gif",
+          "owner": "../🎞️gif"
         },
         {
           "package": "semio-s-artifact-stdio-gltf",
           "manifest": "../🧊️gltf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-animation-gltf"
+          "feature": "conversion-animation-gltf",
+          "owner": "../🧊️gltf"
         },
         {
           "package": "semio-s-artifact-stdio-mp4",
           "manifest": "../🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-animation-mp4"
+          "feature": "conversion-animation-mp4",
+          "owner": "../🎥️mp4"
         }
       ]
     },
@@ -29,12 +32,14 @@
         {
           "package": "semio-s-artifact-stdio-mp3",
           "manifest": "../🎵️mp3/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-audio-mp3"
+          "feature": "conversion-audio-mp3",
+          "owner": "../🎵️mp3"
         },
         {
           "package": "semio-s-artifact-stdio-wav",
           "manifest": "../🔊️wav/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-audio-wav"
+          "feature": "conversion-audio-wav",
+          "owner": "../🔊️wav"
         }
       ]
     },
@@ -45,12 +50,14 @@
         {
           "package": "semio-s-artifact-stdio-dwg",
           "manifest": "../🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-brep-dwg"
+          "feature": "conversion-brep-dwg",
+          "owner": "../🖊️dwg"
         },
         {
           "package": "semio-s-artifact-stdio-step",
           "manifest": "../📐️step/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-brep-step"
+          "feature": "conversion-brep-step",
+          "owner": "../📐️step"
         }
       ]
     },
@@ -61,17 +68,20 @@
         {
           "package": "semio-s-artifact-stdio-dwg",
           "manifest": "../🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-cad-dwg"
+          "feature": "conversion-cad-dwg",
+          "owner": "../🖊️dwg"
         },
         {
           "package": "semio-s-artifact-stdio-dxf",
           "manifest": "../🖋️dxf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-cad-dxf"
+          "feature": "conversion-cad-dxf",
+          "owner": "../🖋️dxf"
         },
         {
           "package": "semio-s-artifact-stdio-step",
           "manifest": "../📐️step/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-cad-step"
+          "feature": "conversion-cad-step",
+          "owner": "../📐️step"
         }
       ]
     },
@@ -82,27 +92,32 @@
         {
           "package": "semio-s-artifact-stdio-docx",
           "manifest": "../📜️docx/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-document-docx"
+          "feature": "conversion-document-docx",
+          "owner": "../📜️docx"
         },
         {
           "package": "semio-s-artifact-stdio-md",
           "manifest": "../📝️md/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-document-md"
+          "feature": "conversion-document-md",
+          "owner": "../📝️md"
         },
         {
           "package": "semio-s-artifact-stdio-pdf",
           "manifest": "../📖️pdf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-document-pdf"
+          "feature": "conversion-document-pdf",
+          "owner": "../📖️pdf"
         },
         {
           "package": "semio-s-artifact-stdio-txt",
           "manifest": "../🔤️txt/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-document-txt"
+          "feature": "conversion-document-txt",
+          "owner": "../🔤️txt"
         },
         {
           "package": "semio-s-artifact-stdio-zip",
           "manifest": "../🎒️zip/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-document-zip"
+          "feature": "conversion-document-zip",
+          "owner": "../🎒️zip"
         }
       ]
     },
@@ -113,32 +128,38 @@
         {
           "package": "semio-s-artifact-stdio-dwg",
           "manifest": "../🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-dwg"
+          "feature": "conversion-drawing-dwg",
+          "owner": "../🖊️dwg"
         },
         {
           "package": "semio-s-artifact-stdio-dxf",
           "manifest": "../🖋️dxf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-dxf"
+          "feature": "conversion-drawing-dxf",
+          "owner": "../🖋️dxf"
         },
         {
           "package": "semio-s-artifact-stdio-pdf",
           "manifest": "../📖️pdf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-pdf"
+          "feature": "conversion-drawing-pdf",
+          "owner": "../📖️pdf"
         },
         {
           "package": "semio-s-artifact-stdio-png",
           "manifest": "../📷️png/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-png"
+          "feature": "conversion-drawing-png",
+          "owner": "../📷️png"
         },
         {
           "package": "semio-s-artifact-stdio-svg",
           "manifest": "../🎨️svg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-svg"
+          "feature": "conversion-drawing-svg",
+          "owner": "../🎨️svg"
         },
         {
           "package": "semio-s-artifact-stdio-xml",
           "manifest": "../📰️xml/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-drawing-xml"
+          "feature": "conversion-drawing-xml",
+          "owner": "../📰️xml"
         }
       ]
     },
@@ -149,7 +170,8 @@
         {
           "package": "semio-s-artifact-stdio-json",
           "manifest": "../🧾️json/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-flow-json"
+          "feature": "conversion-flow-json",
+          "owner": "../🧾️json"
         }
       ]
     },
@@ -160,27 +182,32 @@
         {
           "package": "semio-s-artifact-stdio-bmp",
           "manifest": "../🪟️bmp/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-image-bmp"
+          "feature": "conversion-image-bmp",
+          "owner": "../🪟️bmp"
         },
         {
           "package": "semio-s-artifact-stdio-gif",
           "manifest": "../🎞️gif/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-image-gif"
+          "feature": "conversion-image-gif",
+          "owner": "../🎞️gif"
         },
         {
           "package": "semio-s-artifact-stdio-jpg",
           "manifest": "../📸️jpg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-image-jpg"
+          "feature": "conversion-image-jpg",
+          "owner": "../📸️jpg"
         },
         {
           "package": "semio-s-artifact-stdio-png",
           "manifest": "../📷️png/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-image-png"
+          "feature": "conversion-image-png",
+          "owner": "../📷️png"
         },
         {
           "package": "semio-s-artifact-stdio-tiff",
           "manifest": "../🖼️tiff/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-image-tiff"
+          "feature": "conversion-image-tiff",
+          "owner": "../🖼️tiff"
         }
       ]
     },
@@ -193,32 +220,38 @@
         {
           "package": "semio-s-artifact-stdio-dwg",
           "manifest": "../🖊️dwg/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-dwg"
+          "feature": "conversion-mesh-dwg",
+          "owner": "../🖊️dwg"
         },
         {
           "package": "semio-s-artifact-stdio-gltf",
           "manifest": "../🧊️gltf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-gltf"
+          "feature": "conversion-mesh-gltf",
+          "owner": "../🧊️gltf"
         },
         {
           "package": "semio-s-artifact-stdio-las",
           "manifest": "../☁️las/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-las"
+          "feature": "conversion-mesh-las",
+          "owner": "../☁️las"
         },
         {
           "package": "semio-s-artifact-stdio-obj",
           "manifest": "../🗽️obj/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-obj"
+          "feature": "conversion-mesh-obj",
+          "owner": "../🗽️obj"
         },
         {
           "package": "semio-s-artifact-stdio-ply",
           "manifest": "../🧱️ply/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-ply"
+          "feature": "conversion-mesh-ply",
+          "owner": "../🧱️ply"
         },
         {
           "package": "semio-s-artifact-stdio-stl",
           "manifest": "../🔺️stl/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-mesh-stl"
+          "feature": "conversion-mesh-stl",
+          "owner": "../🔺️stl"
         }
       ]
     },
@@ -229,17 +262,20 @@
         {
           "package": "semio-s-artifact-stdio-bcf",
           "manifest": "../💬️bcf/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-model-bcf"
+          "feature": "conversion-model-bcf",
+          "owner": "../💬️bcf"
         },
         {
           "package": "semio-s-artifact-stdio-ifc",
           "manifest": "../🏗️ifc/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-model-ifc"
+          "feature": "conversion-model-ifc",
+          "owner": "../🏗️ifc"
         },
         {
           "package": "semio-s-artifact-stdio-step",
           "manifest": "../📐️step/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-model-step"
+          "feature": "conversion-model-step",
+          "owner": "../📐️step"
         }
       ]
     },
@@ -250,17 +286,20 @@
         {
           "package": "semio-s-artifact-stdio-pptx",
           "manifest": "../📽️pptx/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-presentation-pptx"
+          "feature": "conversion-presentation-pptx",
+          "owner": "../📽️pptx"
         },
         {
           "package": "semio-s-artifact-stdio-xml",
           "manifest": "../📰️xml/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-presentation-xml"
+          "feature": "conversion-presentation-xml",
+          "owner": "../📰️xml"
         },
         {
           "package": "semio-s-artifact-stdio-zip",
           "manifest": "../🎒️zip/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-presentation-zip"
+          "feature": "conversion-presentation-zip",
+          "owner": "../🎒️zip"
         }
       ]
     },
@@ -271,17 +310,20 @@
         {
           "package": "semio-s-artifact-stdio-csv",
           "manifest": "../📊️csv/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-value-csv"
+          "feature": "conversion-value-csv",
+          "owner": "../📊️csv"
         },
         {
           "package": "semio-s-artifact-stdio-json",
           "manifest": "../🧾️json/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-value-json"
+          "feature": "conversion-value-json",
+          "owner": "../🧾️json"
         },
         {
           "package": "semio-s-artifact-stdio-xml",
           "manifest": "../📰️xml/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-value-xml"
+          "feature": "conversion-value-xml",
+          "owner": "../📰️xml"
         }
       ]
     },
@@ -292,12 +334,14 @@
         {
           "package": "semio-s-artifact-stdio-avi",
           "manifest": "../📼️avi/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-video-avi"
+          "feature": "conversion-video-avi",
+          "owner": "../📼️avi"
         },
         {
           "package": "semio-s-artifact-stdio-mp4",
           "manifest": "../🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
-          "feature": "conversion-video-mp4"
+          "feature": "conversion-video-mp4",
+          "owner": "../🎥️mp4"
         }
       ]
     }

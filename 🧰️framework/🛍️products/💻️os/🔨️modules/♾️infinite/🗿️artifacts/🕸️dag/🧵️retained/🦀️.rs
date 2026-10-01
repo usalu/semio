@@ -228,6 +228,7 @@ impl ErasedSnapshotRetirement for DagRetirement {
             }
             DagOwner::Dsl(value) => match value {
                 DslValue::String(value) => self.text(value),
+                DslValue::Bytes(value) => self.push(DagOwner::Bytes(value)),
                 DslValue::Array(values) => self.push(DagOwner::DslValues(values)),
                 DslValue::Object(values) => self.push(DagOwner::DslEntries(values)),
                 DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {}

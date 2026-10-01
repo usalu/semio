@@ -516,7 +516,7 @@ impl RasterHost {
         self.pan_last = None;
         if let Some(mut gesture) = self.paint_gesture.take() {
             gesture.push(self.screen_to_world(sx, sy));
-            self.paint_edit = gesture.finish(self.brush_size, self.brush_opacity, self.brush_color, self.brush_hardness, self.active_utility == "paintEraser",self.mask_value);
+            self.paint_edit = gesture.finish(self.active_utility == "paintEraser");
         }
     }
 

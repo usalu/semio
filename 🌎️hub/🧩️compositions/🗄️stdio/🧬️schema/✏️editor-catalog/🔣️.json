@@ -16,11 +16,11 @@
   "properties": {
     "formatCount": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 0
     },
     "editorCount": {
       "type": "integer",
-      "minimum": 1
+      "minimum": 0
     },
     "detailsWindow": {
       "type": "string",
@@ -71,7 +71,7 @@
     },
     "editorApps": {
       "type": "array",
-      "minItems": 1,
+      "minItems": 0,
       "uniqueItems": true,
       "items": {
         "type": "string",

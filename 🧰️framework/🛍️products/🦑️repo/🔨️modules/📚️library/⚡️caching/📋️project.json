@@ -184,6 +184,17 @@
           "cargo-build-lease"
         ]
       }
+    },
+    "test-cache-policy": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "cacheCommandSources"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test cache-policy"
+      }
     }
   },
   "namedInputs": {

@@ -1,12 +1,17 @@
-dialect grammar stdio.avi.snapshot
-root = document
-; Schema-owned fields and variant boundaries are declared by AviSnapshot's RecordSpec.
-; The text body retains every header, format choice and intrinsic chunk field.
-document = element*
-element = field / block / list / IDENT / STRING / INT
-field = IDENT "=" element
-block = IDENT "{" element* "}"
-list = "[" element* "]"
-IDENT = 1*(ALPHA / DIGIT / "-" / "_")
-STRING = DQUOTE *(%x20-21 / %x23-5B / %x5D-10FFFF) DQUOTE
-INT = ["-"] 1*DIGIT
+dialect grammar
+grammar stdio.avi.snapshot
+extension semio
+start document
+
+document = "schema" "=" text "idx1-present" "=" boolean "main-header" "=" main-header "streams" "=" "[" stream* "]" "unknown-chunks" "=" "[" riff-chunk* "]" "hdrl-extra" "=" "[" riff-chunk* "]"
+main-header = "micro-sec-per-frame" "=" INT "max-bytes-per-sec" "=" INT "padding-granularity" "=" INT "flags" "=" INT "total-frames" "=" INT "initial-frames" "=" INT "streams" "=" INT "suggested-buffer-size" "=" INT "width" "=" INT "height" "=" INT "reserved" "=" integers
+stream = "strh" "=" stream-header "strf" "{" (bitmap-info / wave-format / raw-format) "}" "chunks" "=" "[" chunk* "]" "strl-extra" "=" "[" riff-chunk* "]"
+stream-header = "fcc-type" "=" text "fcc-handler" "=" text "flags" "=" INT "priority" "=" INT "language" "=" INT "initial-frames" "=" INT "scale" "=" INT "rate" "=" INT "start" "=" INT "length" "=" INT "suggested-buffer-size" "=" INT "quality" "=" INT "sample-size" "=" INT "rc-frame-left" "=" INT "rc-frame-top" "=" INT "rc-frame-right" "=" INT "rc-frame-bottom" "=" INT "rc-frame-width" "=" INT "strh-extra" "=" integers
+bitmap-info = "bitmap-info" "size" "=" INT "width" "=" INT "height" "=" INT "planes" "=" INT "bit-count" "=" INT "compression" "=" text "size-image" "=" INT "x-pels-per-meter" "=" INT "y-pels-per-meter" "=" INT "colors-used" "=" INT "colors-important" "=" INT
+wave-format = "wave-format" "format-tag" "=" INT "channels" "=" INT "samples-per-sec" "=" INT "avg-bytes-per-sec" "=" INT "block-align" "=" INT "bits-per-sample" "=" INT "extra" "=" integers
+raw-format = "raw" "data" "=" integers
+chunk = "fourcc" "=" text "keyframe" "=" boolean "data" "=" integers
+riff-chunk = "fourcc" "=" text "data" "=" integers
+integers = "[" INT* "]"
+boolean = "true" / "false"
+text = STRING / IDENT / INT / FLOAT

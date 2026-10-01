@@ -10,10 +10,12 @@
     "order",
     "selections",
     "apps",
-    "nativeReceipts",
+    "nativeFactories",
     "openTargets",
     "catalogFeatures",
-    "playgrounds"
+    "playgrounds",
+    "mutationDescriptors",
+    "mutationCoordinates"
   ],
   "properties": {
     "schema": {
@@ -51,7 +53,8 @@
           "role",
           "type",
           "factory",
-          "mutationRoster"
+          "mutationRoster",
+          "laws"
         ],
         "properties": {
           "owner": {
@@ -82,74 +85,58 @@
           },
           "mutationRoster": {
             "type": "boolean"
+          },
+          "laws": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "editing",
+                  "sqliteSnapshot"
+                ],
+                "properties": {
+                  "editing": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  },
+                  "sqliteSnapshot": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+                  }
+                }
+              }
+            ]
           }
-        }
-      }
-    },
-    "nativeReceipts": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "required": [
-          "artifact",
-          "factory_id",
-          "descriptor_codec_id",
-          "runtime_capability_id",
-          "artifact_kind",
-          "artifact_schema",
-          "extension",
-          "pack_schema_hash",
-          "protocol_source_sha256",
-          "protocol_path",
-          "definition_path"
-        ],
-        "properties": {
-          "artifact": {
-            "type": "string",
-            "minLength": 1
-          },
-          "factory_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "descriptor_codec_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "runtime_capability_id": {
-            "type": "string",
-            "minLength": 1
-          },
-          "artifact_kind": {
-            "type": "string",
-            "minLength": 1
-          },
-          "artifact_schema": {
-            "type": "string",
-            "minLength": 1
-          },
-          "extension": {
-            "type": "string",
-            "minLength": 1
-          },
-          "pack_schema_hash": {
-            "type": "string",
-            "minLength": 1
-          },
-          "protocol_source_sha256": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{64}$"
-          },
-          "protocol_path": {
-            "type": "string",
-            "minLength": 1
-          },
-          "definition_path": {
-            "type": "string",
-            "minLength": 1
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "role": {
+                  "const": "editor"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "laws": {
+                  "type": "object"
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "laws": {
+                  "type": "null"
+                }
+              }
+            }
           }
-        }
+        ]
       }
     },
     "openTargets": {
@@ -158,33 +145,12 @@
         "type": "object",
         "additionalProperties": false,
         "required": [
-          "artifactKind",
-          "artifactSchema",
-          "packSchemaHash",
           "factoryId",
-          "extension",
           "role",
-          "surfaceId",
-          "protocolSourceSha256"
+          "surfaceId"
         ],
         "properties": {
-          "artifactKind": {
-            "type": "string",
-            "minLength": 1
-          },
-          "artifactSchema": {
-            "type": "string",
-            "minLength": 1
-          },
-          "packSchemaHash": {
-            "type": "string",
-            "minLength": 1
-          },
           "factoryId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "extension": {
             "type": "string",
             "minLength": 1
           },
@@ -193,10 +159,6 @@
             "minLength": 1
           },
           "surfaceId": {
-            "type": "string",
-            "minLength": 1
-          },
-          "protocolSourceSha256": {
             "type": "string",
             "minLength": 1
           }
@@ -263,6 +225,97 @@
                 "maximum": 65535
               }
             }
+          }
+        }
+      }
+    },
+    "mutationDescriptors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "snapshot",
+          "mutation"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+          },
+          "snapshot": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          },
+          "mutation": {
+            "type": "string",
+            "pattern": "^[A-Za-z_][A-Za-z0-9_]*(::[A-Za-z_][A-Za-z0-9_]*)*$"
+          }
+        }
+      }
+    },
+    "mutationCoordinates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "artifact",
+          "standard",
+          "subset",
+          "surface",
+          "owner",
+          "prefix"
+        ],
+        "properties": {
+          "artifact": {
+            "type": "string",
+            "minLength": 1
+          },
+          "standard": {
+            "type": "string",
+            "minLength": 1
+          },
+          "subset": {
+            "type": "string",
+            "minLength": 1
+          },
+          "surface": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "prefix": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "nativeFactories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "factoryId",
+          "definitionPath",
+          "protocolPath"
+        ],
+        "properties": {
+          "factoryId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "definitionPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "protocolPath": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

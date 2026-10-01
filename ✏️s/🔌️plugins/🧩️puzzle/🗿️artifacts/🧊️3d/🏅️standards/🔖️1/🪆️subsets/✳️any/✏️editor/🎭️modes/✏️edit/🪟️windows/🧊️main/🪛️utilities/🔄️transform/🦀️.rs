@@ -191,26 +191,76 @@ impl Puzzle3dSelectionRecord {
 /// 🚚️ The record one Relocate-utility drop states: `object_id` dragged from its BASE origin to `position`, and
 /// every vortex its first vortex lands within `radius` of — on another object, not yet attracted to it — as an
 /// `(attracting, attracted)` pair, the stationary vortex attracting the moved one. `None` for an unknown object.
+/// The whole scan in one call; the retained work pages it through [`Puzzle3dRelocateScan`].
 pub fn puzzle3d_relocate_record(base: &Puzzle3dSnapshot, object_id: &str, position: [f64; 3], radius: f64) -> Option<Puzzle3dSelectionRecord> {
-    let object = base.objects.iter().find(|object| object.id == object_id)?;
-    let offset = [position[0] - object.origin[0], position[1] - object.origin[1], position[2] - object.origin[2]];
-    let world = |origin: [f64; 3], orientation: Option<[f64; 4]>, local: [f64; 3]| {
-        let turned = crate::editor::puzzle3d::quat_rotate_vector(orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), local);
-        [origin[0] + turned[0], origin[1] + turned[1], origin[2] + turned[2]]
-    };
-    let attractions = object.vortices.first().map_or_else(Vec::new, |vortex| {
-        let source = puzzle3d_vortex_full_id(&object.id, &vortex.id);
-        let from = world(position, object.orientation, vortex.position);
-        let connected = |target: &str| base.attractions.iter().any(|entry| (entry.attracting == source && entry.attracted == target) || (entry.attracting == target && entry.attracted == source));
-        base.objects
-            .iter()
-            .filter(|other| other.id != object.id)
-            .flat_map(|other| other.vortices.iter().map(move |candidate| (puzzle3d_vortex_full_id(&other.id, &candidate.id), world(other.origin, other.orientation, candidate.position))))
-            .filter(|(target, at)| *target != source && !connected(target) && ((from[0] - at[0]).powi(2) + (from[1] - at[1]).powi(2) + (from[2] - at[2]).powi(2)).sqrt() <= radius)
-            .map(|(target, _)| (target, source.clone()))
-            .collect()
-    });
-    Some(Puzzle3dSelectionRecord { targets: vec![object.id.clone()], motion: Puzzle3dSelectionMotion::Drag { offset }, attractions })
+    let mut scan = Puzzle3dRelocateScan::begin(base, object_id, position, radius)?;
+    while !scan.step(base, usize::MAX) {}
+    Some(scan.finish())
+}
+
+/// 📄️ Objects one page of a relocate proximity scan measures — the retained work's per-step share.
+pub const PUZZLE3D_RELOCATE_SCAN_PAGE: usize = 16;
+
+/// 🔭️ The paged proximity scan of one Relocate-utility drop: [`Self::begin`] states the drag and indexes the vortices
+/// already attracted to the moved one, every [`Self::step`] measures the vortices of one page of objects, and
+/// [`Self::finish`] hands over the record — so a drop on a large scene reports progress page by page and stays
+/// cancellable between pages, with exactly the pairs (and order) the one-call scan finds.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle3dRelocateScan {
+    record: Puzzle3dSelectionRecord,
+    source: Option<(String, [f64; 3])>,
+    attracted: std::collections::HashSet<String>,
+    radius: f64,
+    cursor: usize,
+}
+
+impl Puzzle3dRelocateScan {
+    /// 🎬️ The scan of `object_id` dropped at `position`; `None` for an unknown object. An object without a vortex
+    /// attracts nothing, so its scan is already done.
+    pub fn begin(base: &Puzzle3dSnapshot, object_id: &str, position: [f64; 3], radius: f64) -> Option<Self> {
+        let object = base.objects.iter().find(|object| object.id == object_id)?;
+        let offset = [position[0] - object.origin[0], position[1] - object.origin[1], position[2] - object.origin[2]];
+        let source = object.vortices.first().map(|vortex| (puzzle3d_vortex_full_id(&object.id, &vortex.id), puzzle3d_world_point(position, object.orientation, vortex.position)));
+        let attracted = source.as_ref().map_or_else(Default::default, |(source, _)| {
+            base.attractions.iter().filter_map(|entry| if &entry.attracting == source { Some(entry.attracted.clone()) } else if &entry.attracted == source { Some(entry.attracting.clone()) } else { None }).collect()
+        });
+        let cursor = if source.is_some() { 0 } else { base.objects.len() };
+        Some(Self { record: Puzzle3dSelectionRecord { targets: vec![object.id.clone()], motion: Puzzle3dSelectionMotion::Drag { offset }, attractions: Vec::new() }, source, attracted, radius, cursor })
+    }
+
+    /// 📏️ Measures the vortices of the next `page` objects (at least one); `true` once every object is measured.
+    pub fn step(&mut self, base: &Puzzle3dSnapshot, page: usize) -> bool {
+        let end = self.cursor.saturating_add(page.max(1)).min(base.objects.len());
+        if let Some((source, from)) = self.source.as_ref() {
+            for other in base.objects.get(self.cursor..end).into_iter().flatten().filter(|other| other.id != self.record.targets[0]) {
+                for candidate in &other.vortices {
+                    let target = puzzle3d_vortex_full_id(&other.id, &candidate.id);
+                    let at = puzzle3d_world_point(other.origin, other.orientation, candidate.position);
+                    if target != *source && !self.attracted.contains(&target) && ((from[0] - at[0]).powi(2) + (from[1] - at[1]).powi(2) + (from[2] - at[2]).powi(2)).sqrt() <= self.radius {
+                        self.record.attractions.push((target, source.clone()));
+                    }
+                }
+            }
+        }
+        self.cursor = end;
+        self.cursor >= base.objects.len()
+    }
+
+    /// 📊️ `(measured objects, all objects)` of `base`.
+    pub fn progress(&self, base: &Puzzle3dSnapshot) -> (usize, usize) {
+        (self.cursor.min(base.objects.len()), base.objects.len())
+    }
+
+    /// 🏁️ The scanned drop record.
+    pub fn finish(self) -> Puzzle3dSelectionRecord {
+        self.record
+    }
+}
+
+/// 🌐️ A vortex's local `position` placed in the world by its object's `origin` and `orientation`.
+fn puzzle3d_world_point(origin: [f64; 3], orientation: Option<[f64; 4]>, local: [f64; 3]) -> [f64; 3] {
+    let turned = crate::editor::puzzle3d::quat_rotate_vector(orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), local);
+    [origin[0] + turned[0], origin[1] + turned[1], origin[2] + turned[2]]
 }
 
 /// 🧹️ `targets` without repeats, in first-seen order — the one target list every leaf the tool yields carries.

@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_dwg::editor::dwg_ac1018::DwgAc1018Editor",
       "factory": "semio_s_artifact_stdio_dwg::editor::dwg_ac1018::create_dwg_ac1018_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "dwg_ac1018_editor",
+        "sqliteSnapshot": "sqlite_snapshot_dwg_ac1018_editor"
+      }
     },
     {
       "owner": "stdio-cad",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1018::DwgAc1018Viewer",
       "factory": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1018::create_dwg_ac1018_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-cad",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_dwg::editor::dwg_ac1024::DwgAc1024Editor",
       "factory": "semio_s_artifact_stdio_dwg::editor::dwg_ac1024::create_dwg_ac1024_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "dwg_ac1024_editor",
+        "sqliteSnapshot": "sqlite_snapshot_dwg_ac1024_editor"
+      }
     },
     {
       "owner": "stdio-cad",
@@ -41,22 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1024::DwgAc1024Viewer",
       "factory": "semio_s_artifact_stdio_dwg::viewer::dwg_ac1024::create_dwg_ac1024_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "dwg",
-      "factory_id": "stdio.native.dwg.v1",
-      "descriptor_codec_id": "s.stdio.dwg.standard.ac1024.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.dwg.standard.ac1018.codec.codec-stdio-dwg-extension-dwg.v1",
-      "artifact_kind": "s.stdio.dwg",
-      "artifact_schema": "stdio.dwg",
-      "extension": "dwg",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
-      "protocol_source_sha256": "29035528709921a6dadecf2968004525baa90f33690d5dc5e09ee4fe49852bb5",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -85,6 +80,38 @@
         "react": 6244,
         "wgpu": 6344
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "DwgMutation",
+      "snapshot": "semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot",
+      "mutation": "semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.dwg",
+      "standard": "ac1018",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.dwg",
+      "standard": "ac1024",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.dwg.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

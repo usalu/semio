@@ -35,6 +35,39 @@ pub const TIME_TRAVEL_FROZEN_CODE: &str = "timeTravel.frozen";
 /// 🧯️ Fault a cancelled replay leaves behind, so hosts can label it and offer [`TimeTravelEvent::Rerun`].
 pub const TIME_TRAVEL_CANCELLED_CODE: &str = "timeTravel.cancelled";
 
+/// 🛑️ Host refusal: a mutating tool run, an agent transaction or a session on another store holds the instance.
+pub const TIME_TRAVEL_BUSY_CODE: &str = "timeTravel.busy";
+
+/// 👻️ Host refusal: the named mutation is not (or no longer) applied in the edited store.
+pub const TIME_TRAVEL_UNKNOWN_MUTATION_CODE: &str = "timeTravel.unknown-mutation";
+
+/// 🔐️ Host refusal: the mutation declares no input schema or emits foreign steps.
+pub const TIME_TRAVEL_NOT_EDITABLE_CODE: &str = "timeTravel.not-editable";
+
+/// 🔍️ Host refusal: the input pointer addresses no input of the edited mutation.
+pub const TIME_TRAVEL_UNKNOWN_INPUT_CODE: &str = "timeTravel.unknown-input";
+
+/// ❎️ Host refusal: the value does not take the input's shape or fails its payload schema; the draft is kept.
+pub const TIME_TRAVEL_INVALID_INPUT_CODE: &str = "timeTravel.invalid-input";
+
+/// 🫥️ Host refusal: the input's selection domain holds nothing at its granularity.
+pub const TIME_TRAVEL_NO_SELECTION_CODE: &str = "timeTravel.no-selection";
+
+/// 🖊️ Host refusal: a new alternative needs a name and no locale supplied the default.
+pub const TIME_TRAVEL_NAME_REQUIRED_CODE: &str = "timeTravel.name-required";
+
+/// 🔤️ Host refusal: the alternative name is blank or longer than [`TIME_TRAVEL_TEXT_MAX_BYTES`].
+pub const TIME_TRAVEL_NAME_INVALID_CODE: &str = "timeTravel.name-invalid";
+
+/// 🧬️ Host refusal: the payload schema compiles no validator or describes no inputs, so no draft is admitted.
+pub const TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE: &str = "timeTravel.schema-unavailable";
+
+/// 💥️ Driver fault: the store refused or broke the Report replay.
+pub const TIME_TRAVEL_REPLAY_FAULTED_CODE: &str = "timeTravel.replay-faulted";
+
+/// 🧨️ Driver fault: the finalize commit failed for a reason other than a stale base or a blocking report.
+pub const TIME_TRAVEL_COMMIT_FAILED_CODE: &str = "timeTravel.commit-failed";
+
 /// 🔣️ A fault code is non-empty, whitespace-free and at most [`TIME_TRAVEL_TEXT_MAX_BYTES`].
 pub fn is_time_travel_fault_code(code: &str) -> bool {
     !code.is_empty() && code.len() <= TIME_TRAVEL_TEXT_MAX_BYTES && !code.chars().any(char::is_whitespace)
@@ -764,6 +797,27 @@ impl TimeTravelSession {
 //#endregion 🔖️Reducer
 
 //#region 🔖️Labels
+/// 🗂️ Every `timeTravel.*` code a history-edit verb or driver answers, with the label a host shows for it.
+pub const TIME_TRAVEL_CODE_LABELS: [(&str, TimeTravelLabel); 17] = [
+    (TIME_TRAVEL_FROZEN_CODE, TimeTravelLabel::Frozen),
+    ("timeTravel.illegal", TimeTravelLabel::RefusalIllegal),
+    ("timeTravel.stale", TimeTravelLabel::RefusalStale),
+    ("timeTravel.blocked", TimeTravelLabel::RefusalBlocked),
+    ("timeTravel.empty", TimeTravelLabel::RefusalEmpty),
+    (TIME_TRAVEL_CANCELLED_CODE, TimeTravelLabel::ReplayCancelled),
+    (TIME_TRAVEL_BUSY_CODE, TimeTravelLabel::RefusalBusy),
+    (TIME_TRAVEL_UNKNOWN_MUTATION_CODE, TimeTravelLabel::RefusalUnknownMutation),
+    (TIME_TRAVEL_NOT_EDITABLE_CODE, TimeTravelLabel::RefusalNotEditable),
+    (TIME_TRAVEL_UNKNOWN_INPUT_CODE, TimeTravelLabel::RefusalUnknownInput),
+    (TIME_TRAVEL_INVALID_INPUT_CODE, TimeTravelLabel::RefusalInvalidInput),
+    (TIME_TRAVEL_NO_SELECTION_CODE, TimeTravelLabel::RefusalNoSelection),
+    (TIME_TRAVEL_NAME_REQUIRED_CODE, TimeTravelLabel::RefusalNameRequired),
+    (TIME_TRAVEL_NAME_INVALID_CODE, TimeTravelLabel::RefusalNameInvalid),
+    (TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, TimeTravelLabel::RefusalSchemaUnavailable),
+    (TIME_TRAVEL_REPLAY_FAULTED_CODE, TimeTravelLabel::ReplayFaulted),
+    (TIME_TRAVEL_COMMIT_FAILED_CODE, TimeTravelLabel::CommitFailed),
+];
+
 /// 💬️ Framework-owned EN/DE text of history editing, no default locale.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum TimeTravelLabel {
@@ -790,10 +844,22 @@ pub enum TimeTravelLabel {
     ReplayCancelled,
     ActionRerun,
     ReplayProgressValueText,
+    RefusalBusy,
+    RefusalUnknownMutation,
+    RefusalNotEditable,
+    RefusalUnknownInput,
+    RefusalInvalidInput,
+    RefusalNoSelection,
+    RefusalNameRequired,
+    RefusalNameInvalid,
+    RefusalSchemaUnavailable,
+    ReplayFaulted,
+    CommitFailed,
+    OutcomeIntroduced,
 }
 
 impl TimeTravelLabel {
-    pub const ALL: [Self; 23] = [
+    pub const ALL: [Self; 35] = [
         Self::StageInactive,
         Self::StageEditing,
         Self::StageReplaying,
@@ -817,6 +883,18 @@ impl TimeTravelLabel {
         Self::ReplayCancelled,
         Self::ActionRerun,
         Self::ReplayProgressValueText,
+        Self::RefusalBusy,
+        Self::RefusalUnknownMutation,
+        Self::RefusalNotEditable,
+        Self::RefusalUnknownInput,
+        Self::RefusalInvalidInput,
+        Self::RefusalNoSelection,
+        Self::RefusalNameRequired,
+        Self::RefusalNameInvalid,
+        Self::RefusalSchemaUnavailable,
+        Self::ReplayFaulted,
+        Self::CommitFailed,
+        Self::OutcomeIntroduced,
     ];
 
     /// 🔑️ `(key, en, de)` row of this label.
@@ -840,11 +918,23 @@ impl TimeTravelLabel {
             Self::AlternativeNameDefault => ("alternativeNameDefault", "Edited history", "Bearbeiteter Verlauf"),
             Self::NoChanges => ("noChanges", "No changes: showing the current history", "Keine Änderungen: aktueller Verlauf wird angezeigt"),
             Self::NeedsReplay => ("needsReplay", "Replay needed: later mutations are not checked yet", "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft"),
-            Self::ReportBlocking => ("reportBlocking", "Errors in later mutations block finalizing", "Fehler in späteren Mutationen verhindern den Abschluss"),
+            Self::ReportBlocking => ("reportBlocking", "Errors must be fixed or withdrawn before finalizing", "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden"),
             Self::ReadyToFinalize => ("readyToFinalize", "Ready to finalize", "Bereit zum Abschließen"),
             Self::ReplayCancelled => ("replayCancelled", "Replay cancelled", "Neu anwenden abgebrochen"),
             Self::ActionRerun => ("actionRerun", "Replay again", "Erneut anwenden"),
             Self::ReplayProgressValueText => ("replayProgressValueText", "Replaying {done} of {total} mutations", "{done} von {total} Mutationen werden neu angewendet"),
+            Self::RefusalBusy => ("refusalBusy", "History editing is busy: finish the running tool or the other history edit first", "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"),
+            Self::RefusalUnknownMutation => ("refusalUnknownMutation", "This mutation is no longer in the history", "Diese Mutation ist nicht mehr im Verlauf"),
+            Self::RefusalNotEditable => ("refusalNotEditable", "The inputs of this mutation cannot be edited", "Die Eingaben dieser Mutation können nicht bearbeitet werden"),
+            Self::RefusalUnknownInput => ("refusalUnknownInput", "This input does not exist in the mutation", "Diese Eingabe gibt es in der Mutation nicht"),
+            Self::RefusalInvalidInput => ("refusalInvalidInput", "Invalid value: the input keeps its previous value", "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"),
+            Self::RefusalNoSelection => ("refusalNoSelection", "Nothing suitable is selected for this input", "Für diese Eingabe ist nichts Passendes ausgewählt"),
+            Self::RefusalNameRequired => ("refusalNameRequired", "Name the new alternative", "Einen Namen für die neue Alternative eingeben"),
+            Self::RefusalNameInvalid => ("refusalNameInvalid", "Invalid alternative name: use 1 to 256 characters", "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"),
+            Self::RefusalSchemaUnavailable => ("refusalSchemaUnavailable", "The input schema of this mutation is unavailable", "Das Eingabeschema dieser Mutation ist nicht verfügbar"),
+            Self::ReplayFaulted => ("replayFaulted", "Replay failed: later mutations could not be checked", "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"),
+            Self::CommitFailed => ("commitFailed", "Finalizing failed: the history is unchanged", "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"),
+            Self::OutcomeIntroduced => ("outcomeIntroduced", "New since this edit", "Neu durch diese Bearbeitung"),
         }
     }
 
@@ -864,9 +954,10 @@ impl TimeTravelLabel {
         self.row().2
     }
 
-    /// 🩹️ Label of a framework-owned fault code (`timeTravel.cancelled`); driver fault codes have none.
-    pub fn for_fault(code: &str) -> Option<Self> {
-        (code == TIME_TRAVEL_CANCELLED_CODE).then_some(Self::ReplayCancelled)
+    /// 🩹️ Label of every `timeTravel.*` code a host shows — the session's refusals, the frozen and cancelled codes, the
+    /// hosting runtime's refusals and driver faults ([`TIME_TRAVEL_CODE_LABELS`]); `None` for any other code.
+    pub fn for_code(code: &str) -> Option<Self> {
+        TIME_TRAVEL_CODE_LABELS.iter().find(|(known, _)| *known == code).map(|(_, label)| *label)
     }
 
     /// 🌐️ Hands both locales to a carrier constructor, e.g. `label.localized(LocalizedLabel::native)`.

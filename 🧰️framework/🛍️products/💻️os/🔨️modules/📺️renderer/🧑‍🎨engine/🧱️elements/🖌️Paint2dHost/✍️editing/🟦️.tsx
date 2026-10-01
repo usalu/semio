@@ -309,7 +309,7 @@ export function PixelEditingOverlay({documentJson,assetsJson,assetExtentsJson,se
     if(!path.length) return;
     const start=path[0]!,end=path[path.length-1]!;
     void run(async signal=>{
-      if(["brush","eraser"].includes(tool)) await submit(target==="mask"?{kind:"alphaStroke",points:path,size:brushSize,opacity:brushOpacity,hardness,alpha:tool==="eraser"?0:maskValue}:{kind:"stroke",points:path,size:brushSize,opacity:brushOpacity,hardness,color:foreground(),erase:tool==="eraser"},mask??null,signal);
+      if(tool==="brush"||tool==="eraser") {if(!signal.aborted&&!active.locked)await dispatchEdit("paintStroke",{layerId:active.id,tool,xs:path.map(point=>point[0]),ys:path.map(point=>point[1])});}
       else if(tool==="rectangle" || tool==="ellipse" || tool==="lasso") {
         if(signal.aborted) return;
         const shape=tool==="lasso"?{kind:"polygon" as const,points:path}:{kind:tool,x:start[0],y:start[1],width:end[0]-start[0],height:end[1]-start[1]};

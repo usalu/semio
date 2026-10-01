@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🔋️ energy TypeScript package and authored-example verification. */
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class TestScript extends BundleScript {
   run(segments: string[]): void {
     const authority = resolve(this.repoRoot, "✏️s/🔌️plugins/🔋️energy/🧪️tests/🛠️toolchain-authority/🟦️.ts");
@@ -15,4 +17,4 @@ class TestScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

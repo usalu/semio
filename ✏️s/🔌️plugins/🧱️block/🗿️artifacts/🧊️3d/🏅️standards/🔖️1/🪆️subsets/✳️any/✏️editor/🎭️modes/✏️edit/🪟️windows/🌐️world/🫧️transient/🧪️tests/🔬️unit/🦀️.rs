@@ -6,7 +6,7 @@ use store::{ArtifactDsl, ArtifactPack};
 #[test]
 fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
     use semio_framework_plugin::WindowTransientOwner;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️codec-contracts/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️codec/🔣️.json")).unwrap();
     let owners = Block3dWorldWindowTransientOwner::build_owners();
     for row in fixture["cases"].as_array().unwrap() {
         let before: Block3dWorldWindowTransient = serde_json::from_value(row["before"].clone()).unwrap();
@@ -37,7 +37,7 @@ fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
 
 #[test]
 fn preview_partition_matches_language_neutral_json_oracle() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️preview-partition/🔣️.json")).expect("fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪟️preview/🔣️.json")).expect("fixture");
     let mut typed = BTreeMap::<String, Block3dWorldWindowTransient>::new();
     let mut oracle = serde_json::Map::new();
     for step in fixture["steps"].as_array().expect("steps") {
@@ -56,7 +56,7 @@ fn preview_partition_matches_language_neutral_json_oracle() {
 
 #[test]
 fn block3d_world_preview_codecs_and_inverse_match_neutral_vectors() {
-    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️codec-contracts/🔣️.json")).unwrap();
+    let oracle: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔀️codec/🔣️.json")).unwrap();
     for row in oracle["cases"].as_array().unwrap() {
         let before: Block3dWorldWindowTransient = dsl::json::from_json_str(&row["before"].to_string()).unwrap();
         let expected: Block3dWorldWindowTransient = dsl::json::from_json_str(&row["after"].to_string()).unwrap();

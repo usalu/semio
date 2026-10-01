@@ -1,0 +1,105 @@
+{
+  "description": "Where keyboard focus goes when a history-edit session (`HistoryPatch.timeTravel`, ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §16 / gap G13) enters a stage — the same rule for the React and the wgpu shell. Focus moves only on an edge: another session, another stage, or another edited mutation while editing; a draft edit, a generation bump or replay progress inside the same stage leaves focus where the person put it, and a closed session moves nothing. `editor` is the first enabled control under the draft editor's inputs section (`keys.editorInputs`), else its Accept button (`keys.editorAccept`); `nextProblem` is the history body's Next problem button (`keys.nextProblem`); `dialog` is the finalize prompt's first focus stop; a control name is that band control. A target that is not on screen within `settleMs` falls back to `fallbacks` (the band control that always shows in that stage), or stays put when it has none.",
+  "settleMs": 1000,
+  "keys": {
+    "editorInputs": "framework.history.editor.inputs",
+    "editorAccept": "framework.history.editor.accept",
+    "nextProblem": "framework.history.timeTravel.nextProblem"
+  },
+  "fallbacks": {
+    "editor": "accept",
+    "nextProblem": "exit"
+  },
+  "cases": [
+    {
+      "name": "beginning an edit focuses the editor",
+      "previous": null,
+      "next": { "sessionId": "1", "generation": 1, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "focus": "editor"
+    },
+    {
+      "name": "a draft edit of the same mutation leaves focus where it is",
+      "previous": { "sessionId": "1", "generation": 1, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "next": { "sessionId": "1", "generation": 2, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "focus": null
+    },
+    {
+      "name": "editing another mutation focuses its editor",
+      "previous": { "sessionId": "1", "generation": 2, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 1 },
+      "next": { "sessionId": "1", "generation": 3, "stage": "editing", "target": "m-5", "blocking": false, "acceptedCount": 1 },
+      "focus": "editor"
+    },
+    {
+      "name": "accepting starts the replay and focuses its cancel",
+      "previous": { "sessionId": "1", "generation": 3, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "next": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 0, "total": 8, "blocking": false, "acceptedCount": 1 },
+      "focus": "cancelReplay"
+    },
+    {
+      "name": "replay progress leaves focus where it is",
+      "previous": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 3, "total": 8, "blocking": false, "acceptedCount": 1 },
+      "next": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 4, "total": 8, "blocking": false, "acceptedCount": 1 },
+      "focus": null
+    },
+    {
+      "name": "a ready review focuses finalize",
+      "previous": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 8, "total": 8, "blocking": false, "acceptedCount": 1 },
+      "next": { "sessionId": "1", "generation": 5, "stage": "reviewing", "worst": "warning", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "focus": "finalize"
+    },
+    {
+      "name": "a blocked review focuses next problem",
+      "previous": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 8, "total": 8, "blocking": false, "acceptedCount": 2 },
+      "next": { "sessionId": "1", "generation": 5, "stage": "reviewing", "worst": "error", "blocking": true, "acceptedCount": 2, "review": "blocked", "rerunnable": false },
+      "focus": "nextProblem"
+    },
+    {
+      "name": "next problem opens the failing mutation and focuses its editor",
+      "previous": { "sessionId": "1", "generation": 5, "stage": "reviewing", "worst": "fatal", "blocking": true, "acceptedCount": 2, "review": "blocked", "rerunnable": false },
+      "next": { "sessionId": "1", "generation": 6, "stage": "editing", "target": "m-7", "blocking": false, "acceptedCount": 2 },
+      "focus": "editor"
+    },
+    {
+      "name": "a cancelled replay focuses replay again",
+      "previous": { "sessionId": "1", "generation": 4, "stage": "replaying", "done": 3, "total": 8, "blocking": false, "acceptedCount": 1 },
+      "next": { "sessionId": "1", "generation": 5, "stage": "reviewing", "blocking": false, "fault": "timeTravel.cancelled", "acceptedCount": 1, "review": "needsReplay", "rerunnable": true },
+      "focus": "rerun"
+    },
+    {
+      "name": "a review without accepted drafts focuses exit",
+      "previous": { "sessionId": "1", "generation": 2, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "next": { "sessionId": "1", "generation": 3, "stage": "reviewing", "blocking": false, "acceptedCount": 0, "review": "noChanges", "rerunnable": false },
+      "focus": "exit"
+    },
+    {
+      "name": "finalize opens the prompt and focuses it",
+      "previous": { "sessionId": "1", "generation": 5, "stage": "reviewing", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "next": { "sessionId": "1", "generation": 6, "stage": "choosing", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "focus": "dialog"
+    },
+    {
+      "name": "back from the prompt focuses finalize again",
+      "previous": { "sessionId": "1", "generation": 6, "stage": "choosing", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "next": { "sessionId": "1", "generation": 7, "stage": "reviewing", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "focus": "finalize"
+    },
+    {
+      "name": "the commit leaves focus where it is",
+      "previous": { "sessionId": "1", "generation": 7, "stage": "choosing", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false },
+      "next": { "sessionId": "1", "generation": 8, "stage": "finalizing", "blocking": false, "acceptedCount": 1 },
+      "focus": null
+    },
+    {
+      "name": "a closed session moves nothing",
+      "previous": { "sessionId": "1", "generation": 8, "stage": "finalizing", "blocking": false, "acceptedCount": 1 },
+      "next": null,
+      "focus": null
+    },
+    {
+      "name": "a new session in the same stage focuses its editor",
+      "previous": { "sessionId": "1", "generation": 3, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "next": { "sessionId": "2", "generation": 1, "stage": "editing", "target": "m-2", "blocking": false, "acceptedCount": 0 },
+      "focus": "editor"
+    }
+  ]
+}

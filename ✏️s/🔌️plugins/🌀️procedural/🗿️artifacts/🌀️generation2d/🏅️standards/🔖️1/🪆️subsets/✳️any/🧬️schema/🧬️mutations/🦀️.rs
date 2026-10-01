@@ -211,13 +211,24 @@ pub type Generation2dEnvelope = ArtifactEnvelope<Generation2dSnapshot, Generatio
 pub type Generation2dStore = ArtifactStore<Generation2dSnapshot, Generation2dMutation>;
 
 /// 🧬️ Applies a mutation to a projection — generic over every variant, so it never needs edits
-/// when the semantic vocabulary grows.
-pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> protocol::MutationApplyResult<()> {
-    let (delta, _messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+/// when the semantic vocabulary grows. A refused diff (Error/Fatal) is never applied as its empty delta: the refusal
+/// travels as the outcome's own messages, codes and levels unchanged, and an apply-time rejection joins them as the
+/// `Fatal` `mutation.apply.*` message `MutationOutcome::apply_to` would persist.
+pub fn apply_generation2d_mutation(projection: &mut Generation2dSnapshot, mutation: &Generation2dMutation) -> Result<(), Vec<protocol::MutationMessage>> {
+    let (delta, messages) = protocol::Mutation::diff(mutation, &*projection).into_parts();
+    if messages.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) {
+        delta.retire_cold();
+        return Err(messages);
+    }
     let applied = protocol::MutationDiff::apply(&delta, &*projection);
     delta.retire_cold();
-    std::mem::replace(projection, applied?).retire_cold();
-    Ok(())
+    match applied {
+        Ok(next) => {
+            std::mem::replace(projection, next).retire_cold();
+            Ok(())
+        }
+        Err(error) => Err(messages.into_iter().chain([protocol::MutationMessage::fatal(error.code, error.message).at(error.target)]).collect()),
+    }
 }
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.
@@ -229,4 +240,8 @@ pub fn inverse_generation2d_mutation(projection: &Generation2dSnapshot, mutation
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️gesture-leaves/🦀️.rs"]
+mod gesture_leaves_tests;
 //#endregion 🧪️Tests

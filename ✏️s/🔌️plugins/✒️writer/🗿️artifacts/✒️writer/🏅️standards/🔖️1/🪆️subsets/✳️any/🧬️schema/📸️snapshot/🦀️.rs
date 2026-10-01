@@ -44,3 +44,9 @@ impl Default for WriterSnapshot {
     }
 }
 //#endregion 🔖️Snapshot
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

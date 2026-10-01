@@ -147,7 +147,7 @@
           "scenarios": [
             {
               "id": "slows-the-second-frame-and-marks-it-do-not-dispose",
-              "directoryName": "⏱️slows-the-second-frame-and-marks-it-do-not-dispose"
+              "directoryName": "⏱️slows"
             }
           ]
         }

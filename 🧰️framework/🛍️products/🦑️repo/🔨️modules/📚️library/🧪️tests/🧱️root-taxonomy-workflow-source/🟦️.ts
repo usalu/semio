@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { loadTaxonomy, semanticDirectoryKindId } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { loadTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
 const repoRoot = resolve(import.meta.dir, "../../../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🧱️root-taxonomy-workflow-source/🔣️.json"), "utf8"));

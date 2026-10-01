@@ -605,13 +605,13 @@ impl Drop for ArtifactStoreStringRetirement {
 }
 
 struct ArtifactStoreStringVectorRetirement {
-    values: std::mem::ManuallyDrop<Option<Vec<String>>>,
+    values: std::mem::ManuallyDrop<Option<crate::os_vcs::HistoryPageStack<String>>>,
     active: std::mem::ManuallyDrop<Option<ArtifactStoreStringRetirement>>,
 }
 
 impl ArtifactStoreStringVectorRetirement {
-    fn new(values: Vec<String>) -> Self {
-        Self { values: std::mem::ManuallyDrop::new(Some(values)), active: std::mem::ManuallyDrop::new(None) }
+    fn new(values: impl Into<crate::os_vcs::HistoryPageStack<String>>) -> Self {
+        Self { values: std::mem::ManuallyDrop::new(Some(values.into())), active: std::mem::ManuallyDrop::new(None) }
     }
 }
 
@@ -755,7 +755,7 @@ struct ArtifactStoreEditRetirement {
 }
 
 struct ArtifactStoreEditRetirementState {
-    strings: [Option<String>; 7],
+    strings: [Option<String>; 8],
     mutation_meta: Vec<MutationMeta>,
     active_meta: Option<ArtifactStoreMutationMetaRetirement>,
     active_bytes: Option<Vec<u8>>,
@@ -808,10 +808,10 @@ impl ArtifactStoreEditRetirement {
         if !edit.forwards.is_empty() || !edit.inverse.is_empty() {
             return Err(edit);
         }
-        let Edit { id, actor, forwards, inverse, mutation_meta, description, verb, coalesce_key, sequence_number: _, started_at, finished_at } = edit;
+        let Edit { id, actor, line, forwards, inverse, mutation_meta, description, verb, coalesce_key, sequence_number: _, started_at, finished_at } = edit;
         drop(forwards);
         drop(inverse);
-        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, verb, coalesce_key, Some(started_at), finished_at], mutation_meta, active_meta: None, active_bytes: None })) })
+        Ok(Self { state: std::mem::ManuallyDrop::new(Some(ArtifactStoreEditRetirementState { strings: [Some(id), actor, description, verb, coalesce_key, Some(started_at), finished_at, line], mutation_meta, active_meta: None, active_bytes: None })) })
     }
 }
 
@@ -1639,7 +1639,7 @@ where
                     return Err("displaced envelope reached initial snapshot handoff without an exact terminal structural shell".into());
                 }
                 let envelope = self.envelope.take().expect("displaced envelope authority remains present");
-                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = envelope.into_owners();
+                let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = envelope.into_owners();
                 let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
                 assert!(
                     schema.is_empty()
@@ -1651,6 +1651,7 @@ where
                         && migrated_from.is_none()
                         && owner.is_none()
                         && lanes.is_empty()
+                        && viewer_checkpoint_id.is_none()
                         && edit_messages.is_empty()
                         && conflicts.is_empty()
                 && transitions.is_empty()
@@ -2546,12 +2547,12 @@ pub async fn document_backbone_ref(uri: &str) -> ArtifactBackboneRef {
 #[cfg_attr(test, serde(rename_all = "camelCase"))]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactCursorOwners {
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
-    pub applied_edit_ids: Vec<String>,
-    #[value(default, skip_serializing_if = "Vec::is_empty")]
-    #[cfg_attr(test, serde(default, skip_serializing_if = "Vec::is_empty"))]
-    pub redo_edit_ids: Vec<String>,
+    #[value(default, skip_serializing_if = "crate::os_vcs::history_id_stack_is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "crate::os_vcs::history_id_stack_is_empty"))]
+    pub applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    #[value(default, skip_serializing_if = "crate::os_vcs::history_id_stack_is_empty")]
+    #[cfg_attr(test, serde(default, skip_serializing_if = "crate::os_vcs::history_id_stack_is_empty"))]
+    pub redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[cfg_attr(test, serde(default, skip_serializing_if = "Option::is_none"))]
     pub checkpoint_id: Option<String>,
@@ -2569,8 +2570,8 @@ struct ArtifactCursorGroupRoot {
 }
 
 impl ArtifactCursor {
-    pub fn new(applied_edit_ids: Vec<String>, redo_edit_ids: Vec<String>, checkpoint_id: Option<String>) -> Self {
-        Self::from_owners(ArtifactCursorOwners { applied_edit_ids, redo_edit_ids, checkpoint_id })
+    pub fn new(applied_edit_ids: impl Into<crate::os_vcs::HistoryPageStack<String>>, redo_edit_ids: impl Into<crate::os_vcs::HistoryPageStack<String>>, checkpoint_id: Option<String>) -> Self {
+        Self::from_owners(ArtifactCursorOwners { applied_edit_ids: applied_edit_ids.into(), redo_edit_ids: redo_edit_ids.into(), checkpoint_id })
     }
 
     pub fn from_owners(owners: ArtifactCursorOwners) -> Self {
@@ -2758,18 +2759,26 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// itself, which this crate's per-technology `Mutation` types don't own) so it survives a plain
     /// JSON round trip (`ArtifactStore::envelope_json`) alongside `cursor`/`owner`/`dialect`.
     pub lanes: BTreeMap<String, HistoryLane>,
+    /// 👁 Explicit checkpoint this viewer is looking at. `None` is the tip of the active line.
+    /// Local to this replica: a collaborator's checkout does not write it.
+    pub viewer_checkpoint_id: Option<String>,
     pub edit_messages: ArtifactEditMessageLedger,
     pub conflicts: Vec<crate::os_spr::Conflict>,
     /// 🔀️ Every structural history event — undo, redo, checkpoint commit, branch, checkout,
     /// repin — as one causal `crate::os_spr::HISTORY_TRANSITION_SCHEMA` envelope, in HLC order.
-    /// Together with `vcs.edits` this is the document's complete semantic event log: `cursor`,
-    /// `active_alternative_id` and the change/checkpoint/alternative ledgers are its projection
-    /// (`crate::os_spr::fold_history`), never an independent source of truth.
+    /// Together with `vcs.edits` this is the document's complete semantic event log. The
+    /// change/checkpoint/alternative ledgers are its projection. `active_alternative_id` and
+    /// `viewer_checkpoint_id` are this replica's head, persisted local-only, not that projection.
     pub transitions: Vec<crate::os_spr::MutationEnvelope>,
     /// 🗂️ The transitions this history holds ([`crate::os_spr::HistoryShape`]): a config store's history holds undo and
     /// redo only, so its store refuses every other transition at dispatch and at remote admission — the same law its
     /// retained loader applies.
     pub history_shape: crate::os_spr::HistoryShape,
+    /// 🎐️ The tool transaction whose edit is open in `vcs.edits` ([`ArtifactCommand::AppendTransaction`]). The store folds
+    /// that edit as its applied tail, but neither the shared log ([`ArtifactStore::event_log`]) nor a persisted form
+    /// ([`print_document_spr`], [`print_document_text`]) holds it before its commit, so an abort or a lost session leaves
+    /// no trace.
+    pub open_transaction: Option<OpenToolTransaction>,
 }
 
 /// 📸️ One immutable envelope observation; cursor and every history ledger share one captured decision.
@@ -2784,6 +2793,7 @@ pub struct ArtifactEnvelopeRead<'a, P, Mutation> {
     migrated_from: Option<&'a MigrationProvenance>,
     owner: Option<&'a OwnerRef>,
     lanes: &'a BTreeMap<String, HistoryLane>,
+    viewer_checkpoint_id: Option<&'a String>,
     edit_messages: &'a ArtifactEditMessageLedger,
     conflicts: &'a Vec<crate::os_spr::Conflict>,
 }
@@ -2816,6 +2826,9 @@ impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Muta
         if !self.lanes.is_empty() {
             entries.push(("lanes".to_string(), self.lanes.to_value()));
         }
+        if let Some(viewer_checkpoint_id) = self.viewer_checkpoint_id {
+            entries.push(("viewerCheckpointId".to_string(), viewer_checkpoint_id.to_value()));
+        }
         entries.push(("editMessages".to_string(), self.edit_messages.to_value()));
         entries.push(("conflicts".to_string(), self.conflicts.to_value()));
         DslValue::Object(entries)
@@ -2823,6 +2836,12 @@ impl<P: ToValue, Mutation: ToValue> ToValue for ArtifactEnvelopeRead<'_, P, Muta
 }
 
 impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
+    /// 🖇️ Whether `edit_id` is committed history: every edit but the open tool transaction's, which the shared log and
+    /// every persisted form leave out until its commit.
+    pub fn holds_committed_edit(&self, edit_id: &str) -> bool {
+        self.open_transaction.as_ref().is_none_or(|open| open.edit_id != edit_id)
+    }
+
     /// 📸️ Captures read roots before any serializer can cross a shared group decision.
     pub fn capture_read(&self) -> Result<ArtifactEnvelopeRead<'_, P, Mutation>, &'static str> {
         let history_visibility = self.vcs.group_visibility().map_err(|()| "envelope history contains different group authorities")?;
@@ -2844,6 +2863,7 @@ impl<P, Mutation> ArtifactEnvelopeOwners<P, Mutation> {
             migrated_from: self.migrated_from.as_ref(),
             owner: self.owner.as_ref(),
             lanes: &self.lanes,
+            viewer_checkpoint_id: self.viewer_checkpoint_id.as_ref(),
             edit_messages: &self.edit_messages,
             conflicts: &self.conflicts,
         })
@@ -2886,7 +2906,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
     where
         Mutation: self::Mutation<P>,
     {
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, mut edit_messages, conflicts, transitions, history_shape: _ } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, mut edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = self.into_owners();
         let ArtifactVcs { initial_snapshot, mut edits, mut changes, mut checkpoints, mut alternatives } = vcs;
         while let Some(edit) = edits.pop() {
             retire_scratch_edits::<P, Mutation>([edit]);
@@ -2895,7 +2915,7 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
         while checkpoints.pop().is_some() {}
         while alternatives.pop().is_some() {}
         while edit_messages.pop().is_some() {}
-        drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions));
+        drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions));
         retire_replayed_projection::<P, Mutation>(initial_snapshot);
     }
 
@@ -2915,15 +2935,16 @@ impl<P, Mutation> ArtifactEnvelope<P, Mutation> {
             || self.migrated_from.is_some()
             || self.owner.is_some()
             || !self.lanes.is_empty()
+            || self.viewer_checkpoint_id.is_some()
             || !self.edit_messages.is_empty()
             || !self.conflicts.is_empty()
             || !self.transitions.is_empty()
         {
             return Err(self);
         }
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = self.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = self.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
-        drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions));
+        drop((schema, id, edits, changes, checkpoints, alternatives, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions));
         Ok(initial_snapshot)
     }
 }
@@ -3995,8 +4016,8 @@ pub struct CommandReceipt {
 pub struct ArtifactRevision {
     pub artifact_id: String,
     pub schema: String,
-    pub applied_edit_ids: Vec<String>,
-    pub redo_edit_ids: Vec<String>,
+    pub applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    pub redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
     pub checkpoint_id: Option<String>,
 }
 
@@ -7065,6 +7086,7 @@ const ARTIFACT_OWNED_SPR_EDIT_FIELDS: &[OwnedSchemaFieldSpec] = &[
     OwnedSchemaFieldSpec { id: 9, key: "startedAt", required: true },
     OwnedSchemaFieldSpec { id: 10, key: "finishedAt", required: false },
     OwnedSchemaFieldSpec { id: 11, key: "verb", required: false },
+    OwnedSchemaFieldSpec { id: 12, key: "line", required: true },
 ];
 
 struct ArtifactOwnedSprMutationTarget<Mutation>
@@ -7348,7 +7370,7 @@ where
     cursor: OwnedSchemaNestedRecordCursor,
     pending: Option<(OwnedSchemaToken, bool)>,
     active: std::mem::ManuallyDrop<Option<ArtifactOwnedSprEditActive<P, Mutation>>>,
-    strings: [std::mem::ManuallyDrop<Option<String>>; 7],
+    strings: [std::mem::ManuallyDrop<Option<String>>; 8],
     forwards: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     inverse: std::mem::ManuallyDrop<Option<Vec<Mutation>>>,
     sequence_number: Option<i32>,
@@ -7396,7 +7418,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
     /// `Some(step)` when the field needed no owner at all.
     fn begin_edit_field(&mut self, field_id: u16, token: OwnedSchemaToken, terminal: bool, source: &OwnedSchemaRecordCursor) -> Result<Option<ArtifactEnvelopeFieldDecodeStep>, OwnedSchemaDecodeDiagnostic> {
         if Self::string_index(field_id).is_some() {
-            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10 | 11) {
+            if token.kind == OwnedSchemaTokenKind::Null && matches!(field_id, 2 | 6 | 7 | 10 | 11 | 12) {
                 return Ok(Some(ArtifactEnvelopeFieldDecodeStep::TokenComplete));
             }
             if !terminal {
@@ -7481,6 +7503,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
             9 => Some(4),
             10 => Some(5),
             11 => Some(6),
+            12 => Some(7),
             _ => None,
         }
     }
@@ -7492,7 +7515,7 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactOwnedSprEditAuthority<
         let started_at = self.strings[4].take().ok_or_else(|| self.diagnostic("artifact-spr.edit-started-at-missing", 0))?;
         let sequence_number = self.sequence_number.ok_or_else(|| self.diagnostic("artifact-spr.edit-sequence-missing", 0))?;
         *self.value =
-            Some(Edit { id, actor: self.strings[1].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), verb: self.strings[6].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
+            Some(Edit { id, actor: self.strings[1].take(), line: self.strings[7].take(), forwards, inverse, mutation_meta: Vec::new(), description: self.strings[2].take(), verb: self.strings[6].take(), coalesce_key: self.strings[3].take(), sequence_number, started_at, finished_at: self.strings[5].take() });
         Ok(())
     }
 }
@@ -10390,7 +10413,9 @@ impl<P: Send + 'static, Mutation: Send + 'static> ArtifactEnvelopeFieldDecoder<P
                 conflicts: Vec::new(),
                 transitions: Vec::new(),
                 history_shape: crate::os_spr::HistoryShape::Document,
-            });
+                open_transaction: None,
+        viewer_checkpoint_id: None,
+    });
             self.pending_completed = Some(Box::new(ArtifactEnvelopeCompletedRecordOwner::new(envelope, Arc::clone(&self.initial_snapshot_factory), Arc::clone(&self.mutation_factory))));
         }
         let owner = self.pending_completed.take().expect("fresh completed owner remains retained");
@@ -10667,11 +10692,17 @@ pub type ArtifactCodecApplyFuture<'a> = std::pin::Pin<Box<dyn std::future::Futur
 /// parsed document pack, so this is a liveness ceiling rather than a work budget.
 pub const ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS: usize = 1 << 20;
 
+#[path = "📦️codec/🪶️snapshot-capability/🪶️native-retirement/🦀️.rs"]
+mod sqlite_snapshot_retirement;
+
 /// 🪶️ A snapshot's handwritten relational model, independently interpretable through SQLite.
 pub trait ArtifactSqliteSnapshot: Sized {
     const SQLITE_SCHEMA: &'static str;
     fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, String>;
     fn from_sqlite_database(database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<Self, String>;
+
+    /// ♻️ Retires a snapshot through its declared owner after an erased conversion.
+    fn retire_sqlite_snapshot(self) { drop(self); }
 
     /// 🚧️ Checks the owner's native encoding expansion before printing or packing any fields.
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), String> {
@@ -10691,18 +10722,31 @@ pub trait ArtifactSqliteSnapshot: Sized {
     where
         Self: ArtifactDsl + ArtifactPack + 'static,
     {
-        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, _dialect: &crate::io_schema::ArtifactDialect, payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
+        fn export_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, payload: &crate::io_schema::IoPayload, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase> {
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 0, 1)?;
-            let snapshot = match payload {
-                crate::io_schema::IoPayload::Binary(bytes) => P::decode_pack(bytes).map_err(|error| error.to_string())?,
+            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(match payload {
+                crate::io_schema::IoPayload::Binary(bytes) => {
+                    let limits = control.limits();
+                    let mut options = PackDecodeOptions::default();
+                    options.limits.max_file_len = options.limits.max_file_len.min(limits.max_file_bytes as u64);
+                    options.limits.max_total_alloc = options.limits.max_total_alloc.min(limits.max_value_bytes as u64);
+                    options.limits.max_segment_len = options.limits.max_segment_len.min(options.limits.max_total_alloc);
+                    options.limits.max_items = options.limits.max_items.min(options.limits.max_total_alloc);
+                    options.limits.max_symbols = options.limits.max_symbols.min((options.limits.max_total_alloc / 32).min(u32::MAX as u64) as u32);
+                    P::decode_pack_with(bytes, &options).map_err(|error| error.to_string())?
+                },
                 crate::io_schema::IoPayload::Text(text) => P::parse_dsl(text).map_err(|error| error.to_string())?,
-            };
+            });
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::DecodeNative, 1, 1)?;
-            snapshot.to_sqlite_database(control).map(crate::io_schema::IoOutcome::clean).map_err(Into::into)
+            let database = snapshot.to_sqlite_database(control)?;
+            control.check_database(&database, crate::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot)?;
+            let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;
+            Ok(crate::io_schema::IoOutcome { value: database, diagnostics: validation.diagnostics })
         }
 
-        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, _dialect: &crate::io_schema::ArtifactDialect, database: crate::sqlite_snapshot::SqliteDatabase, encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
-            let snapshot = P::from_sqlite_database(&database, control)?;
+        fn import_snapshot_impl<P: ArtifactDsl + ArtifactPack + ArtifactSqliteSnapshot>(_schema: &str, dialect: &crate::io_schema::ArtifactDialect, database: crate::sqlite_snapshot::SqliteDatabase, encoding: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload> {
+            let snapshot = sqlite_snapshot_retirement::OwnedSqliteSnapshot::new(P::from_sqlite_database(&database, control)?);
+            let validation = validate_owned_sqlite_snapshot_subset(&*snapshot, dialect, &database, control)?;
             snapshot.preflight_sqlite_snapshot_encoding(encoding, control)?;
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 0, 1)?;
             let payload = match encoding {
@@ -10710,23 +10754,27 @@ pub trait ArtifactSqliteSnapshot: Sized {
                 crate::sqlite_snapshot::SnapshotEncoding::Text => crate::io_schema::IoPayload::Text(snapshot.print_dsl()),
             };
             control.checkpoint(crate::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative, 1, 1)?;
-            Ok(crate::io_schema::IoOutcome::clean(payload))
+            Ok(crate::io_schema::IoOutcome { value: payload, diagnostics: validation.diagnostics })
         }
 
-        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), subset_validation: SnapshotSubsetValidation::LocalRegistry, export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self> }
+        ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Borrowed(Self::SQLITE_SCHEMA), snapshot_type: Some(std::any::TypeId::of::<Self>()), export: export_snapshot_impl::<Self>, import: import_snapshot_impl::<Self> }
     }
 }
 
-/// 🛡️ Native providers use local exact subset validators; remote providers execute that validation in their component.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum SnapshotSubsetValidation { LocalRegistry, Provider }
+/// 🛡️ Applies the owner's semantic policy and preserves warnings while refusing errors.
+pub fn validate_owned_sqlite_snapshot_subset<P: ArtifactSqliteSnapshot>(snapshot: &P, dialect: &crate::io_schema::ArtifactDialect, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+    let outcome = snapshot.validate_sqlite_snapshot_subset(dialect, database, control)?;
+    if outcome.diagnostics.iter().any(|diagnostic| matches!(diagnostic.severity, crate::os_dsl::Severity::Error | crate::os_dsl::Severity::Fatal)) {
+        return Err(crate::io_schema::IoError { message: format!("owned snapshot violates subset {}", dialect.to_coordinate()), diagnostics: outcome.diagnostics });
+    }
+    Ok(outcome)
+}
 
 /// 🔌️ Erased native payload bridge to an artifact's explicit relational SQLite implementation.
 #[derive(Clone)]
 pub struct ArtifactSqliteSnapshotCodec {
     pub schema: std::borrow::Cow<'static, str>,
     pub snapshot_type: Option<std::any::TypeId>,
-    pub subset_validation: SnapshotSubsetValidation,
     pub export: fn(&str, &crate::io_schema::ArtifactDialect, &crate::io_schema::IoPayload, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::sqlite_snapshot::SqliteDatabase>,
     pub import: fn(&str, &crate::io_schema::ArtifactDialect, crate::sqlite_snapshot::SqliteDatabase, crate::sqlite_snapshot::SnapshotEncoding, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<crate::io_schema::IoPayload>,
 }
@@ -10734,7 +10782,7 @@ pub struct ArtifactSqliteSnapshotCodec {
 impl ArtifactSqliteSnapshotCodec {
     /// 🧬️ Compares the explicit schema and concrete native conversion ownership.
     pub fn identical_to(&self, other: &Self) -> bool {
-        self.schema == other.schema && self.snapshot_type == other.snapshot_type && self.subset_validation == other.subset_validation && std::ptr::fn_addr_eq(self.export, other.export) && std::ptr::fn_addr_eq(self.import, other.import)
+        self.schema == other.schema && self.snapshot_type == other.snapshot_type && std::ptr::fn_addr_eq(self.export, other.export) && std::ptr::fn_addr_eq(self.import, other.import)
     }
 }
 
@@ -10942,6 +10990,12 @@ where
 /// supersession heals an earlier one. This is how a hub materializes a Check In from its own ledger.
 ///
 /// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
+/// 📌️ The alternative a hub Check In materializes. It is the canonical trunk of `document_id`;
+/// a viewer's checkout is local and never selects it.
+pub fn canonical_check_in_line(document_id: &str) -> String {
+    crate::os_spr::trunk_alternative_id(&ArtifactId(document_id.to_string()))
+}
+
 pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> DocumentStoreOwners<P, Mutation>) -> Result<ArtifactPackFiles, VcsError>
 where
     P: Clone + ToValue + FromValue + ArtifactPack + Send + 'static,
@@ -10953,9 +11007,13 @@ where
     let envelopes = crate::os_spr::decode_envelopes(envelopes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let parsed = parse_document_pack::<P, Mutation>(pack, spr).await.map_err(|error| VcsError::Deserialize(error.to_string()))?;
     let mut envelope = parsed.into_envelope();
+    let _canonical_line = canonical_check_in_line(&envelope.id);
+    envelope.active_alternative_id = None;
+    envelope.viewer_checkpoint_id = None;
+    project_envelope_history(&mut envelope)?;
     let (applied, redo) = match &envelope.cursor {
         Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), crate::os_vcs::HistoryPageStack::new()),
     };
     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
     let mut store = ArtifactStore::new(envelope).await?;
@@ -11118,7 +11176,7 @@ impl ArtifactCodec {
                     let mut envelope = parsed.into_envelope();
                     let (applied, redo) = match &envelope.cursor {
                         Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-                        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+                        None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), crate::os_vcs::HistoryPageStack::new()),
                     };
                     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
                     let mut store = ArtifactStore::new(envelope).await?;
@@ -11683,6 +11741,8 @@ where
         conflicts: Vec::new(),
         transitions: Vec::new(),
         history_shape: crate::os_spr::HistoryShape::Document,
+        open_transaction: None,
+        viewer_checkpoint_id: None,
     })
 }
 
@@ -11706,15 +11766,18 @@ where
 /// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6/C10) — concurrent-merge
 /// arbitration is now `ArtifactStore::ingest_remote`/`resolve_conflict`'s job against
 /// `📡️spr/⚔️conflict`'s first-class `Conflict`/`MergeReport`, not a post-materialization hook here.
-pub async fn materialize_document_snapshot<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: &[String]) -> Result<P, VcsError>
+pub async fn materialize_document_snapshot<P, Mutation, I, S>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, applied_edit_ids: I) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
     let supersessions = fold_envelope_history(envelope)?.supersessions;
     let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
     for edit_id in applied_edit_ids {
-        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        let edit_id = edit_id.as_ref();
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         fold_effective_edit(&mut snapshot, edit, &envelope.schema, &supersessions, usize::MAX);
     }
     Ok(snapshot.into_inner())
@@ -11754,16 +11817,18 @@ fn now_ms() -> u64 {
 /// id out in release builds — silently shrinking the checkpoint would drop a real edit out of
 /// history without a trace, exactly the failure mode `checkpoint_after_ingesting_a_remote_edit_
 /// stays_valid_once_the_sender_s_own_checkpoint_snapshot_arrives`'s doc comment warns against.
-async fn uncommitted_edit_ids<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String]) -> Vec<String>
+async fn uncommitted_edit_ids<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I) -> Vec<String>
 where
     Mutation: Clone,
     P: Clone,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
     let committed: HashSet<String> = envelope.vcs.changes.iter().flat_map(|change| change.edit_ids.iter().cloned()).collect();
     applied_edit_ids
-        .iter()
-        .filter(|id| !committed.contains(*id))
-        .cloned()
+        .into_iter()
+        .map(|id| id.as_ref().to_string())
+        .filter(|id| !committed.contains(id))
         .inspect(|id| debug_assert!(envelope.vcs.edits.iter().any(|edit| edit.id == *id), "uncommitted_edit_ids: {id} is applied but has no backing envelope.vcs.edits entry — the checkpoint about to reference it will fail validate_durable_history"))
         .collect()
 }
@@ -11948,6 +12013,7 @@ enum OpsHeaderLine {
         key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
+        line: Vec<String>,
     },
     /// ⏪️ A `Revert` transition: `clock` is the HLC as `physical.logical.actor`, `after` its
     /// causal dependencies; every transition line carries both so its envelope id re-derives exactly.
@@ -11984,6 +12050,7 @@ enum OpsHeaderLine {
         by: Vec<OpsAuthor>,
         message: Option<String>,
         at: String,
+        line: Vec<String>,
     },
     /// 🌿️ A `Branch` transition.
     Branch {
@@ -12037,6 +12104,12 @@ enum OpsHeaderLine {
     Message { edit: String, data: String },
     /// ⚔️ One first-class conflict, including its content-addressed identity and lifecycle.
     Conflict { data: String },
+}
+
+/// 🌿️ A text record explicitly carries zero trunk/unknown or one authored branch identity.
+fn ops_line_provenance(mut lines: Vec<String>) -> Result<Option<String>, TextError> {
+    if lines.len() > 1 { return Err(crate::os_dsl::__rt::field_error("history line admits zero or one identity")); }
+    Ok(lines.pop())
 }
 
 //#region 🔖️OpCodec
@@ -12115,6 +12188,7 @@ pub async fn print_edit_lines<Mutation: OpText>(edit: &Edit<Mutation>) -> Result
         key: edit.coalesce_key.clone(),
         description: edit.description.clone(),
         verb: edit.verb.clone(),
+        line: edit.line.iter().cloned().collect(),
     };
     let mut out = header.print_op();
     out.push('\n');
@@ -12196,6 +12270,7 @@ fn ops_line_from_transition(envelope: &crate::os_spr::MutationEnvelope) -> Resul
             by: checkpoint.authors.into_iter().map(|author| OpsAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect(),
             message: checkpoint.message,
             at: checkpoint.timestamp,
+            line: checkpoint.line_id.into_iter().collect(),
         },
         crate::os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id } => OpsHeaderLine::Branch { id, actor, clock, after, alternative: alternative_id, name, checkpoint: checkpoint_id },
         crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id } => OpsHeaderLine::Checkout { id, actor, clock, after, checkpoint: checkpoint_id, alternative: alternative_id },
@@ -12250,10 +12325,12 @@ where
 /// them with one Report replay from the genesis — an operation that no longer applies is recorded as a `Fatal` no-op
 /// whether or not supersessions exist — and every supersession envelope regains the conflict target its record does not
 /// persist. Answers the replayed head projection.
-fn replay_loaded_history<P, Mutation>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: &[String], supersessions: EffectiveSupersessions) -> Result<P, VcsError>
+fn replay_loaded_history<P, Mutation, I, S>(envelope: &mut ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
     let mut replay = loaded_history_replay(envelope, applied, supersessions)?;
     replay.step(&envelope.vcs.edits, &mut || false)?;
@@ -12262,12 +12339,15 @@ where
 
 /// ⏪️ The Report replay every load settles its applied history with ([`replay_loaded_history`]): from the genesis, under
 /// the fold's effective supersessions. A retained loader steps it under its own deadline.
-fn loaded_history_replay<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied: &[String], supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
+fn loaded_history_replay<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied: I, supersessions: EffectiveSupersessions) -> Result<EditReplay<P, Mutation>, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
-    EditReplay::new(ReplayMode::Report, Arc::new(envelope.vcs.initial_snapshot.clone()), applied.to_vec(), 0, &envelope.schema, supersessions, &envelope.vcs.edits)
+    let order = applied.into_iter().map(|edit_id| edit_id.as_ref().to_string()).collect();
+    EditReplay::new(ReplayMode::Report, Arc::new(envelope.vcs.initial_snapshot.clone()), order, 0, &envelope.schema, supersessions, &envelope.vcs.edits)
 }
 
 /// ✍️ Writes a finished load replay into `envelope` — every applied edit's rebased inverse and messages, every supersession
@@ -12366,14 +12446,14 @@ where
     let mut ops = String::new();
     ops.push_str(&OpsHeaderLine::Doc { id: envelope.id.clone(), schema: envelope.schema.clone() }.print_op());
     ops.push('\n');
-    for edit in &envelope.vcs.edits {
+    for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         ops.push_str(&print_edit_lines(edit).await?);
     }
     for transition in &envelope.transitions {
         ops.push_str(&ops_line_from_transition(transition)?.print_op());
         ops.push('\n');
     }
-    for entry in &envelope.edit_messages {
+    for entry in envelope.edit_messages.iter().filter(|entry| envelope.holds_committed_edit(&entry.edit_id)) {
         if !envelope.vcs.edits.iter().any(|edit| edit.id == entry.edit_id) {
             return Err(VcsError::ValidationFailed(format!("message ledger references unknown edit {}", entry.edit_id)));
         }
@@ -12719,27 +12799,35 @@ async fn validate_durable_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mu
     Ok(())
 }
 
-async fn validate_history_lanes<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], redo_edit_ids: &[String]) -> Result<(), VcsError> {
+async fn validate_history_lanes<P, Mutation, I, J, S, R>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, redo_edit_ids: J) -> Result<(), VcsError>
+where
+    I: IntoIterator<Item = S>,
+    J: IntoIterator<Item = R>,
+    S: AsRef<str>,
+    R: AsRef<str>,
+{
     let known = envelope.vcs.edits.iter().map(|edit| edit.id.as_str()).collect::<HashSet<_>>();
     let mut applied = HashSet::new();
     for edit_id in applied_edit_ids {
-        if !applied.insert(edit_id.as_str()) {
+        let edit_id = edit_id.as_ref();
+        if !applied.insert(edit_id.to_string()) {
             return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
         }
-        if !known.contains(edit_id.as_str()) {
-            return Err(VcsError::UnknownEdit(edit_id.clone()));
+        if !known.contains(edit_id) {
+            return Err(VcsError::UnknownEdit(edit_id.to_string()));
         }
     }
     let mut redo = HashSet::new();
     for edit_id in redo_edit_ids {
-        if !redo.insert(edit_id.as_str()) {
+        let edit_id = edit_id.as_ref();
+        if !redo.insert(edit_id.to_string()) {
             return Err(VcsError::ValidationFailed(format!("history repeats redo edit {edit_id}")));
         }
-        if applied.contains(edit_id.as_str()) {
+        if applied.contains(edit_id) {
             return Err(VcsError::ValidationFailed("history places an edit in both applied and redo lanes".to_string()));
         }
-        if !known.contains(edit_id.as_str()) {
-            return Err(VcsError::UnknownEdit(edit_id.clone()));
+        if !known.contains(edit_id) {
+            return Err(VcsError::UnknownEdit(edit_id.to_string()));
         }
     }
     Ok(())
@@ -12774,7 +12862,7 @@ async fn history_edit_from_edit<Mutation: OpBinary>(edit: &Edit<Mutation>, messa
         started_at: edit.started_at.clone(),
         finished_at: edit.finished_at.clone(),
         coalesce_key: edit.coalesce_key.clone(),
-        description: edit.description.clone(), verb: edit.verb.clone(),
+        description: edit.description.clone(), verb: edit.verb.clone(), line: edit.line.clone(),
         ops: history_op_payloads(&edit.forwards).await?,
         inverse: history_op_payloads(&edit.inverse).await?,
         meta: if edit.mutation_meta.is_empty() {
@@ -12948,7 +13036,7 @@ where
 {
     validate_persisted_conflicts(envelope).await?;
     let mut message_ledger = BTreeMap::new();
-    for entry in &envelope.edit_messages {
+    for entry in envelope.edit_messages.iter().filter(|entry| envelope.holds_committed_edit(&entry.edit_id)) {
         if message_ledger.insert(entry.edit_id.as_str(), entry.messages.as_slice()).is_some() {
             return Err(VcsError::ValidationFailed(format!("duplicate message ledger for edit {}", entry.edit_id)));
         }
@@ -12964,7 +13052,7 @@ where
         }
     }
     let mut edits = Vec::with_capacity(envelope.vcs.edits.len());
-    for edit in &envelope.vcs.edits {
+    for edit in envelope.vcs.edits.iter().filter(|edit| envelope.holds_committed_edit(&edit.id)) {
         edits.push(history_edit_from_edit::<Mutation>(edit, message_ledger.get(edit.id.as_str()).copied().unwrap_or(&[]), envelope.lanes.get(&edit.id).copied()).await?);
     }
     let mut conflicts = Vec::with_capacity(envelope.conflicts.len());
@@ -12978,6 +13066,8 @@ where
         transitions: envelope.transitions.iter().map(crate::os_spr::HistoryTransitionRecord::from_envelope).collect(),
         composition: history_composition_from_envelope(envelope).await,
         conflicts,
+        viewer_line: envelope.active_alternative_id.clone().filter(|line| line != &crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()))),
+        viewer_checkpoint: envelope.viewer_checkpoint_id.clone(),
     };
     let options = crate::os_spr::EncodeOptions { write_backwards_section: true, ..crate::os_spr::EncodeOptions::default() };
     crate::os_spr::encode_history(&log, &options).await.map_err(|error| VcsError::Serialize(error.to_string()))
@@ -13063,7 +13153,7 @@ where
             forwards,
             inverse,
             mutation_meta,
-            description: history_edit.description, verb: history_edit.verb,
+            description: history_edit.description, verb: history_edit.verb, line: history_edit.line,
             coalesce_key: history_edit.coalesce_key,
             sequence_number: index as i32 + 1,
             started_at: history_edit.started_at,
@@ -13095,7 +13185,12 @@ where
         conflicts,
         transitions,
         history_shape: crate::os_spr::HistoryShape::Document,
+        open_transaction: None,
+        viewer_checkpoint_id: None,
     });
+    let trunk = crate::os_spr::trunk_alternative_id(&ArtifactId(envelope.id.clone()));
+    envelope.active_alternative_id = log.viewer_line.clone().filter(|line| line != &trunk);
+    envelope.viewer_checkpoint_id = log.viewer_checkpoint.clone();
     let composed = match &log.composition {
         Some(composition) => apply_history_composition(&mut envelope, composition).await.map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1))),
         None => Ok(()),
@@ -13152,6 +13247,7 @@ where
         coalesce_key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
+        line: Option<String>,
     }
     let mut pending_edit: Option<PendingEdit> = None;
     let mut pending_forwards: Vec<Mutation> = Vec::new();
@@ -13167,7 +13263,7 @@ where
             forwards,
             inverse: Vec::new(),
             mutation_meta: Vec::new(),
-            description: header.description, verb: header.verb,
+            description: header.description, verb: header.verb, line: header.line,
             coalesce_key: header.coalesce_key,
             sequence_number: header.sequence_number,
             started_at: header.started_at,
@@ -13198,11 +13294,11 @@ where
                 schema = doc_schema;
                 id = doc_id;
             }
-            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, key, description, verb } => {
+            OpsHeaderLine::Edit { id: edit_id, sequence, started, actor, finished, key, description, verb, line } => {
                 if edits.iter().any(|edit| edit.id == edit_id) || pending_edit.as_ref().is_some_and(|edit| edit.id == edit_id) {
                     return Err(TextError::new(format!("ops text repeats edit {edit_id}"), TextSpan::at(line_no, 1)));
                 }
-                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, coalesce_key: key, description, verb });
+                pending_edit = Some(PendingEdit { id: edit_id, sequence_number: sequence, actor, started_at: started, finished_at: finished, coalesce_key: key, description, verb, line: ops_line_provenance(line)? });
                 pending_forwards = Vec::new();
             }
             OpsHeaderLine::Revert { id: transition_id, actor, clock, after, operations } => {
@@ -13211,9 +13307,9 @@ where
             OpsHeaderLine::Reinstate { id: transition_id, actor, clock, after, operations } => {
                 transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids(operations) }).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
             }
-            OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at } => {
+            OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at, line } => {
                 let authors = by.into_iter().map(|author| crate::os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
-                let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint, parent_id: parent, change_id: change, mutation_ids: mutation_ids(operations), description, saved_at: saved, authors, message, timestamp: at };
+                let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint, parent_id: parent, change_id: change, mutation_ids: mutation_ids(operations), description, saved_at: saved, authors, message, timestamp: at, line_id: ops_line_provenance(line)? };
                 transitions.push(transition_from_ops_line(&id, transition_id, actor, &clock, after, crate::os_spr::HistoryTransition::Commit(checkpoint)).map_err(|error| TextError::new(error, TextSpan::at(line_no, 1)))?);
             }
             OpsHeaderLine::Branch { id: transition_id, actor, clock, after, alternative, name, checkpoint } => {
@@ -13308,6 +13404,8 @@ where
         conflicts,
         transitions,
         history_shape: crate::os_spr::HistoryShape::Document,
+        open_transaction: None,
+        viewer_checkpoint_id: None,
     });
     settle_parsed_envelope(envelope).await
 }
@@ -14621,8 +14719,8 @@ struct CursorRevisionRecord {
 #[derive(Clone)]
 struct CursorRevisionAccumulator {
     identity_digest: [u8; 32],
-    applied: Vec<CursorRevisionRecord>,
-    redo: Vec<CursorRevisionRecord>,
+    applied: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    redo: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
     applied_tail_chains: Option<([u8; 32], EditDigestChains)>,
 }
 
@@ -14709,8 +14807,7 @@ impl CursorRevisionAccumulator {
 
     fn new<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, initial_digest: [u8; 32]) -> Self {
         let identity_digest = Self::hash_record(b"initial", &[envelope.id.as_bytes(), envelope.schema.as_bytes(), &initial_digest]);
-        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
-        Self { identity_digest, applied: Vec::with_capacity(capacity), redo: Vec::with_capacity(capacity), applied_tail_chains: None }
+        Self { identity_digest, applied: crate::os_vcs::HistoryPageStack::new(), redo: crate::os_vcs::HistoryPageStack::new(), applied_tail_chains: None }
     }
 
     /// 🔏️ Revision identity of one edit — a pure function of the edit. A single-operation edit hashes its canonical JSON
@@ -14754,6 +14851,7 @@ impl CursorRevisionAccumulator {
             Some(verb) => Self::hash_record(b"edit-verb", &[&digest, verb.as_bytes()]),
             None => digest,
         };
+        let digest = Self::hash_record(b"edit-line", &[&digest, &[u8::from(edit.line.is_some())], edit.line.as_deref().unwrap_or("").as_bytes()]);
         (digest, Some(chains))
     }
 
@@ -14772,8 +14870,8 @@ impl CursorRevisionAccumulator {
     /// there on are rebuilt even where the ids still match.
     #[allow(clippy::too_many_arguments)]
     fn reconcile_stack<P, Mutation: ToValue + self::Mutation<P>>(
-        records: &mut Vec<CursorRevisionRecord>,
-        ids: &[String],
+        records: &mut crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
+        ids: &crate::os_vcs::HistoryPageStack<String>,
         edits: &ArtifactHistoryLedger<Edit<Mutation>>,
         domain: &[u8],
         identity_digest: [u8; 32],
@@ -14808,7 +14906,7 @@ impl CursorRevisionAccumulator {
                 regrown = Some(edit_digest);
             }
         }
-        for id in &ids[common..] {
+        for id in ids.iter().skip(common) {
             let id_digest = Self::hash_record(b"edit-id", &[id.as_bytes()]);
             let edit_digest = match regrown.take() {
                 Some(edit_digest) => edit_digest,
@@ -14826,7 +14924,7 @@ impl CursorRevisionAccumulator {
         Vec::new()
     }
 
-    fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(&mut self, applied_ids: &[String], redo_ids: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, dirty_from: Option<usize>) -> (Vec<String>, Vec<String>) {
+    fn reconcile<P, Mutation: ToValue + self::Mutation<P>>(&mut self, applied_ids: &crate::os_vcs::HistoryPageStack<String>, redo_ids: &crate::os_vcs::HistoryPageStack<String>, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions, dirty_from: Option<usize>) -> (Vec<String>, Vec<String>) {
         let applied = Self::reconcile_stack::<P, Mutation>(&mut self.applied, applied_ids, edits, b"applied", self.identity_digest, &mut self.applied_tail_chains, supersessions, dirty_from);
         let redo = Self::reconcile_stack::<P, Mutation>(&mut self.redo, redo_ids, edits, b"redo", self.identity_digest, &mut None, supersessions, dirty_from.map(|_| 0));
         (applied, redo)
@@ -14844,36 +14942,28 @@ impl CursorRevisionAccumulator {
 /// Every mutating method advances one already-admitted history or reference owner; final store
 /// construction only moves these prepared authorities into their from-birth terminal shells.
 pub struct ArtifactStoreInitializationOwnerCatalog {
-    applied_edit_ids: Vec<String>,
-    redo_edit_ids: Vec<String>,
-    cursor_applied_edit_ids: Vec<String>,
-    cursor_redo_edit_ids: Vec<String>,
-    applied_revision: Vec<CursorRevisionRecord>,
-    redo_revision: Vec<CursorRevisionRecord>,
+    applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    cursor_applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    cursor_redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    applied_revision: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
+    redo_revision: crate::os_vcs::HistoryPageStack<CursorRevisionRecord>,
 }
 
 impl ArtifactStoreInitializationOwnerCatalog {
-    fn retain_id_capacity(mut ids: Vec<String>) -> Vec<String> {
-        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
-        if ids.capacity() < capacity { ids.reserve_exact(capacity.saturating_sub(ids.len())); }
-        ids
+    fn retain_id_capacity(ids: Vec<String>) -> crate::os_vcs::HistoryPageStack<String> {
+        ids.into()
     }
 
     pub fn try_new() -> Result<Self, &'static str> {
-        let capacity = crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY;
-        let mut applied_edit_ids = Vec::new();
-        let mut redo_edit_ids = Vec::new();
-        let mut cursor_applied_edit_ids = Vec::new();
-        let mut cursor_redo_edit_ids = Vec::new();
-        let mut applied_revision = Vec::new();
-        let mut redo_revision = Vec::new();
-        applied_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store applied owner catalog allocation failed")?;
-        redo_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store redo owner catalog allocation failed")?;
-        cursor_applied_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store cursor-applied owner catalog allocation failed")?;
-        cursor_redo_edit_ids.try_reserve_exact(capacity).map_err(|_| "artifact store cursor-redo owner catalog allocation failed")?;
-        applied_revision.try_reserve_exact(capacity).map_err(|_| "artifact store applied revision catalog allocation failed")?;
-        redo_revision.try_reserve_exact(capacity).map_err(|_| "artifact store redo revision catalog allocation failed")?;
-        Ok(Self { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision })
+        Ok(Self {
+            applied_edit_ids: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied owner catalog allocation failed")?,
+            redo_edit_ids: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo owner catalog allocation failed")?,
+            cursor_applied_edit_ids: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-applied owner catalog allocation failed")?,
+            cursor_redo_edit_ids: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store cursor-redo owner catalog allocation failed")?,
+            applied_revision: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store applied revision catalog allocation failed")?,
+            redo_revision: crate::os_vcs::HistoryPageStack::try_new().map_err(|_| "artifact store redo revision catalog allocation failed")?,
+        })
     }
 
     pub fn admitted_items(&self) -> usize {
@@ -14894,10 +14984,10 @@ impl ArtifactStoreInitializationOwnerCatalog {
 
 pub struct ArtifactStoreInitializationRuntime<P> {
     current: std::mem::ManuallyDrop<Option<P>>,
-    applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
-    redo_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
-    cursor_applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
-    cursor_redo_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
+    applied_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
+    redo_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
+    cursor_applied_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
+    cursor_redo_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
     current_checkpoint_id: std::mem::ManuallyDrop<Option<String>>,
     local_actor_id: std::mem::ManuallyDrop<Option<String>>,
     dag: std::mem::ManuallyDrop<Option<crate::os_spr::MutationDag>>,
@@ -14959,8 +15049,8 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         &self.supersessions
     }
 
-    fn push_revision_record(records: &mut Vec<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32]) -> Result<(), String> {
-        if records.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
+    fn push_revision_record(records: &mut crate::os_vcs::HistoryPageStack<CursorRevisionRecord>, identity_digest: [u8; 32], domain: &[u8], id: &str, edit_digest: [u8; 32]) -> Result<(), String> {
+        if !records.admits_one() {
             return Err("artifact store revision ledger is saturated".into());
         }
         let previous = records.last().map_or(identity_digest, |record| record.prefix_digest);
@@ -14970,7 +15060,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn push_applied(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
-        if self.applied_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
+        if !self.applied_edit_ids.admits_one() || !self.cursor_applied_edit_ids.admits_one() || !self.revision.applied.admits_one() {
             return Err("artifact store applied ledger is saturated".into());
         }
         let identity_digest = self.revision.identity_digest;
@@ -14986,7 +15076,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn push_redo(&mut self, id: String, edit_digest: [u8; 32]) -> Result<(), String> {
-        if self.redo_edit_ids.len() == crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY {
+        if !self.redo_edit_ids.admits_one() || !self.cursor_redo_edit_ids.admits_one() || !self.revision.redo.admits_one() {
             return Err("artifact store redo ledger is saturated".into());
         }
         let identity_digest = self.revision.identity_digest;
@@ -15151,7 +15241,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     #[allow(clippy::type_complexity)]
-    fn into_parts(mut self) -> (P, Vec<String>, Vec<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
+    fn into_parts(mut self) -> (P, crate::os_vcs::HistoryPageStack<String>, crate::os_vcs::HistoryPageStack<String>, ArtifactCursor, Option<String>, crate::os_spr::MutationDag, i32, HybridLogicalTimestamp, [u8; 32], CursorRevisionAccumulator, EffectiveSupersessions) {
         assert!(self.close_phase == 0 && self.close_active.is_none(), "a closing initialization runtime cannot be adopted");
         let current = self.current.take().expect("validated initialization owns its current snapshot");
         let applied = unsafe { std::mem::ManuallyDrop::take(&mut self.applied_edit_ids) };
@@ -15722,6 +15812,7 @@ pub struct ArtifactStoreOneItemLiveAuthority {
     next_sequence_number: i32,
     next_clock: HybridLogicalTimestamp,
     actor: String,
+    line: Option<String>,
     group_id: Option<String>,
     stamped_edit_id: Option<String>,
 }
@@ -15783,6 +15874,9 @@ impl ArtifactStoreOneItemLiveAuthority {
         id
     }
 
+    /// 🌿️ The immutable authored branch of this Store publication.
+    pub fn line_id(&self) -> Option<&str> { self.line.as_deref() }
+
     pub fn group_id(&self) -> Option<&str> {
         self.group_id.as_deref()
     }
@@ -15807,6 +15901,7 @@ impl ArtifactStoreOneItemLiveAuthority {
             || edit.forwards.len() != 1
             || edit.mutation_meta.len() != 1
             || edit.actor.as_deref() != Some(self.actor.as_str())
+            || edit.line != self.line
             || meta.author_id.as_ref().map(|actor| actor.0.as_str()) != Some(self.actor.as_str())
             || meta.timestamp != self.next_clock
             || meta.group_id.as_deref() != self.group_id.as_deref()
@@ -16292,7 +16387,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: released });
             }
         }
-        for value in [&mut self.edit.actor, &mut self.edit.description, &mut self.edit.verb, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
+        for value in [&mut self.edit.actor, &mut self.edit.line, &mut self.edit.description, &mut self.edit.verb, &mut self.edit.coalesce_key, &mut self.edit.finished_at, &mut self.local_actor] {
             if let Some(taken) = value.take() {
                 return Ok(SnapshotRetirementStep::Pending { released_items: 0, released_bytes: taken.len() });
             }
@@ -16314,6 +16409,7 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
             && self.tail_edit_id.is_empty()
             && self.edit.started_at.is_empty()
             && self.edit.actor.is_none()
+            && self.edit.line.is_none()
             && self.edit.description.is_none()
             && self.edit.verb.is_none()
             && self.edit.coalesce_key.is_none()
@@ -16354,6 +16450,8 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     transaction: Option<protocol::TransactionRef>,
     outbound: bool,
     announce_from: usize,
+    announce_items: usize,
+    transaction_open: bool,
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
@@ -16380,6 +16478,13 @@ impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
     /// 🧾️ The committed tool transaction this gesture publishes for, stamped on every staged operation.
     pub fn transaction(&self) -> Option<&protocol::TransactionRef> {
         self.transaction.as_ref()
+    }
+
+    /// 🫙️ Keeps this gesture's tool transaction open after its operations land: they join the transaction's open edit (the
+    /// first streamed gesture opens it) and nothing is announced until a closing gesture or `CommitTransaction` commits
+    /// it. A closing gesture (the default) that carries the open transaction's ref appends to its edit and commits it.
+    pub fn set_transaction_open(&mut self, open: bool) {
+        self.transaction_open = open;
     }
 
     /// 🔢️ How many mutations this gesture admitted, and how many of them are already staged.
@@ -16585,8 +16690,8 @@ where
     envelope_detached: bool,
     backbone: std::mem::ManuallyDrop<Option<Backbones>>,
     dag: std::mem::ManuallyDrop<crate::os_spr::MutationDag>,
-    applied_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
-    redo_edit_ids: std::mem::ManuallyDrop<Vec<String>>,
+    applied_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
+    redo_edit_ids: std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>,
     edit_sequence: i32,
     generation: u64,
     last_projection_cause: Option<ArtifactProjectionCause>,
@@ -16670,8 +16775,6 @@ where
     /// amend keeps the verb of the edit it extends). Set by the dispatching runtime via
     /// {@link set_authoring_verb}; not part of the wire envelope.
     authoring_verb: Option<String>,
-    /// 🎞️ The tool transaction whose open edit this store's `AppendTransaction`s grow, until its commit or abort.
-    open_transaction: Option<OpenToolTransaction>,
     pending_report: std::mem::ManuallyDrop<PendingCommandReport>,
     durable_group_root: std::mem::ManuallyDrop<Option<durable_group::ArtifactStoreDurableGroupRootV1<P>>>,
 }
@@ -16818,7 +16921,6 @@ where
         local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
         member_inbox: VecDeque::new(),
         authoring_verb: None,
-        open_transaction: None,
         merge_policy: crate::os_spr::MergePolicy::default(),
         clock,
         initial_digest,
@@ -16969,7 +17071,6 @@ where
             local_actor_id: std::mem::ManuallyDrop::new(local_actor_id),
             member_inbox: VecDeque::new(),
             authoring_verb: None,
-            open_transaction: None,
             merge_policy: crate::os_spr::MergePolicy::default(),
             clock,
             initial_digest,
@@ -17111,13 +17212,13 @@ where
         ArtifactEnvelopeView { envelope: &self.envelope }
     }
 
-    pub fn applied_edit_ids(&self) -> &[String] {
-        self.durable_group_read_root().map_or((*self.applied_edit_ids).as_slice(), |root| root.applied_edit_ids.as_slice())
+    pub fn applied_edit_ids(&self) -> &crate::os_vcs::HistoryPageStack<String> {
+        self.durable_group_read_root().map_or(&self.applied_edit_ids, |root| &root.applied_edit_ids)
     }
 
     /// ↪️ Pending redo stack (edit ids undone since the last fresh `Apply`).
-    pub fn redo_edit_ids(&self) -> &[String] {
-        self.durable_group_read_root().map_or((*self.redo_edit_ids).as_slice(), |root| root.redo_edit_ids.as_slice())
+    pub fn redo_edit_ids(&self) -> &crate::os_vcs::HistoryPageStack<String> {
+        self.durable_group_read_root().map_or(&self.redo_edit_ids, |root| &root.redo_edit_ids)
     }
 
     /// 🧭️ The checkpoint new commits currently parent onto (defaults to the latest checkpoint
@@ -17153,7 +17254,7 @@ where
 
     /// 🎞️ The tool transaction open on this store, if any ([`ArtifactCommand::AppendTransaction`]).
     pub fn open_transaction(&self) -> Option<&OpenToolTransaction> {
-        self.open_transaction.as_ref()
+        self.envelope.open_transaction.as_ref()
     }
 
     /// 🔧️ The most recently created/amended edit's `(forwards, inverse, per-operation meta)`.
@@ -17174,7 +17275,7 @@ where
         self.ensure_durable_group_idle()?;
         self.set_state(envelope).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Reset);
-        Ok(CommandReceipt { edit_ids: (*self.applied_edit_ids).clone(), generation: self.generation(), messages: Vec::new(), worst: None })
+        Ok(CommandReceipt { edit_ids: self.applied_edit_ids.to_vec(), generation: self.generation(), messages: Vec::new(), worst: None })
     }
 
     /// 💾️ Adopts full store state from `envelope`'s event log — applied edits, redo stack,
@@ -17441,7 +17542,7 @@ where
         *self.tail_undo_cache = next_tail;
     }
 
-    fn string_vector_owner_slots(values: &Vec<String>) -> usize {
+    fn string_vector_owner_slots(values: &crate::os_vcs::HistoryPageStack<String>) -> usize {
         usize::from(!values.is_empty() || values.capacity() != 0)
     }
 
@@ -17457,7 +17558,7 @@ where
         usize::from(value.edit_ids.as_ref().is_some_and(|ids| !ids.is_empty() || ids.capacity() != 0) || !value.messages.is_empty() || value.messages.capacity() != 0 || value.worst.is_some() || !value.outbound.is_empty() || value.outbound.capacity() != 0)
     }
 
-    fn take_string_vector_replacement(target: &mut std::mem::ManuallyDrop<Vec<String>>, next: Vec<String>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
+    fn take_string_vector_replacement(target: &mut std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>, next: crate::os_vcs::HistoryPageStack<String>) -> Option<Box<dyn ErasedSnapshotRetirement>> {
         let previous = std::mem::replace(&mut **target, next);
         (!previous.is_empty() || previous.capacity() != 0).then(|| Box::new(ArtifactStoreStringVectorRetirement::new(previous)) as Box<dyn ErasedSnapshotRetirement>)
     }
@@ -17467,7 +17568,7 @@ where
         previous.map(|previous| Box::new(ArtifactStoreStringRetirement::new(previous)) as Box<dyn ErasedSnapshotRetirement>)
     }
 
-    fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<Vec<String>>, position: usize) -> String {
+    fn take_string_at_retained(target: &mut std::mem::ManuallyDrop<crate::os_vcs::HistoryPageStack<String>>, position: usize) -> String {
         target.remove(position)
     }
 
@@ -17555,7 +17656,7 @@ where
             Ok(history) => Ok(ArtifactStoreHistoryCommitReservation { history, rejected_owner }),
             Err(_) => {
                 self.displaced_retirements.release_owner_slots(rejected_owner)?;
-                Err(VcsError::ValidationFailed("edit history ledger is saturated".into()))
+                Err(VcsError::HistoryFull { capacity: self.envelope.vcs.edits.len() })
             }
         }
     }
@@ -18009,7 +18110,7 @@ where
         };
         self.envelope_detached = true;
         let envelope = unsafe { std::mem::ManuallyDrop::take(&mut self.envelope) };
-        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, edit_messages, conflicts, transitions, history_shape: _ } = envelope.into_owners();
+        let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction: _ } = envelope.into_owners();
         let ArtifactVcs { initial_snapshot, edits, changes, checkpoints, alternatives } = vcs;
         assert!(
             schema.is_empty()
@@ -18021,6 +18122,7 @@ where
                 && migrated_from.is_none()
                 && owner.is_none()
                 && lanes.is_empty()
+                && viewer_checkpoint_id.is_none()
                 && edit_messages.is_empty()
                 && conflicts.is_empty()
                 && transitions.is_empty()
@@ -18062,10 +18164,14 @@ where
     /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
     /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
     async fn fold_current(&self) -> Result<P, VcsError> {
-        fold_history(&self.envelope, &self.applied_edit_ids, &self.supersessions).await
+        fold_history(&self.envelope, &*self.applied_edit_ids, &self.supersessions).await
     }
 
-    async fn fold_history(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], supersessions: &EffectiveSupersessions) -> Result<P, VcsError> {
+    async fn fold_history<I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
+    where
+        I: IntoIterator<Item = S>,
+        S: AsRef<str>,
+    {
         fold_history(envelope, applied_edit_ids, supersessions).await
     }
 
@@ -18249,7 +18355,7 @@ where
     /// 🗄️ The durable outcomes of `applied_edit_ids[from..]`.
     fn durable_outcomes(&self, from: usize) -> Result<Vec<protocol::MutationReplayOutcome>, VcsError> {
         let mut outcomes = Vec::new();
-        for edit_id in &self.applied_edit_ids[from.min(self.applied_edit_ids.len())..] {
+        for edit_id in self.applied_edit_ids.iter().skip(from.min(self.applied_edit_ids.len())) {
             let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
             let messages = self.messages_for_edit(edit_id);
             for (index, mutation_id) in crate::os_spr::mutation_ids_for_edit::<P, Mutation>(edit).into_iter().enumerate() {
@@ -18290,7 +18396,7 @@ where
             live_until = live_until.min(self.locate_mutation(target)?.0);
         }
         let supersessions = draft_supersessions(&self.supersessions, drafts);
-        let applied: Vec<String> = (*self.applied_edit_ids).clone();
+        let applied: Vec<String> = self.applied_edit_ids.to_vec();
         let (base, recorded) = self.prefix_state_recorded(&applied, position, &supersessions, Self::prefix_stride(applied.len()))?;
         let (mut live, stale): (Vec<(usize, Arc<P>)>, Vec<(usize, Arc<P>)>) = recorded.into_iter().partition(|(length, _)| *length <= live_until);
         for (_, snapshot) in stale {
@@ -18317,7 +18423,7 @@ where
     /// with progress; cancelling drops it and leaves this store untouched; {@link replay_report} reads the result.
     pub fn begin_report_replay(&self, drafts: &BTreeMap<MutationId, protocol::InputReplacement>, from: Option<&MutationId>) -> Result<EditReplay<P, Mutation>, VcsError> {
         let supersessions = draft_supersessions(&self.supersessions, drafts);
-        let applied: Vec<String> = (*self.applied_edit_ids).clone();
+        let applied: Vec<String> = self.applied_edit_ids.to_vec();
         let (window, horizon) = self.replay_window(&applied, &supersessions)?;
         let from = match from {
             Some(mutation_id) => self.locate_mutation(mutation_id)?.0.min(window),
@@ -18329,7 +18435,7 @@ where
     /// 🛡️ Judges the folded history as a whole under `MergePolicy::Normal`: one Report replay of every applied edit from the
     /// genesis, refused with its blocking messages when the report blocks finalize.
     pub fn refuse_blocking_history(&self) -> Result<(), VcsError> {
-        let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(self.envelope.vcs.initial_snapshot.clone()), (*self.applied_edit_ids).clone(), 0, &self.envelope.schema, (*self.supersessions).clone(), &self.envelope.vcs.edits)?;
+        let mut replay = EditReplay::new(ReplayMode::Report, Arc::new(self.envelope.vcs.initial_snapshot.clone()), self.applied_edit_ids.to_vec(), 0, &self.envelope.schema, (*self.supersessions).clone(), &self.envelope.vcs.edits)?;
         replay.step(&self.envelope.vcs.edits, &mut || false)?;
         let result = replay.finish()?;
         if !result.report().blocks_finalize() {
@@ -18368,7 +18474,7 @@ where
         self.dispatch_inner(command).await?;
         self.last_projection_cause = projection_cause;
         self.flush_outbound().await?;
-        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| if self.applied_edit_ids.len() >= before { self.applied_edit_ids[before..].to_vec() } else { Vec::new() });
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| if self.applied_edit_ids.len() >= before { self.applied_edit_ids.cloned_from(before) } else { Vec::new() });
         Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
@@ -18383,7 +18489,7 @@ where
         self.apply_command(mutations, description, HistoryLane::Document, None).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
         self.flush_outbound().await?;
-        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids[before..].to_vec());
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids.cloned_from(before));
         Ok(CommandReceipt { edit_ids, generation: self.generation(), messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() })
     }
 
@@ -18475,7 +18581,7 @@ where
             return Ok(false);
         }
         publication.outbound = false;
-        self.flush_apply_outbound(publication.announce_from, publication.admitted_items).await?;
+        self.flush_apply_outbound(publication.announce_from, publication.announce_items).await?;
         Ok(true)
     }
 
@@ -18536,6 +18642,9 @@ where
         if self.durable_group_root.is_some() {
             return Err(reject("batched publication cannot interleave with an unresolved durable group decision".into(), source));
         }
+        if let Some(open) = self.envelope.open_transaction.as_ref().filter(|open| transaction.as_ref().is_none_or(|transaction| transaction.id != open.transaction.id)) {
+            return Err(reject(format!("batched publication cannot interleave with the open tool transaction {}", open.transaction.id), source));
+        }
         if self.generation != expected_generation || self.content_revision != expected_revision {
             return Err(reject("batched publication base generation or revision is stale".into(), source));
         }
@@ -18589,6 +18698,7 @@ where
             next_sequence_number,
             next_clock,
             actor,
+            line: self.envelope.active_alternative_id.clone(),
             group_id,
             stamped_edit_id,
         });
@@ -18621,6 +18731,8 @@ where
             transaction,
             outbound,
             announce_from: 0,
+            announce_items: 0,
+            transaction_open: false,
         })
     }
 
@@ -18640,8 +18752,12 @@ where
         Ok(SnapshotRead::new(owner, lease))
     }
 
-    /// 🎥️ Tail uncommitted document edit that a coalesced batch may absorb into, matching `amend_command`.
-    fn batch_amend_target(&self, key: Option<&str>) -> Option<String> {
+    /// 🎥️ The edit a batch appends to instead of minting a ledger slot: the open edit of the tool transaction it carries,
+    /// else the tail uncommitted document edit its coalesce key matches, as `amend_command` does.
+    fn batch_amend_target(&self, key: Option<&str>, transaction: Option<&protocol::TransactionRef>) -> Option<String> {
+        if let Some(transaction) = transaction {
+            return self.envelope.open_transaction.as_ref().filter(|open| open.transaction.id == transaction.id && self.applied_edit_ids.last() == Some(&open.edit_id)).map(|open| open.edit_id.clone());
+        }
         let key = key.filter(|value| !value.is_empty())?;
         let last = self.applied_edit_ids.last()?;
         let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == *last)?;
@@ -18766,13 +18882,13 @@ where
                 {
                     return Err(VcsError::ValidationFailed("batched prepared candidate failed its exact fixed commit contract".into()));
                 }
-                let amending = self.batch_amend_target(publication.coalesce_key.as_deref()).is_some();
+                let amending = self.batch_amend_target(publication.coalesce_key.as_deref(), publication.transaction.as_ref()).is_some();
                 if !amending
-                    && (self.applied_edit_ids.len() == self.applied_edit_ids.capacity()
-                        || self.revision_accumulator.applied.len() == self.revision_accumulator.applied.capacity()
-                        || self.envelope.cursor.as_ref().is_none_or(|cursor| cursor.applied_edit_ids.len() == cursor.applied_edit_ids.capacity()))
+                    && (!self.applied_edit_ids.admits_one()
+                        || !self.revision_accumulator.applied.admits_one()
+                        || self.envelope.cursor.as_ref().is_none_or(|cursor| !cursor.applied_edit_ids.admits_one()))
                 {
-                    return Err(VcsError::ValidationFailed("batched publication requires preinstalled fixed applied and revision capacity".into()));
+                    return Err(VcsError::HistoryFull { capacity: self.applied_edit_ids.len() });
                 }
                 if self.generation == u64::MAX {
                     return Err(VcsError::ValidationFailed("batched store generation is exhausted".into()));
@@ -18786,19 +18902,26 @@ where
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
-                if let Some(edit_id) = self.batch_amend_target(publication.coalesce_key.as_deref()) {
+                if let Some(edit_id) = self.batch_amend_target(publication.coalesce_key.as_deref(), publication.transaction.as_ref()) {
                     let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
                     let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, .. } = *stage;
                     let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                     let generation_before = self.generation;
+                    let closes = publication.transaction.is_some() && !publication.transaction_open;
                     if let Some(existing) = self.envelope.vcs.edits.iter_mut().find(|candidate| candidate.id == edit_id) {
-                        publication.announce_from = existing.forwards.len();
+                        publication.announce_from = if closes { 0 } else { existing.forwards.len() };
                         existing.forwards.extend(edit.forwards);
                         existing.inverse.extend(edit.inverse);
                         existing.mutation_meta.extend(edit.mutation_meta);
-                        existing.finished_at = edit.finished_at;
+                        existing.finished_at = if closes { Some(now_iso()) } else { edit.finished_at };
+                        publication.announce_items = existing.forwards.len() - publication.announce_from;
                     } else {
                         return Err(VcsError::ValidationFailed("batched amend lost its coalesced tail edit".into()));
+                    }
+                    if closes {
+                        self.envelope.open_transaction = None;
+                    } else if publication.transaction_open {
+                        publication.outbound = false;
                     }
                     self.replace_pending_report_retained(PendingCommandReport::default())?;
                     self.replace_local_actor_retained(local_actor)?;
@@ -18819,6 +18942,7 @@ where
                 let stage = publication.take_stage().ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged edit at atomic transfer".into()))?;
                 let ArtifactStoreBatchStage { edit, post, next_clock, local_actor, applied_edit_id, tail_edit_id, digest, .. } = *stage;
                 publication.announce_from = 0;
+                publication.announce_items = publication.admitted_items;
                 let post = post.ok_or_else(|| VcsError::ValidationFailed("batched publication lost its staged post root at atomic transfer".into()))?;
                 let generation_before = self.generation;
                 let pre_snapshot = Arc::clone(&self.current);
@@ -18839,13 +18963,18 @@ where
                 let edit_id_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
                 let previous = self.revision_accumulator.applied.last().map_or(self.revision_accumulator.identity_digest, |record| record.prefix_digest);
                 let prefix_digest = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &digest]);
+                let opened = publication.transaction.clone().filter(|_| publication.transaction_open).map(|transaction| OpenToolTransaction { transaction, edit_id: edit.id.clone() });
                 self.insert_reserved_edit_history(reservation, *edit)?;
+                if opened.is_some() {
+                    publication.outbound = false;
+                    self.envelope.open_transaction = opened;
+                }
                 self.revision_accumulator.applied.push(CursorRevisionRecord { id_digest: edit_id_digest, edit_digest: digest, prefix_digest });
                 let retired_redo = std::mem::take(&mut self.revision_accumulator.redo);
                 if !retired_redo.is_empty() || retired_redo.capacity() != 0 {
                     self.displaced_retirements.push_reserved(Box::new(ArtifactStoreRevisionAccumulatorRetirement::new(CursorRevisionAccumulator {
                         identity_digest: self.revision_accumulator.identity_digest,
-                        applied: Vec::new(),
+                        applied: crate::os_vcs::HistoryPageStack::new(),
                         redo: retired_redo,
                         applied_tail_chains: None,
                     })));
@@ -19001,7 +19130,7 @@ where
     /// first fold reserves the gesture's exact admitted capacity.
     fn empty_batch_stage(authority: &Arc<ArtifactStoreOneItemLiveAuthority>) -> ArtifactStoreBatchStage<P, Mutation> {
         ArtifactStoreBatchStage {
-            edit: Box::new(Edit {
+            edit: Box::new(Edit { line: None,
                 id: String::new(),
                 actor: None,
                 forwards: Vec::new(),
@@ -19045,7 +19174,7 @@ where
         self.apply_command(vec![mutation], description, lane, None).await?;
         self.last_projection_cause = Some(ArtifactProjectionCause::Apply);
         self.flush_outbound().await?;
-        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids[before..].to_vec());
+        let edit_ids = self.pending_report.edit_ids.take().unwrap_or_else(|| self.applied_edit_ids.cloned_from(before));
         let receipt = CommandReceipt { edit_ids, generation: self.generation, messages: std::mem::take(&mut self.pending_report.messages), worst: self.pending_report.worst.take() };
         Ok((receipt, LaneItemReceipt { generation_before, generation_after: self.generation }))
     }
@@ -19269,8 +19398,8 @@ where
     /// edits from the tail (every remaining edit keeps its prefix, so its durable messages and inverses stay
     /// replay-consistent), otherwise a replay from the first position whose order or effective input differs — an interior
     /// undo, redo or checkout rewrites every downstream edit's messages and inverses exactly as a supersession does.
-    /// Synchronous by budget: the applied history is bounded by the fixed ledger (`ARTIFACT_HISTORY_LEDGER_CAPACITY`, 64
-    /// edits), which is the work one command or ingest turn may replay; a longer history needs a resumable reprojection.
+    /// Synchronous by budget: one command or ingest turn replays the applied history in place. A longer history still
+    /// replays here; a resumable reprojection is a separate gap.
     fn reprojection_replay(&self, fold: &crate::os_spr::HistoryFold) -> Result<Option<EditReplayResult<P, Mutation>>, VcsError> {
         if fold.supersessions == *self.supersessions && self.applied_edit_ids.starts_with(&fold.applied) {
             return Ok(None);
@@ -19369,7 +19498,7 @@ where
     /// live tail keeps the live head as that edit's tail snapshot (an undo answers from it again).
     fn adopt_replayed_projection(&mut self, applied: Vec<String>, supersessions: EffectiveSupersessions, mut result: EditReplayResult<P, Mutation>) -> Result<Vec<crate::os_spr::EditMessages>, VcsError> {
         let from = result.from;
-        let appended = from == self.applied_edit_ids.len() && from + 1 == applied.len() && applied.starts_with(&self.applied_edit_ids) && supersessions == *self.supersessions && !self.current_detached;
+        let appended = from == self.applied_edit_ids.len() && from + 1 == applied.len() && self.applied_edit_ids.is_prefix_of_slice(&applied) && supersessions == *self.supersessions && !self.current_detached;
         let tail = appended.then(|| (applied[from].clone(), Arc::clone(&*self.current)));
         let recorded = result.take_recorded();
         let replayed = self.adopt_report_replay(result, tail)?;
@@ -19420,7 +19549,7 @@ where
             }
         };
         let convergence = match (horizon, self.snapshot_equality) {
-            (Some(horizon), Some(equal)) if applied == self.applied_edit_ids.as_slice() => Some(self.convergence_checkpoints(horizon, equal)?),
+            (Some(horizon), Some(equal)) if self.applied_edit_ids.eq_slice(applied) => Some(self.convergence_checkpoints(horizon, equal)?),
             _ => None,
         };
         Ok(replay.with_convergence(convergence))
@@ -19431,7 +19560,7 @@ where
     /// store keeps, so the probe never owns a last reference.
     fn convergence_checkpoints(&self, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
         let length = self.applied_edit_ids.len();
-        let digests = forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let digests = forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
         let mut checkpoints: Vec<(usize, Arc<P>)> = self.prefix_ring.iter().filter(|entry| entry.length >= horizon && entry.length < length && digests.get(entry.length) == Some(&entry.digest)).map(|entry| (entry.length, Arc::clone(&entry.snapshot))).collect();
         if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
             if length > horizon && self.applied_edit_ids.last() == Some(edit_id) && !checkpoints.iter().any(|(known, _)| *known == length - 1) {
@@ -19453,8 +19582,8 @@ where
     /// with the projections it folded through at every multiple of `stride`.
     fn prefix_state_recorded(&self, applied: &[String], from: usize, supersessions: &EffectiveSupersessions, stride: usize) -> Result<(Arc<P>, Vec<(usize, Arc<P>)>), VcsError> {
         let identity = self.revision_accumulator.identity_digest;
-        let digests = forward_prefix_digests::<P, Mutation>(identity, &applied[..from], &self.envelope.vcs.edits, supersessions)?;
-        let live = forward_prefix_digests::<P, Mutation>(identity, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let digests = forward_prefix_digests::<P, Mutation, _, _>(identity, &applied[..from], &self.envelope.vcs.edits, supersessions)?;
+        let live = forward_prefix_digests::<P, Mutation, _, _>(identity, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
         let length = self.applied_edit_ids.len();
         let mut candidates: Vec<(usize, [u8; 32], &Arc<P>)> = self.prefix_ring.iter().map(|entry| (entry.length, entry.digest, &entry.snapshot)).collect();
         if !self.current_detached {
@@ -19529,7 +19658,7 @@ where
             Some(factory) => self
                 .displaced_retirements
                 .reserve(2 * snapshots.len())
-                .and_then(|()| forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions))
+                .and_then(|()| forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions))
                 .map(|digests| Some((factory, digests))),
             None => Ok(None),
         };
@@ -19579,7 +19708,7 @@ where
         if self.prefix_ring.is_empty() {
             return Ok(());
         }
-        let digests = forward_prefix_digests::<P, Mutation>(self.revision_accumulator.identity_digest, &self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
+        let digests = forward_prefix_digests::<P, Mutation, _, _>(self.revision_accumulator.identity_digest, &*self.applied_edit_ids, &self.envelope.vcs.edits, &self.supersessions)?;
         let stale: Vec<usize> = self.prefix_ring.iter().enumerate().filter(|(_, entry)| digests.get(entry.length) != Some(&entry.digest)).map(|(position, _)| position).collect();
         if stale.is_empty() {
             return Ok(());
@@ -19685,7 +19814,7 @@ where
             }
             return Err(VcsError::HistoryShape { shape, kind });
         }
-        if let Some(open) = self.open_transaction.as_ref() {
+        if let Some(open) = self.envelope.open_transaction.as_ref() {
             let admitted = match &command {
                 ArtifactCommand::AppendTransaction { transaction, .. } => transaction.id == open.transaction.id,
                 ArtifactCommand::CommitTransaction { .. } | ArtifactCommand::AbortTransaction { .. } | ArtifactCommand::IngestRemote { .. } | ArtifactCommand::SetMergePolicy { .. } => true,
@@ -19726,26 +19855,14 @@ where
                     return Err(VcsError::ValidationFailed(format!("alternative {alternative_id} already exists")));
                 }
                 let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
-                self.commit_transition(crate::os_spr::HistoryTransition::Branch { alternative_id, name, checkpoint_id }, dependencies).await
+                self.commit_transition(crate::os_spr::HistoryTransition::Branch { alternative_id: alternative_id.clone(), name, checkpoint_id }, dependencies).await?;
+                self.envelope.active_alternative_id = Some(alternative_id);
+                self.envelope.viewer_checkpoint_id = None;
+                self.reproject().await?;
+                self.bump()
             }
-            ArtifactCommand::SwitchAlternative { alternative_id } => {
-                let alternative = self.envelope.vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.clone()))?;
-                let checkpoint_id = alternative.checkpoint_ids.last().ok_or(VcsError::NoCheckpoint)?.clone();
-                if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
-                    return Err(VcsError::NoCheckpoint);
-                }
-                let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
-                let alternative_id = self.branched_alternative(alternative_id);
-                self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id }, dependencies).await
-            }
-            ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => {
-                if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
-                    return Err(VcsError::UnknownChange(checkpoint_id));
-                }
-                let alternative_id = self.envelope.vcs.alternatives.iter().find(|alternative| alternative.checkpoint_ids.last() == Some(&checkpoint_id)).and_then(|alternative| self.branched_alternative(alternative.id.clone()));
-                let dependencies = self.checkpoint_origin(&checkpoint_id).into_iter().collect();
-                self.commit_transition(crate::os_spr::HistoryTransition::Checkout { checkpoint_id, alternative_id }, dependencies).await
-            }
+            ArtifactCommand::SwitchAlternative { alternative_id } => self.switch_local_alternative(alternative_id).await,
+            ArtifactCommand::CheckoutCheckpoint { checkpoint_id } => self.checkout_local_checkpoint(checkpoint_id).await,
             ArtifactCommand::Apply { mutations, description, transaction } => self.apply_command(mutations, description, HistoryLane::Document, transaction).await,
             ArtifactCommand::ApplyInLane { mutations, description, lane, transaction } => self.apply_command(mutations, description, lane, transaction).await,
             ArtifactCommand::AmendLast { mutations, coalesce_key } => self.amend_command(mutations, coalesce_key, HistoryLane::Document).await,
@@ -19774,25 +19891,24 @@ where
     }
 
     //#region 🔖️ToolTransactions
-    /// 🎞️ `AppendTransaction`: the first append opens one edit stamped with the ref — no description, no coalesce key —
-    /// and every later one replays its operations onto the projection and appends them to that edit, every operation
-    /// stamped with the ref. Nothing is announced before the commit, so an abort leaves no trace anywhere. The open edit
-    /// stays the local tail: when a remote edit landed after it, it is re-stamped onto this replica's clock first, which
-    /// is legal because no other replica has seen it.
+    /// 🪡️ `AppendTransaction`: the first append opens one edit stamped with the ref — no description, no coalesce key — and
+    /// every later one folds its operations onto the projection and appends them to that edit, every operation stamped with
+    /// the ref. The open edit is always the applied tail ([`Self::ingest_remote`] lifts it over remote edits), and neither
+    /// the shared log nor a persisted form holds it before its commit, so an abort leaves no trace anywhere.
     async fn append_transaction(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef) -> Result<(), VcsError> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
         }
-        let Some(open) = self.open_transaction.clone() else {
+        let Some(open) = self.envelope.open_transaction.clone() else {
             return self.open_transaction_edit(mutations, transaction).await;
         };
-        if let Err(error) = self.keep_open_edit_at_tail(&open.edit_id).await {
-            retire_operations::<P, Mutation>(mutations);
-            return Err(error);
-        }
         let pre_snapshot = Arc::clone(&*self.current);
-        let (forwards, inverse, mutation_meta, post, messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
+        let (forwards, inverse, mutation_meta, post, mut messages) = self.replay_mutations(&pre_snapshot, mutations, Some(&transaction)).await?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        let offset = edit.forwards.len() as u32;
+        for message in messages.iter_mut() {
+            message.op_index = message.op_index.map(|index| index + offset);
+        }
         edit.forwards.extend(forwards);
         edit.inverse.extend(inverse);
         edit.mutation_meta.extend(mutation_meta);
@@ -19802,7 +19918,8 @@ where
         self.bump()
     }
 
-    /// 🎬️ The first append of a tool transaction: one fresh edit at the tail holding the operations, kept unannounced.
+    /// 🪁️ The first append of a tool transaction: one fresh edit at the applied tail holding its operations, open and
+    /// unannounced.
     async fn open_transaction_edit(&mut self, mutations: Vec<Mutation>, transaction: protocol::TransactionRef) -> Result<(), VcsError> {
         let started_at = now_iso();
         let pre_snapshot = Arc::clone(&*self.current);
@@ -19813,56 +19930,89 @@ where
         let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
         let reservation = self.reserve_edit_history_slot()?;
         let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
-        let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: None };
+        let edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), line: self.envelope.active_alternative_id.clone(), coalesce_key: None, sequence_number: self.edit_sequence, started_at, finished_at: None };
         self.insert_reserved_edit_history(reservation, edit)?;
         self.record_edit_messages(&edit_id, messages)?;
         self.replace_tail_undo_cache_retained(Some((edit_id.clone(), pre_snapshot)))?;
         self.applied_edit_ids.push(edit_id.clone());
         self.replace_current_retained(Arc::new(post))?;
-        self.open_transaction = Some(OpenToolTransaction { transaction, edit_id });
+        self.envelope.open_transaction = Some(OpenToolTransaction { transaction, edit_id });
         self.reproject().await?;
         self.bump()
     }
 
-    /// ✅️ `CommitTransaction`: the open edit closes at the local tail and every operation it holds is announced.
+    /// 🎗️ `CommitTransaction`: the open edit closes and every operation it holds is announced in one batch — exactly the edit
+    /// one `Apply` of the same operations under the same ref would have recorded.
     async fn commit_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
-        let open = self.open_transaction.clone().filter(|open| open.transaction.id == transaction_id).ok_or_else(|| VcsError::UnknownTransaction(transaction_id.to_string()))?;
-        self.keep_open_edit_at_tail(&open.edit_id).await?;
+        let open = self.open_transaction_named(transaction_id)?;
         let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
         edit.finished_at = Some(now_iso());
+        stamp_primary_operation_identity(edit);
         let edit = self.envelope.vcs.edits.iter().find(|edit| edit.id == open.edit_id).ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
         let operations = self.operation_envelopes(edit)?;
+        self.envelope.open_transaction = None;
         self.announce_operations(operations)?;
-        self.open_transaction = None;
         self.bump()
     }
 
-    /// 🧨️ `AbortTransaction`: the open edit leaves the ledger, its messages and its operations retire, and the projection
-    /// folds back to the history without it — the projection and revision of before its first append.
+    /// 🪃️ `AbortTransaction`: the open edit leaves the ledger, its messages and its operations retire, the edit sequence it
+    /// took is returned, and the projection folds back to the history without it — the projection and revision of before
+    /// its first append.
     async fn abort_transaction(&mut self, transaction_id: &str) -> Result<(), VcsError> {
-        let open = self.open_transaction.clone().filter(|open| open.transaction.id == transaction_id).ok_or_else(|| VcsError::UnknownTransaction(transaction_id.to_string()))?;
+        let open = self.open_transaction_named(transaction_id)?;
         let removed = self.envelope.vcs.edits.extract_if(|edit| edit.id == open.edit_id).map_err(|fault| VcsError::ValidationFailed(format!("the open transaction edit cannot leave its ledger: {fault:?}")))?;
+        if removed.iter().any(|edit| edit.sequence_number == self.edit_sequence) {
+            self.edit_sequence -= 1;
+        }
         retire_scratch_edits::<P, Mutation>(removed);
         self.replace_edit_messages(&open.edit_id, Vec::new())?;
-        self.open_transaction = None;
+        self.envelope.open_transaction = None;
         self.reproject().await?;
         self.bump()
     }
 
-    /// 🔝️ Keeps the open transaction edit at the local tail: when an ingested edit landed after it, its operations are
-    /// re-stamped onto this replica's clock — no other replica has seen them — and the projection folds it after.
-    async fn keep_open_edit_at_tail(&mut self, edit_id: &str) -> Result<(), VcsError> {
-        if self.applied_edit_ids.last().is_some_and(|tail| tail == edit_id) {
-            return Ok(());
-        }
-        let mut clock = self.clock;
-        let edit = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
+    /// 🧿️ The open tool transaction when `transaction_id` names it, else `UnknownTransaction`.
+    fn open_transaction_named(&self, transaction_id: &str) -> Result<OpenToolTransaction, VcsError> {
+        self.envelope.open_transaction.clone().filter(|open| open.transaction.id == transaction_id).ok_or_else(|| VcsError::UnknownTransaction(transaction_id.to_string()))
+    }
+
+    /// 🪂️ Takes the open tool transaction's edit off the applied tail before a remote merge: the ledger, the message ledger
+    /// and the projection return to the history without it.
+    async fn lift_open_transaction(&mut self) -> Result<Option<(OpenToolTransaction, Edit<Mutation>)>, VcsError> {
+        let Some(open) = self.envelope.open_transaction.take() else {
+            return Ok(None);
+        };
+        let mut removed = self.envelope.vcs.edits.extract_if(|edit| edit.id == open.edit_id).map_err(|fault| VcsError::ValidationFailed(format!("the open transaction edit cannot leave its ledger: {fault:?}")))?;
+        let edit = removed.pop().ok_or_else(|| VcsError::UnknownEdit(open.edit_id.clone()))?;
+        retire_scratch_edits::<P, Mutation>(removed);
+        self.replace_edit_messages(&open.edit_id, Vec::new())?;
+        self.reproject().await?;
+        Ok(Some((open, edit)))
+    }
+
+    /// 🛞️ Folds a lifted tool transaction's edit back as the applied tail of the merged history: its operations take fresh
+    /// clock stamps after everything this replica has seen and its next edit sequence, and the Report replay recomputes
+    /// their inverses and messages against the merged head (keep-and-record: nothing is quarantined or refused). When the
+    /// ledger can no longer hold it the transaction is aborted — zero trace — and the refusal is answered.
+    async fn restore_open_transaction(&mut self, open: OpenToolTransaction, mut edit: Edit<Mutation>) -> Result<(), VcsError> {
         for meta in edit.mutation_meta.iter_mut() {
-            clock.tick(now_ms());
-            meta.timestamp = clock;
+            self.clock.tick(now_ms());
+            meta.timestamp = self.clock;
         }
-        self.clock = clock;
-        self.reproject().await.map(|_| ())
+        self.edit_sequence += 1;
+        edit.sequence_number = self.edit_sequence;
+        let reservation = match self.reserve_edit_history_slot() {
+            Ok(reservation) => reservation,
+            Err(error) => {
+                self.edit_sequence -= 1;
+                retire_scratch_edits::<P, Mutation>([edit]);
+                return Err(error);
+            }
+        };
+        self.insert_reserved_edit_history(reservation, edit)?;
+        self.envelope.open_transaction = Some(open);
+        self.reproject().await?;
+        self.bump()
     }
     //#endregion 🔖️ToolTransactions
 
@@ -19900,6 +20050,9 @@ where
         P: Sync,
     {
         self.ensure_durable_group_idle()?;
+        if let Some(open) = self.envelope.open_transaction.as_ref() {
+            return Err(VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() });
+        }
         if finished.generation != self.generation || finished.revision != self.content_revision {
             return Err(VcsError::Stale { expected_generation: finished.generation, generation: self.generation });
         }
@@ -19930,30 +20083,73 @@ where
     async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>) -> Result<protocol::ReplayReport, VcsError> {
         let mut clock = self.clock;
         let mut envelopes = Vec::with_capacity(3);
+        let saved_line = self.envelope.active_alternative_id.clone();
+        let saved_checkpoint = self.envelope.viewer_checkpoint_id.clone();
+        let mut viewing_new = false;
         let scope = match scope {
             SupersedeScope::Document => None,
             SupersedeScope::Alternative(alternative_id) => Some(alternative_id),
-            SupersedeScope::NewAlternative(name) => Some(self.author_head_alternative(name, &mut clock, &mut envelopes).await?),
+            SupersedeScope::NewAlternative(name) => match self.author_head_alternative(name, &mut clock, &mut envelopes).await {
+                Ok(alternative_id) => {
+                    self.envelope.active_alternative_id = Some(alternative_id.clone());
+                    self.envelope.viewer_checkpoint_id = None;
+                    viewing_new = true;
+                    Some(alternative_id)
+                }
+                Err(error) => return Err(error),
+            },
+        };
+        let restore_head = |store: &mut Self| {
+            if viewing_new {
+                store.envelope.active_alternative_id = saved_line.clone();
+                store.envelope.viewer_checkpoint_id = saved_checkpoint.clone();
+            }
         };
         let supersede = protocol::TransitionSupersede { scope, inputs };
-        supersede.validate().map_err(|error| VcsError::ValidationFailed(error.to_string()))?;
+        if let Err(error) = supersede.validate() {
+            restore_head(self);
+            return Err(VcsError::ValidationFailed(error.to_string()));
+        }
         let dependencies = supersede.targets();
         clock.tick(now_ms());
         envelopes.push(self.transition_envelope(&crate::os_spr::HistoryTransition::Supersede(supersede), dependencies, target, clock));
-        let fold = self.prospective_fold(&envelopes)?;
+        let fold = match self.prospective_fold(&envelopes) {
+            Ok(fold) => fold,
+            Err(error) => {
+                restore_head(self);
+                return Err(error);
+            }
+        };
         let result = match replayed {
             Some(result) if result.order == fold.applied && same_effective_inputs(&result.supersessions, &fold.supersessions) => result,
             other => {
                 drop(other);
-                self.dry_run(&fold)?
+                match self.dry_run(&fold) {
+                    Ok(result) => result,
+                    Err(error) => {
+                        restore_head(self);
+                        return Err(error);
+                    }
+                }
             }
         };
-        let report = self.replay_report(&result)?;
+        let report = match self.replay_report(&result) {
+            Ok(report) => report,
+            Err(error) => {
+                drop(result);
+                restore_head(self);
+                return Err(error);
+            }
+        };
         if report.blocks_finalize() {
             drop(result);
+            restore_head(self);
             return Err(VcsError::Rejected { policy: crate::os_spr::MergePolicy::Normal, messages: report.outcomes.iter().flat_map(|outcome| outcome.messages.iter().cloned()).collect() });
         }
-        self.install_transitions(envelopes, clock, Some(result)).await?;
+        if let Err(error) = self.install_transitions(envelopes, clock, Some(result)).await {
+            restore_head(self);
+            return Err(error);
+        }
         self.record_replay_report(&report);
         Ok(report)
     }
@@ -19961,7 +20157,7 @@ where
     /// 🪴️ Authors into `envelopes` the commit of every pending edit (when one is pending or no checkpoint exists) and a
     /// `Branch` of `name` at the resulting head, answering the new alternative's id.
     async fn author_head_alternative(&self, name: String, clock: &mut HybridLogicalTimestamp, envelopes: &mut Vec<crate::os_spr::MutationEnvelope>) -> Result<String, VcsError> {
-        let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+        let pending = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         let checkpoint_id = if !pending.is_empty() || self.envelope.vcs.checkpoints.is_empty() {
             if self.applied_edit_ids.is_empty() {
                 return Err(VcsError::NoCheckpoint);
@@ -19990,12 +20186,13 @@ where
     fn prospective_fold(&self, candidates: &[crate::os_spr::MutationEnvelope]) -> Result<crate::os_spr::HistoryFold, VcsError> {
         let mut transitions = self.envelope.transitions.clone();
         transitions.extend(candidates.iter().cloned());
-        fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts)
+        let head = envelope_viewer_head(&self.envelope);
+        fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts, &head)
     }
 
     /// 🧪️ The Report replay of everything `fold` changes against the live projection, driven to completion, touching nothing.
-    /// Synchronous by budget: the applied history is bounded by the fixed ledger (`ARTIFACT_HISTORY_LEDGER_CAPACITY`, 64
-    /// edits), which is the work one actor turn may replay; a longer history needs a resumable replay here.
+    /// Synchronous by budget: one actor turn replays the applied history in place. A longer history still replays here;
+    /// a resumable replay is a separate gap.
     fn dry_run(&self, fold: &crate::os_spr::HistoryFold) -> Result<EditReplayResult<P, Mutation>, VcsError> {
         let (from, horizon) = self.replay_window(&fold.applied, &fold.supersessions)?;
         let mut replay = self.report_replay(&fold.applied, from, fold.supersessions.clone(), horizon, Self::prefix_stride(fold.applied.len()))?;
@@ -20169,6 +20366,43 @@ where
         self.commit_transition(crate::os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids.clone() }, mutation_ids).await
     }
 
+    /// 👁 Moves this replica onto `alternative_id` at its tip. Registration stays the shared log;
+    /// no checkout event is authored, so every other replica keeps its own head.
+    async fn switch_local_alternative(&mut self, alternative_id: String) -> Result<(), VcsError> {
+        let trunk = self.trunk_alternative_id();
+        if alternative_id != trunk {
+            let alternative = self.envelope.vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.clone()))?;
+            let checkpoint_id = alternative.checkpoint_ids.last().ok_or(VcsError::NoCheckpoint)?.clone();
+            if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
+                return Err(VcsError::NoCheckpoint);
+            }
+            self.envelope.active_alternative_id = Some(alternative_id);
+        } else {
+            self.envelope.active_alternative_id = None;
+        }
+        self.envelope.viewer_checkpoint_id = None;
+        self.reproject().await?;
+        self.bump()
+    }
+
+    /// 👁 Looks at `checkpoint_id` on this replica only. The line stays the current one when that
+    /// checkpoint is on it; otherwise it is the first registered alternative whose chain contains it.
+    async fn checkout_local_checkpoint(&mut self, checkpoint_id: String) -> Result<(), VcsError> {
+        if !self.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
+            return Err(VcsError::UnknownChange(checkpoint_id));
+        }
+        let current = self.active_line_id();
+        let line = if self.envelope.vcs.alternatives.iter().any(|alternative| alternative.id == current && alternative.checkpoint_ids.iter().any(|id| id == &checkpoint_id)) {
+            current
+        } else {
+            self.envelope.vcs.alternatives.iter().find(|alternative| alternative.checkpoint_ids.iter().any(|id| id == &checkpoint_id)).map(|alternative| alternative.id.clone()).unwrap_or(current)
+        };
+        self.envelope.active_alternative_id = self.branched_alternative(line);
+        self.envelope.viewer_checkpoint_id = Some(checkpoint_id);
+        self.reproject().await?;
+        self.bump()
+    }
+
     /// 🚩️ Commits every applied-but-uncommitted edit as one change on a new checkpoint.
     async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>) -> Result<(), VcsError> {
         let (transition, dependencies, _) = self.pending_checkpoint_transition(message, authors).await?;
@@ -20177,7 +20411,7 @@ where
 
     /// 🚩️ The `Commit` transition (with its dependencies and new checkpoint id) grouping every applied-but-uncommitted edit.
     async fn pending_checkpoint_transition(&self, message: Option<String>, authors: Vec<Author>) -> Result<(crate::os_spr::HistoryTransition, Vec<MutationId>, String), VcsError> {
-        let pending = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+        let pending = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         if pending.is_empty() {
             return Err(VcsError::ValidationFailed(EMPTY_CHECKPOINT_MESSAGE.to_string()));
         }
@@ -20196,7 +20430,7 @@ where
         let mut dependencies = mutation_ids.clone();
         dependencies.extend(parent_id.as_deref().and_then(|parent_id| self.checkpoint_origin(parent_id)));
         let authors = authors.into_iter().map(|author| crate::os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
-        let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp };
+        let checkpoint = crate::os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
         Ok((crate::os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))
     }
 
@@ -20209,6 +20443,11 @@ where
     async fn apply_command(&mut self, mutations: Vec<Mutation>, description: Option<String>, lane: HistoryLane, transaction: Option<protocol::TransactionRef>) -> Result<(), VcsError> {
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
+        }
+        if let Some(open) = self.envelope.open_transaction.as_ref() {
+            let transaction_id = open.transaction.id.clone();
+            retire_operations::<P, Mutation>(mutations);
+            return Err(VcsError::TransactionOpen { transaction_id });
         }
         let started_at = now_iso();
         let pre_snapshot = Arc::clone(&*self.current);
@@ -20226,6 +20465,7 @@ where
             mutation_meta,
             description,
             verb: self.authoring_verb.clone(),
+            line: self.envelope.active_alternative_id.clone(),
             coalesce_key: None,
             sequence_number: self.edit_sequence,
             started_at,
@@ -20260,7 +20500,7 @@ where
         if mutations.is_empty() {
             return Err(VcsError::EmptyApply);
         }
-        let uncommitted = uncommitted_edit_ids(&self.envelope, &self.applied_edit_ids).await;
+        let uncommitted = uncommitted_edit_ids(&self.envelope, &*self.applied_edit_ids).await;
         let amend_target =
             self.applied_edit_ids.last().cloned().filter(|last_id| coalesce_key.is_some() && uncommitted.contains(last_id) && self.envelope.vcs.edits.iter().find(|edit| edit.id == *last_id).is_some_and(|edit| edit.coalesce_key == coalesce_key));
         if let Some(edit_id) = amend_target {
@@ -20293,7 +20533,7 @@ where
             let forwards_fingerprint = crate::os_pack::json::to_json_string(&forwards).into_bytes();
             let edit_id = mint_edit_id(self.clock.actor, self.edit_sequence, &forwards_fingerprint).await;
             let reservation = self.reserve_edit_history_slot()?;
-            let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
+            let mut edit = Edit { id: edit_id.clone(), actor, forwards, inverse, mutation_meta, description: None, verb: self.authoring_verb.clone(), line: self.envelope.active_alternative_id.clone(), coalesce_key, sequence_number: self.edit_sequence, started_at, finished_at: Some(now_iso()) };
             stamp_primary_operation_identity(&mut edit);
             let operations = self.operation_envelopes(&edit)?;
             self.insert_reserved_edit_history(reservation, edit)?;
@@ -20514,7 +20754,7 @@ where
     /// before its commit.
     pub fn event_log(&self) -> Result<Vec<crate::os_spr::MutationEnvelope>, VcsError> {
         let mut events = Vec::new();
-        for edit in self.envelope.vcs.edits.iter().filter(|edit| self.open_transaction.as_ref().is_none_or(|open| open.edit_id != edit.id)) {
+        for edit in self.envelope.vcs.edits.iter().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) {
             events.extend(self.operation_envelopes(edit)?);
         }
         events.extend(self.envelope.transitions.iter().cloned());
@@ -20532,7 +20772,7 @@ where
     /// envelopes {@link flush_apply_outbound} would have sent, for a caller that owns the transport —
     /// the composed-member half of outbound announcement. Empty when nothing has ever been applied.
     pub fn announce_tail_edit_payload(&mut self) -> Result<Vec<u8>, VcsError> {
-        let Some(edit) = self.envelope.vcs.edits.last() else { return Ok(Vec::new()) };
+        let Some(edit) = self.envelope.vcs.edits.last().filter(|edit| self.envelope.holds_committed_edit(&edit.id)) else { return Ok(Vec::new()) };
         let document_id = ArtifactId(self.envelope.id.clone());
         let schema = SchemaId(self.envelope.schema.clone());
         let op_envelopes = crate::os_spr::mutation_envelope_from_edit::<P, Mutation>(edit, &document_id, &schema).map_err(|error| VcsError::Serialize(error.to_string()))?;
@@ -20667,6 +20907,18 @@ where
         self.pump_with_reports().await.map(|(_, reports)| reports)
     }
 
+    /// 🛟️ The sole public remote write gate ([`Self::ingest_remote_merge`]). While a tool transaction is open its
+    /// unannounced edit is lifted off the applied tail for the merge and folded back onto the merged head after it, so a
+    /// remote edit never reorders, quarantines or degrades it and it stays the tail its commit announces.
+    pub async fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
+        let Some((open, edit)) = self.lift_open_transaction().await? else {
+            return self.ingest_remote_merge(envelope).await;
+        };
+        let report = self.ingest_remote_merge(envelope).await;
+        self.restore_open_transaction(open, edit).await?;
+        report
+    }
+
     /// 🕸️ Feeds a remote {@link MutationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `MutationDag` and the vcs edit history. Sole public remote write gate —
@@ -20754,7 +21006,7 @@ where
     /// (R10 shape 1), so the max is found by an explicit fold over resolved keys instead.
     ///
     /// `>=`: `Iterator::max_by_key` keeps the LAST equally-maximum element on a tie.
-    pub async fn ingest_remote(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
+    async fn ingest_remote_merge(&mut self, envelope: crate::os_spr::MutationEnvelope) -> Result<crate::os_spr::MergeReport, VcsError> {
         self.ensure_durable_group_idle()?;
         let no_op_report = |policy: crate::os_spr::MergePolicy, insertion_index: usize| crate::os_spr::MergeReport { policy, accepted: true, insertion_index: insertion_index as u32, replayed: Vec::new(), worst: None, conflict: None };
         self.displaced_retirements.reserve(2)?;
@@ -20859,7 +21111,7 @@ where
                 }
             }
         }
-        let mut order: Vec<String> = (*self.applied_edit_ids).clone();
+        let mut order: Vec<String> = self.applied_edit_ids.to_vec();
         for (edit, &hlc_key) in batch.iter().zip(batch_keys.iter()) {
             let mut insert_at = order.len();
             for offset in k..order.len() {
@@ -20967,7 +21219,7 @@ where
                 None => retire_scratch_operations::<P, Mutation>(inverse),
             }
         }
-        self.replace_applied_edit_ids_retained(self.applied_edit_ids[..k].iter().cloned().chain(committed_ids.iter().cloned()).collect())?;
+        self.replace_applied_edit_ids_retained(self.applied_edit_ids.iter().take(k).cloned().chain(committed_ids.iter().cloned()).collect())?;
         for edit_messages in &replayed {
             if committed_ids.contains(&edit_messages.edit_id) {
                 self.replace_edit_messages(&edit_messages.edit_id, edit_messages.messages.clone())?;
@@ -21144,7 +21396,8 @@ where
         conflicts[index].status = crate::os_spr::ConflictStatus::Accepted;
         let mut edits: Vec<&Edit<Mutation>> = self.envelope.vcs.edits.iter().collect();
         edits.extend(admitted.iter());
-        let fold = match fold_event_log::<P, Mutation>(&self.envelope.id, &edits, &self.envelope.transitions, &conflicts) {
+        let head = envelope_viewer_head(&self.envelope);
+        let fold = match fold_event_log::<P, Mutation>(&self.envelope.id, &edits, &self.envelope.transitions, &conflicts, &head) {
             Ok(fold) => fold,
             Err(error) => {
                 retire_scratch_edits::<P, Mutation>(admitted);
@@ -21313,11 +21566,7 @@ where
     /// `envelope.cursor` — the single choke point that keeps the persisted cursor in sync with
     /// live undo/redo state. Called from every `bump()`, so every mutating command re-syncs it.
     fn sync_cursor(&mut self) {
-        let mut applied = Vec::with_capacity(self.applied_edit_ids.capacity());
-        applied.extend(self.applied_edit_ids.iter().cloned());
-        let mut redo = Vec::with_capacity(self.redo_edit_ids.capacity());
-        redo.extend(self.redo_edit_ids.iter().cloned());
-        let next = Some(ArtifactCursor::new(applied, redo, (*self.current_checkpoint_id).clone()));
+        let next = Some(ArtifactCursor::new((*self.applied_edit_ids).clone(), (*self.redo_edit_ids).clone(), (*self.current_checkpoint_id).clone()));
         if let Some(previous) = std::mem::replace(&mut self.envelope.cursor, next) {
             self.displaced_retirements.push_reserved(Box::new(ArtifactStoreCursorRetirement::new(previous)));
         }
@@ -21511,7 +21760,7 @@ pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &crate::
             origin: Default::default(),
             transaction: envelope.transaction.clone(),
         }],
-        description: None, verb: envelope.verb.clone(),
+        description: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
         coalesce_key: None,
         sequence_number: 0,
         started_at: String::new(),
@@ -21692,13 +21941,22 @@ pub fn fold_envelope_history<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, M
 where
     Mutation: self::Mutation<P>,
 {
-    fold_event_log::<P, Mutation>(&envelope.id, &envelope.vcs.edits.iter().collect::<Vec<_>>(), &envelope.transitions, &envelope.conflicts)
+    let head = envelope_viewer_head(envelope);
+    fold_event_log::<P, Mutation>(&envelope.id, &envelope.vcs.edits.iter().collect::<Vec<_>>(), &envelope.transitions, &envelope.conflicts, &head)
+}
+
+/// 👁 The head [`fold_history_for`] projects: this replica's alternative and explicit checkpoint.
+/// Absent alternative is the canonical trunk. `viewer_checkpoint_id` of `None` is that line's tip.
+fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>) -> crate::os_spr::ViewerHead {
+    let document_id = ArtifactId(envelope.id.clone());
+    let trunk = crate::os_spr::trunk_alternative_id(&document_id);
+    crate::os_spr::ViewerHead { line_id: envelope.active_alternative_id.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: envelope.viewer_checkpoint_id.clone() }
 }
 
 /// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
-pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict]) -> Result<crate::os_spr::HistoryFold, VcsError>
+pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[crate::os_spr::MutationEnvelope], conflicts: &[crate::os_spr::Conflict], head: &crate::os_spr::ViewerHead) -> Result<crate::os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -21709,7 +21967,7 @@ where
         for mutation_id in &mutation_ids {
             owners.insert(mutation_id.0.clone(), edit.id.clone());
         }
-        folded.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids });
+        folded.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp: edit_timestamp(edit), mutation_ids, line: edit.line.clone() });
     }
     let mut excluded = HashSet::new();
     for conflict in conflicts {
@@ -21720,7 +21978,7 @@ where
             excluded.extend(envelopes.iter().filter_map(|quarantined| owners.get(&quarantined.mutation_id.0).cloned()));
         }
     }
-    crate::os_spr::fold_history(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded).map_err(|error| VcsError::ValidationFailed(error.to_string()))
+    crate::os_spr::fold_history_for(&ArtifactId(document_id.to_string()), &folded, transitions, &excluded, head).map_err(|error| VcsError::ValidationFailed(error.to_string()))
 }
 
 /// 🗣️ `<document schema>#<semantic kind>` of the leaf `operation` is — what `MutationMeta.semantic_kind` records.
@@ -21743,18 +22001,21 @@ fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp {
 }
 
 /// 🧮️ Folds the genesis over the effective forwards of `applied_edit_ids` ([`fold_effective_edit`]).
-async fn fold_history<P, Mutation>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: &[String], supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
+async fn fold_history<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone,
     Mutation: self::Mutation<P> + OpBinary,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
     let mut snapshot = ReplayProjection::<P, Mutation>::new(envelope.vcs.initial_snapshot.clone());
     let mut seen = HashSet::new();
     for edit_id in applied_edit_ids {
-        if !seen.insert(edit_id) {
+        let edit_id = edit_id.as_ref();
+        if !seen.insert(edit_id.to_string()) {
             return Err(VcsError::ValidationFailed(format!("history repeats applied edit {edit_id}")));
         }
-        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        let edit = envelope.vcs.edits.iter().find(|entry| entry.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         fold_effective_edit(&mut snapshot, edit, &envelope.schema, supersessions, usize::MAX);
     }
     Ok(snapshot.into_inner())
@@ -22030,15 +22291,18 @@ where
 
 /// 🧭️ Forwards-only effective prefix digests of `applied`: entry `i` names the projection after the first `i` edits by
 /// their ids, forward counts and effective supersessions — never the inverses, metadata or messages a replay rewrites.
-fn forward_prefix_digests<P, Mutation>(identity: [u8; 32], applied: &[String], edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
+fn forward_prefix_digests<P, Mutation, I, S>(identity: [u8; 32], applied: I, edits: &ArtifactHistoryLedger<Edit<Mutation>>, supersessions: &EffectiveSupersessions) -> Result<Vec<[u8; 32]>, VcsError>
 where
     Mutation: self::Mutation<P>,
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
 {
     let mut digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&identity]);
-    let mut digests = Vec::with_capacity(applied.len() + 1);
+    let mut digests = Vec::new();
     digests.push(digest);
     for edit_id in applied {
-        let edit = edits.iter().find(|edit| edit.id == *edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+        let edit_id = edit_id.as_ref();
+        let edit = edits.iter().find(|edit| edit.id == edit_id).ok_or_else(|| VcsError::UnknownEdit(edit_id.to_string()))?;
         let superseded = edit_supersession_digest::<P, Mutation>(edit, supersessions).unwrap_or([0; 32]);
         digest = CursorRevisionAccumulator::hash_record(b"forward-prefix", &[&digest, edit_id.as_bytes(), &(edit.forwards.len() as u64).to_be_bytes(), &superseded]);
         digests.push(digest);

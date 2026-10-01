@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://framework/os/renderer/canvas2d-host/gumball-dispatch",
+  "title": "Canvas2d gumball dispatch corpus",
+  "description": "🧫️ Language-agnostic cases for the Canvas2d gumball: one armed `meta:gumball` layer, the host camera and viewport, a pointer gesture (press, drags, release or cancel) in screen-logical pixels — out come the handle the press hits and the exact dispatches the gesture sends. React `Canvas2dGumballOverlay` and the wgpu twin `canvas2d_gumball` both replay every case.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["tolerance", "cases"],
+  "properties": {
+    "tolerance": { "type": "number", "exclusiveMinimum": 0, "description": "Absolute tolerance every replay compares dispatched numbers with." },
+    "cases": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Case" } }
+  },
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "viewport", "camera", "layer", "press", "events", "expect"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "viewport": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["width", "height"],
+          "properties": { "width": { "type": "number", "exclusiveMinimum": 0 }, "height": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "camera": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["x", "y", "zoom"],
+          "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "zoom": { "type": "number", "exclusiveMinimum": 0 } }
+        },
+        "layer": { "$ref": "semio://framework/os/renderer/canvas2d-host/gumball-meta" },
+        "press": { "$ref": "#/definitions/Point" },
+        "events": { "type": "array", "items": { "$ref": "#/definitions/Event" } },
+        "expect": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["handle", "dispatches"],
+          "properties": {
+            "handle": { "oneOf": [{ "$ref": "#/definitions/Handle" }, { "type": "null" }] },
+            "dispatches": { "type": "array", "items": { "$ref": "#/definitions/Dispatch" } }
+          }
+        }
+      }
+    },
+    "Point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": { "x": { "type": "number" }, "y": { "type": "number" } }
+    },
+    "Handle": { "enum": ["moveX", "moveY", "rotate", "scaleX", "scaleY", "scaleUniform"] },
+    "Event": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "x", "y"],
+          "properties": { "kind": { "enum": ["move", "release"] }, "x": { "type": "number" }, "y": { "type": "number" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "reason"],
+          "properties": { "kind": { "const": "cancel" }, "reason": { "enum": ["blur", "captureLost"] } }
+        }
+      ]
+    },
+    "Ids": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "Phase": { "enum": ["stream", "commit"] },
+    "Dispatch": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "args"],
+          "properties": {
+            "action": { "const": "translateSelection" },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ids", "dx", "dy", "dz"],
+              "properties": { "ids": { "$ref": "#/definitions/Ids" }, "dx": { "type": "number" }, "dy": { "type": "number" }, "dz": { "const": 0 }, "phase": { "$ref": "#/definitions/Phase" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "args"],
+          "properties": {
+            "action": { "const": "rotateSelection" },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ids", "ax", "ay", "az", "angle"],
+              "properties": { "ids": { "$ref": "#/definitions/Ids" }, "ax": { "const": 0 }, "ay": { "const": 0 }, "az": { "const": 1 }, "angle": { "type": "number" }, "phase": { "$ref": "#/definitions/Phase" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "args"],
+          "properties": {
+            "action": { "const": "scaleSelection" },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ids", "sx", "sy", "sz"],
+              "properties": { "ids": { "$ref": "#/definitions/Ids" }, "sx": { "type": "number", "exclusiveMinimum": 0 }, "sy": { "type": "number", "exclusiveMinimum": 0 }, "sz": { "const": 1 }, "phase": { "$ref": "#/definitions/Phase" } }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["action", "args"],
+          "properties": {
+            "action": { "enum": ["translateSelection", "rotateSelection", "scaleSelection"] },
+            "args": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["ids", "phase", "reason"],
+              "properties": { "ids": { "$ref": "#/definitions/Ids" }, "phase": { "const": "abort" }, "reason": { "enum": ["blur", "captureLost"] } }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

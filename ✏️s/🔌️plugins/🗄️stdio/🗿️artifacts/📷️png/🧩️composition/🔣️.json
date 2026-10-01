@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_png::editor::png::PngEditor",
       "factory": "semio_s_artifact_stdio_png::editor::png::create_png_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "png_editor",
+        "sqliteSnapshot": "sqlite_snapshot_png_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_png::viewer::png::PngViewer",
       "factory": "semio_s_artifact_stdio_png::viewer::png::create_png_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "png",
-      "factory_id": "stdio.native.png.v1",
-      "descriptor_codec_id": "s.stdio.png.standard.1-2.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.png.standard.1-2.codec.codec-stdio-png-extension-png.v1",
-      "artifact_kind": "s.stdio.png",
-      "artifact_schema": "stdio.png",
-      "extension": "png",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
-      "protocol_source_sha256": "fae0c8a340fe7d7486768794f7f3cad326ec9cd055fe271985154c383c48f9d0",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6219,
         "wgpu": 6319
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "PngMutation",
+      "snapshot": "semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::snapshot::PngSnapshot",
+      "mutation": "semio_s_artifact_stdio_png::standards::v1_2::subsets::any::schema::mutations::PngMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.png",
+      "standard": "1.2",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.png.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🏅️standards/🔖️1.2/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

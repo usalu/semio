@@ -1,5 +1,5 @@
 {
-  "description": "Language-neutral cases for the time-travel band and window indicator (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §10): every stage of HistoryPatch.timeTravel, the lines a shell shows in English and German, the controls in order with the refusal that disables one, the reserved verb each dispatches (args carry the session generation), the default remappable chords (never Escape) and the indicator's accessible name. Read by the React band test; the wgpu band reads the same cases.",
+  "description": "Language-neutral cases for the time-travel band and window indicator (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING, design §10): every stage of HistoryPatch.timeTravel, the lines a shell shows in English and German, the controls in order with the refusal that disables one, the reserved verb each dispatches (args carry the session generation), the default remappable chords (never Escape) and the indicator's accessible name. Read by the React band test; the wgpu band reads the same cases. `transitions` are what one change of the focused program's session asks of either shell: reveal the History panel on the edge into a new session, and move keyboard focus to the draft editor's first input, the band or the finalize prompt.",
   "controllerId": "toy.controller",
   "axes": {
     "terminology": "native"
@@ -213,7 +213,7 @@
           "stage": "Reviewing the edited history",
           "target": null,
           "progress": null,
-          "review": "Errors in later mutations block finalizing",
+          "review": "Errors must be fixed or withdrawn before finalizing",
           "outcome": "Worst outcome: Error",
           "fault": null,
           "accepted": "Accepted changes: 2"
@@ -222,7 +222,7 @@
           "stage": "Bearbeiteter Verlauf wird geprüft",
           "target": null,
           "progress": null,
-          "review": "Fehler in späteren Mutationen verhindern den Abschluss",
+          "review": "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden",
           "outcome": "Schwerstes Ergebnis: Fehler",
           "fault": null,
           "accepted": "Übernommene Änderungen: 2"
@@ -412,6 +412,60 @@
       }
     },
     {
+      "name": "a faulted replay names its fault in words and can replay again",
+      "session": {
+        "sessionId": "1",
+        "generation": 12,
+        "stage": "reviewing",
+        "blocking": false,
+        "fault": "timeTravel.replay-faulted",
+        "acceptedCount": 1,
+        "review": "needsReplay",
+        "rerunnable": true
+      },
+      "text": {
+        "en": {
+          "stage": "Reviewing the edited history",
+          "target": null,
+          "progress": null,
+          "review": "Replay needed: later mutations are not checked yet",
+          "outcome": null,
+          "fault": "Replay failed: later mutations could not be checked",
+          "accepted": "Accepted changes: 1"
+        },
+        "de": {
+          "stage": "Bearbeiteter Verlauf wird geprüft",
+          "target": null,
+          "progress": null,
+          "review": "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft",
+          "outcome": null,
+          "fault": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden",
+          "accepted": "Übernommene Änderungen: 1"
+        }
+      },
+      "controls": [
+        {
+          "control": "rerun",
+          "action": "historyEditRerun",
+          "disabledBy": null
+        },
+        {
+          "control": "finalize",
+          "action": "historyEditFinalize",
+          "disabledBy": "ui.timeTravel.refusal.blocked"
+        },
+        {
+          "control": "exit",
+          "action": "historyEditExit",
+          "disabledBy": null
+        }
+      ],
+      "indicator": {
+        "en": "Reviewing the edited history",
+        "de": "Bearbeiteter Verlauf wird geprüft"
+      }
+    },
+    {
       "name": "a review the session does not state is never read as no changes or ready",
       "session": {
         "sessionId": "1",
@@ -469,7 +523,7 @@
         "sessionId": "1",
         "generation": 11,
         "stage": "editing",
-        "fault": "timeTravel.replay-faulted",
+        "fault": "store.replay-unreadable",
         "blocking": false,
         "acceptedCount": 0
       },
@@ -480,7 +534,7 @@
           "progress": null,
           "review": null,
           "outcome": null,
-          "fault": "Replay failed (timeTravel.replay-faulted)",
+          "fault": "Replay failed (store.replay-unreadable)",
           "accepted": null
         },
         "de": {
@@ -489,7 +543,7 @@
           "progress": null,
           "review": null,
           "outcome": null,
-          "fault": "Neuanwendung fehlgeschlagen (timeTravel.replay-faulted)",
+          "fault": "Neuanwendung fehlgeschlagen (store.replay-unreadable)",
           "accepted": null
         }
       },
@@ -677,6 +731,304 @@
         "de": "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden"
       },
       "severity": "warning"
+    },
+    {
+      "code": "timeTravel.busy",
+      "text": {
+        "en": "History editing is busy: finish the running tool or the other history edit first",
+        "de": "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.unknown-mutation",
+      "text": {
+        "en": "This mutation is no longer in the history",
+        "de": "Diese Mutation ist nicht mehr im Verlauf"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.not-editable",
+      "text": {
+        "en": "The inputs of this mutation cannot be edited",
+        "de": "Die Eingaben dieser Mutation können nicht bearbeitet werden"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.unknown-input",
+      "text": {
+        "en": "This input does not exist in the mutation",
+        "de": "Diese Eingabe gibt es in der Mutation nicht"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.invalid-input",
+      "text": {
+        "en": "Invalid value: the input keeps its previous value",
+        "de": "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.no-selection",
+      "text": {
+        "en": "Nothing suitable is selected for this input",
+        "de": "Für diese Eingabe ist nichts Passendes ausgewählt"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.name-required",
+      "text": {
+        "en": "Name the new alternative",
+        "de": "Einen Namen für die neue Alternative eingeben"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.schema-unavailable",
+      "text": {
+        "en": "The input schema of this mutation is unavailable",
+        "de": "Das Eingabeschema dieser Mutation ist nicht verfügbar"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.replay-faulted",
+      "text": {
+        "en": "Replay failed: later mutations could not be checked",
+        "de": "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden"
+      },
+      "severity": "warning"
+    },
+    {
+      "code": "timeTravel.commit-failed",
+      "text": {
+        "en": "Finalizing failed: the history is unchanged",
+        "de": "Abschließen fehlgeschlagen: Der Verlauf ist unverändert"
+      },
+      "severity": "warning"
+    }
+  ],
+  "transitions": [
+    {
+      "name": "beginning a session reveals the History panel and focuses the draft's first input",
+      "from": null,
+      "to": {
+        "sessionId": "1",
+        "generation": 1,
+        "stage": "editing",
+        "target": "m-2",
+        "blocking": false,
+        "acceptedCount": 0
+      },
+      "reveal": true,
+      "focus": "editor"
+    },
+    {
+      "name": "accepting a draft moves focus to the band while the replay runs",
+      "from": {
+        "sessionId": "1",
+        "generation": 3,
+        "stage": "editing",
+        "target": "m-2"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "done": 0,
+        "total": 8
+      },
+      "reveal": false,
+      "focus": "band"
+    },
+    {
+      "name": "a replay progress step moves nothing",
+      "from": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "done": 3,
+        "total": 8
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "done": 5,
+        "total": 8
+      },
+      "reveal": false,
+      "focus": null
+    },
+    {
+      "name": "the review after a replay keeps focus on the band",
+      "from": {
+        "sessionId": "1",
+        "generation": 4,
+        "stage": "replaying",
+        "target": "m-2",
+        "done": 8,
+        "total": 8
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "review": "blocked",
+        "blocking": true,
+        "acceptedCount": 1
+      },
+      "reveal": false,
+      "focus": "band"
+    },
+    {
+      "name": "Next problem from the review focuses the failing mutation's first input",
+      "from": {
+        "sessionId": "1",
+        "generation": 5,
+        "stage": "reviewing",
+        "review": "blocked"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 6,
+        "stage": "editing",
+        "target": "m-5"
+      },
+      "reveal": false,
+      "focus": "editor"
+    },
+    {
+      "name": "switching the draft to another mutation focuses its first input",
+      "from": {
+        "sessionId": "1",
+        "generation": 6,
+        "stage": "editing",
+        "target": "m-5"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 7,
+        "stage": "editing",
+        "target": "m-6"
+      },
+      "reveal": false,
+      "focus": "editor"
+    },
+    {
+      "name": "editing the same draft moves nothing",
+      "from": {
+        "sessionId": "1",
+        "generation": 7,
+        "stage": "editing",
+        "target": "m-6"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 7,
+        "stage": "editing",
+        "target": "m-6",
+        "acceptedCount": 1
+      },
+      "reveal": false,
+      "focus": null
+    },
+    {
+      "name": "the finalize prompt takes focus",
+      "from": {
+        "sessionId": "1",
+        "generation": 8,
+        "stage": "reviewing",
+        "review": "ready"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 9,
+        "stage": "choosing"
+      },
+      "reveal": false,
+      "focus": "dialog"
+    },
+    {
+      "name": "going back from the prompt returns focus to the band",
+      "from": {
+        "sessionId": "1",
+        "generation": 9,
+        "stage": "choosing"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 10,
+        "stage": "reviewing",
+        "review": "ready"
+      },
+      "reveal": false,
+      "focus": "band"
+    },
+    {
+      "name": "the commit moves nothing",
+      "from": {
+        "sessionId": "1",
+        "generation": 11,
+        "stage": "choosing"
+      },
+      "to": {
+        "sessionId": "1",
+        "generation": 12,
+        "stage": "finalizing"
+      },
+      "reveal": false,
+      "focus": null
+    },
+    {
+      "name": "closing the session moves nothing",
+      "from": {
+        "sessionId": "1",
+        "generation": 12,
+        "stage": "finalizing"
+      },
+      "to": null,
+      "reveal": false,
+      "focus": null
+    },
+    {
+      "name": "a new session after another one reveals the panel again",
+      "from": {
+        "sessionId": "1",
+        "generation": 10,
+        "stage": "reviewing",
+        "review": "ready"
+      },
+      "to": {
+        "sessionId": "2",
+        "generation": 1,
+        "stage": "editing",
+        "target": "m-2"
+      },
+      "reveal": true,
+      "focus": "editor"
+    },
+    {
+      "name": "a session already open when the shell first sees it reveals the panel and focuses its band",
+      "from": null,
+      "to": {
+        "sessionId": "3",
+        "generation": 4,
+        "stage": "reviewing",
+        "review": "needsReplay",
+        "rerunnable": true,
+        "acceptedCount": 1
+      },
+      "reveal": true,
+      "focus": "band"
     }
   ]
 }

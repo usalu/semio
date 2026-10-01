@@ -129,6 +129,39 @@ fn the_brush_state_round_trips_the_window_transient_codecs() {
 }
 //#endregion 🛠️Tool
 
+//#region 🖱️Pointer
+#[test]
+fn a_hover_a_stray_release_and_a_secondary_press_mean_nothing_to_the_brush() {
+    let (width, height) = (base().input.width, base().input.height);
+    assert_eq!(bitmap_brush_pointer_stroke(&BitmapBrushPointer::Move { samples: vec![[1.5, 1.5]] }, width, height, false), None);
+    assert_eq!(bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: Some([1.0, 1.0]), cancelled: false }, width, height, false), None);
+    assert_eq!(bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: None, cancelled: true }, width, height, false), None);
+    assert_eq!(bitmap_brush_pointer_stroke(&BitmapBrushPointer::Down { world: Some([1.0, 1.0]), button: 2 }, width, height, false), None);
+    assert_eq!(bitmap_brush_pointer_stroke(&BitmapBrushPointer::Down { world: Some([f64::NAN, 1.0]), button: 0 }, width, height, false), None);
+}
+
+#[test]
+fn pointer_samples_map_to_clamped_cells_with_repeats_collapsed() {
+    let (width, height) = (base().input.width, base().input.height);
+    let down = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Down { world: Some([0.9, 0.1]), button: 0 }, width, height, true).expect("a primary press opens");
+    assert_eq!((down.phase, down.points, down.interrupt), (BitmapStrokePhase::Stream, vec![point(0, 0)], true), "a press drops a stroke a lost release left open");
+    let drag = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Move { samples: vec![[0.2, 0.2], [1.2, 0.4], [1.8, 0.6], [-3.0, -2.0], [99.0, 1.0]] }, width, height, true).expect("a drag streams");
+    assert_eq!(drag.points, vec![point(0, 0), point(1, 0), point(0, 0), point(width - 1, 1)], "repeats collapse and a drag past an edge clamps onto it");
+    let release = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: Some([2.5, 1.5]), cancelled: false }, width, height, true).expect("a release commits");
+    assert_eq!((release.phase, release.points), (BitmapStrokePhase::Commit, vec![point(2, 1)]));
+    let cancel = bitmap_brush_pointer_stroke(&BitmapBrushPointer::Up { world: None, cancelled: true }, width, height, true).expect("a cancel aborts");
+    assert_eq!(cancel.phase, BitmapStrokePhase::Abort(ToolAbortReason::CaptureLost));
+}
+
+#[test]
+fn a_streamed_stroke_never_repeats_a_cell_across_ticks() {
+    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(1, 1)], 1), &BitmapInputWindowTransient::default(), SEED);
+    let (_, open) = bitmap_brush_dispatch(BitmapStrokePhase::Stream, request(&[(1, 1), (1, 1), (2, 1)], 1), &open, SEED);
+    let (committed, _) = bitmap_brush_dispatch(BitmapStrokePhase::Commit, request(&[(2, 1)], 1), &open, SEED);
+    assert_eq!(committed.expect("the release commits").1, vec![paint_input_stroke(vec![point(1, 1), point(2, 1)], 1)]);
+}
+//#endregion 🖱️Pointer
+
 //#region 🧩️MountedApp
 type BitmapApp = VcsArtifactApp<EditorApp<BitmapEditor>>;
 
@@ -251,6 +284,39 @@ fn two_mounted_strokes_are_two_transactions() {
     let second = edit_rows(&stroke(&mut app, &[(0, 2), (1, 2)], None));
     let (first, second) = (first[0].transaction.clone().expect("first ref"), second[0].transaction.clone().expect("second ref"));
     assert_ne!(first.id, second.id);
+    close(&mut app);
+}
+
+/// 🖱️ Dispatches one canvas verb exactly as both hosts send it (surface id as the React host stamps it, world
+/// coordinates on every command) and settles it.
+fn pointer(app: &mut BitmapApp, action: &str, args: serde_json::Value) -> InvocationResult {
+    let mut args = args;
+    args["surfaceId"] = serde_json::Value::from(format!("window:{WFC_BITMAP_WINDOW_INPUT}"));
+    let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some(&dsl::DslValue::from(&args))).expect("the canvas verb bridges");
+    let meta = input_meta();
+    let result = block_on(app.dispatch_typed(command, &meta));
+    settle(app, result)
+}
+
+#[test]
+fn a_mounted_press_drag_release_paints_one_stroke_and_a_hover_or_a_cancel_leaves_zero_trace() {
+    let mut app = app();
+    let before = app.snapshot().expect("projection");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerMove", serde_json::json!({ "worldSamples": [[1.5, 1.5]] }))).is_empty(), "a hover is no stroke");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerUp", serde_json::json!({ "worldX": 1.5, "worldY": 1.5, "cancelled": false }))).is_empty(), "a release with nothing open is no stroke");
+    assert_eq!(app.snapshot().expect("projection"), before);
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerDown", serde_json::json!({ "worldX": 0.25, "worldY": 0.75, "button": 0 }))).is_empty(), "a press opens the stroke, no history");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerMove", serde_json::json!({ "worldSamples": [[0.5, 0.5], [1.5, 0.5], [2.5, 0.5]] }))).is_empty());
+    assert_eq!(app.snapshot().expect("projection"), before, "ticks never touch the document");
+    let rows = edit_rows(&pointer(&mut app, "canvasPointerUp", serde_json::json!({ "worldX": 2.9, "worldY": 1.1, "cancelled": false })));
+    assert_eq!(rows.len(), 1, "press, drag, release is ONE row: {rows:?}");
+    assert!(rows[0].transaction.as_ref().is_some_and(|transaction| transaction.tool == "s.wfc.bitmap@1/*#editor#paint-stroke"));
+    assert!(rows[0].op_lines.iter().all(|line| line.starts_with("paint-input-stroke")), "{:?}", rows[0].op_lines);
+    let committed = app.snapshot().expect("projection");
+    assert_ne!(committed, before, "the stroke landed");
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerDown", serde_json::json!({ "worldX": 5.0, "worldY": 5.0, "button": 0 }))).is_empty());
+    assert!(edit_rows(&pointer(&mut app, "canvasPointerUp", serde_json::json!({ "worldX": 6.0, "worldY": 6.0, "cancelled": true }))).is_empty(), "a cancelled release is no history");
+    assert_eq!(app.snapshot().expect("projection"), committed, "a cancelled stroke leaves zero trace");
     close(&mut app);
 }
 //#endregion 🧩️MountedApp

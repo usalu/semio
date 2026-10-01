@@ -3,7 +3,9 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import type { FileLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, buildBudgetMs, defineLint, goLevelTestArgs, resolveCliBin, resolveTestLevel, runBundleScriptMain, runCanonicalGoBuild, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, defineLint, goLevelTestArgs, resolveCliBin, resolveTestLevel, runCanonicalGoBuild, runCanonicalGoTests, runCmd } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
@@ -61,4 +63,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("build", BuildScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url);

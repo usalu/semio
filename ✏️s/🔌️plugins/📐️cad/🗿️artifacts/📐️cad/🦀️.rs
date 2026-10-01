@@ -720,7 +720,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🧪️tests/🙈️hides-the-shape-reference/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_the_shape_reference;
                         }
                         #[path = "."]
@@ -733,7 +733,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🧪️tests/🔓️unlocks-the-shape-reference/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒change-reference-locked/🧪️tests/🔓️unlocks/🦀️.rs"]
                             mod tests_unlocks_the_shape_reference;
                         }
                         #[path = "."]
@@ -746,7 +746,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🧪️tests/↔️widens-the-shape-reference-plane/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📏change-reference-width/🧪️tests/↔️widens/🦀️.rs"]
                             mod tests_widens_the_shape_reference_plane;
                         }
                         #[path = "."]
@@ -759,7 +759,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🧪️tests/📍️moves-the-shape-reference-off-origin/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-reference/🧪️tests/📍️moves/🦀️.rs"]
                             mod tests_moves_the_shape_reference_off_origin;
                         }
                         #[path = "."]
@@ -772,7 +772,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🧪️tests/🖼️reattaches-the-shape-reference-to-a-new-plan/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-media/🧪️tests/🖼️reattaches/🦀️.rs"]
                             mod tests_reattaches_the_shape_reference_to_a_new_plan;
                         }
                         #[path = "."]
@@ -785,7 +785,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps-the-shape-reference-list/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📎replace-references/🧪️tests/🔄️swaps/🦀️.rs"]
                             mod tests_swaps_the_shape_reference_list;
                         }
                         #[path = "."]
@@ -896,7 +896,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles-the-occupied-shape-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-shape-model/🧪️tests/🧱️rehandles/🦀️.rs"]
                             mod tests_rehandles_the_occupied_shape_slot;
                         }
                         #[path = "."]
@@ -922,7 +922,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles-the-occupied-building-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢create-building-model/🧪️tests/🏢️rehandles/🦀️.rs"]
                             mod tests_rehandles_the_occupied_building_slot;
                         }
                         #[path = "."]
@@ -935,7 +935,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates-the-building-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💥delete-building-model/🧪️tests/🏚️vacates/🦀️.rs"]
                             mod tests_vacates_the_building_slot;
                         }
                         #[path = "."]
@@ -948,7 +948,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles-the-occupied-energy-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡create-energy-model/🧪️tests/⚡️rehandles/🦀️.rs"]
                             mod tests_rehandles_the_occupied_energy_slot;
                         }
                         #[path = "."]
@@ -961,20 +961,20 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🧪️tests/🔌️vacates-the-energy-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌delete-energy-model/🧪️tests/🔌️vacates/🦀️.rs"]
                             mod tests_vacates_the_energy_slot;
                         }
                         #[path = "."]
                         pub mod create_structure_classic_model {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🦀️.rs"]
                             mod component;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🧪️tests/🏛️rehandles-the-occupied-structure-classic-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🧪️tests/🏛️rehandles/🦀️.rs"]
                             mod tests_rehandles_the_occupied_structure_classic_slot;
                         }
                         #[path = "."]
@@ -987,7 +987,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates-the-structure-classic-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣delete-structure-classic-model/🧪️tests/🏚️vacates/🦀️.rs"]
                             mod tests_vacates_the_structure_classic_slot;
                         }
                         #[path = "."]
@@ -1228,6 +1228,8 @@ pub mod editor {
                 pub mod windows {
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎚️config/🦀️.rs"]
                     pub mod config;
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🫧️transient/🦀️.rs"]
+                    pub mod transient;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🏢️building/🦀️.rs"]
                     pub mod building;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔥️energy/🦀️.rs"]

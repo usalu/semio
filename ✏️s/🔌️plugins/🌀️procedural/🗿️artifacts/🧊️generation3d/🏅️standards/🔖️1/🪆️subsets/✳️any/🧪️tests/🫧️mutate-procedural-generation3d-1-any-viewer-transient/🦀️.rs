@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-preview-eval" => Vector {
-            before: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set-preview-eval-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../👁️viewer/🫧️transient/🧫️fixtures/👁️set-preview-eval/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

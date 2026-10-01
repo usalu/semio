@@ -2,7 +2,7 @@
 import type { Component, UiContractViolation, UiDocumentLimits, UiNodeRecord } from "../../../../../🛂️manifest/🟦️.ts";
 import type { RetainedUiComponent, RetainedUiNodeRecord } from "../../📦️wire/🧾️typed/🟦️.ts";
 import type { RetainedUiNumericTable, RetainedUiSiblingKeys } from "../../🟦️.ts";
-import { snapsAreValid } from "../../../🛡️limits/🟦️.ts";
+import { numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../🛡️limits/🟦️.ts";
 
 type Program<T> = Generator<number, T, void>;
 type Record = UiNodeRecord | RetainedUiNodeRecord;
@@ -13,19 +13,26 @@ export type RetainedUiGraphNodes = { readonly size: number; lookup(id: number): 
 
 function finite(component: Component | RetainedUiComponent): boolean {
   switch (component.type) {
-    case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step) && component.snaps.every(Number.isFinite);
-    case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step) && (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.min == null || component.max == null || component.min <= component.max);
+    case "slider": return Number.isFinite(component.value) && Number.isFinite(component.min) && Number.isFinite(component.max) && Number.isFinite(component.step) && component.snaps.every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
+    case "numberStepper": return Number.isFinite(component.value) && Number.isFinite(component.step) && (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.min == null || component.max == null || component.min <= component.max) && (component.snaps ?? []).every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
     case "ring": return Number.isFinite(component.t);
     case "progress": return Number.isFinite(component.completed) && (component.total == null || Number.isFinite(component.total));
-    case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step)) && (component.snaps ?? []).every(Number.isFinite);
+    case "input": return (component.min == null || Number.isFinite(component.min)) && (component.max == null || Number.isFinite(component.max)) && (component.step == null || Number.isFinite(component.step)) && (component.snaps ?? []).every(Number.isFinite) && (component.displayFactor == null || Number.isFinite(component.displayFactor)) && numberLimitValues(component.limits).every(Number.isFinite);
     default: return true;
   }
+}
+
+/** 📏️ A slider's, stepper's and number field's travel, scale, display factor and limits agree — the twin of the Rust `number_range_is_valid` gate. */
+function validNumberRange(component: Component | RetainedUiComponent): boolean {
+  if (component.type === "slider") return numberRangeIsValid(component.min, component.max, component.scale ?? "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps);
+  if (component.type === "numberStepper" || component.type === "input") return numberRangeIsValid(component.min ?? null, component.max ?? null, "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps ?? []);
+  return true;
 }
 
 /** 🧲️ A slider's and a number field's detents obey the shared law; every other component passes — the twin of the Rust `snaps_are_valid` gate. */
 function validSnaps(component: Component | RetainedUiComponent): boolean {
   if (component.type === "slider") return snapsAreValid(component.snaps, component.min, component.max);
-  return component.type !== "input" || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
+  return (component.type !== "input" && component.type !== "numberStepper") || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
 }
 
 function* violation(value: UiContractViolation, frontier: RetainedUiGraphFrontier, violations: RetainedUiNumericTable<UiContractViolation>): Program<void> {
@@ -88,6 +95,7 @@ export function* retainedUiGraphValidation(nodes: RetainedUiGraphNodes, root: nu
     if (frame.section && section) yield* violation({ type: "sectionNested", node: frame.id }, frontier, violations);
     if (!finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: frame.id }, frontier, violations);
     else if (!validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: frame.id }, frontier, violations);
+    else if (!validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: frame.id }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.inlineToolbar !== null && !(yield* validTreeToolbar(record, record.component.inlineToolbar, nodes))) yield* violation({ type: "invalidTreeInlineToolbar", node: frame.id, toolbar: record.component.inlineToolbar }, frontier, violations);
     if (record.component.type === "treeSection" && record.component.headerToolbar !== null && !(yield* validTreeToolbar(record, record.component.headerToolbar, nodes))) yield* violation({ type: "invalidTreeSectionHeaderToolbar", node: frame.id, toolbar: record.component.headerToolbar }, frontier, violations);
     if (record.component.type === "treeItem" && record.component.detail !== null && !(yield* validTreeDetail(record, nodes))) yield* violation({ type: "invalidTreeDetail", node: frame.id, detail: record.component.detail }, frontier, violations);
@@ -133,6 +141,7 @@ export function* retainedUiGraphTouchedValidation(nodes: RetainedUiGraphNodes, t
     const record = yield* nodes.lookup(entry[0]);
     if (record && !finite(record.component)) yield* violation({ type: "nonFiniteNumber", node: entry[0] }, frontier, violations);
     else if (record && !validSnaps(record.component)) yield* violation({ type: "invalidSnaps", node: entry[0] }, frontier, violations);
+    else if (record && !validNumberRange(record.component)) yield* violation({ type: "invalidNumberRange", node: entry[0] }, frontier, violations);
     if (record && !validRowTarget(record)) yield* violation({ type: "invalidRowTarget", node: entry[0] }, frontier, violations);
   }
 }

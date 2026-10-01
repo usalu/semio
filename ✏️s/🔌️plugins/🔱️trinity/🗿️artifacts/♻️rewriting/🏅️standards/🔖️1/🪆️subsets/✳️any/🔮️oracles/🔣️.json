@@ -59,23 +59,23 @@
       "vectors": [
         {
           "mutationId": "change-parameter-binding",
-          "sourceMutationDirectoryName": "🔧️change-parameter-binding",
-          "mutationDirectoryName": "🔧️change-parameter-binding",
+          "sourceMutationDirectoryName": "🔧️change-parameter",
+          "mutationDirectoryName": "🔧️change-parameter",
           "scenarios": [
             {
               "id": "retitles-the-caption-binding",
-              "directoryName": "🏷️retitles-the-caption-binding"
+              "directoryName": "🏷️retitles"
             }
           ]
         },
         {
           "mutationId": "change-rule-layout-point",
-          "sourceMutationDirectoryName": "📐️change-rule-layout-point",
-          "mutationDirectoryName": "📐️change-rule-layout-point",
+          "sourceMutationDirectoryName": "📐️change-rule-layout",
+          "mutationDirectoryName": "📐️change-rule-layout",
           "scenarios": [
             {
               "id": "nudges-the-capsule-var-off-the-shaft",
-              "directoryName": "📍️nudges-the-capsule-var-off-the-shaft"
+              "directoryName": "📍️nudges"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "swaps-in-a-two-node-before-graph",
-              "directoryName": "🕸️swaps-in-a-two-node-before-graph"
+              "directoryName": "🕸️swaps"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "narrows-the-lhs-pattern-to-a-shaft-neighbour",
-              "directoryName": "👈️narrows-the-lhs-pattern-to-a-shaft-neighbour"
+              "directoryName": "👈️narrows"
             }
           ]
         },
@@ -108,7 +108,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-rhs-to-set-a-second-property",
-              "directoryName": "👉️rewrites-the-rhs-to-set-a-second-property"
+              "directoryName": "👉️rewrites"
             }
           ]
         },
@@ -119,18 +119,18 @@
           "scenarios": [
             {
               "id": "drops-the-repeat-binding",
-              "directoryName": "✂️drops-the-repeat-binding"
+              "directoryName": "✂️drops"
             }
           ]
         },
         {
           "mutationId": "remove-rule-layout-point",
-          "sourceMutationDirectoryName": "🗑️remove-rule-layout-point",
-          "mutationDirectoryName": "🗑️remove-rule-layout-point",
+          "sourceMutationDirectoryName": "🗑️remove-rule-layout",
+          "mutationDirectoryName": "🗑️remove-rule-layout",
           "scenarios": [
             {
               "id": "clears-the-shaft-layout-point",
-              "directoryName": "📐️clears-the-shaft-layout-point"
+              "directoryName": "📐️clears"
             }
           ]
         }

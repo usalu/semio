@@ -7,7 +7,9 @@
  * dependency tree. That is a property no type signature can express, so it is asserted here. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runProbe } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runCmd, runProbe } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
@@ -61,5 +63,5 @@ class BoundariesScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("boundaries", BoundariesScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

@@ -336,7 +336,7 @@ fn canonical_reader_sealer_failed_prefix_is_accounted_without_minting_authority(
             oracle.forwards.push(serde_json::json!([fixture["text"], null]).into());
             let expected = serde_json::to_string(&test_support::SerdeValue(&oracle.to_value())).unwrap();
             let prefix = &expected.as_bytes()[..expected.find("null]").unwrap()];
-            let edit = Edit {
+            let edit = Edit { line: oracle.line,
                 id: oracle.id,
                 actor: oracle.actor,
                 forwards: vec![ErrorRoot { text: fixture["text"].as_str().unwrap().into(), borrowed, error: ErrorLeaf }],

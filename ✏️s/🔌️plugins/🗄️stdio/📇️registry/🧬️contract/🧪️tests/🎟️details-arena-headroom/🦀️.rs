@@ -53,6 +53,7 @@ impl Document {
                 DslValue::String(value) => serde_json::Value::String(value.clone()),
                 DslValue::Array(items) => serde_json::Value::Array(items.iter().map(convert).collect()),
                 DslValue::Object(entries) => serde_json::Value::Object(entries.iter().map(|(key, value)| (key.clone(), convert(value))).collect()),
+                DslValue::Bytes(bytes) => serde_json::Value::Array(bytes.iter().map(|byte| serde_json::Value::from(*byte)).collect()),
             }
         }
         convert(&self.value)
@@ -68,6 +69,7 @@ impl SnapshotDetailsProvider for Document {
             DslValue::String(value) => SnapshotDetailValue::String(value.clone()),
             DslValue::Array(_) => SnapshotDetailValue::Array,
             DslValue::Object(_) => SnapshotDetailValue::Object,
+            DslValue::Bytes(bytes) => SnapshotDetailValue::Bytes { len: bytes.len() },
         })
     }
 

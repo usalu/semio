@@ -5,25 +5,48 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { dirname, join, relative, resolve } from "node:path";
 import Ajv from "ajv/dist/2020.js";
+import glob from "fast-glob";
 import ts from "typescript";
 import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependencyDirectionWorkspacePackages, type DependencyDirectionGraphScope } from "../../🕸️dependencies/🧭️direction/🟦️.ts";
 
-type Edge = Readonly<{ id: string; target: string; reference: "relative" | "package" | "package-subpath" | "unresolved-package"; syntax: "static" | "type" | "dynamic" | "export" | "require"; package?: string }>;
-type Case = Readonly<{ id: string; from: string; comments?: readonly string[]; dependencies: readonly Edge[]; forbidden: readonly string[] }>;
+type Edge = Readonly<{ id: string; target: string; reference: "relative" | "package" | "package-subpath" | "unresolved-package"; syntax: "static" | "type" | "dynamic" | "export" | "require"; package?: string; installation?: string }>;
+type Case = Readonly<{ id: string; from: string; comments?: readonly string[]; dependencies: readonly Edge[]; forbidden: readonly string[]; forbiddenRules?: Readonly<Record<string, readonly string[]>> }>;
 type Rule = Readonly<{ name: string; severity: string; from: { path: string[]; pathNot?: string[] }; to: { path: string[]; pathNot?: string[] } }>;
 type Graph = Readonly<{ modules: readonly { source: string; dependencies: readonly { module: string; resolved: string; couldNotResolve?: boolean }[] }[]; summary: { violations: readonly { from: string; to: string; rule: { name: string } }[] } }>;
 const library = resolve(import.meta.dir, "../.."), repo = resolve(library, "../../../../..");
 const read = (path: string): unknown => JSON.parse(readFileSync(join(library, path), "utf8"));
-type RemovabilityCase = Readonly<{ id: string; directories: readonly string[]; manifests: Readonly<Record<string, string | object>>; expectedPackages: readonly string[]; expectedPlugins: readonly string[]; accept: boolean }>;
+type RemovabilityCase = Readonly<{ id: string; directories: readonly string[]; manifests: Readonly<Record<string, string | object>>; expectedPackages: readonly string[]; expectedPlugins: readonly string[]; accept: boolean; members?: readonly string[]; nextManifests?: Readonly<Record<string, object>>; nextExpectedPackages?: readonly string[] }>;
 const fixture = read("🧫️fixtures/🧱️dependency-direction/🔣️.json") as { schemaVersion: number; infrastructureCases: readonly { owner: string; name: string; commands: readonly string[] }[]; typeCases: readonly { id: string; source: string; name: string; value: unknown; accept: boolean }[]; publicExportCases: readonly { id: string; owner: string; specifier: string; accept: boolean; conditions: readonly string[]; target?: string }[]; removabilityCases: readonly RemovabilityCase[]; cases: readonly Case[]; graphScope: DependencyDirectionGraphScope; resolutionCases: readonly { id: string; specifier: string; owner: string; from: string; forbidden: number; authored: boolean; accept: boolean }[]; inventoryCases: readonly { id: string; accept: boolean; roots: readonly string[]; files: readonly string[]; links: readonly { path: string; target: string }[]; expectedSources: readonly string[] }[]; graphCases: readonly { id: string; accept: boolean }[] };
 const schema = read("🧬️schema/🧱️dependency-direction/🔣️.json");
-const config = createRequire(import.meta.url)(join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) as { forbidden: readonly Rule[] };
-const rules = config.forbidden.filter((rule) => ["framework-no-implementation", "io-renderer-independent", "repo-no-implementation", "s-modules-no-plugins", "plugin-no-extension-or-artifact-📐️cad"].includes(rule.name)).map((rule) => {
+type PolicyOwner = Readonly<{ owner: string; name: string; role?: string }>;
+const policyOwners = (fixture as typeof fixture & { policyOwners: readonly PolicyOwner[] }).policyOwners;
+const config = portablePolicy();
+const rules = config.forbidden.filter((rule) => ["framework-no-implementation", "io-renderer-independent", "repo-no-implementation", "s-modules-no-plugins", "plugin-no-extension-or-artifact-📐️cad", "framework-modules-no-products"].includes(rule.name)).map((rule) => {
   const patterns = (value: string | string[]): string[] => typeof value === "string" ? [value] : value;
   return { ...rule, from: { path: patterns(rule.from.path), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } };
 });
 const matches = (patterns: readonly string[], candidate: string): boolean => patterns.some((pattern) => new RegExp(pattern, "u").test(candidate));
-const write = (root: string, path: string, content: string): void => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); };
+function write(root: string, path: string, content: string): void { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+
+/** 🧪️ Loads the actual policy generator over portable owners verified against their current authored manifests. */
+function portablePolicy(): { forbidden: readonly Rule[] } {
+  const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
+  mkdirSync(output, { recursive: true });
+  const root = realpathSync(mkdtempSync(join(output, "dependency-policy-")));
+  const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
+  try {
+    write(root, boundary, readFileSync(join(repo, boundary), "utf8"));
+    for (const source of ["🔣️taxonomy.json", "🕸️dependencies/🧭️direction/🟦️.ts", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/📦️payload/🟦️.ts"]) write(root, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+    const members = policyOwners.map((row) => row.owner);
+    write(root, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
+    for (const row of policyOwners) {
+      const manifest = JSON.parse(readFileSync(join(repo, row.owner, "package.json"), "utf8"));
+      if (manifest.name !== row.name || manifest.semio?.dependencyRole !== row.role) throw new Error(`Portable policy owner drift: ${row.owner}`);
+      write(root, `${row.owner}/package.json`, JSON.stringify(manifest));
+    }
+    return createRequire(import.meta.url)(join(root, boundary));
+  } finally { rmSync(root, { recursive: true, force: true }); }
+}
 
 /** 🧭️ Renders the same neutral dependency intent into the JavaScript parser's supported import forms. */
 function render(edge: Edge, from: string): { specifier: string; source: string } {
@@ -44,9 +67,12 @@ test("schema defines unique neutral dependency cases and exact expected edges", 
   const validate = new Ajv({ strict: true }).compile(schema as object);
   expect(validate(fixture), JSON.stringify(validate.errors)).toBe(true);
   expect(new Set(fixture.cases.map((row) => row.id)).size).toBe(fixture.cases.length);
+  expect(new Set(policyOwners.map((row) => row.name)).size).toBe(policyOwners.length);
+  expect(new Set(policyOwners.map((row) => row.owner)).size).toBe(policyOwners.length);
   for (const row of fixture.cases) {
     expect(new Set(row.dependencies.map((edge) => edge.id)).size).toBe(row.dependencies.length);
     expect(row.forbidden.every((id) => row.dependencies.some((edge) => edge.id === id))).toBe(true);
+    expect(Object.keys(row.forbiddenRules ?? {}).every((id) => row.forbidden.includes(id))).toBe(true);
   }
 });
 
@@ -63,53 +89,70 @@ test("declared semantic roles satisfy the portable schema and package contributi
 });
 
 test("strict taxonomy direction covers paths, package aliases, subpaths, tests and scripts", () => {
-  expect(rules).toHaveLength(5);
+  expect(rules).toHaveLength(6);
   expect(rules.every((rule) => rule.severity === "error")).toBe(true);
   for (const row of fixture.cases) {
     const forbidden = row.dependencies.filter((edge) => rules.some((rule) => matches(rule.from.path, row.from) && !matches(rule.from.pathNot ?? [], row.from) && matches(rule.to.path, edge.reference === "relative" ? edge.target : `${edge.package}${edge.reference === "package-subpath" ? "/schema" : ""}`))).map((edge) => edge.id);
     expect(forbidden, row.id).toEqual([...row.forbidden]);
+    for (const edge of row.dependencies) if (row.forbiddenRules?.[edge.id]) expect(rules.filter((rule) => matches(rule.from.path, row.from) && !matches(rule.from.pathNot ?? [], row.from) && matches(rule.to.path, edge.reference === "relative" ? edge.target : `${edge.package}${edge.reference === "package-subpath" ? "/schema" : ""}`)).map((rule) => rule.name).sort(), row.id).toEqual([...row.forbiddenRules[edge.id]!].sort());
   }
 });
 
 test("dependency-cruiser independently parses and resolves every neutral fixture verdict", async () => {
-  expect(rules).toHaveLength(5);
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
-  const root = realpathSync(mkdtempSync(join(output, "dependency-direction-")));
+  const cwd = realpathSync(mkdtempSync(join(output, "dependency-direction-")));
   try {
-    for (const [index, row] of fixture.cases.entries()) {
-      const cwd = join(root, String(index));
-      const inputs = row.dependencies.map((edge) => ({ edge, ...render(edge, row.from) }));
-      write(cwd, row.from, [...(row.comments ?? []).map((comment) => `// ${comment}`), ...inputs.map((input) => input.source), "export {};"].join("\n"));
-      write(cwd, "package.json", JSON.stringify({ type: "module", dependencies: Object.fromEntries(row.dependencies.filter((edge) => edge.package).map((edge) => [edge.package, "*"])) }));
+    const cases = fixture.cases.map((row, index) => {
+      const from = row.from.includes("/") ? `${dirname(row.from)}/case-${index}/${row.from.split("/").at(-1)}` : `case-${index}.ts`;
+      expect(rules.filter((rule) => matches(rule.from.path, from) && !matches(rule.from.pathNot ?? [], from)).map((rule) => rule.name), row.id).toEqual(rules.filter((rule) => matches(rule.from.path, row.from) && !matches(rule.from.pathNot ?? [], row.from)).map((rule) => rule.name));
+      const inputs = row.dependencies.map((edge) => ({ edge, ...render(edge, from) }));
+      write(cwd, from, [...(row.comments ?? []).map((comment) => `// ${comment}`), ...inputs.map((input) => input.source), "export {};"].join("\n"));
+      write(cwd, `${dirname(from)}/package.json`, JSON.stringify({ type: "module", dependencies: Object.fromEntries(row.dependencies.filter((edge) => edge.package).map((edge) => [edge.package, "*"])) }));
       for (const { edge } of inputs) {
         const target = "export interface Value {}\nexport const value = 1;\n";
         write(cwd, edge.target, target);
         if (edge.reference === "package" || edge.reference === "package-subpath") {
-          const packageRoot = `node_modules/${edge.package}`;
+          const packageRoot = edge.installation ?? `${dirname(from)}/node_modules/${edge.package}`;
           write(cwd, `${packageRoot}/package.json`, JSON.stringify({ name: edge.package, type: "module", exports: { ".": "./entry.ts", "./schema": "./schema.ts" } }));
           write(cwd, `${packageRoot}/entry.ts`, target);
           write(cwd, `${packageRoot}/schema.ts`, target);
+          if (edge.installation) {
+            const link = join(cwd, `${dirname(from)}/node_modules/${edge.package}`);
+            mkdirSync(dirname(link), { recursive: true });
+            symlinkSync(join(cwd, packageRoot), link, process.platform === "win32" ? "junction" : "dir");
+          }
         }
       }
-      const oracle = await cruise([row.from], { baseDir: cwd, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", tsPreCompilationDeps: true, combinedDependencies: true, doNotFollow: { path: "node_modules" } }, { exportsFields: ["exports"], conditionNames: ["import", "require", "node", "default"], modules: [join(cwd, "node_modules")], bustTheCache: true });
-      expect(oracle.exitCode, row.id).toBe(0);
+      return { row, from, inputs };
+    });
+    const unresolved = (row: Case): boolean => row.dependencies.some((edge) => edge.reference === "unresolved-package" && edge.package?.startsWith("@semio-tech/"));
+    for (const refused of [false, true]) {
+      const group = cases.filter(({ row }) => unresolved(row) === refused);
+      if (!group.length) continue;
+      const oracle = await cruise(group.map(({ from }) => from), { baseDir: cwd, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", tsPreCompilationDeps: true, combinedDependencies: true, doNotFollow: { path: "node_modules" } }, { exportsFields: ["exports"], conditionNames: ["import", "require", "node", "default"], modules: ["node_modules"], restrictions: [cwd], bustTheCache: true });
+      expect(oracle.exitCode).toBe(0);
       const graph = (typeof oracle.output === "string" ? JSON.parse(oracle.output) : oracle.output) as Graph;
-      const scope = { ...fixture.graphScope, workspaceRoots: ["🧰️framework", "🌎️hub", "✏️s", "♻️mit-bestand"], expectedSources: [row.from] };
-      if (inputs.some((input) => input.edge.reference === "unresolved-package" && input.edge.package?.startsWith("@semio-tech/"))) expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
-      else expect(dependencyDirectionEdges(graph, rules, scope), row.id).toHaveLength(row.forbidden.length);
-      const module = graph.modules.find((module) => module.source === row.from);
+      const scope = { ...fixture.graphScope, workspaceRoots: ["🧰️framework", "🌎️hub", "✏️s", "♻️mit-bestand", "🏢️semio-tech"], expectedSources: group.map(({ from }) => from) };
+      if (refused) expect(() => dependencyDirectionEdges(graph, rules, scope)).toThrow();
+      else expect(dependencyDirectionEdges(graph, rules, scope)).toHaveLength(group.reduce((count, { row }) => count + row.forbidden.reduce((count, id) => count + (row.forbiddenRules?.[id]?.length ?? 1), 0), 0));
+      for (const { row, from, inputs } of group) {
+      const module = graph.modules.find((module) => module.source === from);
       expect(module, row.id).toBeDefined();
       expect(module!.dependencies, row.id).toHaveLength(inputs.length);
-      const actual = inputs.filter(({ specifier }) => {
+      const actual = inputs.filter(({ specifier, edge }) => {
         const dependency = module!.dependencies.find((dependency) => dependency.module === specifier);
         expect(dependency, row.id).toBeDefined();
-        expect(dependency!.couldNotResolve === true, row.id).toBe(inputs.find((input) => input.specifier === specifier)!.edge.reference === "unresolved-package");
-        return graph.summary.violations.some((violation) => violation.from === row.from && violation.to === dependency!.resolved && rules.some((rule) => violation.rule.name === rule.name));
+        if (edge.installation) expect(dependency!.resolved, row.id).toBe(`${edge.installation}/${edge.reference === "package-subpath" ? "schema" : "entry"}.ts`);
+        expect(dependency!.couldNotResolve === true, row.id).toBe(edge.reference === "unresolved-package");
+        const verdicts = graph.summary.violations.filter((violation) => violation.from === from && violation.to === dependency!.resolved && rules.some((rule) => violation.rule.name === rule.name));
+        if (row.forbiddenRules?.[edge.id]) expect(verdicts.map((violation) => violation.rule.name).sort(), row.id).toEqual([...row.forbiddenRules[edge.id]!].sort());
+        return verdicts.length > 0;
       }).map(({ edge }) => edge.id);
       expect(actual, row.id).toEqual([...row.forbidden]);
     }
-  } finally { rmSync(root, { recursive: true, force: true }); }
+    }
+  } finally { rmSync(cwd, { recursive: true, force: true }); }
 }, 45_000);
 
 
@@ -184,15 +227,23 @@ test("dependency-cruiser unresolved local terminals fail and authored aliases re
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "dependency-resolution-")));
   try {
-    for (const [index, row] of fixture.resolutionCases.entries()) {
-      const cwd = join(root, String(index)), entry = row.from;
-      write(cwd, entry, `import ${JSON.stringify(row.specifier)}; export {};`);
-      const result = await cruise([entry], { baseDir: cwd, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", combinedDependencies: true }, { bustTheCache: true });
-      const graph = typeof result.output === "string" ? JSON.parse(result.output) : result.output;
-      expect(result.exitCode, row.id).toBe(0);
-      expect(graph.modules.find((module: { source: string }) => module.source === entry).dependencies[0].couldNotResolve, row.id).toBe(true);
+    const entries = fixture.resolutionCases.map((row, index) => { const entry = `${dirname(row.from)}/resolution-${index}/${row.from.split("/").at(-1)}`; write(root, entry, `import ${JSON.stringify(row.specifier)}; export {};`); return { row, entry }; });
+    const result = await cruise(entries.map(({ entry }) => entry), { baseDir: root, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", combinedDependencies: true }, { modules: [join(root, "node_modules")], restrictions: [root], bustTheCache: true });
+    const report = typeof result.output === "string" ? JSON.parse(result.output) : result.output;
+    expect(result.exitCode).toBe(0);
+    expect(report.modules.map((module: { source: string }) => module.source).sort()).toEqual([...entries.map(({ entry }) => entry), ...new Set(entries.map(({ row }) => row.specifier))].sort());
+    expect(report.summary.totalCruised).toBe(report.modules.length);
+    expect(report.summary.totalDependenciesCruised).toBe(entries.length);
+    for (const { row, entry } of entries) {
+      const module = report.modules.find((module: { source: string }) => module.source === entry);
+      expect(module.dependencies, row.id).toHaveLength(1);
+      expect(module.dependencies[0].couldNotResolve, row.id).toBe(true);
+      const violations = report.summary.violations.filter((violation: { from: string }) => violation.from === entry);
+      const terminal = report.modules.find((leaf: { source: string }) => leaf.source === module.dependencies[0].resolved);
+      expect(terminal.dependencies, row.id).toEqual([]);
+      const graph = { ...report, modules: [module, terminal], summary: { ...report.summary, totalCruised: 2, totalDependenciesCruised: 1, violations, error: violations.length } };
       const scope = { ...fixture.graphScope, workspacePackages: row.authored ? [{ name: row.specifier.startsWith("@") ? row.specifier.split("/").slice(0, 2).join("/") : row.specifier.split("/")[0]!, owner: row.owner, exports: [".", "./schema"] }] : [], expectedSources: [entry] };
-      expect(graph.summary.violations.length, row.id).toBe(row.forbidden);
+      expect(violations.length, row.id).toBe(row.forbidden);
       if (row.accept) expect(dependencyDirectionEdges(graph, rules, scope), row.id).toHaveLength(row.forbidden);
       else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
     }
@@ -247,11 +298,14 @@ test("portable removability cases agree with actual boundary policy loading", as
   const boundary = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs";
   const owner = "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript";
   try {
+    const oracleRows: { entry: string; policy: { forbidden: readonly Rule[] } }[] = [];
     for (const [index, row] of fixture.removabilityCases.entries()) {
       const cwd = join(root, String(index));
       write(cwd, boundary, readFileSync(join(repo, boundary), "utf8"));
       write(cwd, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json", readFileSync(join(library, "🔣️taxonomy.json"), "utf8"));
-      write(cwd, "package.json", JSON.stringify({ workspaces: [owner, "✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript"] }));
+      for (const source of ["🕸️dependencies/🧭️direction/🟦️.ts", "🗂️workspaces/🟦️bun/🟦️.ts", "🗂️workspaces/📦️payload/🟦️.ts"]) write(cwd, `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/${source}`, readFileSync(join(library, source), "utf8"));
+      const members = row.members ?? [owner, "✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript"];
+      write(cwd, "package.json", JSON.stringify({ workspaces: members, semio: { workspace: { schemaVersion: 1, members, owners: [] } } }));
       for (const directory of row.directories) mkdirSync(join(cwd, directory), { recursive: true });
       for (const [directory, manifest] of Object.entries(row.manifests)) write(cwd, `${directory}/package.json`, typeof manifest === "string" ? manifest : JSON.stringify(manifest));
       const load = (): { forbidden: readonly Rule[] } => createRequire(import.meta.url)(join(cwd, boundary));
@@ -266,41 +320,64 @@ test("portable removability cases agree with actual boundary policy loading", as
       const neutralRule = policy.forbidden.find((rule) => rule.name === "framework-no-implementation")!;
       expect(neutralRule.severity, row.id).toBe("error");
       write(cwd, "🧰️framework/🟦️.ts", "export {};\n");
-      const oracle = await cruise(["🧰️framework/🟦️.ts"], { baseDir: cwd, validate: true, ruleSet: { forbidden: policy.forbidden.map((rule) => ({ ...rule, severity: rule.severity as "error" | "warn" })) }, outputType: "json" }, { bustTheCache: true });
-      const graph = typeof oracle.output === "string" ? JSON.parse(oracle.output) : oracle.output;
-      expect(oracle.exitCode, row.id).toBe(0);
-      expect(graph.summary.violations, row.id).toEqual([]);
+      oracleRows.push({ entry: `${index}/🧰️framework/🟦️.ts`, policy });
+      if (row.nextManifests) {
+        for (const [directory, manifest] of Object.entries(row.nextManifests)) write(cwd, `${directory}/package.json`, JSON.stringify(manifest));
+        const expected = glob.sync(members.map((pattern) => `${pattern}/package.json`), { cwd, onlyFiles: true, followSymbolicLinks: false }).map((path) => JSON.parse(readFileSync(join(cwd, path), "utf8")).name).sort();
+        expect(expected, row.id).toEqual([...row.nextExpectedPackages!].sort());
+        expect(dependencyDirectionWorkspacePackages(cwd, []).map((pkg) => pkg.name).sort(), row.id).toEqual(expected);
+      }
     }
+    const oracle = await cruise(oracleRows.map(({ entry }) => entry), { baseDir: root, validate: true, ruleSet: { forbidden: oracleRows.flatMap(({ policy }, index) => policy.forbidden.map((rule) => ({ ...rule, name: `case-${index}-${rule.name}`, severity: rule.severity as "error" | "warn" }))) }, outputType: "json" }, { modules: [join(root, "node_modules")], restrictions: [root], bustTheCache: true });
+    const graph = typeof oracle.output === "string" ? JSON.parse(oracle.output) : oracle.output;
+    expect(oracle.exitCode).toBe(0);
+    expect(graph.modules.map((module: { source: string }) => module.source).sort()).toEqual(oracleRows.map(({ entry }) => entry).sort());
+    expect(graph.summary.totalDependenciesCruised).toBe(0);
+    expect(graph.summary.violations).toEqual([]);
   } finally { rmSync(root, { recursive: true, force: true }); }
 });
 
 /** 🏷️ Authored public subpaths resolve independently while private and pseudo-package names fail. */
 test("authored owner exports agree with independent package resolution", async () => {
-  const policy = createRequire(import.meta.url)(join(repo, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs"));
+  const policy = config;
   const output = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
   mkdirSync(output, { recursive: true });
   const root = realpathSync(mkdtempSync(join(output, "dependency-public-exports-")));
   try {
-    for (const [index, row] of fixture.publicExportCases.entries()) {
-      const cwd = join(root, String(index)), from = "♻️mit-bestand/consumer.ts";
+    const entries = fixture.publicExportCases.map((row, index) => {
+      const from = `♻️mit-bestand/public-${index}/consumer.ts`;
       const manifest = JSON.parse(readFileSync(join(repo, row.owner, "package.json"), "utf8"));
-      const owner = `node_modules/${manifest.name}`;
-      write(cwd, `${owner}/package.json`, JSON.stringify(manifest));
+      const owner = `${dirname(from)}/node_modules/${manifest.name}`;
+      write(root, `${owner}/package.json`, JSON.stringify(manifest));
       const targets = (entry: unknown): string[] => typeof entry === "string" ? [entry] : entry && typeof entry === "object" ? Object.values(entry).flatMap(targets) : [];
-      for (const target of targets(manifest.exports)) write(cwd, `${owner}/${target}`, "export const value = 1;\n");
-      write(cwd, from, `import { value } from ${JSON.stringify(row.specifier)}; export const used = value;`);
-      const result = await cruise([from], { baseDir: cwd, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", tsPreCompilationDeps: true, combinedDependencies: true, doNotFollow: { path: "node_modules" } }, { exportsFields: ["exports"], conditionNames: [...row.conditions], modules: [join(cwd, "node_modules")], bustTheCache: true });
-      const graph = typeof result.output === "string" ? JSON.parse(result.output) : result.output;
-      expect(result.exitCode, row.id).toBe(0);
-      const dependency = graph.modules.find((module: { source: string }) => module.source === from).dependencies[0];
-      expect(dependency.couldNotResolve !== true, row.id).toBe(row.accept);
-      if (row.target) {
-        expect(policy.options.enhancedResolveOptions.conditionNames, row.id).toEqual([...row.conditions]);
-        expect(dependency.resolved, row.id).toBe(`${owner}/${row.target.slice(2)}`);
+      for (const target of targets(manifest.exports)) write(root, `${owner}/${target}`, "export const value = 1;\n");
+      write(root, from, `import { value } from ${JSON.stringify(row.specifier)}; export const used = value;`);
+      return { row, from, manifest, owner };
+    });
+    for (const conditions of new Map(entries.map(({ row }) => [JSON.stringify(row.conditions), row.conditions])).values()) {
+      const group = entries.filter(({ row }) => JSON.stringify(row.conditions) === JSON.stringify(conditions));
+      const result = await cruise(group.map(({ from }) => from), { baseDir: root, validate: true, ruleSet: { forbidden: rules.map((rule) => ({ ...rule, severity: "error" as const })) }, outputType: "json", tsPreCompilationDeps: true, combinedDependencies: true, doNotFollow: { path: "node_modules" } }, { exportsFields: ["exports"], conditionNames: [...conditions], modules: ["node_modules"], restrictions: [root], bustTheCache: true });
+      const report = typeof result.output === "string" ? JSON.parse(result.output) : result.output;
+      expect(result.exitCode).toBe(0);
+      expect(report.summary.totalDependenciesCruised).toBe(group.length);
+      expect(report.summary.totalCruised).toBe(report.modules.length);
+      for (const { row, from, manifest, owner } of group) {
+        const module = report.modules.find((module: { source: string }) => module.source === from);
+        expect(module.dependencies, row.id).toHaveLength(1);
+        const dependency = module.dependencies[0];
+        expect(dependency.couldNotResolve !== true, row.id).toBe(row.accept);
+        if (row.target) {
+          expect(policy.options.enhancedResolveOptions.conditionNames, row.id).toEqual([...row.conditions]);
+          expect(dependency.resolved, row.id).toBe(`${owner}/${row.target.slice(2)}`);
+        }
+        const terminal = report.modules.find((leaf: { source: string }) => leaf.source === dependency.resolved);
+        expect(terminal.dependencies, row.id).toEqual([]);
+        const violations = report.summary.violations.filter((violation: { from: string }) => violation.from === from);
+        const graph = { ...report, modules: [module, terminal], summary: { ...report.summary, totalCruised: 2, totalDependenciesCruised: 1, violations, error: violations.length } };
+        const scope = { ...fixture.graphScope, workspaceRoots: [...fixture.graphScope.workspaceRoots, "♻️mit-bestand", "✏️s"], workspacePackages: [{ name: manifest.name, owner: row.owner, exports: Object.keys(manifest.exports) }], expectedSources: [from] };
+        if (row.accept) expect(dependencyDirectionEdges(graph, rules, scope), row.id).toEqual([]);
+        else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
       }
-      const scope = { ...fixture.graphScope, workspaceRoots: [...fixture.graphScope.workspaceRoots, "♻️mit-bestand", "✏️s"], workspacePackages: [{ name: manifest.name, owner: row.owner, exports: Object.keys(manifest.exports) }], expectedSources: [from] };
-      if (row.accept) expect(dependencyDirectionEdges(graph, rules, scope), row.id).toEqual([]);
-      else expect(() => dependencyDirectionEdges(graph, rules, scope), row.id).toThrow();
     }
   } finally { rmSync(root, { recursive: true, force: true }); }
 }, 45_000);

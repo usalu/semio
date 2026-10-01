@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🧫️fixtures/📇️directory/🧩️execution-target-module-resolution-v1.json");

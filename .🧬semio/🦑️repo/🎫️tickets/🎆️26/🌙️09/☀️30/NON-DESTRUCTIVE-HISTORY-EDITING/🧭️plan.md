@@ -296,3 +296,35 @@ gated foreground builds, compile-atomic edits, re-read before edit, no git-modif
 never sweep `🗑️generated/`, `[DEBUG] ` prefix for temporary logs and remove them). Don't regenerate descriptors /
 launch.json / central schema generate (coordinator does it once at the end) — list what needs regeneration.
 Report: `📓️w3-t-<plugin>-report.md`.
+
+## Session 2 — successor roster (coordinator `⚪552b484a…`, 2026-10-01 12:00)
+
+Every session-1 agent died ~08:00. One successor per in-flight WP; same owner files as session 1 (table above + the W3
+briefs). Common duties: fleet rules 1–24 (`📌️important/📝️.md`, esp. 21 repair-first, 22 moved layout, 23 no channel bump /
+no activation), append `## Session 2` to the predecessor's report, private `CARGO_TARGET_DIR=…/target-nde-s2-<wp>`.
+Product acceptance (dev's goal, binding for every WP): every history mutation is editable; editing enters time-travel mode;
+the edited mutation shows with downstream NOT applied; accept/discard; inputs render from schema UI metadata (slider + snaps,
+stepper, min/max, select, vector, reference + "use selection"); accept replays downstream with per-mutation success /
+warning / error / fatal; warnings stay visible in history (also after finalize and reload); fatal/error block finalize until
+edited or withdrawn ("Next problem"); after a clean review the user can finalize or keep editing other mutations; finalize
+prompts New alternative vs Overwrite; tools are state machines yielding mutations in ONE transaction; artifact-agnostic.
+
+| WP (session 2) | Owner files | Assignment |
+|---|---|---|
+| S2-W2A runtime | `OS/🔌️plugin/**` (shared regions with S2-W1G §15 and S2-FLOWCAD §12 — region-scoped compile-atomic edits), `FW/🎠️kernel/**` | finish the locale-neutral edit-verb pass (labels survive reload; `🧪️w2-a-edit-verb-*.py` scripts), compile native + wasm32-wasip2, time-travel laws + plugin suite; prove acceptance items: multi-mutation drafts from Reviewing, persisted warnings after finalize + reload, Next problem, progress + cancel |
+| S2-W2B React | React shell elements, i18n bundles, keybindings | repair + typecheck (fake `PluginWasmHandle.readAppDocumentIdentity`), adopt any kernel wire change from S2-W2A, re-verify R2-2/R2-4/R2-6 fixes, React UX/a11y pass over the whole time-travel flow |
+| S2-W2C wgpu | `🐚️Shell/🎯️targets/🧊️wgpu/**` | finish (5) native folder re-attach parity; full wgpu parity of band/editor/dialog/alternatives/peers/notices; wasm32 check; wgpu probe prerequisites |
+| S2-W2D puzzle 2d | `PZ2D/✏️editor/**`, `OS/♾️infinite/🎲️board/**`, `🖥️Board2dHost`, wgpu coalescer | re-run the verification its follow-up left pending (`🗑️generated/w2d-test-*.txt`), wgpu shortest-decimal replay, "use selection" for drag-selection targets, nudge/HUD/inspector reuse |
+| S2-W1G store | `OS/🏪️store/**`, `OS/📡️spr/📜️history/**`, `OS/🌿️vcs/**`, retained initializer + `tool_transaction_shape_fault` region | design §15 transaction-scoped amend (store + runtime shape rule + TS twin + laws), follow-up-4 open items; signal S2-STROKES when §15 lands |
+| S2-PUZZLE | puzzle 3d/5d trees | verification + rotate-pivot parity, attraction/fastener re-solve, paged relocate scan (progress + cancel), derive cfg warning, §7 commands |
+| S2-DRAW | draw + note trees | continue from `📓️w3-t-draw-note-report.md` |
+| S2-SPATIAL | shooting, fem 2d/3d, lowpoly trees + `World3dHost` | compile + verify fem move-selection leaves + gumball machines, lowpoly, delete the bracket rule; then the World3dHost live consumer for generation3d (old W3-T-GEN3D) |
+| S2-FLOWCAD | flow + cad trees, composed-child framework seam (§12) | §12 composed-child transactions end to end (parent + child stores, history rows with `store`, time travel on member store, parent re-derive) |
+| S2-LAYOUT | layout tree + `Canvas2dGumballOverlay` | continue from `📓️w3-t-layout-report.md` |
+| S2-CONTROLS | `🛠️tool-machine` ScrubMachine + glue, gis/energy/forms/norm/playbook control call sites | verification of the source-complete scrub work + fixes |
+| S2-TEXT | typing-run machine + text plugin trees (§13.2) | reconstruct (`🗑️generated/w3-t2-text/`), finish, write `📓️w3-t2-text-report.md` |
+| S2-STROKES | strokes / wfc / remodel trees | continue; remodel on §15 after S2-W1G |
+| S2-PROCEDURAL | procedural incl. generation3d trees | reconstruct (`🗑️generated/w3-t2-procedural/`), finish, write `📓️w3-t2-procedural-report.md` |
+| S2-TAX | `📚️library/🔣️taxonomy.json` (Edit tool only), taxonomy engine | structural leaf identity from mutation catalogs; restore the sealed `📽️nested-cargo-package-projection` catalog; workspace-contract package-move re-target |
+| S2-CODES | outcome-code fixtures/adapters | drop the "warn" alias (70 fixtures), generation3d/workflow checked-apply adapters, remodel oracle, deferred reruns |
+| queued | norm-2, norm-3, media, stdio cases, GRAPHS, CLOSURE, E2E, W3-G gates, W3-R audits | launched as slots free |

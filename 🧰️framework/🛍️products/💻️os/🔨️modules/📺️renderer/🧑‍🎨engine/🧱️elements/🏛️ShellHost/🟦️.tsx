@@ -627,7 +627,11 @@ import {
   checkinAbortText,
   checkinStatusText,
   checkinSubmitMessageV1,
+  checkpointGateV1,
+  checkpointOnCloseKeyV1,
   FRAMEWORK_CHECKIN_CONTROLLER_ID,
+  syncAttachDocumentIdV1,
+  useCheckpointOnCloseV1,
   computeSyncPillState,
   createLatestAsyncDispatcher,
   presenceClientIdentity,
@@ -709,7 +713,7 @@ import {
   type UiRefreshCache,
 } from "../🛠️ShellHelpers/🟦️.tsx";
 import { toolRunPanelReveal, toolRunPanelTasksV1, type ToolRunPanelControlV1 } from "../🛠️ShellHelpers/⏯️tool-run-panel/🟦️.ts";
-import { TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, TimeTravelWindowIndicator } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
+import { scheduleTimeTravelFocusV1, TimeTravelBand, timeTravelIndicatorTextV1, timeTravelPeerPresenceV1, timeTravelTransitionV1, TimeTravelWindowIndicator } from "../🛠️ShellHelpers/⏪️time-travel/🟦️.tsx";
 import { commitLocalFoldersConfigMutationV1, localFolderNameV1, LocalFolderReconnectBand, localFolderReconnectOfferV1, readLocalFolderBindingsV1, type LocalFolderIdentityV1 } from "./📎️local-folders/🟦️.tsx";
 import { attachLocalFolder, detachLocalFolder, type LocalFolderBinding, type LocalFolderBindings } from "../../../../../🎚️config/🧬️schema/🧬️mutations/🟦️.ts";
 import { retireSkippedWindowBodies } from "./🪟️mounted-window-refresh/🟦️.ts";
@@ -7775,8 +7779,9 @@ function FrameworkOsShellInner({
       const targetSession = resolveSyncTargetSession();
       if (!targetSession) return;
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === targetSession.pluginId)?.handle;
-      const documentId = (target.kind === "remote" ? target.documentId : null) ?? (plugin ? (await plugin.readAppDocumentIdentity(targetSession.instanceId)).parent_document_id : null);
-      if (!documentId) {
+      const identity = (target.kind === "remote" && target.documentId !== null) || plugin === undefined ? null : await plugin.readAppDocumentIdentity(targetSession.instanceId);
+      const documentId = syncAttachDocumentIdV1(target, identity);
+      if (documentId === null) {
         showTransientNoticeRef.current(shellLabel("ui.sync.documentUnidentified"), "warning", "sync.attach.document-unidentified");
         return;
       }
@@ -10968,13 +10973,12 @@ function FrameworkOsShellInner({
   const dispatchCheckpoint = useCallback(
     (message: string) => {
       if (!session) return;
-      if (focusedHistoryV1().timeTravel !== null) {
-        if (message !== "auto") {
-          const notice = historyRefusalNoticeV1("timeTravel.frozen");
-          showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
-        }
-        return;
+      const gate = checkpointGateV1(focusedHistoryV1().timeTravel, message);
+      if (gate === "frozen") {
+        const notice = historyRefusalNoticeV1("timeTravel.frozen");
+        showTransientNoticeRef.current(notice.text, notice.kind, notice.code);
       }
+      if (gate !== "dispatch") return;
       checkpointDispatchedRef.current = true;
       const authors = identityRef.current ? [{ id: identityRef.current.userId, name: identityRef.current.displayName }] : [];
       onAction({ controllerId: session.app.controllerId, action: "commitCheckpoint", args: { message, authors } });
@@ -11036,18 +11040,12 @@ function FrameworkOsShellInner({
   // unmount — never on a new session object of the same program (every view-state rewrite mints one, and the
   // New-alternative submit fired a close check-in into the frozen history, e2e R2-6). Best-effort (fire-and-forget, not gated on the success-detection effect above — by the
   // time the response arrives `historyProjection` may already belong to the NEW session).
-  useEffect(() => {
-    if (!isEditorSession || !currentDocumentId) return;
-    const documentId = currentDocumentId;
-    const spaceId = openSpaceIdRef.current;
-    return () => {
-      if (uncommittedEditCountRef.current > 0) {
-        dispatchCheckpoint("auto");
-        if (spaceId && documentId !== S_SPACE_INDEX_DOCUMENT_ID) void touchSpaceIndexArtifact(spaceId, documentId);
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session?.pluginId, session?.instanceId, currentDocumentId]);
+  const closingSpaceId = openSpaceIdRef.current;
+  useCheckpointOnCloseV1(checkpointOnCloseKeyV1(isEditorSession, session, currentDocumentId), () => {
+    if (uncommittedEditCountRef.current === 0) return;
+    dispatchCheckpoint("auto");
+    if (closingSpaceId && currentDocumentId && currentDocumentId !== S_SPACE_INDEX_DOCUMENT_ID) void touchSpaceIndexArtifact(closingSpaceId, currentDocumentId);
+  });
 
   // 📌️ §C5 item 3 — explicit check-in: the history body's `#s-checkin` dispatches `framework.checkin` `submit`, which
   // `onAction` answers through this ref (the same fallback message the wgpu shell uses).
@@ -11864,6 +11862,39 @@ function FrameworkOsShellInner({
     if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
   }, [toolRunPanelNode, dock]);
+
+  /** ⏪️ Opens the History panel on its own anchor (on mobile, the merged panel) — what the edge into a history-edit
+   * session asks for, whoever began it. Read through a ref so the session effect below never re-runs on a dock change. */
+  const revealHistoryPanelRef = useRef<() => void>(() => undefined);
+  revealHistoryPanelRef.current = () => {
+    if (mobile) {
+      const resolved = findPanelTabPath(mobilePanelTabs, FRAMEWORK_PANEL_TAB_HISTORY_ID);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+      return;
+    }
+    const located = findPanelTabInDock(dock, FRAMEWORK_PANEL_TAB_HISTORY_ID);
+    if (!located) return;
+    const resolved = findPanelTabPath(dock.anchors[located.anchor], FRAMEWORK_PANEL_TAB_HISTORY_ID);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: located.anchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: located.anchor, value: true });
+  };
+  /** ⏪️ Each change of the focused program's session: the edge into one reveals the History panel, a draft that starts
+   * focuses its first input, a replay or a review the band, the finalize prompt its first control
+   * ({@link timeTravelTransitionV1}); a focus still waiting for its target to mount yields only to a newer focus or to the
+   * session closing, never to a progress step. */
+  const timeTravelSeenRef = useRef<typeof focusedTimeTravel>(null);
+  const timeTravelFocusCancelRef = useRef<(() => void) | null>(null);
+  useEffect(() => {
+    const transition = timeTravelTransitionV1(timeTravelSeenRef.current, focusedTimeTravel);
+    timeTravelSeenRef.current = focusedTimeTravel;
+    if (transition.reveal) revealHistoryPanelRef.current();
+    if (transition.focus === null && focusedTimeTravel !== null) return;
+    timeTravelFocusCancelRef.current?.();
+    const root = scope.rootRef.current;
+    timeTravelFocusCancelRef.current = transition.focus === null || root === null ? null : scheduleTimeTravelFocusV1(root, transition.focus, 120);
+  }, [focusedTimeTravel, scope]);
+  useEffect(() => () => timeTravelFocusCancelRef.current?.(), []);
 
   /** 🤖️ Fills {@link applyAgentShellCommandRef}: the MCP gateway's `ui_reveal`/`ui_focus` reach this
    * host as SSOT `ShellCommand`s, and this is where they stop being a mirror update and become the

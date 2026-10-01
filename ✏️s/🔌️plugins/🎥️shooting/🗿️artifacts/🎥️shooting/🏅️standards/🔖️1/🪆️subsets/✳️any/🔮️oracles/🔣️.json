@@ -72,84 +72,84 @@
           "scenarios": [
             {
               "id": "points-asset-prop-at-v2-mesh",
-              "directoryName": "🌐️points-asset-prop-at-v2-mesh"
+              "directoryName": "🌐️points"
             }
           ]
         },
         {
           "mutationId": "change-scene-ambient-intensity",
-          "sourceMutationDirectoryName": "🔅️change-scene-ambient-intensity",
-          "mutationDirectoryName": "🔅️change-scene-ambient-intensity",
+          "sourceMutationDirectoryName": "🔅️change-scene-ambient",
+          "mutationDirectoryName": "🔅️change-scene-ambient",
           "scenarios": [
             {
               "id": "dims-scene-ambient-to-quarter",
-              "directoryName": "🔅️dims-scene-ambient-to-quarter"
+              "directoryName": "🔅️dims"
             }
           ]
         },
         {
           "mutationId": "change-scene-material-roughness",
-          "sourceMutationDirectoryName": "🪨️change-scene-material-roughness",
-          "mutationDirectoryName": "🪨️change-scene-material-roughness",
+          "sourceMutationDirectoryName": "🪨️change-scene",
+          "mutationDirectoryName": "🪨️change-scene",
           "scenarios": [
             {
               "id": "polishes-scene-material-to-quarter",
-              "directoryName": "✨️polishes-scene-material-to-quarter"
+              "directoryName": "✨️polishes"
             }
           ]
         },
         {
           "mutationId": "change-scene-shadow-enabled",
-          "sourceMutationDirectoryName": "🌑️change-scene-shadow-enabled",
-          "mutationDirectoryName": "🌑️change-scene-shadow-enabled",
+          "sourceMutationDirectoryName": "🌑️change-scene-shadow",
+          "mutationDirectoryName": "🌑️change-scene-shadow",
           "scenarios": [
             {
               "id": "switches-scene-shadows-off",
-              "directoryName": "🌑️switches-scene-shadows-off"
+              "directoryName": "🌑️switches"
             }
           ]
         },
         {
           "mutationId": "change-scene-sun-azimuth",
-          "sourceMutationDirectoryName": "🧭️change-scene-sun-azimuth",
-          "mutationDirectoryName": "🧭️change-scene-sun-azimuth",
+          "sourceMutationDirectoryName": "🧭️change-scene-sun",
+          "mutationDirectoryName": "🧭️change-scene-sun",
           "scenarios": [
             {
               "id": "turns-scene-sun-to-315-degrees",
-              "directoryName": "🧭️turns-scene-sun-to-315-degrees"
+              "directoryName": "🧭️turns"
             }
           ]
         },
         {
           "mutationId": "change-scene-sun-elevation",
-          "sourceMutationDirectoryName": "🌅️change-scene-sun-elevation",
-          "mutationDirectoryName": "🌅️change-scene-sun-elevation",
+          "sourceMutationDirectoryName": "🌅️change-scene-sun",
+          "mutationDirectoryName": "🌅️change-scene-sun",
           "scenarios": [
             {
               "id": "raises-scene-sun-to-60-degrees",
-              "directoryName": "🌅️raises-scene-sun-to-60-degrees"
+              "directoryName": "🌅️raises"
             }
           ]
         },
         {
           "mutationId": "change-scene-sun-enabled",
-          "sourceMutationDirectoryName": "☀️change-scene-sun-enabled",
-          "mutationDirectoryName": "☀️change-scene-sun-enabled",
+          "sourceMutationDirectoryName": "☀️change-scene-sun",
+          "mutationDirectoryName": "☀️change-scene-sun",
           "scenarios": [
             {
               "id": "switches-scene-sun-off",
-              "directoryName": "☀️switches-scene-sun-off"
+              "directoryName": "☀️switches"
             }
           ]
         },
         {
           "mutationId": "change-scene-sun-intensity",
-          "sourceMutationDirectoryName": "💡️change-scene-sun-intensity",
-          "mutationDirectoryName": "💡️change-scene-sun-intensity",
+          "sourceMutationDirectoryName": "💡️change-scene-sun",
+          "mutationDirectoryName": "💡️change-scene-sun",
           "scenarios": [
             {
               "id": "dims-scene-sun-to-half",
-              "directoryName": "💡️dims-scene-sun-to-half"
+              "directoryName": "💡️dims"
             }
           ]
         },
@@ -160,7 +160,7 @@
           "scenarios": [
             {
               "id": "switches-shot-wide-to-svg",
-              "directoryName": "🎨️switches-shot-wide-to-svg"
+              "directoryName": "🎨️switches"
             }
           ]
         },
@@ -171,7 +171,7 @@
           "scenarios": [
             {
               "id": "heightens-shot-close-to-768",
-              "directoryName": "↕️heightens-shot-close-to-768"
+              "directoryName": "↕️heightens"
             }
           ]
         },
@@ -182,7 +182,7 @@
           "scenarios": [
             {
               "id": "rounds-shot-wide-to-ellipse",
-              "directoryName": "⭕️rounds-shot-wide-to-ellipse"
+              "directoryName": "⭕️rounds"
             }
           ]
         },
@@ -193,7 +193,7 @@
           "scenarios": [
             {
               "id": "widens-shot-close-to-1024",
-              "directoryName": "↔️widens-shot-close-to-1024"
+              "directoryName": "↔️widens"
             }
           ]
         },
@@ -204,7 +204,7 @@
           "scenarios": [
             {
               "id": "appends-asset-detail",
-              "directoryName": "➕️appends-asset-detail"
+              "directoryName": "➕️appends"
             }
           ]
         },
@@ -215,7 +215,7 @@
           "scenarios": [
             {
               "id": "appends-saved-camera-top",
-              "directoryName": "🎥️appends-saved-camera-top"
+              "directoryName": "🎥️appends"
             }
           ]
         },
@@ -226,7 +226,7 @@
           "scenarios": [
             {
               "id": "appends-shot-macro",
-              "directoryName": "📸️appends-shot-macro"
+              "directoryName": "📸️appends"
             }
           ]
         },
@@ -237,7 +237,7 @@
           "scenarios": [
             {
               "id": "removes-trailing-asset-prop",
-              "directoryName": "🗑️removes-trailing-asset-prop"
+              "directoryName": "🗑️removes"
             }
           ]
         },
@@ -248,7 +248,7 @@
           "scenarios": [
             {
               "id": "removes-trailing-cam-close",
-              "directoryName": "🚫️removes-trailing-cam-close"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -259,7 +259,7 @@
           "scenarios": [
             {
               "id": "removes-trailing-shot-close",
-              "directoryName": "🚫️removes-trailing-shot-close"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -270,7 +270,7 @@
           "scenarios": [
             {
               "id": "offsets-both-assets-and-skips-a-ghost",
-              "directoryName": "🚚️offsets-both-assets-and-skips-a-ghost"
+              "directoryName": "🚚️offsets"
             }
           ]
         },
@@ -281,7 +281,7 @@
           "scenarios": [
             {
               "id": "renames-asset-hero-to-lead",
-              "directoryName": "🏷️renames-asset-hero-to-lead"
+              "directoryName": "🏷️renames"
             }
           ]
         },
@@ -292,7 +292,7 @@
           "scenarios": [
             {
               "id": "relabels-cam-close-to-tight",
-              "directoryName": "🔤️relabels-cam-close-to-tight"
+              "directoryName": "🔤️relabels"
             }
           ]
         },
@@ -303,7 +303,7 @@
           "scenarios": [
             {
               "id": "relabels-shot-close-to-detail",
-              "directoryName": "🔤️relabels-shot-close-to-detail"
+              "directoryName": "🔤️relabels"
             }
           ]
         },
@@ -314,7 +314,7 @@
           "scenarios": [
             {
               "id": "moves-asset-hero-behind-asset-prop",
-              "directoryName": "🔀️moves-asset-hero-behind-asset-prop"
+              "directoryName": "🔀️moves"
             }
           ]
         },
@@ -325,7 +325,7 @@
           "scenarios": [
             {
               "id": "moves-cam-close-to-front",
-              "directoryName": "🔁️moves-cam-close-to-front"
+              "directoryName": "🔁️moves"
             }
           ]
         },
@@ -336,18 +336,18 @@
           "scenarios": [
             {
               "id": "moves-shot-close-to-front",
-              "directoryName": "⬆️moves-shot-close-to-front"
+              "directoryName": "⬆️moves"
             }
           ]
         },
         {
           "mutationId": "replace-saved-camera-view",
-          "sourceMutationDirectoryName": "🎞️replace-saved-camera-view",
-          "mutationDirectoryName": "🎞️replace-saved-camera-view",
+          "sourceMutationDirectoryName": "🎞️replace-saved",
+          "mutationDirectoryName": "🎞️replace-saved",
           "scenarios": [
             {
               "id": "repositions-cam-close-view",
-              "directoryName": "📍️repositions-cam-close-view"
+              "directoryName": "📍️repositions"
             }
           ]
         },
@@ -358,7 +358,7 @@
           "scenarios": [
             {
               "id": "rewrites-cam-wide-through-shot-wide",
-              "directoryName": "📷️rewrites-cam-wide-through-shot-wide"
+              "directoryName": "📷️rewrites"
             }
           ]
         },
@@ -369,7 +369,7 @@
           "scenarios": [
             {
               "id": "spins-asset-hero-about-z",
-              "directoryName": "🔄️spins-asset-hero-about-z"
+              "directoryName": "🔄️spins"
             }
           ]
         },
@@ -380,7 +380,7 @@
           "scenarios": [
             {
               "id": "doubles-asset-hero-scale",
-              "directoryName": "📏️doubles-asset-hero-scale"
+              "directoryName": "📏️doubles"
             }
           ]
         },
@@ -391,7 +391,7 @@
           "scenarios": [
             {
               "id": "activates-asset-prop",
-              "directoryName": "📌️activates-asset-prop"
+              "directoryName": "📌️activates"
             }
           ]
         },
@@ -402,7 +402,7 @@
           "scenarios": [
             {
               "id": "activates-shot-close",
-              "directoryName": "🎯️activates-shot-close"
+              "directoryName": "🎯️activates"
             }
           ]
         }

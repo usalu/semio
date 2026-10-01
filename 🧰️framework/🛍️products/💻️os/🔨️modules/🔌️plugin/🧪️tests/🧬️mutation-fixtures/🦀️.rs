@@ -13,8 +13,8 @@ pub mod transaction;
 #[test]
 fn committed_wire_witnesses_are_the_canonical_wire() {
     ::store::os_store::test_support::assert_wire_witness::<dummy::DummyMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/📝️set-dummy-count/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction-count/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction-count-without-preflight/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
-    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction-count-and-notify/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📝️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/⏩️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
+    ::store::os_store::test_support::assert_wire_witness::<transaction::TxnMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🔀️transaction/🧬️mutations/📣️set-transaction/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
     ::store::os_store::test_support::assert_wire_witness::<surface::SurfaceMutation>(include_str!("../../🧫️fixtures/🧬️mutation-fixtures/🪟️surface/🧬️mutations/📝️set-surface-count/🧫️fixtures/🧾️wire-witness/🦠️mutation/🔣️.json"));
 }

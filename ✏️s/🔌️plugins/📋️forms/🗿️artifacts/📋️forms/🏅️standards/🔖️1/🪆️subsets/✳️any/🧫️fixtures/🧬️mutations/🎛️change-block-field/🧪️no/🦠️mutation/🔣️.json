@@ -1,0 +1,6 @@
+{
+  "mutation": "changeBlockField",
+  "blockId": "q-site-name",
+  "field": "required",
+  "value": true
+}

@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/ui-styling` task router: `bun ./📜️script.ts <generate|fonts>`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runTestBudgeted, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runTestBudgeted, runVitest } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { fetchElementsFonts } from "../../🔤️fonts/🟦️.ts";
 
 class GenerateScript extends BundleScript {
@@ -48,4 +50,4 @@ class AssetTransportTestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("generate", GenerateScript).register("fonts", FontsScript).register("test", TestScript).register("test-geometry", ThemeGeometryTestScript).register("test-asset-transport", AssetTransportTestScript).register("twin", TwinScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

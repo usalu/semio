@@ -1,0 +1,41 @@
+{
+  "annex": "En",
+  "projectId": "bridge 世界\u0000",
+  "structureKind": "custom",
+  "altitudeM": -12.5,
+  "consequenceClass": 255,
+  "reliabilityClass": 0,
+  "designWorkingLifeCategory": 254,
+  "designWorkingLifeYears": 50.5,
+  "referencePeriodYears": -1.25,
+  "supervisionLevel": "",
+  "inspectionLevel": "IL 世界",
+  "kFiDeclared": 1.125,
+  "betaComputed": -3.75,
+  "permanents": [
+    {"id": "G", "kind": "g_sup", "gk": 80000.5},
+    {"id": "G", "kind": "custom", "gk": -20000.25}
+  ],
+  "variables": [{"id": "Q", "category": "office", "qk": 40000.125}],
+  "accidentals": [{"id": "A", "ad": -12.75}],
+  "seismics": [
+    {"id": "S1", "aEk": 1.5, "importanceClass": "I"},
+    {"id": "S2", "aEk": -2.5, "importanceClass": "II"},
+    {"id": "S3", "aEk": 3.5, "importanceClass": "III"},
+    {"id": "S4", "aEk": -4.5, "importanceClass": "IV"}
+  ],
+  "members": [
+    {"id": "beam", "labelEn": "Beam 世界", "labelDe": "Träger", "rdStr": 1.25, "rdGeo": 2.5, "rdEquStab": 3.75, "rdEquDestab": 4.25, "rdFat": 5.5, "span": 6.75, "deflectionW": -0.125, "deflectionLimitRatio": 250.5, "vibrationFrequency": 5.75, "vibrationFrequencyMin": 3.25},
+    {"id": "duplicate", "labelEn": "", "labelDe": "A", "rdStr": 11.25, "rdGeo": 12.5, "rdEquStab": 13.75, "rdEquDestab": 14.25, "rdFat": 15.5, "span": 16.75, "deflectionW": -10.125, "deflectionLimitRatio": 350.5, "vibrationFrequency": 15.75, "vibrationFrequencyMin": 13.25},
+    {"id": "duplicate", "labelEn": "", "labelDe": "B", "rdStr": 21.25, "rdGeo": 22.5, "rdEquStab": 23.75, "rdEquDestab": 24.25, "rdFat": 25.5, "span": 26.75, "deflectionW": -20.125, "deflectionLimitRatio": 450.5, "vibrationFrequency": 25.75, "vibrationFrequencyMin": 23.25}
+  ],
+  "bridgeSls": [
+    {"id": "B", "memberId": "beam", "deckAcceleration": 1.25, "deckAccelerationLimit": 2.5, "deckTwist": -3.75, "deckTwistLimit": 4.25, "bridgeDeflection": -5.5, "bridgeDeflectionLimit": 6.75},
+    {"id": "B", "memberId": "missing", "deckAcceleration": 11.25, "deckAccelerationLimit": 12.5, "deckTwist": -13.75, "deckTwistLimit": 14.25, "bridgeDeflection": -15.5, "bridgeDeflectionLimit": 16.75}
+  ],
+  "effects": [
+    {"memberId": "beam", "actionId": "Q", "influence": 1.25},
+    {"memberId": "duplicate", "actionId": "G", "influence": -2.5},
+    {"memberId": "missing", "actionId": "missing", "influence": 3.75}
+  ]
+}

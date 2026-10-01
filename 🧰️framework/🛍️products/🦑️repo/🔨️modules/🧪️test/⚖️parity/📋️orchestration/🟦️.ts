@@ -28,7 +28,8 @@ import {
   summarizeRun,
   testCacheDir,
 } from "../../📦️packages/🟦️typescript/🟦️.ts";
-import { Script, type TestLevel, resolveTestLevel, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type TestLevel } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { Script, resolveTestLevel, testLevelBudgetMs } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 

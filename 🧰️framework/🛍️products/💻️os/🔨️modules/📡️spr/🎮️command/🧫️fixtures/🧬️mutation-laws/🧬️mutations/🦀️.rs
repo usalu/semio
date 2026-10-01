@@ -11,7 +11,7 @@ pub use add_counter_twice::AddCounterTwice;
 #[path = "4️⃣add-counter-four-times/🦀️.rs"]
 mod add_counter_four_times;
 pub use add_counter_four_times::AddCounterFourTimes;
-#[path = "🌐️add-counter-then-notify-foreign/🦀️.rs"]
+#[path = "🌐️add-counter-then-notify/🦀️.rs"]
 mod add_counter_then_notify_foreign;
 pub use add_counter_then_notify_foreign::AddCounterThenNotifyForeign;
 #[path = "🔢️add-counter-sequence/🦀️.rs"]

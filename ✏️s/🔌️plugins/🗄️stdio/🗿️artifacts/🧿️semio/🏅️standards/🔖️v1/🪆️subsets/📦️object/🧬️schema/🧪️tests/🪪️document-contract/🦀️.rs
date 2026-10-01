@@ -4,7 +4,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral Object vectors");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).expect("neutral Object vectors");
     for case in fixture["snapshotCases"].as_array().expect("snapshot vectors") {
         let input = &case["input"];
         let text = input.to_string();

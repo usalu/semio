@@ -153,7 +153,7 @@ import {
 import { decodeScenePackField, decodeScenePackValue } from "@semio-tech/framework-os";
 import { uiAccessibilityValueV1, uiProgressFractionV1 } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/♿️accessibility/🟦️.ts";
 import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🔢️number-format/🟦️.ts";
-import { uiNumberKeyValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
+import { uiNumberCrossedBound, uiNumberDisplayText, uiNumberKeyValue, uiNumberTypedValue } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🧩️component/🟦️.ts";
 import { shellLabel } from "../🛠️ShellHelpers/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 import { ShellFaultBoundary } from "../🐚️Shell/🟦️.tsx";
@@ -1084,6 +1084,10 @@ function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRecord, tr
  *
  * `context` and `record` are read through a ref because both identities change on every render while
  * the lane must outlive them: a lane recreated per render is not a lane. */
+/** 🔢️ Page-wide press serial: two presses of one control in the same millisecond still carry distinct identities, so the
+ * guest never mistakes the second for a late tick of the first it already closed. */
+let continuousPressSerial = 0;
+
 function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
   const bindingRef = useRef({ context, record });
   bindingRef.current = { context, record };
@@ -1098,7 +1102,7 @@ function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeR
       // while a program that cares can fold a whole press into ONE undoable edit
       // (`📓️slider-preview-update-2026-09-15.md`).
       send: (value, phase) => {
-        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.record.key}:${Date.now()}`;
+        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.record.key}:${Date.now()}:${(continuousPressSerial += 1)}`;
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
         return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue);
@@ -1208,7 +1212,7 @@ function useDeclarativeLane(onAction: (action: ActionDescriptor) => void, descri
   if (laneRef.current === null) {
     laneRef.current = createContinuousGestureLane<number>({
       send: (value, phase) => {
-        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.key}:${Date.now()}`;
+        if (gestureRef.current === null) gestureRef.current = `${bindingRef.current.key}:${Date.now()}:${(continuousPressSerial += 1)}`;
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
         dispatchDeclarativeControlAction(bindingRef.current.onAction, bindingRef.current.descriptor, { value, gesture, commit: phase === "commit" });
@@ -1237,7 +1241,7 @@ function DeclarativeSliderControl({ control, onAction, path }: { readonly contro
       step={control.step}
       snapValues={control.snaps}
       value={[control.value]}
-      aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])] }).valueText ?? undefined}
+      aria-valuetext={uiAccessibilityValueV1({ type: "slider", value: control.value, min: control.min, max: control.max, step: control.step, unit: control.unit ?? null, snaps: [...(control.snaps ?? [])], precision: null, displayUnit: null, displayFactor: null, limits: null }).valueText ?? undefined}
       onValueChange={(values) => lane.offer(values[0] ?? control.value)}
       onValueCommit={(values) => lane.commit(values[0] ?? control.value)}
       onPointerCancel={() => lane.abort("captureLost")}
@@ -1379,19 +1383,62 @@ function useCommitDraft(published: string, scope: string): [string, (next: strin
   }];
 }
 
+/** 🎨️ The release of a colour field's press: the native `change` a colour picker fires when it commits (React's `onChange`
+ * is the per-move `input`, so it never sees it). A `display: contents` wrapper catches the bubbling event; the release is
+ * deferred past React's own handler of the same event (which offers the value when the picker reports only `change`) and
+ * names no value — the field is controlled, so its DOM value may already be the published one again; the lane releases
+ * the press on the value last offered (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING). */
+function usePickerRelease(enabled: boolean, lane: ContinuousGestureLane<UiValue>): RefObject<HTMLSpanElement | null> {
+  const ref = useRef<HTMLSpanElement | null>(null);
+  useEffect(() => {
+    const element = ref.current;
+    if (!enabled || element === null) return undefined;
+    const release = () => queueMicrotask(() => lane.commit());
+    element.addEventListener("change", release);
+    return () => element.removeEventListener("change", release);
+  }, [enabled, lane]);
+  return ref;
+}
+
 function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
   const draftScope = useMemo(() => JSON.stringify(record.bindings), [record.bindings]);
-  const [draft, setDraft, takeDraftCommit] = useCommitDraft(component.value, draftScope);
+  // 🔁️ A number field with a display factor carries its stored number and shows `stored × factor` at its precision; every
+  // typed number reads back through the shared law, so retyping the shown value keeps the exact stored one.
+  const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
+  const storedNumber = Number(component.value);
+  const shownText = (stored: number): string => (factor == null ? (component.precision == null ? formatUiNumber(stored) : formatUiNumberFixed(stored, component.precision)) : uiNumberDisplayText(stored, factor, component.precision));
+  const published = factor != null && component.value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : component.value;
+  const [draft, setDraft, takeDraftCommit] = useCommitDraft(published, draftScope);
+  const [refusal, setRefusal] = useState<{ readonly message: string | null } | null>(null);
   const lane = useContinuousTriggerLane(context, record);
-  // 🎚️ A number field with no `commit` mode IS a continuous control: a held spinner, an arrow key on
-  // repeat and a scripted value stream all emit a value per frame, and each one costs a whole
-  // document round trip. It rides the same coalescing lane as a slider, and its blur is the release.
-  const continuous = component.kind === "number" && !commitOnBlur;
+  /** 🚧️ The stored number a typed text means, or the refusal it earns: unreadable text, or a value crossing a hard bound (the
+   * field's `limits`, else its inclusive `min`/`max`) — a refused value is never dispatched and the draft is kept. */
+  const typedNumber = (raw: string): number | { readonly refused: string | null } => {
+    const typed = Number(raw.trim());
+    if (raw.trim() === "" || !Number.isFinite(typed)) return { refused: null };
+    const stored = uiNumberTypedValue(typed, factor, component.precision, [storedNumber, ...(component.snaps ?? [])]);
+    const crossed = uiNumberCrossedBound(stored, component.min, component.max, component.limits);
+    return crossed ? { refused: crossed.refusal ?? null } : stored;
+  };
+  // 🎚️ A number or colour field with no `commit` mode IS a continuous control: a held spinner, an arrow key
+  // on repeat, a colour picker dragged across its swatch and a scripted value stream all emit a value per frame,
+  // and each one costs a whole document round trip. It rides the same coalescing lane as a slider; blur and a
+  // colour picker's native `change` release the open press on the value last offered (the controlled field's DOM
+  // value may already be the published one again).
+  const continuous = (component.kind === "number" || component.kind === "color") && !commitOnBlur;
+  const picker = continuous && component.kind === "color";
+  const pickerRef = usePickerRelease(picker, lane);
   const commitValue = (raw: string) => {
+    const number = component.kind === "number" ? typedNumber(raw) : null;
+    if (number !== null && typeof number !== "number") {
+      setRefusal({ message: number.refused });
+      return;
+    }
+    setRefusal(null);
     if (commitOnBlur && !takeDraftCommit(raw)) return;
-    const value: UiValue = component.kind === "number" ? toUiValue(component.precision == null ? Number(raw) : roundUiNumber(Number(raw), component.precision)) : toUiValue(raw);
+    const value: UiValue = typeof number === "number" ? toUiValue(number) : toUiValue(raw);
     if (continuous) {
       lane.offer(value);
       return;
@@ -1409,11 +1456,12 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
   /** 📌️ A number field's page keys follow the shared keyboard law: the adjacent detent (`snaps`), else ten steps —
    * staged in the draft of a blur-committed field, offered on the lane of a continuous one. */
   const pageKey = (event: ReactKeyboardEvent<HTMLInputElement | HTMLTextAreaElement>): boolean => {
-    const current = Number((event.target as HTMLInputElement).value);
-    if (component.kind !== "number" || (event.key !== "PageUp" && event.key !== "PageDown") || !Number.isFinite(current)) return false;
+    const typed = Number((event.target as HTMLInputElement).value);
+    if (component.kind !== "number" || (event.key !== "PageUp" && event.key !== "PageDown") || !Number.isFinite(typed)) return false;
     event.preventDefault();
+    const current = uiNumberTypedValue(typed, factor, component.precision, [storedNumber, ...(component.snaps ?? [])]);
     const next = uiNumberKeyValue(current, component.min ?? null, component.max ?? null, component.step ?? 1, component.snaps ?? [], event.key === "PageUp" ? "pageUp" : "pageDown", false);
-    const text = component.precision == null ? formatUiNumber(next) : formatUiNumberFixed(next, component.precision);
+    const text = shownText(next);
     if (commitOnBlur) setDraft(text);
     else commitValue(text);
     return true;
@@ -1435,25 +1483,40 @@ function InputView({ record, context }: { readonly record: UiNodeRecord; readonl
     );
   }
   const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
-  return (
+  const shown = (value: number | null | undefined): number | undefined => (value == null ? undefined : factor == null ? value : value * factor);
+  const refusalId = `${nodeDomId(context.store, record, context.domScope)}-refusal`;
+  const input = (
     <Input
       id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
+      aria-invalid={refusal ? true : undefined}
+      aria-describedby={refusal?.message ? refusalId : undefined}
       disabled={record.disabled}
       type={inputType}
       className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0"
-      value={component.kind === "file" ? undefined : commitOnBlur ? draft : component.value}
+      value={component.kind === "file" ? undefined : commitOnBlur ? draft : published}
       placeholder={component.placeholder ?? undefined}
-      min={component.min ?? undefined}
-      max={component.max ?? undefined}
-      step={component.step ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
+      min={shown(component.min)}
+      max={shown(component.max)}
+      step={shown(component.step) ?? (component.kind === "number" && component.precision != null ? 10 ** -component.precision : undefined)}
       accept={component.kind === "file" ? (component.accept ?? undefined) : undefined}
       onChange={commitOnBlur && component.kind !== "file" ? (event) => setDraft(event.target.value) : (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value)}
       onKeyDown={(event) => { if (!pageKey(event) && commitOnBlur) commitOnEnter(event); }}
-      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? (event) => lane.commit(toUiValue(component.precision == null ? Number(event.target.value) : roundUiNumber(Number(event.target.value), component.precision))) : undefined}
+      onBlur={commitOnBlur ? (event) => commitValue(component.kind === "file" ? (event.target.files?.[0]?.name ?? "") : event.target.value) : continuous ? () => lane.commit() : undefined}
     />
   );
+  const field = refusal?.message ? (
+    <span data-slot="input-field" className="flex w-full min-w-0 flex-col">
+      {input}
+      <span id={refusalId} role="alert" data-slot="input-refusal" className="text-destructive text-xs leading-tight">
+        {refusal.message}
+      </span>
+    </span>
+  ) : (
+    input
+  );
+  return picker ? <span ref={pickerRef} className="contents">{field}</span> : field;
 }
 
 function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -1502,11 +1565,17 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
       id={nodeDomId(context.store, record, context.domScope)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
+      aria-valuetext={uiAccessibilityValueV1(component).valueText ?? undefined}
       className="w-full min-w-0"
       max={component.max}
       min={component.min}
       step={component.step}
       snapValues={component.snaps}
+      scale={component.scale ?? "linear"}
+      appearance={component.appearance ?? "track"}
+      displayFactor={component.displayFactor ?? null}
+      precision={component.precision ?? null}
+      limits={component.limits ?? null}
       value={[component.value]}
       onValueChange={(values) => lane.offer(toUiValue(values[0] ?? component.value))}
       onValueCommit={(values) => lane.commit(toUiValue(values[0] ?? component.value))}
@@ -1514,12 +1583,13 @@ function SliderView({ record, context }: { readonly record: UiNodeRecord; readon
       onBlur={() => lane.abort("blur")}
     />
   );
-  if (!component.unit) return slider;
+  const unit = component.displayUnit ?? component.unit;
+  if (!unit) return slider;
   return (
     <div className="flex min-w-0 w-full items-center gap-single">
       {slider}
-      <span className="text-muted-foreground shrink-0 text-xs tabular-nums">
-        {component.value} {component.unit}
+      <span data-slot="slider-unit" className="text-muted-foreground shrink-0 text-xs tabular-nums">
+        {uiNumberDisplayText(component.value, component.displayFactor ?? null, component.precision ?? null)} {unit}
       </span>
     </div>
   );
@@ -1533,10 +1603,17 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
   return (
     <Stepper
       id={nodeDomId(context.store, record, context.domScope)}
+      aria-label={record.accessibility.label ?? undefined}
+      disabled={record.disabled}
       step={component.step}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
       precision={component.precision ?? undefined}
+      snapValues={component.snaps ?? []}
+      displayFactor={component.displayFactor ?? null}
+      unit={component.displayUnit ?? component.unit ?? null}
+      limits={component.limits ?? null}
+      aria-valuetext={uiAccessibilityValueV1(component).valueText ?? undefined}
       value={component.uniform ? component.value : undefined}
       mixed={!component.uniform}
       onChange={(value) => lane.offer(toUiValue(value))}
@@ -1553,9 +1630,25 @@ function NumberStepperView({ record, context }: { readonly record: UiNodeRecord;
   );
 }
 
+/** 💍️ A dragged orb IS a continuous control (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every
+ * position rides the press lane, the pointer's release ends the press on the value last offered (deferred past `Ring`'s
+ * own release handler, which reports the final position), and a cancelled pointer drops it with zero trace. */
 function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
   const component = record.component as Extract<Component, { type: "ring" }>;
-  return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => dispatchTrigger(context, record, "change", toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+  const lane = useContinuousTriggerLane(context, record);
+  useEffect(() => {
+    const release = () => queueMicrotask(() => {
+      if (lane.open()) lane.commit();
+    });
+    const cancel = () => lane.abort("captureLost");
+    window.addEventListener("pointerup", release);
+    window.addEventListener("pointercancel", cancel);
+    return () => {
+      window.removeEventListener("pointerup", release);
+      window.removeEventListener("pointercancel", cancel);
+    };
+  }, [lane]);
+  return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => lane.offer(toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
 }
 
 function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
@@ -2166,6 +2259,15 @@ function registerTreeWalkRow(walk: TreeWalkContextV1 | undefined, identity: stri
 }
 //#endregion 🪟️TreeWindows
 
+/** 🚦️ The text colour a tree row's `style.tone` paints (a history row's outcome, a refused input): a semantic role, and
+ * never the only cue — the row's icon and its words say the same. Neutral and the brand roles paint nothing. */
+export const TREE_ROW_TONE_CLASSES: Readonly<Partial<Record<NonNullable<StyleSpec["tone"]>, string>>> = {
+  info: "text-info",
+  success: "text-success",
+  warning: "text-warning",
+  danger: "text-destructive",
+};
+
 export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentState, node: TreeWalkNode, context: UiInterpreterContext, overlay: UiPresenceOverlayValue, leftoverIds?: readonly string[], walk?: TreeWalkContextV1, parentWindowPath?: string): TreeDataItem {
   const { record, props } = node;
   // 🪟️ A WINDOW is identified by its path; an unwindowed row has no window identity and keeps its authored
@@ -2193,6 +2295,7 @@ export function treeItemToTreeData(store: UiDocumentStore, state: UiDocumentStat
     windowKey: record.key || undefined,
     windowPath,
     label: props.label,
+    className: record.style.tone === undefined ? undefined : TREE_ROW_TONE_CLASSES[record.style.tone],
     description: [props.description, ...(presence.notes ?? [])].filter((line): line is string => typeof line === "string" && line !== "").join(" · ") || undefined,
     icon: props.icon ? resolveControlIconNode(props.icon, 12) : undefined,
     defaultOpen: props.defaultOpen ?? undefined,
@@ -2923,6 +3026,8 @@ export const InterpretedUiNode = memo(function InterpretedUiNode({ store, onActi
 if (import.meta.vitest) {
   const { registerTests1 } = await import("./🧪️tests/🧪️unknown-component-placeholder/🟦️.tsx");
   await registerTests1(import.meta.vitest, { DEFAULT_UI_DOCUMENT_LIMITS, Profiler, UiDocumentStore, UiNodeView, accessibilityAriaProps }, { directory: import.meta.dir, url: import.meta.url });
+  const { registerTests1: registerContinuousPressTests } = await import("./🧪️tests/🧪️continuous-presses/🟦️.tsx");
+  await registerContinuousPressTests(import.meta.vitest, { UiDocumentStore, UiNodeView }, { url: import.meta.url });
   const { registerTests1: registerContainerNodeIdTests } = await import("./🧪️tests/🪪️container-node-ids/🟦️.tsx");
   await registerContainerNodeIdTests(import.meta.vitest, { UiDocumentStore, UiNodeView, uiChildReactKeys, uiSiblingReactKeys }, { url: import.meta.url });
   const { registerTests1: registerTreeWindowTests } = await import("./🧪️tests/🪟️tree-windows/🟦️.tsx");

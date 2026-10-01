@@ -1,17 +1,64 @@
 {
   "schemaVersion": 1,
-  "opaquePaths": ["compose", "temp/compose"],
-  "virtualRoots": ["🧪️virtual-cargo-workspace", "🧪️compose-named-workspace"],
-  "traversal": { "enumeration": "names-only", "metadata": "after-lexical-admission", "symlinks": "do-not-follow" },
-  "symlinks": ["🧪️ordinary/🔗️external", "🧪️ordinary/🔗️manifest/Cargo.toml"],
+  "opaquePaths": [
+    "compose",
+    "temp/compose",
+    "♻️mit-bestand/🔎️recherche"
+  ],
+  "virtualRoots": [
+    "🧪️virtual-cargo-workspace",
+    "🧪️compose-named-workspace"
+  ],
+  "traversal": {
+    "enumeration": "names-only",
+    "metadata": "after-lexical-admission",
+    "symlinks": "do-not-follow"
+  },
+  "symlinks": [
+    "🧪️ordinary/🔗️external",
+    "🧪️ordinary/🔗️manifest/Cargo.toml"
+  ],
   "manifests": [
-    { "path": "ordinaryCargo.toml", "package": "semio-fixture-ordinary", "admitted": true },
-    { "path": "compose/Cargo.toml", "package": "opaque-compose", "admitted": false },
-    { "path": "compose/nestedCargo.toml", "package": "opaque-compose-nested", "admitted": false },
-    { "path": "temp/compose/Cargo.toml", "package": "opaque-temp-compose", "admitted": false },
-    { "path": "temp-compose/Cargo.toml", "package": "semio-fixture-temp-compose", "admitted": true },
-    { "path": "compose-metadata/Cargo.toml", "package": "semio-fixture-compose-metadata", "admitted": true },
-    { "path": "🧪️ordinary/compose/Cargo.toml", "package": "semio-fixture-nested-name", "admitted": true }
+    {
+      "path": "ordinary/Cargo.toml",
+      "package": "semio-fixture-ordinary",
+      "admitted": true
+    },
+    {
+      "path": "compose/Cargo.toml",
+      "package": "opaque-compose",
+      "admitted": false
+    },
+    {
+      "path": "compose/nested/Cargo.toml",
+      "package": "opaque-compose-nested",
+      "admitted": false
+    },
+    {
+      "path": "temp/compose/Cargo.toml",
+      "package": "opaque-temp-compose",
+      "admitted": false
+    },
+    {
+      "path": "temp-compose/Cargo.toml",
+      "package": "semio-fixture-temp-compose",
+      "admitted": true
+    },
+    {
+      "path": "compose-metadata/Cargo.toml",
+      "package": "semio-fixture-compose-metadata",
+      "admitted": true
+    },
+    {
+      "path": "🧪️ordinary/compose/Cargo.toml",
+      "package": "semio-fixture-nested-name",
+      "admitted": true
+    },
+    {
+      "path": "♻️mit-bestand/🔎️recherche/Cargo.toml",
+      "package": "opaque-research",
+      "admitted": false
+    }
   ],
   "execution": {
     "target": "test-cargo-discovery-exclusions",

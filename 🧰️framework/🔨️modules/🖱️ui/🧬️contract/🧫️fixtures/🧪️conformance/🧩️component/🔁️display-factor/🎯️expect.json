@@ -1,0 +1,32 @@
+{
+  "case": "display-factor",
+  "kind": "component",
+  "description": "A NumberStepper storing radians and showing degrees (display factor 180/π): the value π/4 reads 45 °, a typed 90 commits π/2 exactly.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "numberStepper",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Heading",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setHeading@1"
+  ]
+}

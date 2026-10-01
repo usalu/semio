@@ -600,15 +600,15 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/✉️replaces-the-envelope-wrapping-a-value-subset/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/✉️replaces/🦀️.rs"]
 mod set_snapshot_replaces_the_envelope_wrapping_a_value_subset;
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🪞️reasserts-the-value-envelope-unchanged/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🪞️reasserts/🦀️.rs"]
 mod set_snapshot_reasserts_the_value_envelope_unchanged;
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔁️retypes-a-value-envelope-to-an-empty-image/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔁️retypes/🦀️.rs"]
 mod set_snapshot_retypes_a_value_envelope_to_an_empty_image;
 #[cfg(test)]
-#[path = "🖼️apply-image/🧪️tests/🚫️refuses-a-value-envelope/🦀️.rs"]
+#[path = "🖼️apply-image/🧪️tests/🚫️refuses/🦀️.rs"]
 mod apply_image_refuses_a_value_envelope;
 //#endregion 🧪️FixtureCases

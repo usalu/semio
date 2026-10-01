@@ -1,0 +1,2 @@
+CREATE TABLE writer_document (rowid INTEGER PRIMARY KEY CHECK(rowid=1), schema TEXT NOT NULL, id TEXT NOT NULL, language_id TEXT NOT NULL, uri TEXT NOT NULL, text TEXT NOT NULL);
+CREATE TABLE writer_document_child (id INTEGER PRIMARY KEY CHECK(id=1), document_id INTEGER NOT NULL REFERENCES writer_document(rowid), child_id TEXT NOT NULL, target_artifact_id TEXT NOT NULL, target_artifact_kind TEXT NOT NULL, target_standard TEXT NOT NULL, target_subset TEXT NOT NULL);

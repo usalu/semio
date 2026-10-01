@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⏱️change-simulation-settings",
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⏱️change-simulation",
   "semanticKind": "change-simulation-settings",
   "displayName": "Change Simulation Settings",
   "emoji": "⏱️",

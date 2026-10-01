@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-collapsed",
-              "directoryName": "🟰️no-ops-when-the-step-is-already-collapsed"
+              "directoryName": "🟰️no"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-step-id",
-              "directoryName": "🚫️rejects-a-duplicate-step-id"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-missing-step",
-              "directoryName": "🚫️rejects-deleting-a-missing-step"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "rejects-when-the-new-id-already-exists",
-              "directoryName": "🚫️rejects-when-the-new-id-already-exists"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -60,7 +60,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-params-are-already-identical",
-              "directoryName": "🟰️no-ops-when-the-params-are-already-identical"
+              "directoryName": "🟰️no"
             }
           ]
         },
@@ -71,7 +71,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-at-that-position",
-              "directoryName": "🟰️no-ops-when-the-step-is-already-at-that-position"
+              "directoryName": "🟰️no"
             }
           ]
         }

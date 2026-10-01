@@ -133,6 +133,7 @@ fn board_scene(document: &Puzzle5dSnapshot) -> Board2dScene {
         camera_json: camera_value().to_string(),
         glyph_catalogs_json: json!({ "nodes": [], "handles": [], "edges": [], "wires": [] }).to_string(),
         selection_json: "[]".into(),
+        highlighted_ids_json: "[]".into(),
         interactive: false,
         hovered_id: None,
         active_utility: None,

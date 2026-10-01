@@ -31,7 +31,10 @@ generic schema `s.architect.program`'s own mutation schema records itself as sup
 replaced here.
 
 **No Rust was read to write this.** `🦀️.rs` beside this file registers the SUBJECT half
-only.
+only. The one exception is NUMERIC, not semantic: re-deriving an attraction's six connection parameters
+(`gap`, `shift`, `rise`, `rotation`, `turn`, `tilt`) after a selection move is the compose kernel's pose
+inversion, ported operation for operation so both sides round alike. WHICH objects follow a move and WHICH
+attractions re-derive is this file's own reading of the selection leaves' schema descriptions.
 
 **One kind this implementation REFUSES, by clause rather than by absence.** See `UNDERDETERMINED`.
 """
@@ -131,9 +134,11 @@ KINDS = (
 """🏷️ Every kind the catalog declares, in its declared order."""
 
 SELECTION = {"drag-selection": "origin", "rotate-selection": "orientation", "scale-selection": "scale"}
-"""🧭️ The three parametric selection kinds and the one pose member each rewrites. They state INTENT rather
-than a final value: every addressed id that names an unlocked object or target volume is transformed IN PLACE
-from whatever pose the scene holds; absent and locked ids are skipped."""
+"""🧭️ The three parametric selection kinds and the one pose member each rewrites on its targets. They state
+INTENT rather than a final value: every addressed id that names an unlocked object or target volume is
+transformed IN PLACE from whatever pose the scene holds; absent and locked ids are skipped. A drag and a turn
+also re-solve the attraction graph — attracted objects follow, attractions between ends that stop moving
+together re-derive — so resolving the scene afterwards never snaps a moved object back."""
 
 SETTERS = {("objects", "origin"): ("move-object", "newOrigin"), ("objects", "orientation"): ("rotate-object", "newOrientation"), ("objects", "scale"): ("scale-object", "newScale"), ("targetVolumes", "origin"): ("move-target-volume", "newOrigin"), ("targetVolumes", "orientation"): ("rotate-target-volume", "newOrientation"), ("targetVolumes", "scale"): ("scale-target-volume", "newScale")}
 """↩️ The absolute setter that restores one pose member of one collection — how a selection kind is undone."""
@@ -241,7 +246,163 @@ def transformed(kind, payload, record):
     held = record.get("scale")
     triple = [1.0, 1.0, 1.0] if held is None else ([held] * 3 if isinstance(held, (int, float)) else held)
     return [triple[axis] * payload["factors"][axis] for axis in range(3)]
+
+
+def selection_effect(document, kind, payload):
+    """🌲️ What one selection kind changes: `{index: record}` for objects (the targets AND every unlocked object an
+    attraction hangs off a moved object, re-placed breadth first from its moved parent with the attraction's own
+    parameters), `{index: record}` for target volumes, and every OTHER attraction touching a moved object,
+    re-derived from the moved poses. A locked object never follows, and neither does anything hanging off it. A
+    scaling moves no pose: nothing follows, nothing re-derives."""
+    targets = [entry for entry in addressed(document, kind, payload)]
+    volumes = {at: dict(document["targetVolumes"][at], **{SELECTION[kind]: transformed(kind, payload, document["targetVolumes"][at])}) for member, at in targets if member == "targetVolumes"}
+    objects, queue = {}, []
+    for identifier in payload["targets"]:
+        for member, at in targets:
+            if member == "objects" and document["objects"][at]["id"] == identifier and at not in objects:
+                objects[at] = dict(document["objects"][at], **{SELECTION[kind]: transformed(kind, payload, document["objects"][at])})
+                queue.append(at)
+    if kind == "scale-selection" or not objects:
+        return objects, volumes, []
+    port = {"%s:%s" % (record["id"], vortex["id"]): (at, index) for at, record in enumerate(document["objects"]) for index, vortex in enumerate(record["vortices"])}
+    ends = [(port.get(held["attracting"]), port.get(held["attracted"])) for held in document["attractions"]]
+    ends = [(a, b) if a is not None and b is not None and a[0] != b[0] else None for a, b in ends]
+    placing = set()
+    while queue:
+        parent = queue.pop(0)
+        for index, end in enumerate(ends):
+            if end is None or end[0][0] != parent:
+                continue
+            (_, port_a), (child, port_b) = end
+            if child in objects or document["objects"][child]["locked"]:
+                continue
+            source, held, target = objects[parent], document["attractions"][index], document["objects"][child]
+            vortex_a, vortex_b = source["vortices"][port_a], target["vortices"][port_b]
+            origin, orientation = placement_of(source["origin"], source.get("orientation") or IDENTITY, vortex_a["position"], vortex_a.get("direction") or [0.0, 0.0, -1.0], vortex_b["position"], vortex_b.get("direction") or [0.0, 0.0, -1.0], [held[member] for member in ("gap", "shift", "rise", "rotation", "turn", "tilt")])
+            objects[child] = dict(target, origin=origin, orientation=orientation)
+            placing.add(index)
+            queue.append(child)
+    pose = lambda at: objects.get(at, document["objects"][at])
+    rederived = []
+    for index, (held, end) in enumerate(zip(document["attractions"], ends)):
+        if end is None or index in placing:
+            continue
+        (a, port_a), (b, port_b) = end
+        if a not in objects and b not in objects:
+            continue
+        source, target = pose(a), pose(b)
+        vortex_a, vortex_b = source["vortices"][port_a], target["vortices"][port_b]
+        params = connection_of(source["origin"], source.get("orientation") or IDENTITY, vortex_a["position"], vortex_a.get("direction") or [0.0, 0.0, -1.0], vortex_b["position"], vortex_b.get("direction") or [0.0, 0.0, -1.0], target["origin"], target.get("orientation") or IDENTITY)
+        updated = dict(held, **dict(zip(("gap", "shift", "rise", "rotation", "turn", "tilt"), params)))
+        if updated != held:
+            rederived.append(updated)
+    return objects, volumes, rederived
 # endregion 🔖️Selection
+
+
+# region 🔖️ConnectionPose
+def rotated(quat, vector):
+    """🌐️ `vector` turned by the unit quaternion `quat`."""
+    x, y, z, w = quat
+    vx, vy, vz = vector
+    ix = w * vx + y * vz - z * vy
+    iy = w * vy + z * vx - x * vz
+    iz = w * vz + x * vy - y * vx
+    iw = -x * vx - y * vy - z * vz
+    return [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]
+
+
+def unit(vector):
+    """🎯️ `vector` scaled to unit length (a near-zero vector stays)."""
+    length = math.sqrt(vector[0] * vector[0] + vector[1] * vector[1] + vector[2] * vector[2])
+    return vector if length < 1e-12 else [vector[0] * (1.0 / length), vector[1] * (1.0 / length), vector[2] * (1.0 / length)]
+
+
+def unit_quaternion(q):
+    """🧼️ `q` scaled to unit length; a degenerate quaternion is no turn."""
+    length = math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3])
+    return list(IDENTITY) if length < 1e-12 else [q[0] / length, q[1] / length, q[2] / length, q[3] / length]
+
+
+def cross(a, b):
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def between(source, target):
+    """🧭️ The quaternion turning unit `source` onto unit `target`."""
+    r = dot(source, target) + 1.0
+    if r < 0.000001:
+        quat = [-source[1], source[0], 0.0, 0.0] if abs(source[0]) > abs(source[2]) else [0.0, -source[2], source[1], 0.0]
+    else:
+        c = cross(source, target)
+        quat = [c[0], c[1], c[2], r]
+    return unit_quaternion(quat)
+
+
+def aligned(parent, child):
+    """🧲️ The turn that sets the attracted port against the attracting one (with the compose kernel's
+    (anti)parallel special cases)."""
+    reverse = [child[0] * -1.0, child[1] * -1.0, child[2] * -1.0]
+    if math.sqrt(dot(cross(parent, reverse), cross(parent, reverse))) < 0.01:
+        if abs(parent[2]) < 0.01:
+            return between([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
+        axis = cross([0.0, 0.0, 1.0], parent)
+        if math.sqrt(dot(axis, axis)) < 1e-9:
+            axis = cross([1.0, 0.0, 0.0], parent)
+        axis = unit(axis)
+        half = math.pi / 2
+        return unit_quaternion([axis[0] * math.sin(half), axis[1] * math.sin(half), axis[2] * math.sin(half), math.cos(half)])
+    return between(reverse, parent)
+
+
+def placement_of(t_a, q_a, p_a, d_a, p_b, d_b, params):
+    """📐️ The attracted pose `(origin, orientation)` the six connection parameters place against the attracting pose:
+    the port alignment, then rotation about the attracting port and turn and tilt about the turned rise and shift
+    axes, applied to the attracting port offset by gap, shift and rise."""
+    gap, shift, rise, rotation, turn, tilt = params
+    conjugate = lambda q: [-q[0], -q[1], -q[2], q[3]]
+    radians = lambda deg: deg * math.pi / 180.0
+    parent, child = unit(d_a), unit(d_b)
+    align = aligned(parent, child)
+    frame = between([0.0, 1.0, 0.0], parent)
+    gap_dir, shift_dir, raise_dir = rotated(frame, [0.0, 1.0, 0.0]), rotated(frame, [1.0, 0.0, 0.0]), rotated(frame, [0.0, 0.0, 1.0])
+    spin = axis_angle(parent, -radians(rotation))
+    turn_axis, tilt_axis = rotated(spin, raise_dir), rotated(spin, shift_dir)
+    local = conjugate(align)
+    for step in (spin, axis_angle(turn_axis, radians(turn)), axis_angle(tilt_axis, radians(tilt))):
+        local = hamilton(local, conjugate(step))
+    local = unit_quaternion(local)
+    reach = [gap_dir[axis] * gap for axis in range(3)], [shift_dir[axis] * shift for axis in range(3)], [raise_dir[axis] * rise for axis in range(3)]
+    offset = [(t_a[axis] + p_a[axis]) + ((reach[0][axis] + reach[1][axis]) + reach[2][axis]) for axis in range(3)]
+    landed = rotated(local, offset)
+    return [landed[axis] - p_b[axis] for axis in range(3)], unit_quaternion(hamilton(local, q_a))
+
+
+def connection_of(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b):
+    """🧮️ The six connection parameters that place the attracted pose `(t_b, q_b)` against the attracting one."""
+    conjugate = lambda q: [-q[0], -q[1], -q[2], q[3]]
+    parent, child = unit(d_a), unit(d_b)
+    align = aligned(parent, child)
+    frame = between([0.0, 1.0, 0.0], parent)
+    gap_dir, shift_dir, raise_dir = rotated(frame, [0.0, 1.0, 0.0]), rotated(frame, [1.0, 0.0, 0.0]), rotated(frame, [0.0, 0.0, 1.0])
+    local = unit_quaternion(hamilton(q_b, conjugate(q_a)))
+    offset = rotated(conjugate(local), [t_b[0] + p_b[0], t_b[1] + p_b[1], t_b[2] + p_b[2]])
+    diff = [(offset[axis] - t_a[axis]) - p_a[axis] for axis in range(3)]
+    m = hamilton(hamilton(conjugate(frame), hamilton(align, local)), frame)
+    col_x, col_y = rotated(m, [1.0, 0.0, 0.0]), rotated(m, [0.0, 1.0, 0.0])
+    tilt = -math.asin(max(-1.0, min(1.0, col_y[2])))
+    if abs(abs(col_y[2]) - 1.0) < 1e-6:
+        rotation, turn = math.atan2(col_x[1], col_x[0]), 0.0
+    else:
+        col_z = rotated(m, [0.0, 0.0, 1.0])
+        rotation, turn = math.atan2(-col_x[2], col_z[2]), math.atan2(col_y[0], col_y[1])
+    degrees = lambda rad: rad * 180.0 / math.pi
+    return dot(diff, gap_dir), dot(diff, shift_dir), dot(diff, raise_dir), degrees(rotation), degrees(turn), degrees(tilt)
+# endregion 🔖️ConnectionPose
 
 
 # region 🔖️Verbs
@@ -277,8 +438,13 @@ def apply_mutation(document, kind, payload):
         member, argument = VOLUME_FIELDS[kind]
         put(document["targetVolumes"][record_at(document, "targetVolumes", payload["id"], kind, "mutate")], member, copy.deepcopy(payload[argument]))
     elif kind in SELECTION:
-        for member, at in addressed(document, kind, payload):
-            document[member][at][SELECTION[kind]] = transformed(kind, payload, document[member][at])
+        objects, volumes, rederived = selection_effect(document, kind, payload)
+        for at, record in objects.items():
+            document["objects"][at] = record
+        for at, record in volumes.items():
+            document["targetVolumes"][at] = record
+        for updated in rederived:
+            document["attractions"][record_at(document, "attractions", updated["id"], kind, "mutate")] = updated
     elif kind in REFERENCE_FIELDS:
         member, argument = REFERENCE_FIELDS[kind]
         document["references"][record_at(document, "references", payload["id"], kind, "mutate")][member] = copy.deepcopy(payload[argument])
@@ -358,10 +524,17 @@ def inverse_mutation(document, kind, payload):
         member, argument = REFERENCE_FIELDS[kind]
         return [(kind, {"id": payload["id"], argument: copy.deepcopy(document["references"][record_at(document, "references", payload["id"], kind, "inverse")][member])})]
     if kind in SELECTION:
+        objects, volumes, rederived = selection_effect(document, kind, payload)
         steps = []
-        for member, at in addressed(document, kind, payload):
-            setter, argument = SETTERS[(member, SELECTION[kind])]
-            steps.append((setter, {"id": document[member][at]["id"], argument: copy.deepcopy(document[member][at].get(SELECTION[kind]))}))
+        for member, changed in (("objects", objects), ("targetVolumes", volumes)):
+            for at in sorted(changed):
+                for pose in ("origin", "orientation", "scale"):
+                    if changed[at].get(pose) != document[member][at].get(pose):
+                        setter, argument = SETTERS[(member, pose)]
+                        steps.append((setter, {"id": document[member][at]["id"], argument: copy.deepcopy(document[member][at].get(pose))}))
+        for updated in rederived:
+            held = document["attractions"][record_at(document, "attractions", updated["id"], kind, "inverse")]
+            steps.append(("replace-attraction-geometry", dict({"id": held["id"]}, **{"new" + member[:1].upper() + member[1:]: held[member] for member in ATTRACTION_GEOMETRY})))
         return steps
     if kind == "add-object-vortex":
         return [("remove-object-vortex", {"objectId": payload["objectId"], "vortexId": payload["vortex"]["id"]})]

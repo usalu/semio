@@ -183,7 +183,7 @@ describe("lifecycle law", () => {
       if (context.stage === "reviewing") expect(M.timeTravelRerunRefusal(context) === null, row.context).toBe(row.review === "needsReplay" || (context.fault !== null && context.accepted.length > 0));
     }
     expect(M.TIME_TRAVEL_REVIEWS.map(M.timeTravelReviewLabel)).toEqual(["noChanges", "needsReplay", "reportBlocking", "readyToFinalize"]);
-    expect([M.timeTravelFaultLabel(M.TIME_TRAVEL_CANCELLED_CODE), M.timeTravelFaultLabel("vcs.rejected")]).toEqual(["replayCancelled", undefined]);
+    expect([M.timeTravelCodeLabel(M.TIME_TRAVEL_CANCELLED_CODE), M.timeTravelCodeLabel("vcs.rejected")]).toEqual(["replayCancelled", undefined]);
   });
 
   test("text limits hold at their edges with Unicode White_Space", () => {
@@ -206,6 +206,13 @@ describe("lifecycle law", () => {
   test("invariants hold for every context and fail for their counterexample", () => {
     for (const [name, json] of Object.entries(law.contexts)) expect(M.timeTravelInvariantViolation(M.timeTravelSessionFromJson(json)), name).toBeNull();
     for (const row of law.invariants) expect(M.timeTravelInvariantViolation(M.timeTravelSessionFromJson(row.violation))).toBe(row.id);
+  });
+
+  test("every timeTravel code names the fixture label, and every session refusal its own", () => {
+    expect(M.TIME_TRAVEL_CODE_LABELS.map(([code, key]) => ({ code, key }))).toEqual(law.codeLabels);
+    for (const [code, key] of M.TIME_TRAVEL_CODE_LABELS) expect([M.isTimeTravelFaultCode(code), code.startsWith("timeTravel."), M.timeTravelCodeLabel(code)]).toEqual([true, true, key]);
+    for (const refusal of M.TIME_TRAVEL_REFUSALS) expect(M.timeTravelCodeLabel(refusal)).toBe(M.timeTravelRefusalLabel(refusal));
+    expect(new Set(M.TIME_TRAVEL_CODE_LABELS.map(([code]) => code)).size).toBe(M.TIME_TRAVEL_CODE_LABELS.length);
   });
 
   test("labels mirror the fixture with both locales", () => {

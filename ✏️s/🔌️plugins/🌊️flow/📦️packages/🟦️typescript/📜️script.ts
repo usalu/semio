@@ -2,7 +2,9 @@
 /** 🌊️ `@semio-tech/flow-js` router: `bun ./📜️script.ts test`. */
 import { resolve } from "node:path";
 import Ajv from "ajv";
-import { BundleScript, ScriptRouter, runCmd, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, resolveTestLevel, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -185,4 +187,4 @@ class ActionCohortAuditScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("action-cohort-audit", ActionCohortAuditScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

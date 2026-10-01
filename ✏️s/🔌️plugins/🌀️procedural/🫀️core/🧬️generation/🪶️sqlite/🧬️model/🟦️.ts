@@ -1,0 +1,20 @@
+/** 🌀️ Exact owned procedural host/generation fields shared by the actual 2d and 3d models. */
+import type{Binary64}from"../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+export type NeuralValue={kind:"null"}|{kind:"boolean";value:boolean}|{kind:"integer";value:bigint}|{kind:"decimal";value:Binary64}|{kind:"string";value:string}|{kind:"dictionary";value:NeuralDictionary};
+export type NeuralDictionary=Readonly<Record<string,NeuralValue>>;
+export type GenerationValue={kind:"null"}|{kind:"boolean";value:boolean}|{kind:"unsigned";value:bigint}|{kind:"integer";value:bigint}|{kind:"float";value:Binary64}|{kind:"string";value:string}|{kind:"bytes";value:Uint8Array}|{kind:"array";values:readonly GenerationValue[]}|{kind:"object";members:readonly(readonly[string,GenerationValue])[]};
+export type CameraJson={x:Binary64;y:Binary64;zoom:Binary64};
+export type WidgetLayout={x:Binary64;y:Binary64};
+export type SynapseSpec={id:string;from:string;to:string;fromPort:string;toPort:string};
+export type FlowTree={neurons:readonly FlowNeuron[];synapses:readonly SynapseSpec[]};
+export type FlowNeuron={id:string;kind:string;params:NeuralDictionary;tree:FlowTree|null};
+export type NodeChrome={kind:"plain";preview:boolean}|{kind:"slider";label:string;min:Binary64;max:Binary64;step:Binary64;value:Binary64}|{kind:"note";text:string}|{kind:"image";src:string}|{kind:"variable";name:string;schema:string};
+export type FlowNodeGui={layout:WidgetLayout;chrome:NodeChrome};
+export type FlowChannelRef={neuron:string;channel:string};
+export type FlowPreviewGui={id:string;source:FlowChannelRef|null;mode:string;preview:NeuralDictionary;expanded:readonly string[];layout:WidgetLayout|null};
+export type FlowUi={camera:CameraJson;nodes:Readonly<Record<string,FlowNodeGui>>;previews:readonly FlowPreviewGui[]};
+export type Widget={kind:"neuron";id:string;neuronKind:string;params:NeuralDictionary;inputPorts:readonly string[];outputPorts:readonly string[];preview:boolean}|{kind:"inputSlider";id:string;label:string;value:Binary64;min:Binary64;max:Binary64;step:Binary64}|{kind:"inputNote";id:string;text:string}|{kind:"inputImage";id:string;src:string}|{kind:"variable";id:string;name:string;schema:string}|{kind:"outputPreview";id:string;preview:NeuralDictionary;expanded:readonly string[]}|{kind:"outputAction";id:string;action:string}|{kind:"outputExport";id:string;format:string}|{kind:"cluster";id:string;name:string;tree:FlowTree;flow:FlowUi};
+export type FlowHostSnapshot={schema:string;camera:CameraJson;widgets:readonly Widget[];synapses:readonly SynapseSpec[];layout:Readonly<Record<string,WidgetLayout>>};
+export type FormGeneration={id:string;name:string;values:Readonly<Record<string,GenerationValue>>};
+export type GenerationPlayState={generations:readonly FormGeneration[];selectedGenerationId?:string;previewText?:string};
+export type ProceduralSnapshot={hostSnapshot:FlowHostSnapshot;generation:GenerationPlayState};

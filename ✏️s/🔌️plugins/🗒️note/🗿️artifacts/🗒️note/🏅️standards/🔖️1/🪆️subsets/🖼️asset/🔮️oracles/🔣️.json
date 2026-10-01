@@ -24,7 +24,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-image-asset",
-              "directoryName": "➕️adds-a-second-image-asset"
+              "directoryName": "➕️adds"
             }
           ]
         },
@@ -35,7 +35,7 @@
           "scenarios": [
             {
               "id": "removes-the-logo-asset",
-              "directoryName": "🗑️removes-the-logo-asset"
+              "directoryName": "🗑️removes"
             }
           ]
         },
@@ -46,7 +46,7 @@
           "scenarios": [
             {
               "id": "swaps-logo-payload-for-svg",
-              "directoryName": "🔁️swaps-logo-payload-for-svg"
+              "directoryName": "🔁️swaps"
             }
           ]
         }
@@ -256,14 +256,14 @@
       "files": [
         {
           "role": "before-svg",
-          "path": "../🧫️fixtures/🗑️removes-the-logo-asset/⬅️before.svg",
+          "path": "../🧫️fixtures/🗑️removes/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
           "bytes": 852
         },
         {
           "role": "after-svg",
-          "path": "../🧫️fixtures/🗑️removes-the-logo-asset/➡️after.svg",
+          "path": "../🧫️fixtures/🗑️removes/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a7106fdefa2c7f24889d7618f968eaa1a2195b2fd861320341777b5463046f83",
           "bytes": 729

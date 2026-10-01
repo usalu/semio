@@ -128,7 +128,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends-artifact-3-to-the-index/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends/🦀️.rs"]
                                     mod tests_appends_artifact_3_to_the_index;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -145,7 +145,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🧪️removes-artifact-2-from-the-index/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/🧪️tests/🧪️removes/🦀️.rs"]
                                     mod tests_removes_artifact_2_from_the_index;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-artifact/📝️text/🦀️.rs"]
                                     pub mod text;
@@ -179,7 +179,7 @@ pub fn declaration() -> Result<semio_framework_plugin::ArtifactDeclaration, semi
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🧪️stamps-artifact-1-with-a-new-editor/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/🧪️tests/🧪️stamps/🦀️.rs"]
                                     mod tests_stamps_artifact_1_with_a_new_editor;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒touch-artifact/📝️text/🦀️.rs"]
                                     pub mod text;

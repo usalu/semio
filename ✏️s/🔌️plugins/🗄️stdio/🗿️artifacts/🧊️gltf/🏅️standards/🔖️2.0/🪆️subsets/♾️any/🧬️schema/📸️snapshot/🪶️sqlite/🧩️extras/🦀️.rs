@@ -3,15 +3,15 @@ use super::*;
 const NUMBER:&[FloatColumn]=&[FloatColumn::Binary64(3)];
 
 pub(super) fn project(write:&mut Write<'_,'_>,value:Option<&GltfJson>)->Result<Option<i64>,String>{
- let Some(value)=value else{return Ok(None)};let root=write.json_id()?;let mut pending=vec![(root,value)];
- while let Some((key,value))=pending.pop(){
+ let Some(value)=value else{return Ok(None)};let root=write.json_id()?;let mut pending=std::collections::VecDeque::from([(root,value)]);
+ while let Some((key,value))=pending.pop_front(){
   match value{
    GltfJson::Null=>write.float_key("gltf_json_value",key,&[Cell::Text("null"),Cell::Null,Cell::Null,Cell::Null],NUMBER)?,
    GltfJson::Bool(value)=>write.float_key("gltf_json_value",key,&[Cell::Text("boolean"),Cell::Integer(i64::from(*value)),Cell::Null,Cell::Null],NUMBER)?,
    GltfJson::Number(value)=>write.float_key("gltf_json_value",key,&[Cell::Text("number"),Cell::Null,Cell::Real(*value),Cell::Null],NUMBER)?,
    GltfJson::String(value)=>write.float_key("gltf_json_value",key,&[Cell::Text("string"),Cell::Null,Cell::Null,Cell::Text(value)],NUMBER)?,
-   GltfJson::Array(values)=>{write.check(values.len())?;write.float_key("gltf_json_value",key,&[Cell::Text("array"),Cell::Null,Cell::Null,Cell::Null],NUMBER)?;for(position,value)in values.iter().enumerate(){let child=write.json_id()?;write.insert("gltf_json_array_element",&[Cell::Integer(key),ordinal(position)?,Cell::Integer(child)])?;pending.push((child,value));}},
-   GltfJson::Object(values)=>{write.check(values.len())?;write.float_key("gltf_json_value",key,&[Cell::Text("object"),Cell::Null,Cell::Null,Cell::Null],NUMBER)?;for(position,(name,value))in values.iter().enumerate(){let child=write.json_id()?;write.insert("gltf_json_object_member",&[Cell::Integer(key),ordinal(position)?,Cell::Text(name),Cell::Integer(child)])?;pending.push((child,value));}}
+   GltfJson::Array(values)=>{write.check(values.len())?;write.float_key("gltf_json_value",key,&[Cell::Text("array"),Cell::Null,Cell::Null,Cell::Null],NUMBER)?;for(position,value)in values.iter().enumerate(){let child=write.json_id()?;write.insert("gltf_json_array_element",&[Cell::Integer(key),ordinal(position)?,Cell::Integer(child)])?;pending.push_back((child,value));}},
+   GltfJson::Object(values)=>{write.check(values.len())?;write.float_key("gltf_json_value",key,&[Cell::Text("object"),Cell::Null,Cell::Null,Cell::Null],NUMBER)?;for(position,(name,value))in values.iter().enumerate(){let child=write.json_id()?;write.insert("gltf_json_object_member",&[Cell::Integer(key),ordinal(position)?,Cell::Text(name),Cell::Integer(child)])?;pending.push_back((child,value));}}
   }
  }Ok(Some(root))
 }

@@ -482,3 +482,85 @@ fn canvas_framing_waits_for_measurement_and_preserves_navigation() {
     assert!(apply_canvas_framing(&scene, Rect::new(0.0, 0.0, 900.0, 700.0)));
     assert_eq!(scene_state(&scene.host_id).viewport.x, 100.0);
 }
+
+//#region 🧭️Gumball
+/// 🧭️ An armed Transform utility: the `meta:utility` and `meta:gumball` layers a plugin emits (pivot at the world origin).
+fn gumball_scene(surface_id: &str, live: bool) -> UiComponentSceneNode {
+    let layers = json!([
+        { "id": "meta:utility", "role": "meta", "utility": "transform" },
+        { "id": "meta:gumball", "role": "meta", "gumball": { "active": true, "liveDispatch": live, "pivotLayer": [0, 0], "selectionIds": ["frame-1"], "config": { "moveAxes": true, "rotate": true, "scaleAxes": true, "scaleUniform": true } } }
+    ]);
+    let node = canvas_scene(surface_id, layers.to_string());
+    mutate_scene_state(surface_id, |state| state.viewport = Viewport { x: 0.0, y: 0.0, zoom: 1.0 });
+    node
+}
+
+fn gumball_actions(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Vec<(String, Value)> {
+    catalogue_actions(input).into_iter().map(|action| (action.action.clone(), Value::from(action.args.as_ref().expect("gumball args")))).collect()
+}
+
+/// 🧭️ The live seam: a press on the x knob (pivot at the canvas centre, knob 56 px right) opens the gumball gesture —
+/// never a document pointer action — each move streams its increment and the release commits the tail, every dispatch
+/// addressed to the canvas surface; a press beside the handles under the Transform utility reaches nothing.
+#[test]
+fn a_live_gumball_drag_streams_and_commits_through_the_canvas_seam() {
+    let node = gumball_scene("canvas2d-gumball-live", true);
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let pointer = ui_render::PointerId(41);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+    assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 270.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 280.0, 150.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
+    let actions = gumball_actions(&mut input);
+    assert_eq!(actions.iter().map(|(action, args)| (action.as_str(), args["phase"].as_str(), args["dx"].as_f64(), args["surfaceId"].as_str())).collect::<Vec<_>>(), [
+        ("translateSelection", Some("stream"), Some(14.0), Some("canvas2d-gumball-live")),
+        ("translateSelection", Some("commit"), Some(10.0), Some("canvas2d-gumball-live")),
+    ]);
+    assert_eq!(actions[0].1["ids"], json!(["frame-1"]));
+    assert!(CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer).is_none()), "the gumball never opens a document pointer gesture");
+    assert!(canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 205.0, 160.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(!canvas_pointer_button_into(&node, bounds, pointer, "canvas2d-gumball-window", 1, 205.0, 160.0, false, 0, SceneModifiers::default(), &mut input).unwrap(), "no gesture owns the release");
+    assert!(gumball_actions(&mut input).is_empty(), "a press beside the handles reaches nothing under the Transform utility, as in React");
+}
+
+/// 🧯️ A host cancel of a streamed gesture aborts it with zero trace; a non-live gesture dispatches only ONE one-shot pose
+/// delta on release and nothing on cancel.
+#[test]
+fn gumball_cancels_abort_live_gestures_and_non_live_gestures_release_one_one_shot() {
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let pointer = ui_render::PointerId(42);
+    let mut input = ui_wgpu::wgpu::InputState::<ActionDescriptor>::default();
+    CANVAS_GESTURE.with(|cell| *cell.borrow_mut() = CanvasGestureSlots::default());
+    let live = gumball_scene("canvas2d-gumball-cancel", true);
+    assert!(canvas_pointer_button_into(&live, bounds, pointer, "canvas2d-gumball-cancel-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&live, bounds, pointer, "canvas2d-gumball-cancel-window", 1, 270.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(cancel_canvas_pointer_gesture_for(pointer, &mut input));
+    let actions = gumball_actions(&mut input);
+    assert_eq!(actions.iter().map(|(action, args)| (action.as_str(), args["phase"].as_str(), args["reason"].as_str())).collect::<Vec<_>>(), [("translateSelection", Some("stream"), None), ("translateSelection", Some("abort"), Some("captureLost"))]);
+    let one_shot = gumball_scene("canvas2d-gumball-one-shot", false);
+    assert!(canvas_pointer_button_into(&one_shot, bounds, pointer, "canvas2d-gumball-one-shot-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&one_shot, bounds, pointer, "canvas2d-gumball-one-shot-window", 1, 270.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(gumball_actions(&mut input).is_empty(), "a non-live gesture previews locally");
+    assert!(canvas_pointer_button_into(&one_shot, bounds, pointer, "canvas2d-gumball-one-shot-window", 1, 290.0, 150.0, false, 0, SceneModifiers::default(), &mut input).unwrap());
+    let actions = gumball_actions(&mut input);
+    assert_eq!(actions.iter().map(|(action, args)| (action.as_str(), args.get("phase").is_none(), args["dx"].as_f64())).collect::<Vec<_>>(), [("translateSelection", true, Some(34.0))]);
+    assert!(canvas_pointer_button_into(&one_shot, bounds, pointer, "canvas2d-gumball-one-shot-window", 1, 256.0, 150.0, true, 0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(canvas_pointer_move_into(&one_shot, bounds, pointer, "canvas2d-gumball-one-shot-window", 1, 300.0, 150.0, SceneModifiers::default(), &mut input).unwrap());
+    assert!(cancel_canvas_pointer_gesture_for(pointer, &mut input));
+    assert!(gumball_actions(&mut input).is_empty(), "a cancelled non-live gesture leaves zero trace");
+}
+
+/// 🎨️ The armed gumball paints its handles over the canvas; any other utility paints none.
+#[test]
+fn the_armed_gumball_paints_and_any_other_utility_does_not() {
+    let bounds = Rect::new(0.0, 0.0, 400.0, 300.0);
+    let painted = |node: &UiComponentSceneNode| {
+        let mut draw = ui_wgpu::wgpu::DrawList::default();
+        crate::canvas2d_gumball::paint(node, bounds, (0.0, 0.0, 1.0), &mut draw);
+        draw.layers.iter().map(|layer| layer.ui_instances.len() + layer.vector_vertices.len()).sum::<usize>()
+    };
+    assert!(painted(&gumball_scene("canvas2d-gumball-paint", true)) > 0, "the armed gumball paints its handles");
+    assert_eq!(painted(&canvas_scene("canvas2d-gumball-select", json!([{ "role": "meta", "utility": "select" }]).to_string())), 0);
+}
+//#endregion 🧭️Gumball

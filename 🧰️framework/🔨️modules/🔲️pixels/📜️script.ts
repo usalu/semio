@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🔲️ Pixel editing verification through the shared workspace task runner. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, runCargoTestBudgeted } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargoTestBudgeted } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -16,4 +18,4 @@ class TestScript extends BundleScript {
   }
 }
 
-await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), import.meta.url, { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript), { defaultCommand: "test" });

@@ -24,7 +24,7 @@ case's rationale used to call its own vocabulary un-adjudicable.
   each yield.
 * the 266 committed `(before, mutation, after, outcome)` specification vectors, which are the only
   statement of three things: that a `connect-` verb NORMALISES the edge it appends (the
-  `🧲️adjacency/🧲️connect/🧪️tests/🧲️reception-waiting` vector's `normalized` flips false to true while the payload's own
+  `🧲️adjacency/🧲️connect/🧪️tests/🧲️reception` vector's `normalized` flips false to true while the payload's own
   value is false), that a `delete`/`rename`/`replace` against an absent id is
   `mutation.target-missing` with the id as its path rather than a no-op, and that the snapshot's
   47th register is serialized `artifacts` even though the committed JSON Schema requires `documents`.
@@ -538,7 +538,7 @@ def apply_mutation(document, kind, payload):
 
 
 def normalised(record):
-    """🧲 A `connect` verb normalises the edge it appends. The `🧲️adjacency/🧲️connect/🧪️tests/🧲️reception-waiting` vector
+    """🧲 A `connect` verb normalises the edge it appends. The `🧲️adjacency/🧲️connect/🧪️tests/🧲️reception` vector
     is the only statement of it: its payload carries `normalized` false and its after-snapshot
     carries true, with nothing else changed. An edge record that declares no `normalized` member —
     `trace` — is appended as given."""

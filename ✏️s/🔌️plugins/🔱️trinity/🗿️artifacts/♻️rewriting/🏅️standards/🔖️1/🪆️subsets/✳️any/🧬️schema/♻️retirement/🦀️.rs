@@ -1,11 +1,12 @@
 //! ♻️ Rewrite-rule document ownership retires bodies, keyed values, and semantic mutations incrementally.
 
-use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
+use crate::standards::v1::subsets::any::schema::mutations::{RewriteRuleMutation, RuleLayoutPlacement};
 use crate::{LayoutPoint, RewritingSnapshot};
 use store::retirement::{OwnedValueRetirementFactory, RetireOwned, RetirementCursor, SharedValueRetirementFactory};
 
 store::artifact_retire_struct!(RewritingSnapshot { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout });
 store::artifact_retire_struct!(LayoutPoint { x, y });
+store::artifact_retire_struct!(RuleLayoutPlacement { key, x, y });
 
 impl RetireOwned for RewriteRuleMutation {
     fn retirement(self) -> Box<dyn RetirementCursor> {
@@ -17,6 +18,10 @@ impl RetireOwned for RewriteRuleMutation {
             Self::RemoveParameterBinding(value) => value.key.retirement(),
             Self::ChangeRuleLayoutPoint(value) => (value.key, value.new_point).retirement(),
             Self::RemoveRuleLayoutPoint(value) => value.key.retirement(),
+            Self::DragWorkingNodes(value) => (value.targets, (value.dx, value.dy)).retirement(),
+            Self::PatchWorkingNodes(value) => (value.targets, (value.field, value.value)).retirement(),
+            Self::DragRuleNodes(value) => (value.targets, (value.dx, value.dy)).retirement(),
+            Self::SetRuleLayoutPoints(value) => (value.points, value.cleared).retirement(),
         }
     }
 }

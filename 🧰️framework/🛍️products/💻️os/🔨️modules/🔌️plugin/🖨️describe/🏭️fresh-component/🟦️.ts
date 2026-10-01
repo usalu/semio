@@ -7,7 +7,8 @@ import { acquireCargoBuildLeaseV1 } from "../../../../../🦑️repo/🔨️modu
 import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
-import { BundleScript, devToolingEnv, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin, runExactCargoLawProcess } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { createFreshComponentTests } from "../🧪️tests/🆕️fresh-component/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";

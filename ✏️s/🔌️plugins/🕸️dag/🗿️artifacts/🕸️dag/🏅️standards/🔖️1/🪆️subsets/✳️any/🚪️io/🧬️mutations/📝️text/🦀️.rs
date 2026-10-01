@@ -14,7 +14,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 //#endregion 📖️SemioGrammar
 
 use crate::mutations::{
-    change_node_abbreviation, change_node_icon, change_node_name, change_node_operator_kind, delete_node, disconnect_nodes, move_node, rename_node, reorder_nodes, replace_node_kind, replace_node_properties, resize_node, ConnectNodes, CreateNode,
+    change_node_abbreviation, change_node_icon, change_node_name, change_node_operator_kind, delete_node, disconnect_nodes, move_node, move_nodes, rename_node, reorder_nodes, replace_node_kind, replace_node_properties, resize_node, set_node_positions, set_slider, ConnectNodes,
+    CreateNode, DagNodePosition, DagSliderField,
 };
 use crate::{DagNodeKind, DagNodeSpec};
 use graph::manifest::PropertyBag;
@@ -45,6 +46,9 @@ enum DagMutationDsl {
     ReorderNodes { order: Vec<String> },
     ConnectNodes { id: String, source: String, target: String, route_style: EdgeRouteStyle, properties_json: String, index: Option<usize> },
     DisconnectNodes { id: String },
+    MoveNodes { ids: Vec<String>, dx: f64, dy: f64 },
+    SetNodePositions { positions_json: String },
+    SetSlider { id: String, field: DagSliderField, value: f64 },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -99,6 +103,9 @@ fn dag_mutation_to_dsl(mutation: &DagMutation) -> DagMutationDsl {
         DagMutation::ReorderNodes(payload) => DagMutationDsl::ReorderNodes { order: payload.order.clone() },
         DagMutation::ConnectNodes(payload) => DagMutationDsl::ConnectNodes { id: payload.id.clone(), source: payload.source.clone(), target: payload.target.clone(), route_style: payload.route_style, properties_json: json_of(&payload.properties), index: payload.index },
         DagMutation::DisconnectNodes(payload) => DagMutationDsl::DisconnectNodes { id: payload.id.clone() },
+        DagMutation::MoveNodes(payload) => DagMutationDsl::MoveNodes { ids: payload.ids.clone(), dx: payload.dx, dy: payload.dy },
+        DagMutation::SetNodePositions(payload) => DagMutationDsl::SetNodePositions { positions_json: json_of(&payload.positions) },
+        DagMutation::SetSlider(payload) => DagMutationDsl::SetSlider { id: payload.id.clone(), field: payload.field, value: payload.value },
     }
 }
 
@@ -120,6 +127,9 @@ fn dag_mutation_from_dsl(mutation: DagMutationDsl) -> DagMutation {
             DagMutation::ConnectNodes(ConnectNodes { id, source, target, route_style, properties: dsl::json::from_json_str::<PropertyBag>(&properties_json).expect("dag mutation dsl `properties_json` must decode"), index })
         }
         DagMutationDsl::DisconnectNodes { id } => disconnect_nodes(id),
+        DagMutationDsl::MoveNodes { ids, dx, dy } => move_nodes(ids, dx, dy),
+        DagMutationDsl::SetNodePositions { positions_json } => set_node_positions(dsl::json::from_json_str::<Vec<DagNodePosition>>(&positions_json).expect("dag mutation dsl `positions_json` must decode")),
+        DagMutationDsl::SetSlider { id, field, value } => set_slider(id, field, value),
     }
 }
 

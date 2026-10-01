@@ -18,9 +18,10 @@ use crate::os_spr::wire::{DictBuilder, DictReader, ProtocolError, ProtocolLimits
 use std::collections::{HashMap, HashSet};
 
 //#region 🔖️Model
-// Persisted history is the semantic event log only: edits (opaque `print_op` lines / `OpBinary`
-// payloads) and structural transitions. Change/checkpoint/alternative facts, the active alternative,
-// checkpoint pins and the undo/redo cursor are derived by [`HistoryLog::fold`], never stored.
+// Persisted history is the semantic event log plus this replica's head. Edits (with the alternative
+// they were authored on) and structural transitions are shared. `viewer_line` and `viewer_checkpoint`
+// are persisted local-only; absent, the head is the canonical trunk tip. Change/checkpoint/alternative
+// ledgers and the cursor stay derived by [`HistoryLog::fold`].
 #[derive(Clone, Debug, PartialEq, Default)]
 pub struct HistoryLog {
     pub doc_id: String,
@@ -38,6 +39,10 @@ pub struct HistoryLog {
     /// accepted-but-messy merge — see `crate::os_spr::conflict::ConflictKind`. Empty for the
     /// overwhelming majority of documents; no record is written when empty.
     pub conflicts: Vec<HistoryConflict>,
+    /// 👁 Alternative this replica is on (`REC_VIEWER`). `None` is the canonical trunk.
+    pub viewer_line: Option<String>,
+    /// 👁 Explicit checkpoint this replica is looking at. `None` is the tip of `viewer_line`.
+    pub viewer_checkpoint: Option<String>,
 }
 
 /// 🔀️ One persisted history transition: the [`crate::os_spr::MutationEnvelope`] minus its
@@ -113,6 +118,8 @@ pub struct HistoryEdit {
     pub description: Option<String>,
     /// 🏷️ The id of the action or command that authored this edit (mirrors `crate::os_spr::command::Edit::verb`).
     pub verb: Option<String>,
+    /// 🌿️ Authored branch identity, explicitly null for trunk or unknown provenance.
+    pub line: Option<String>,
     pub ops: Vec<OpPayload>,
     /// 🔙️ The edit's inverse operations, in apply order (mirrors `crate::os_spr::command::Edit
     /// ::inverse`). Empty for text-compiled/imported logs — a decoder recomputing them from a
@@ -209,7 +216,7 @@ impl HistoryTransitionRecord {
             diff: crate::os_spr::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
             inverse: crate::os_spr::InverseMutation { schema, payload: Vec::new() },
             timestamp: crate::os_spr::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },
-            transaction: None, verb: None,
+            transaction: None, verb: None, line: None,
         }
     }
 }
@@ -239,7 +246,7 @@ impl HistoryLog {
             for mutation_id in &mutation_ids {
                 owners.insert(mutation_id.0.clone(), edit.id.as_str());
             }
-            edits.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp, mutation_ids });
+            edits.push(crate::os_spr::FoldEdit { id: edit.id.clone(), actor: edit.actor.clone(), timestamp, mutation_ids, line: edit.line.clone() });
         }
         let mut excluded = HashSet::new();
         for conflict in self.conflicts.iter().filter(|conflict| conflict.kind == 0 && conflict.status != 1) {
@@ -255,7 +262,10 @@ impl HistoryLog {
             }
         }
         let transitions: Vec<crate::os_spr::MutationEnvelope> = self.transitions.iter().map(|transition| transition.to_envelope(&self.doc_id)).collect();
-        crate::os_spr::fold_history(&crate::os_spr::ArtifactId(self.doc_id.clone()), &edits, &transitions, &excluded)
+        let document_id = crate::os_spr::ArtifactId(self.doc_id.clone());
+        let trunk = crate::os_spr::trunk_alternative_id(&document_id);
+        let head = crate::os_spr::ViewerHead { line_id: self.viewer_line.clone().filter(|line| line != &trunk).unwrap_or(trunk), checkpoint_id: self.viewer_checkpoint.clone() };
+        crate::os_spr::fold_history_for(&document_id, &edits, &transitions, &excluded, &head)
     }
 }
 //#endregion 🔖️Fold
@@ -276,6 +286,7 @@ const F_EDIT_FINISHED: u16 = 3;
 const F_EDIT_KEY: u16 = 4;
 const F_EDIT_DESCRIPTION: u16 = 5;
 const F_EDIT_VERB: u16 = 6;
+const F_EDIT_LINE: u16 = 7;
 const F_TRANSITION_ID: u16 = 0;
 const F_TRANSITION_ACTOR: u16 = 1;
 const F_TRANSITION_HLC: u16 = 2;
@@ -299,6 +310,7 @@ fn edit_spec() -> RecordSpec {
             FieldSpec::new(F_EDIT_KEY, "key", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_DESCRIPTION, "description", Shape::Text).optional(),
             FieldSpec::new(F_EDIT_VERB, "verb", Shape::Text).optional(),
+            FieldSpec::new(F_EDIT_LINE, "line", Shape::List(Box::new(Shape::Text))),
         ],
     )
 }
@@ -378,6 +390,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
         coalesce_key: Option<String>,
         description: Option<String>,
         verb: Option<String>,
+        line: Option<String>,
     }
 
     let mut log = HistoryLog::default();
@@ -392,7 +405,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                 started_at: header.started_at,
                 finished_at: header.finished_at,
                 coalesce_key: header.coalesce_key,
-                description: header.description, verb: header.verb,
+                description: header.description, verb: header.verb, line: header.line,
                 ops: std::mem::take(forwards),
                 inverse: Vec::new(),
                 meta: None, lane: None,
@@ -429,6 +442,10 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
                     coalesce_key: field_text(&record, F_EDIT_KEY),
                     description: field_text(&record, F_EDIT_DESCRIPTION),
                     verb: field_text(&record, F_EDIT_VERB),
+                    line: match record.get(F_EDIT_LINE) {
+                        Some(FieldValue::List(values)) if values.len() <= 1 => values.first().map(|value| match value { FieldValue::Text(line) => Ok(line.clone()), _ => Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected text".into() }) }).transpose()?,
+                        _ => return Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: "expected explicit zero-or-one text list".into() }),
+                    },
                 });
                 forwards = Vec::new();
             }
@@ -463,7 +480,7 @@ pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     out.push('\n');
 
     for edit in &log.edits {
-        let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone()))];
+        let mut fields = vec![(F_EDIT_ID, FieldValue::Text(edit.id.clone())), (F_EDIT_STARTED, FieldValue::Text(edit.started_at.clone())), (F_EDIT_LINE, FieldValue::List(edit.line.iter().cloned().map(FieldValue::Text).collect()))];
         if let Some(actor) = &edit.actor {
             fields.push((F_EDIT_ACTOR, FieldValue::Text(actor.clone())));
         }
@@ -805,7 +822,7 @@ async fn read_op_meta<'d>(input: &mut ByteReader<'_>, dict: &'d DictReader, ordi
 pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordinal_of: impl Fn(&str) -> Option<u64> + Send + Sync) -> Result<Vec<u8>, ProtocolError> {
     let edit_ordinal_of: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &edit_ordinal_of;
     let mut out = ByteWriter::new();
-    out.write_u8(1);
+    out.write_u8(2);
     let mut presence = 0u8;
     if edit.actor.is_some() {
         presence |= 1 << 0;
@@ -853,6 +870,10 @@ pub async fn encode_edit(edit: &HistoryEdit, dict: &mut DictBuilder, edit_ordina
     if let Some(verb) = &edit.verb {
         write_str_field(&mut out, verb).await;
     }
+    match &edit.line {
+        None => out.write_u8(0),
+        Some(line) => { out.write_u8(1); write_str_field(&mut out, line).await; }
+    }
     if edit.ops.len() as u64 > ProtocolLimits::default().max_op_count_per_edit as u64 {
         return Err(ProtocolError::LimitExceeded("edit op count exceeds ProtocolLimits::max_op_count_per_edit"));
     }
@@ -881,7 +902,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let ordinal_to_id: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &ordinal_to_id;
     let mut input = ByteReader::new(payload);
     let format = input.read_u8()?;
-    if format > 1 {
+    if format != 2 {
         return Err(malformed_fmt("edit", format).await);
     }
     let presence = input.read_u8()?;
@@ -900,6 +921,11 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     let description = if presence & (1 << 3) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let lane = if presence & (1 << 6) != 0 { Some(read_str_field(&mut input).await?) } else { None };
     let verb = if presence & (1 << 7) != 0 { Some(read_str_field(&mut input).await?) } else { None };
+    let line = match input.read_u8()? {
+        0 => None,
+        1 => Some(read_str_field(&mut input).await?),
+        tag => return Err(ProtocolError::Malformed { what: "edit line", offset: 0, detail: format!("unknown line tag {tag}") }),
+    };
     let op_count = input.read_varint_u64()?;
     let max_ops = ProtocolLimits::default().max_op_count_per_edit as u64;
     if op_count > max_ops {
@@ -931,7 +957,7 @@ pub async fn decode_edit<'d>(payload: &[u8], dict: &'d DictReader, ordinal_to_id
     } else {
         None
     };
-    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb, ops, inverse, meta, lane })
+    Ok(HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb, line, ops, inverse, meta, lane })
 }
 //#endregion 🔖️Edit
 
@@ -1162,6 +1188,46 @@ pub async fn decode_conflicts<'d>(payload: &[u8], dict: &'d DictReader, ordinal_
     Ok(conflicts)
 }
 //#endregion 🔖️Conflict
+
+//#region 👁ViewerHead
+/// 👁 Non-critical extension: this replica's head. A hub check-in omits it, so the published
+/// pair hydrates to the canonical trunk. Last-wins. Absent, the head is the trunk tip.
+pub const REC_VIEWER: u8 = 0x45;
+
+/// 👁 `format u8 (=1) | presence u8 (bit0 line, bit1 checkpoint) | [line] | [checkpoint]`.
+pub async fn encode_viewer(line: Option<&str>, checkpoint: Option<&str>, dict: &mut DictBuilder) -> Result<Vec<u8>, ProtocolError> {
+    let plain: &(dyn Fn(&str) -> Option<u64> + Send + Sync) = &|_: &str| None;
+    let mut out = ByteWriter::new();
+    out.write_u8(1);
+    let presence = u8::from(line.is_some()) | (u8::from(checkpoint.is_some()) << 1);
+    out.write_u8(presence);
+    if let Some(line) = line {
+        write_id_field(&mut out, line, dict, plain).await?;
+    }
+    if let Some(checkpoint) = checkpoint {
+        write_id_field(&mut out, checkpoint, dict, plain).await?;
+    }
+    Ok(out.into_bytes())
+}
+
+/// 👁 Inverse of [`encode_viewer`].
+pub async fn decode_viewer<'d>(payload: &[u8], dict: &'d DictReader) -> Result<(Option<String>, Option<String>), ProtocolError> {
+    let miss: &(dyn Fn(u64) -> Result<&'d str, ProtocolError> + Send + Sync) = &|ord: u64| Err(ProtocolError::DictMiss(ord as u32));
+    let mut input = ByteReader::new(payload);
+    let format = input.read_u8()?;
+    if format > 1 {
+        return Err(malformed_fmt("viewer", format).await);
+    }
+    let presence = input.read_u8()?;
+    let line = if presence & 1 != 0 { Some(read_id_field(&mut input, dict, miss)?) } else { None };
+    let checkpoint = if presence & 2 != 0 { Some(read_id_field(&mut input, dict, miss)?) } else { None };
+    if input.remaining() != 0 {
+        return Err(ProtocolError::Malformed { what: "viewer", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });
+    }
+    Ok((line, checkpoint))
+}
+//#endregion 👁ViewerHead
+
 //#endregion 🔖️Payloads
 
 //#region 🔖️Codec
@@ -1435,6 +1501,11 @@ impl RetainedHistoryDecode {
                     .map_err(|error| error.to_string())?;
                 self.saw_conflicts = true;
             }
+            REC_VIEWER => {
+                let (viewer_line, viewer_checkpoint) = crate::os_io::resolve_ready(decode_viewer(payload, &self.dict)).map_err(|error| error.to_string())?;
+                log.viewer_line = viewer_line;
+                log.viewer_checkpoint = viewer_checkpoint;
+            }
             _ => {}
         }
         Ok(())
@@ -1566,6 +1637,11 @@ pub async fn encode_history(log: &HistoryLog, options: &EncodeOptions) -> Result
         flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
         writer.write_record(REC_CONFLICT, false, &conflicts_payload, CodecId(0)).await?;
     }
+    if log.viewer_line.is_some() || log.viewer_checkpoint.is_some() {
+        let viewer_payload = encode_viewer(log.viewer_line.as_deref(), log.viewer_checkpoint.as_deref(), &mut dict).await?;
+        flush_dict_delta(&mut writer, &dict, &mut dict_base).await?;
+        writer.write_record(REC_VIEWER, false, &viewer_payload, CodecId(0)).await?;
+    }
 
     writer.commit().await?;
     Ok(writer.into_sink().await)
@@ -1610,6 +1686,11 @@ async fn decode_history_from(trusted: &[u8], options: &DecodeOptions) -> Result<
                 let edit_ids_ref = &edit_ids;
                 log.conflicts = decode_conflicts(frame.payload().await, &dict, |ord| edit_ids_ref.get(ord as usize).map(String::as_str).ok_or(ProtocolError::DictMiss(ord as u32))).await?;
                 saw_conflicts = true;
+            }
+            REC_VIEWER => {
+                let (viewer_line, viewer_checkpoint) = decode_viewer(frame.payload().await, &dict).await?;
+                log.viewer_line = viewer_line;
+                log.viewer_checkpoint = viewer_checkpoint;
             }
             crate::os_spr::REC_COMMIT if full => {
                 let (commit_seq, chain_hash) = parse_commit_fields(frame.payload().await).await?;
@@ -1691,6 +1772,13 @@ impl<S: PackSink> HistoryAppender<S> {
         let payload = encode_conflicts(conflicts, &mut self.dict, |id| ordinals.get(id).copied()).await?;
         flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
         self.writer.write_record(REC_CONFLICT, false, &payload, CodecId(0)).await
+    }
+
+    /// 👁 Appends this replica's head. Both fields absent means the canonical trunk tip, and the record is omitted.
+    pub async fn append_viewer(&mut self, line: Option<&str>, checkpoint: Option<&str>) -> Result<u64, ProtocolError> {
+        let payload = encode_viewer(line, checkpoint, &mut self.dict).await?;
+        flush_dict_delta(&mut self.writer, &self.dict, &mut self.dict_base).await?;
+        self.writer.write_record(REC_VIEWER, false, &payload, CodecId(0)).await
     }
 
     pub async fn commit(&mut self) -> Result<u64, ProtocolError> {

@@ -1,4 +1,4 @@
-import { BundleScript } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { repoCacheDirectory } from "../../🟦️.ts";
 import { acquireResourceLease } from "../../🔒️leases/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";

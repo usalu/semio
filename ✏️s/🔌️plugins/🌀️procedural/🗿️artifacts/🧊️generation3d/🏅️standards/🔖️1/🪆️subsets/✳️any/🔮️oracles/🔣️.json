@@ -164,12 +164,12 @@
       "vectors": [
         {
           "mutationId": "change-generation-value",
-          "sourceMutationDirectoryName": "🔧️change-generation-value",
-          "mutationDirectoryName": "🔧️change-generation-value",
+          "sourceMutationDirectoryName": "🔧️change",
+          "mutationDirectoryName": "🔧️change",
           "scenarios": [
             {
               "id": "raises-the-storeys-answer-in-generation-1",
-              "directoryName": "🏢️raises-the-storeys-answer-in-generation-1"
+              "directoryName": "🏢️raises"
             }
           ]
         },
@@ -180,7 +180,7 @@
           "scenarios": [
             {
               "id": "restamps-the-fixture-schema-id",
-              "directoryName": "🏷️restamps-the-fixture-schema-id"
+              "directoryName": "🏷️restamps"
             }
           ]
         },
@@ -191,7 +191,7 @@
           "scenarios": [
             {
               "id": "wires-node-b-to-node-c-at-index-1",
-              "directoryName": "🔌️wires-node-b-to-node-c-at-index-1"
+              "directoryName": "🔌️wires"
             }
           ]
         },
@@ -202,7 +202,7 @@
           "scenarios": [
             {
               "id": "appends-generation-2-and-moves-the-selection",
-              "directoryName": "🌱️appends-generation-2-and-moves-the-selection"
+              "directoryName": "🌱️appends"
             }
           ]
         },
@@ -213,18 +213,18 @@
           "scenarios": [
             {
               "id": "inserts-node-c-at-index-2",
-              "directoryName": "📝️inserts-node-c-at-index-2"
+              "directoryName": "📝️inserts"
             }
           ]
         },
         {
           "mutationId": "delete-generation",
-          "sourceMutationDirectoryName": "🗑️delete-generation",
-          "mutationDirectoryName": "🗑️delete-generation",
+          "sourceMutationDirectoryName": "🗑️delete",
+          "mutationDirectoryName": "🗑️delete",
           "scenarios": [
             {
               "id": "removes-the-selected-generation-2-and-falls-back",
-              "directoryName": "🚫️removes-the-selected-generation-2-and-falls-back"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -235,51 +235,51 @@
           "scenarios": [
             {
               "id": "removes-node-a-and-leaves-wire-ab-dangling",
-              "directoryName": "🚫️removes-node-a-and-leaves-wire-ab-dangling"
+              "directoryName": "🚫️removes"
             }
           ]
         },
         {
           "mutationId": "delete-widget-position",
-          "sourceMutationDirectoryName": "🧹️delete-widget-position",
-          "mutationDirectoryName": "🧹️delete-widget-position",
+          "sourceMutationDirectoryName": "🧹️delete-widget",
+          "mutationDirectoryName": "🧹️delete-widget",
           "scenarios": [
             {
               "id": "unpins-the-node-a-position",
-              "directoryName": "🧹️unpins-the-node-a-position"
+              "directoryName": "🧹️unpins"
             }
           ]
         },
         {
           "mutationId": "disconnect-synapse",
-          "sourceMutationDirectoryName": "✂️disconnect-synapse",
-          "mutationDirectoryName": "✂️disconnect-synapse",
+          "sourceMutationDirectoryName": "✂️disconnect",
+          "mutationDirectoryName": "✂️disconnect",
           "scenarios": [
             {
               "id": "cuts-wire-ab-leaving-both-nodes",
-              "directoryName": "✂️cuts-wire-ab-leaving-both-nodes"
+              "directoryName": "✂️cuts"
             }
           ]
         },
         {
           "mutationId": "move-widget",
-          "sourceMutationDirectoryName": "📍️move-widget",
-          "mutationDirectoryName": "📍️move-widget",
+          "sourceMutationDirectoryName": "📍️move",
+          "mutationDirectoryName": "📍️move",
           "scenarios": [
             {
               "id": "repositions-node-a-in-the-graph",
-              "directoryName": "📍️repositions-node-a-in-the-graph"
+              "directoryName": "📍️repositions"
             }
           ]
         },
         {
           "mutationId": "rename-generation",
-          "sourceMutationDirectoryName": "🏷️rename-generation",
-          "mutationDirectoryName": "🏷️rename-generation",
+          "sourceMutationDirectoryName": "🏷️rename",
+          "mutationDirectoryName": "🏷️rename",
           "scenarios": [
             {
               "id": "retitles-generation-1-via-new-name",
-              "directoryName": "🏷️retitles-generation-1-via-new-name"
+              "directoryName": "🏷️retitles"
             }
           ]
         },
@@ -290,18 +290,18 @@
           "scenarios": [
             {
               "id": "frames-the-graph-at-double-zoom",
-              "directoryName": "🔍️frames-the-graph-at-double-zoom"
+              "directoryName": "🔍️frames"
             }
           ]
         },
         {
           "mutationId": "update-synapse",
-          "sourceMutationDirectoryName": "🔄️update-synapse",
-          "mutationDirectoryName": "🔄️update-synapse",
+          "sourceMutationDirectoryName": "🔄️update",
+          "mutationDirectoryName": "🔄️update",
           "scenarios": [
             {
               "id": "repoints-wire-ab-onto-the-cap-port",
-              "directoryName": "📡️repoints-wire-ab-onto-the-cap-port"
+              "directoryName": "📡️repoints"
             }
           ]
         },
@@ -312,7 +312,7 @@
           "scenarios": [
             {
               "id": "retunes-the-knob-slider-value",
-              "directoryName": "🎚️retunes-the-knob-slider-value"
+              "directoryName": "🎚️retunes"
             }
           ]
         }

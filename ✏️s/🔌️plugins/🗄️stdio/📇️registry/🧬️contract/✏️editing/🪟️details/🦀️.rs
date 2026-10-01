@@ -32,6 +32,7 @@ pub enum SnapshotDetailValue {
     Bool(bool),
     Number(Number),
     String(String),
+    Bytes { len: usize },
     Array,
     Object,
 }
@@ -378,7 +379,7 @@ fn schema_accepts_shape(root: &DslValue, schema: &DslValue, shape: &ValueShape) 
         "boolean" => matches!(shape, ValueShape::Bool),
         "integer" | "number" => matches!(shape, ValueShape::Number),
         "string" => matches!(shape, ValueShape::String),
-        "array" => matches!(shape, ValueShape::Array { .. }),
+        "array" => matches!(shape, ValueShape::Array { .. } | ValueShape::Bytes { .. }),
         "object" => matches!(shape, ValueShape::Object { .. }),
         _ => false,
     };
@@ -386,7 +387,7 @@ fn schema_accepts_shape(root: &DslValue, schema: &DslValue, shape: &ValueShape) 
         Some(DslValue::String(kind)) => accepts(kind),
         Some(DslValue::Array(kinds)) => kinds.iter().any(|kind| matches!(kind, DslValue::String(kind) if accepts(kind))),
         _ if object_field(schema, "properties").is_some() => matches!(shape, ValueShape::Object { .. }),
-        _ if object_field(schema, "items").is_some() => matches!(shape, ValueShape::Array { .. }),
+        _ if object_field(schema, "items").is_some() => matches!(shape, ValueShape::Array { .. } | ValueShape::Bytes { .. }),
         _ => true,
     }
 }
@@ -617,6 +618,7 @@ fn template_candidate_is_valid(root: &DslValue, schema: &DslValue, value: &DslVa
         DslValue::Bool(_) => ValueShape::Bool,
         DslValue::Number(_) => ValueShape::Number,
         DslValue::String(_) => ValueShape::String,
+        DslValue::Bytes(values) => ValueShape::Bytes { len: values.len() },
         DslValue::Array(values) => ValueShape::Array { len: values.len() },
         DslValue::Object(values) => ValueShape::Object { len: values.len() },
     };
@@ -634,6 +636,22 @@ fn template_candidate_is_valid(root: &DslValue, schema: &DslValue, value: &DslVa
             let value = number_as_f64(*value);
             if schema_number(object_field(schema, "minimum")).is_some_and(|minimum| value < number_as_f64(minimum)) || schema_number(object_field(schema, "maximum")).is_some_and(|maximum| value > number_as_f64(maximum)) {
                 return false;
+            }
+        }
+        DslValue::Bytes(values) => {
+            if schema_usize(object_field(schema, "minItems")).is_some_and(|minimum| values.len() < minimum) || schema_usize(object_field(schema, "maxItems")).is_some_and(|maximum| values.len() > maximum) {
+                return false;
+            }
+            if let Some(items) = object_field(schema, "items") {
+                for (index, byte) in values.iter().enumerate() {
+                    let item = match items {
+                        DslValue::Array(items) => items.get(index).or_else(|| items.last()),
+                        item => Some(item),
+                    };
+                    if item.is_some_and(|item| !template_candidate_is_valid(root, item, &DslValue::Number(Number::UInt(u64::from(*byte))), depth + 1)) {
+                        return false;
+                    }
+                }
             }
         }
         DslValue::Array(values) => {
@@ -1046,6 +1064,7 @@ impl<S: ArtifactDsl + ToValue> SnapshotDetailsProvider for DslSnapshotDetailsPro
                 _ => return None,
             },
             ValueShape::Array { .. } => SnapshotDetailValue::Array,
+            ValueShape::Bytes { len } => SnapshotDetailValue::Bytes { len },
             ValueShape::Object { .. } => SnapshotDetailValue::Object,
         })
     }
@@ -1488,6 +1507,7 @@ fn read_only_value(id: &str, value: SnapshotDetailValue) -> UiAssemblyResult<Bui
         SnapshotDetailValue::Number(Number::Int(value)) => value.to_string(),
         SnapshotDetailValue::Number(Number::Float(value)) => value.to_string(),
         SnapshotDetailValue::String(value) => value,
+        SnapshotDetailValue::Bytes { len } => format!("{len} B"),
         SnapshotDetailValue::Array => "[]".to_string(),
         SnapshotDetailValue::Object => "{}".to_string(),
     };
@@ -1618,6 +1638,7 @@ fn scalar_control(id: &str, path: &str, value: SnapshotDetailValue, template: Op
             }
             control_group(&format!("{id}-null"), controls.into_iter().map(Ok))
         }
+        SnapshotDetailValue::Bytes { len } => read_only_value(&format!("{id}-octets"), SnapshotDetailValue::Bytes { len }),
         SnapshotDetailValue::Array | SnapshotDetailValue::Object => Err(error("ui.snapshot-details.scalar-kind")),
     }
 }

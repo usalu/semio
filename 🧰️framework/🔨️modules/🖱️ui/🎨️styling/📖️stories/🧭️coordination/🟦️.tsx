@@ -41,7 +41,7 @@ export const galleryCardStyle: CSSProperties = {
   gap: 16,
   padding: 16,
   borderRadius: 8,
-  border: "1px solid rgba(128, 128, 128, 0.3)",
+  border: "1px solid color-mix(in srgb, var(--border-normal-color) 30%, transparent)",
 };
 //#endregion 🔖️Layout
 
@@ -61,7 +61,7 @@ export function SwatchGrid({ title, entries }: { readonly title: string; readonl
       ) : (
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(168px, 1fr))", gap: 8 }}>
           {entries.map(([name, rgba]) => (
-            <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid rgba(128, 128, 128, 0.25)", borderRadius: 6, padding: 6, minWidth: 0 }}>
+            <div key={name} style={{ display: "flex", alignItems: "center", gap: 8, border: "1px solid color-mix(in srgb, var(--border-normal-color) 25%, transparent)", borderRadius: 6, padding: 6, minWidth: 0 }}>
               <div
                 style={{
                   width: 28,
@@ -70,7 +70,7 @@ export function SwatchGrid({ title, entries }: { readonly title: string; readonl
                   flexShrink: 0,
                   background: `repeating-conic-gradient(#8884 0% 25%, transparent 0% 50%) 50% / 10px 10px, ${rgba8ToCss(rgba)}`,
                   backgroundBlendMode: "normal",
-                  border: "1px solid rgba(128, 128, 128, 0.4)",
+                  border: "1px solid color-mix(in srgb, var(--border-normal-color) 40%, transparent)",
                 }}
               />
               <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
@@ -97,7 +97,7 @@ export function DataTable({ columns, rows }: { readonly columns: readonly string
         <thead>
           <tr>
             {columns.map((col) => (
-              <th key={col} style={{ textAlign: "left", padding: "4px 10px", borderBottom: "1px solid rgba(128, 128, 128, 0.4)", opacity: 0.7, fontWeight: 600 }}>
+              <th key={col} style={{ textAlign: "left", padding: "4px 10px", borderBottom: "1px solid color-mix(in srgb, var(--border-normal-color) 40%, transparent)", opacity: 0.7, fontWeight: 600 }}>
                 {col}
               </th>
             ))}
@@ -107,7 +107,7 @@ export function DataTable({ columns, rows }: { readonly columns: readonly string
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex}>
               {row.map((cell, cellIndex) => (
-                <td key={cellIndex} style={{ padding: "4px 10px", borderBottom: "1px solid rgba(128, 128, 128, 0.15)", fontFamily: cellIndex === 0 ? "monospace" : undefined, whiteSpace: "nowrap" }}>
+                <td key={cellIndex} style={{ padding: "4px 10px", borderBottom: "1px solid color-mix(in srgb, var(--border-normal-color) 15%, transparent)", fontFamily: cellIndex === 0 ? "monospace" : undefined, whiteSpace: "nowrap" }}>
                   {cell}
                 </td>
               ))}

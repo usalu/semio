@@ -30,7 +30,7 @@ pub(crate) fn slider_tick_rects(rail: Rect, min: f64, max: f64, snaps: &[f64], t
 
 /// 🎚️ The value a pointer at `raw` commits: the shared contract law (clamp, step ladder, detents).
 pub(crate) fn slider_pointer_value(raw: f64, min: f64, max: f64, step: f64, snaps: &[f64]) -> f64 {
-    ui_contract::slider_pointer_value(raw, min, max, if step.is_finite() { step } else { 0.0 }, snaps.iter().copied())
+    ui_contract::slider_pointer_value(raw, min, max, if step.is_finite() { step } else { 0.0 }, snaps.iter().copied(), ui_contract::UiNumberScale::Linear)
 }
 
 #[allow(clippy::too_many_arguments, reason = "one arg per widget/render-context field; grouping into a struct is a T2 restructure, out of scope")]

@@ -23,7 +23,7 @@ impl SimDate {
         days_before + self.day as u16
     }
 
-    /// 📅️ Day of week (1=Mon … 7=Sun).
+    /// 📅️ Day of week (1 = Sunday … 7 = Saturday), the EnergyPlus day type.
     pub fn day_of_week(&self) -> u8 {
         let y = self.year as i32;
         let m = self.month as i32;

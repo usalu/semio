@@ -2,7 +2,10 @@
 /** 🧭️ `@semio-tech/repo-vscode` router: `bun ./📜️script.ts <dev|test [level]|build|lint|build-vsix>`. */
 import { build } from "vite";
 import { extensionBuildConfig, extensionPackageEnvironment } from "../../🏗️builder/🟦️.ts";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, TEST_LEVELS } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { TEST_LEVELS } from "../../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { resolveTestLevel, runBunx } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 //#region Build
 /** 🧩️Builds the extension host entry and its extension-host test bundle. */
@@ -54,4 +57,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("lint", LintScript)
   .register("build-vsix", BuildVsixScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

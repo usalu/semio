@@ -7,7 +7,10 @@
  * reports the whole e2e suite as skipped in well under a second. */
 import { randomBytes } from "node:crypto";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunxStatus, runBundleScriptMain, runCargo, runVitest, runTestBudgeted, type TestLevel } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { type TestLevel } from "../../../\uD83E\uDDF0\uFE0Fframework/\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { resolveTestLevel, runBunxStatus, runCargo, runVitest, runTestBudgeted } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { HUB_BACKEND_ENGINE, HUB_BACKENDS, claimHubBackend, ensureHubBackend, freeLoopbackPort, hubBackendEngineVersion, hubBackendIdentity, hubBackendName, hubBackendStatus, hubDevBinaryPath, hubDevPostgresBinaryPath, stopHubBackend, type HubBackendName, type HubBackendProgress } from "../../🚀️local-bootstrap/🏃️execution/🟦️.ts";
 import { acceptanceCheckResult, publishAcceptanceCheckResult, withAcceptanceRecord } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🎯️acceptance/📋️orchestration/🟦️.ts";
 
@@ -588,4 +591,4 @@ class TypecheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("two-client-e2e", TwoClientE2eScript).register("document-growth-e2e", DocumentGrowthE2eScript).register("backend", BackendScript).register("backup-restore-drill", BackupRestoreDrillScript).register("shutdown-drill", ShutdownDrillScript).register("residency-watch", ResidencyWatchScript).register("boot-watch", BootWatchScript).register("hub-freshness", HubFreshnessScript).register("agent-ceiling-check", AgentCeilingCheckScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("typecheck", TypecheckScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

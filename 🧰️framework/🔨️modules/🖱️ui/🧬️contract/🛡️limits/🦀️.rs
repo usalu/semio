@@ -165,13 +165,31 @@ fn label_bytes(label: &Option<crate::Label>) -> usize {
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 fn component_is_finite(component: &crate::Component) -> bool {
     match component {
-        crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().chain(props.snaps.iter().copied()).all(f64::is_finite),
-        crate::Component::NumberStepper(props) => [Some(props.value), Some(props.step), props.min, props.max].into_iter().flatten().all(f64::is_finite) && props.min.zip(props.max).is_none_or(|(min, max)| min <= max),
+        crate::Component::Slider(props) => [props.value, props.min, props.max, props.step].into_iter().chain(props.snaps.iter().copied()).chain(props.display_factor).chain(limit_values(props.limits.as_ref())).all(f64::is_finite),
+        crate::Component::NumberStepper(props) => [Some(props.value), Some(props.step), props.min, props.max, props.display_factor].into_iter().flatten().chain(props.snaps.iter().copied()).chain(limit_values(props.limits.as_ref())).all(f64::is_finite) && props.min.zip(props.max).is_none_or(|(min, max)| min <= max),
         crate::Component::Ring(props) => props.t.is_finite(),
         crate::Component::Progress(props) => props.completed.is_finite() && props.total.is_none_or(f64::is_finite),
-        crate::Component::Input(props) => [props.min, props.max, props.step].into_iter().flatten().chain(props.snaps.iter().copied()).all(|value| value.is_finite()),
+        crate::Component::Input(props) => [props.min, props.max, props.step, props.display_factor].into_iter().flatten().chain(props.snaps.iter().copied()).chain(limit_values(props.limits.as_ref())).all(|value| value.is_finite()),
         _ => true,
     }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn limit_values(limits: Option<&crate::UiNumberLimits>) -> impl Iterator<Item = f64> + '_ {
+    limits.into_iter().flat_map(|limits| [limits.min.as_ref(), limits.max.as_ref()]).flatten().map(|bound| bound.value)
+}
+
+/// 🎚️ The number-range law every renderer shares (TS twin `numberRangeIsValid`): a display factor is positive; a
+/// `log` scale has a strictly positive travel; declared limits keep their lower bound below their upper one
+/// (equal only when both include it) and admit the key range `min..=max` and every detent — so a slider's travel
+/// is a soft range inside its hard one. The admission gate behind [`UiContractViolation::InvalidNumberRange`].
+pub fn number_range_is_valid(min: Option<f64>, max: Option<f64>, scale: crate::UiNumberScale, display_factor: Option<f64>, limits: Option<&crate::UiNumberLimits>, snaps: impl IntoIterator<Item = f64>) -> bool {
+    let factor = display_factor.is_none_or(|factor| factor > 0.0);
+    let axis = scale == crate::UiNumberScale::Linear || min.zip(max).is_some_and(|(min, max)| min > 0.0 && max > 0.0);
+    let Some(limits) = limits else { return factor && axis };
+    let ordered = limits.min.as_ref().zip(limits.max.as_ref()).is_none_or(|(low, high)| low.value < high.value || (low.value == high.value && !low.exclusive && !high.exclusive));
+    let admitted = |value: f64| limits.crossed(value).is_none();
+    factor && axis && ordered && min.is_none_or(admitted) && max.is_none_or(admitted) && snaps.into_iter().all(admitted)
 }
 
 /// 🧲️ The detent law every renderer shares: finite, strictly ascending, inside `min..=max` — the admission
@@ -190,6 +208,17 @@ fn component_snaps_are_valid(component: &crate::Component) -> bool {
     match component {
         crate::Component::Slider(props) => props.snaps_are_valid(),
         crate::Component::Input(props) => props.snaps_are_valid(),
+        crate::Component::NumberStepper(props) => props.snaps_are_valid(),
+        _ => true,
+    }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn component_number_range_is_valid(component: &crate::Component) -> bool {
+    match component {
+        crate::Component::Slider(props) => props.number_range_is_valid(),
+        crate::Component::Input(props) => props.number_range_is_valid(),
+        crate::Component::NumberStepper(props) => props.number_range_is_valid(),
         _ => true,
     }
 }
@@ -322,6 +351,11 @@ pub enum UiContractViolation {
     InvalidSnaps {
         node: crate::UiNodeId,
     },
+    /// 🧭️ A Slider's, stepper's or number field's travel, scale, display factor and limits disagree — see
+    /// [`crate::number_range_is_valid`].
+    InvalidNumberRange {
+        node: crate::UiNodeId,
+    },
 }
 
 /// 🌲️ Validates `snapshot` against `limits`, collecting every [`UiContractViolation`] found rather
@@ -430,6 +464,10 @@ fn validate_core<'a>(
                             }
                         } else if !component_snaps_are_valid(&record.component) {
                             if violations.try_push(UiContractViolation::InvalidSnaps { node: id }).is_err() {
+                                return violations;
+                            }
+                        } else if !component_number_range_is_valid(&record.component) {
+                            if violations.try_push(UiContractViolation::InvalidNumberRange { node: id }).is_err() {
                                 return violations;
                             }
                         }
@@ -1003,6 +1041,9 @@ impl UiPatchApplyProducer {
                 }
                 if !component_snaps_are_valid(&record.component) {
                     return self.reject_violation(UiContractViolation::InvalidSnaps { node: frame.id });
+                }
+                if !component_number_range_is_valid(&record.component) {
+                    return self.reject_violation(UiContractViolation::InvalidNumberRange { node: frame.id });
                 }
                 if let crate::Component::TreeItem(props) = &record.component {
                     if let Some(toolbar) = props.inline_toolbar.filter(|_| !tree_inline_toolbar_is_valid(record, |id| draft.nodes.get(&id))) {

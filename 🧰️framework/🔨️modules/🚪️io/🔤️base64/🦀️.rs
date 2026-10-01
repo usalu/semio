@@ -10,6 +10,41 @@
 const BASE64_STANDARD_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 const BASE64_URL_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
 
+/// 📍️ Bounded base64 work uses bytes for Encode and ASCII characters for Validate or Decode.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub enum Base64Phase{Encode,Validate,Decode}
+/// 📍️ Monotonic input units within one base64 phase.
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
+pub struct Base64Progress{pub phase:Base64Phase,pub completed:usize,pub total:usize}
+/// 🎟️ Caller-owned output allowance and bounded cancellation callback.
+pub struct Base64Control<'a>{pub maximum_output_bytes:usize,pub progress:&'a mut dyn FnMut(Base64Progress)->bool}
+/// 🚨️ Exact format failures stay separate from caller resource refusal or cancellation.
+#[derive(Clone,Debug,PartialEq,Eq)]
+pub enum Base64ControlError{Codec(Base64Error),OutputLimit,Cancelled}
+impl std::fmt::Display for Base64ControlError{
+    fn fmt(&self,out:&mut std::fmt::Formatter<'_>)->std::fmt::Result{match self{Self::Codec(error)=>std::fmt::Display::fmt(error,out),Self::OutputLimit=>out.write_str("base64 output allocation or limit exceeded"),Self::Cancelled=>out.write_str("base64 cancelled")}}
+}
+impl std::error::Error for Base64ControlError{}
+impl From<Base64Error> for Base64ControlError{fn from(error:Base64Error)->Self{Self::Codec(error)}}
+impl Base64Control<'_>{
+    fn admit(&self,length:usize)->Result<(),Base64ControlError>{if length>self.maximum_output_bytes{Err(Base64ControlError::OutputLimit)}else{Ok(())}}
+    fn checkpoint(&mut self,phase:Base64Phase,completed:usize,total:usize)->Result<(),Base64ControlError>{if(self.progress)(Base64Progress{phase,completed,total}){Ok(())}else{Err(Base64ControlError::Cancelled)}}
+}
+/// 🔤️ Bounds output before allocation and cancellation before each at-most4095-byte encoding chunk.
+pub fn base64_standard_encode_controlled(bytes:&[u8],control:&mut Base64Control<'_>)->Result<String,Base64ControlError>{
+    let length=bytes.len().div_ceil(3).checked_mul(4).ok_or(Base64ControlError::OutputLimit)?;control.admit(length)?;control.checkpoint(Base64Phase::Encode,0,bytes.len())?;
+    let mut output=String::new();output.try_reserve_exact(length).map_err(|_|Base64ControlError::OutputLimit)?;
+    for(offset,chunk)in bytes.chunks(4095).enumerate(){output.push_str(&encode_bytes(chunk,BASE64_STANDARD_ALPHABET,true));control.checkpoint(Base64Phase::Encode,(offset*4095+chunk.len()).min(bytes.len()),bytes.len())?;}Ok(output)
+}
+/// 🔤️ Validates strict padding before allocating the result; each pass checks at most4096 input bytes.
+pub fn base64_standard_decode_controlled(encoded:&[u8],control:&mut Base64Control<'_>)->Result<Vec<u8>,Base64ControlError>{
+    if encoded.len()%4!=0{return Err(Base64Error::InvalidLength.into());}
+    let padding=if encoded.ends_with(b"=="){2}else if encoded.ends_with(b"="){1}else{0};let length=encoded.len()/4*3-padding;control.admit(length)?;control.checkpoint(Base64Phase::Validate,0,encoded.len())?;
+    for(offset,chunk)in encoded.chunks(4096).enumerate(){let end=offset*4096+chunk.len();if end<encoded.len()&&chunk.contains(&b'='){return Err(Base64Error::InvalidPadding.into());}decode_bytes(chunk).map_err(|error|match error{Base64Error::InvalidByte{index,byte}=>Base64ControlError::Codec(Base64Error::InvalidByte{index:offset*4096+index,byte}),error=>error.into()})?;control.checkpoint(Base64Phase::Validate,end,encoded.len())?;}
+    control.checkpoint(Base64Phase::Decode,0,encoded.len())?;let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|Base64ControlError::OutputLimit)?;
+    for(offset,chunk)in encoded.chunks(4096).enumerate(){output.extend_from_slice(&decode_bytes(chunk)?);control.checkpoint(Base64Phase::Decode,offset*4096+chunk.len(),encoded.len())?;}Ok(output)
+}
+
 /// 🔤️ Strict RFC 4648 base64 decoding failure, shared by the standard and URL-safe codecs.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Base64Error {

@@ -7,11 +7,11 @@ fn direct_language_neutral_vectors_match_lopdf_and_concrete_inverse() {
     macro_rules! vector {
         ($mutation:literal) => {
             (
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🎯️outcome/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🔺️diff/🔣️.json")),
-                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round-trips-the-concrete-inverse/🦠️mutation/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🎯️outcome/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/📸️snapshot/➡️after/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🔺️diff/🔣️.json")),
+                include_str!(concat!("../../../🧫️fixtures/🧬️mutations/", $mutation, "/🔄️round/🦠️mutation/🔣️.json")),
             )
         };
     }

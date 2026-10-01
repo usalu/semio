@@ -446,7 +446,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🧪️tests/🧪️no-ops-when-the-frame-is-already-identical/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔲resize-source-frame/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_frame_is_already_identical;
                         }
                         #[path = "."]
@@ -459,7 +459,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🧪️tests/🧪️no-ops-when-the-source-is-already-identical/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️replace-source/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_source_is_already_identical;
                         }
                         #[path = "."]
@@ -472,7 +472,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🧪️tests/🧪️rejects-a-duplicate-tile-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-tile/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_tile_id;
                         }
                         #[path = "."]
@@ -485,7 +485,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🧪️rejects-deleting-a-missing-tile/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_missing_tile;
                         }
                         #[path = "."]
@@ -498,7 +498,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🧪️tests/🧪️rejects-when-every-addressed-tile-is-missing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹delete-tiles/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_when_every_addressed_tile_is_missing;
                         }
                         #[path = "."]
@@ -511,7 +511,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🧪️tests/🧪️no-ops-when-the-tile-already-has-that-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-tile/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_tile_already_has_that_name;
                         }
                         #[path = "."]
@@ -524,7 +524,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🧪️tests/🧪️rejects-a-zero-width-crop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️resize-tile-crop/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_a_zero_width_crop;
                         }
                         #[path = "."]
@@ -537,7 +537,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/🧪️no-ops-when-the-tile-is-already-at-that-index/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-tiles/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_tile_is_already_at_that_index;
                         }
                         #[path = "."]
@@ -550,7 +550,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🧪️tests/🧪️no-ops-when-the-collection-is-already-empty/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-tiles/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_collection_is_already_empty;
                         }
                     }

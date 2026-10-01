@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { BundleScript, ScriptRouter } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { assertGeneratedSources, readSourceInputContract } from "../../../../../../../🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs";
 import { renderBrowserBoot } from "./🟦️.ts";
 

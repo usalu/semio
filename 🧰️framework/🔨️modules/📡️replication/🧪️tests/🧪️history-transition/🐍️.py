@@ -147,7 +147,7 @@ def encode(t: dict) -> bytes:
     if k == "commit":
         out = varint(2) + s(t["checkpointId"]) + opt(t["parentId"]) + s(t["changeId"]) + ids(t["mutationIds"]) + opt(t["description"]) + s(t["savedAt"])
         out += varint(len(t["authors"])) + b"".join(s(a["id"]) + s(a["name"]) + opt(a["avatar"]) for a in t["authors"])
-        return out + opt(t["message"]) + s(t["timestamp"])
+        return out + opt(t["message"]) + s(t["timestamp"]) + opt(t["lineId"])
     if k == "branch":
         return varint(3) + s(t["alternativeId"]) + s(t["name"]) + s(t["checkpointId"])
     if k == "checkout":
@@ -191,8 +191,8 @@ def corpus() -> dict:
         ("revert-one", {"kind": "revert", "mutationIds": ["op-a-1"]}),
         ("revert-many", {"kind": "revert", "mutationIds": ["op-a-1", "op-a-2", "op-a-3"]}),
         ("reinstate-long-id", {"kind": "reinstate", "mutationIds": [long_id]}),
-        ("commit-full", {"kind": "commit", "checkpointId": "checkpoint-2", "parentId": "checkpoint-1", "changeId": "change-2", "mutationIds": ["op-a-1", "op-b-1"], "description": "Tiles and source", "savedAt": "2026-09-19T12:00:00Z", "authors": [{"id": "actor-a", "name": "Ada", "avatar": "https://example.test/ada.png"}, {"id": "actor-b", "name": "Bé 🧪", "avatar": None}], "message": "merge both replicas", "timestamp": "1789819200000"}),
-        ("commit-minimal", {"kind": "commit", "checkpointId": "checkpoint-1", "parentId": None, "changeId": "change-1", "mutationIds": [], "description": None, "savedAt": "", "authors": [], "message": None, "timestamp": ""}),
+        ("commit-full", {"kind": "commit", "checkpointId": "checkpoint-2", "parentId": "checkpoint-1", "changeId": "change-2", "mutationIds": ["op-a-1", "op-b-1"], "description": "Tiles and source", "savedAt": "2026-09-19T12:00:00Z", "authors": [{"id": "actor-a", "name": "Ada", "avatar": "https://example.test/ada.png"}, {"id": "actor-b", "name": "Bé 🧪", "avatar": None}], "message": "merge both replicas", "timestamp": "1789819200000", "lineId": "alternative-2"}),
+        ("commit-minimal", {"kind": "commit", "checkpointId": "checkpoint-1", "parentId": None, "changeId": "change-1", "mutationIds": [], "description": None, "savedAt": "", "authors": [], "message": None, "timestamp": "", "lineId": None}),
         ("branch", {"kind": "branch", "alternativeId": "alternative-2", "name": "Variant B", "checkpointId": "checkpoint-1"}),
         ("checkout-alternative", {"kind": "checkout", "checkpointId": "checkpoint-1", "alternativeId": "alternative-2"}),
         ("checkout-plain", {"kind": "checkout", "checkpointId": "checkpoint-2", "alternativeId": None}),

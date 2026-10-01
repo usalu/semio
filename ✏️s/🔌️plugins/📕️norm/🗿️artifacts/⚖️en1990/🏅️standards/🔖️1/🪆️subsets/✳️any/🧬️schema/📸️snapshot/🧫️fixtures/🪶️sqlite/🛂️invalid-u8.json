@@ -1,0 +1,1 @@
+{"fields":["consequenceClass","reliabilityClass","designWorkingLifeCategory"],"invalidValues":[-1,256,1.25],"validValues":[0,1,254,255]}

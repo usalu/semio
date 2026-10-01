@@ -4,8 +4,8 @@ import type { DeleteStep } from "../../../🪜️step/🧬️schema/🧬️mutat
 import type { MoveStep } from "../../../🪜️step/🧬️schema/🧬️mutations/📍️move-step/🟦️";
 import type { EditStepParams } from "../../../🪜️step/🧬️schema/🧬️mutations/🔧️edit-step-params/🟦️";
 import type { ChangeStepCollapsed } from "../../../🪜️step/🧬️schema/🧬️mutations/🗂️change-step-collapsed/🟦️";
-import type { ConnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🟦️";
-import type { DisconnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🟦️";
+import type { ConnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🟦️";
+import type { DisconnectSteps } from "../../../🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🟦️";
 import type { DuplicateStep } from "../../../🪜️step/🧬️schema/🧬️mutations/🧬️duplicate-step/🟦️";
 
 //#region 🧬️Aggregate

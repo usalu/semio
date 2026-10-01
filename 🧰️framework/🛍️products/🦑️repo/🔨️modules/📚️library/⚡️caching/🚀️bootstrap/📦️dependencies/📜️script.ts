@@ -2,7 +2,7 @@
 import { spawn, spawnSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { Script, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { prepareCargoWorkspaceInvocation } from "../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { discoverBunWorkspaces, bunWorkspaceNativePatterns } from "../../../🗂️workspaces/🟦️bun/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";

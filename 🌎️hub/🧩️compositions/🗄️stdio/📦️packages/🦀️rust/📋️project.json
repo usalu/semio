@@ -310,6 +310,33 @@
         "command": "bun ./📜️script.ts composition prepare",
         "forwardAllArgs": true
       }
+    },
+    "parent-removal-test-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition removal-test-check",
+        "forwardAllArgs": true
+      }
+    },
+    "parent-removal-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition removal-check",
+        "forwardAllArgs": true
+      }
+    },
+    "mutation-inventory": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts mutation-inventory list-mutations s.stdio.binary raw any",
+        "forwardAllArgs": true
+      }
     }
   }
 }

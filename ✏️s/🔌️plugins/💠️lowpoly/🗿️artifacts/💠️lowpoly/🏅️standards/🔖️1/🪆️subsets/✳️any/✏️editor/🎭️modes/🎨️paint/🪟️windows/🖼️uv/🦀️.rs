@@ -16,7 +16,7 @@ pub const LOWPOLY_PLAY_WINDOW_UV: &str = "lowpoly-uv";
 pub const LOWPOLY_PLAY_BODY_UV: &str = "lowpoly.play.uv";
 const LOWPOLY_PLAY_SURFACE_UV: &str = "lowpoly.play.uv";
 
-pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintStrokeEnd", "paintFill", "fillBucket"];
+pub const LOWPOLY_UV_ACTIONS: &[&str] = &["addPaintLayer", "paintFill", "fillBucket"];
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

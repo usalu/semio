@@ -74,7 +74,7 @@ def outcome_of(board, targets, transform):
             missing.append(identifier)
     if not survivors:
         return None, {"status": "rejected", "code": "mutation.target-missing", "path": list(targets)}
-    messages = [{"code": "mutation.partial", "level": "warn", "target": ids} for ids in (missing, locked, fixed) if ids]
+    messages = [{"code": "mutation.partial", "level": "warning", "target": ids} for ids in (missing, locked, fixed) if ids]
     after = copy.deepcopy(board)
     patched_nodes, patched_regions = [], []
     if not identity:
@@ -94,7 +94,7 @@ def outcome_of(board, targets, transform):
     delta = lambda patched: {"added": [], "patched": patched, "removed": [], "reordered": None} if patched else None
     diff = {"artifact": None, "camera": None, "edges": None, "meta": None, "nodes": delta(patched_nodes), "schema": None, "targetRegions": delta(patched_regions)}
     if not patched_nodes and not patched_regions:
-        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warn", "target": list(targets)}]}
+        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warning", "target": list(targets)}]}
     return (after, diff), dict({"status": "applied"}, **({"messages": messages} if messages else {}))
 
 
@@ -214,7 +214,7 @@ DECLARED_MESSAGES = '''
 fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
     let level = |text: &str| match text {{
         "info" => protocol::Severity::Info,
-        "warn" => protocol::Severity::Warning,
+        "warning" => protocol::Severity::Warning,
         "error" => protocol::Severity::Error,
         "fatal" => protocol::Severity::Fatal,
         other => panic!("{kind}/{slug}: unknown message level {{other:?}}"),

@@ -103,5 +103,11 @@ union RasterMutation =
   | ChangeLayerPixels
   | ChangeLayerMask
   | ChangeLayerTransform
+  | PaintStroke
 
 type ChangeLayerTransform {layerId: String! expected: RasterTransform! transform: RasterTransform!}
+
+type RasterStrokePoint { x: Float!, y: Float! }
+type RasterBrush { size: Float!, hardness: Float!, opacity: Float!, color: [Float!]! }
+type RasterSelectionSpan { start: Int!, length: Int!, coverage: Int! }
+type PaintStroke { layerId: String!, target: String!, tool: String!, brush: RasterBrush!, points: [RasterStrokePoint!]!, selection: [RasterSelectionSpan!] }

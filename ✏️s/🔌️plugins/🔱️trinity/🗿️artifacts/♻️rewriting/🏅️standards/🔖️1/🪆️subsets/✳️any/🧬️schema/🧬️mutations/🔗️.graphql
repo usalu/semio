@@ -9,6 +9,11 @@ input RemoveParameterBindingInput { key: String! }
 input RewriteRuleLayoutPointInput { x: Float!, y: Float! }
 input ChangeRuleLayoutPointInput { key: String!, newPoint: RewriteRuleLayoutPointInput! }
 input RemoveRuleLayoutPointInput { key: String! }
+input DragWorkingNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
+input PatchWorkingNodesInput { targets: [String!]!, field: String!, value: String! }
+input DragRuleNodesInput { targets: [String!]!, dx: Float!, dy: Float! }
+input RuleLayoutPlacementInput { key: String!, x: Float!, y: Float! }
+input SetRuleLayoutPointsInput { points: [RuleLayoutPlacementInput!]!, cleared: [String!]! }
 
 input RewriteRuleMutationInput {
   editBeforeFixture: EditBeforeFixtureInput
@@ -18,4 +23,8 @@ input RewriteRuleMutationInput {
   removeParameterBinding: RemoveParameterBindingInput
   changeRuleLayoutPoint: ChangeRuleLayoutPointInput
   removeRuleLayoutPoint: RemoveRuleLayoutPointInput
+  dragWorkingNodes: DragWorkingNodesInput
+  patchWorkingNodes: PatchWorkingNodesInput
+  dragRuleNodes: DragRuleNodesInput
+  setRuleLayoutPoints: SetRuleLayoutPointsInput
 }

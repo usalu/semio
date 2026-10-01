@@ -57,6 +57,7 @@ export function mutationEnvelopeToWire(envelope: MutationEnvelope, timestamp: Wi
     timestamp,
     transaction: envelope.transaction ?? null,
     verb: envelope.verb ?? null,
+    line: null,
   };
 }
 
@@ -252,6 +253,8 @@ export type WireMutationEnvelope = {
   /** 🏷️ The id of the action or command whose edit carried the operation, never display text (`null`: none, and always
    * for a transition) — a peer resolves it through the authoring app's registry to the same history label. */
   readonly verb: string | null;
+  /** 🌿️ The alternative the operation was authored on (`null`: the trunk). */
+  readonly line: string | null;
 };
 
 /** 🏔️ Runtime/wire frontier summary — mirrors Rust `protocol_causal::FrontierSummary`
@@ -996,7 +999,7 @@ function decodeHlc(bytes: Uint8Array, pos: [number]): { readonly actor: number; 
 
 /** 🎯️ `mutation_id str | document_id str | actor str | dependencies vec<str> | observed (0 | 1 str) |
  * target vec<str> | diff.schema str | diff.payload bytes | inverse.schema str | inverse.payload bytes | hlc |
- * trailing flags varint (bit 0 transaction, bit 1 verb) | [transaction id str tool str] | [verb str]` — the TS twin of
+ * trailing flags varint (bit 0 transaction, bit 1 verb, bit 2 line) | [transaction id str tool str] | [verb str] | [line str]` — the TS twin of
  * Rust `protocol_causal::encode_envelope`. */
 function encodeEnvelope(out: number[], envelope: WireMutationEnvelope): void {
   encodeEnvelopeFields(out, envelope, () => encodeHlc(out, envelope.timestamp));
@@ -1029,12 +1032,13 @@ function encodeEnvelopeFields(out: number[], envelope: Omit<WireMutationEnvelope
   writeStr(out, envelope.inverse.schema);
   writeBytes(out, envelope.inverse.payload);
   hlc();
-  writeVarintU64(out, (envelope.transaction === null ? 0 : 1) | (envelope.verb === null ? 0 : 2));
+  writeVarintU64(out, (envelope.transaction === null ? 0 : 1) | (envelope.verb === null ? 0 : 2) | (envelope.line === null ? 0 : 4));
   if (envelope.transaction !== null) {
     writeStr(out, envelope.transaction.id);
     writeStr(out, envelope.transaction.tool);
   }
   if (envelope.verb !== null) writeStr(out, envelope.verb);
+  if (envelope.line !== null) writeStr(out, envelope.line);
 }
 
 /** 🎯️ Inverse of {@link encodeEnvelope} — the TS twin of Rust `protocol_causal::decode_envelope`. */
@@ -1053,10 +1057,11 @@ function decodeEnvelope(bytes: Uint8Array, pos: [number]): WireMutationEnvelope 
   const inversePayload = readBytes(bytes, pos);
   const timestamp = decodeHlc(bytes, pos);
   const flags = readVarintU64(bytes, pos);
-  if (flags > 0b11) throw new Error(`mutation envelope: trailing flags ${flags}`);
+  if (flags > 0b111) throw new Error(`mutation envelope: trailing flags ${flags}`);
   const transaction = (flags & 0b01) !== 0 ? { id: readStr(bytes, pos), tool: readStr(bytes, pos) } : null;
   const verb = (flags & 0b10) !== 0 ? readStr(bytes, pos) : null;
-  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction, verb };
+  const line = (flags & 0b100) !== 0 ? readStr(bytes, pos) : null;
+  return { mutation_id, document_id, actor, dependencies, observed, target, diff: { schema: diffSchema, payload: diffPayload }, inverse: { schema: inverseSchema, payload: inversePayload }, timestamp, transaction, verb, line };
 }
 
 /** 🎯️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq varint |
@@ -1186,29 +1191,27 @@ export type SupersessionFoldEvent = { readonly id: string; readonly actor: strin
  * (`alternative` is `null` then: a `checkout` naming the trunk or none activates it, a `branch` may not claim it). No
  * ownership rule. A target outside `operations` is refused like Rust's unknown-operation fold error.
  * @see ./🔗️causal/🔀️transition/🦀️.rs */
-export function foldSupersessions(documentId: string, operations: ReadonlySet<string>, events: readonly SupersessionFoldEvent[]): Readonly<{ alternative: string | null; trunk: string; supersessions: ReadonlyMap<string, EffectiveSupersession> }> {
+export function foldSupersessions(documentId: string, operations: ReadonlySet<string>, events: readonly SupersessionFoldEvent[], head?: { readonly lineId: string; readonly checkpointId?: string | null }): Readonly<{ alternative: string | null; trunk: string; supersessions: ReadonlyMap<string, EffectiveSupersession> }> {
   const trunk = trunkAlternativeId(documentId);
   const key = (event: SupersessionFoldEvent): readonly [number, number, number] => [event.timestamp.physical_ms, event.timestamp.logical, event.timestamp.actor];
   const ordered = [...events].sort((left, right) => {
     const [a, b] = [key(left), key(right)];
     return a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || (left.id < right.id ? -1 : left.id > right.id ? 1 : 0);
   });
-  let alternative: string | null = null;
   const candidates: [string, EffectiveSupersession][] = [];
   for (const event of ordered) {
     const transition = event.transition;
     if (transition.kind === "branch") {
       if (transition.alternativeId === trunk) throw new Error(`history fold: branch claims the trunk alternative ${trunk}`);
-      alternative = transition.alternativeId;
-    } else if (transition.kind === "checkout") alternative = transition.alternativeId === trunk ? null : transition.alternativeId;
-    else if (transition.kind === "supersede") {
+    } else if (transition.kind === "supersede") {
       for (const input of transition.inputs) {
         if (!operations.has(input.target)) throw new Error(`history fold: transition references unknown operation ${input.target}`);
         candidates.push([input.target, { transitionId: event.id, actor: event.actor, timestamp: event.timestamp, scope: transition.scope, replacement: input.replacement }]);
       }
     }
   }
-  const activeLine = alternative ?? trunk;
+  const activeLine = head?.lineId ?? trunk;
+  const alternative = activeLine === trunk ? null : activeLine;
   const supersessions = new Map<string, EffectiveSupersession>();
   for (const [target, supersession] of candidates) if (supersession.scope === null || supersession.scope === activeLine) supersessions.set(target, supersession);
   return { alternative, trunk, supersessions };
@@ -1311,6 +1314,7 @@ export type ExactWireMutationEnvelope = Readonly<{
   timestamp: Readonly<{ actor: bigint; physical_ms: bigint; logical: bigint }>;
   transaction: TransactionRef | null;
   verb: string | null;
+  line: string | null;
 }>;
 
 export class DocumentBackboneBatchError extends Error {
@@ -1389,12 +1393,13 @@ export function encodeDocumentBackboneEnvelopeBatchExact(envelopes: readonly Exa
     documentBackboneWriteU64(out, envelope.timestamp.actor);
     documentBackboneWriteU64(out, envelope.timestamp.physical_ms);
     documentBackboneWriteU64(out, envelope.timestamp.logical);
-    documentBackboneWriteU64(out, (envelope.transaction === null ? 0n : 1n) | (envelope.verb === null ? 0n : 2n));
+    documentBackboneWriteU64(out, (envelope.transaction === null ? 0n : 1n) | (envelope.verb === null ? 0n : 2n) | (envelope.line === null ? 0n : 4n));
     if (envelope.transaction !== null) {
       documentBackboneWriteText(out, envelope.transaction.id);
       documentBackboneWriteText(out, envelope.transaction.tool);
     }
     if (envelope.verb !== null) documentBackboneWriteText(out, envelope.verb);
+    if (envelope.line !== null) documentBackboneWriteText(out, envelope.line);
   }
   return new Uint8Array(out);
 }
@@ -1483,9 +1488,10 @@ function readDocumentBackboneEnvelopeBatchAtExact(
     totalPayloadBytes += inversePayload.length;
     const timestamp = { actor: readU64(), physical_ms: readU64(), logical: readU64() };
     const flags = readU64();
-    if (flags > 0b11n) throw new DocumentBackboneBatchError("malformed", "trailing-flags");
+    if (flags > 0b111n) throw new DocumentBackboneBatchError("malformed", "trailing-flags");
     const transaction = (flags & 0b01n) !== 0n ? { id: readText(limits.maximumIdentifierBytes, "identifier-bytes"), tool: readText(limits.maximumIdentifierBytes, "identifier-bytes") } : null;
     const verb = (flags & 0b10n) !== 0n ? readText(limits.maximumIdentifierBytes, "identifier-bytes") : null;
+    const line = (flags & 0b100n) !== 0n ? readText(limits.maximumIdentifierBytes, "identifier-bytes") : null;
     envelopes.push({
       mutation_id,
       document_id,
@@ -1498,6 +1504,7 @@ function readDocumentBackboneEnvelopeBatchAtExact(
       timestamp,
       transaction,
       verb,
+      line,
     });
   }
   if (terminal && position[0] !== bytes.length) throw new DocumentBackboneBatchError("malformed", "trailing-bytes");

@@ -3,6 +3,9 @@ use super::*;
 #[path = "../🪶️native-encoding/🧪️tests/🦀️.rs"]
 mod native_encoding_tests;
 
+#[path = "../🪶️native-decoding/🧪️tests/🦀️.rs"]
+mod native_decoding_tests;
+
 impl ArtifactDsl for RetainedTextSnapshot {
     const EXTENSION: &'static str = "retained-text";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {

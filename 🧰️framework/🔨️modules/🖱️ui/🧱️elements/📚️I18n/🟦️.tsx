@@ -779,6 +779,16 @@ export type UiTranslationSchema = {
         readonly empty: UiLabelValue;
         readonly cancelled: UiLabelValue;
         readonly nameInvalid: UiLabelValue;
+        readonly busy: UiLabelValue;
+        readonly unknownMutation: UiLabelValue;
+        readonly notEditable: UiLabelValue;
+        readonly unknownInput: UiLabelValue;
+        readonly invalidInput: UiLabelValue;
+        readonly noSelection: UiLabelValue;
+        readonly nameRequired: UiLabelValue;
+        readonly schemaUnavailable: UiLabelValue;
+        readonly replayFaulted: UiLabelValue;
+        readonly commitFailed: UiLabelValue;
       };
     };
     /** 🛟️ The hub and event-log refusals of history transitions (`history.malformed-transition`,

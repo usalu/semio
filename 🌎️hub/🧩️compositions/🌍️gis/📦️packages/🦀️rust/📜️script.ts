@@ -4,7 +4,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted, runCmd, devToolingEnv, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 import { DurableThreeStoreAssemblyCheckScript, DurableThreeStoreAssemblyNativeCheckScript } from "../../🧪️tests/🗄️durable-three-store-assembly/🟦️.ts";
 import { MapCreateRegionGroupCheckScript, MapCreateRegionGroupNativeCheckScript } from "../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🧪️tests/🧩️map-create-region-group/🟦️.ts";
@@ -73,4 +75,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
   .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript);
 registerPlaygroundSiteBuildCommands(router);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

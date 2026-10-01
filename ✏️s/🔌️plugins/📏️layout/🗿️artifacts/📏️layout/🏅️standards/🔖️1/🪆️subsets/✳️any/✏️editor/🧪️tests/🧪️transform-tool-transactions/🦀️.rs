@@ -1,7 +1,8 @@
 //! 🛠️ Laws for the transform tool's ONE promise, through the real registry-backed app and its retained command route:
 //! one gumball gesture is one `ToolTransaction` — one edit, one history row stamped with its `TransactionRef`, one
 //! parametric leaf carrying the literal targets and the net parameters — streamed ticks live in the Blueprint window's
-//! open transaction (previewed by that window, never history), and a cancelled gesture leaves zero trace.
+//! open transaction (previewed by that window, never history), and a cancelled gesture leaves zero trace. Time travel edits
+//! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
 use super::*;
 use crate::editor::layout::unit_tests::context::{layout_app_with_registry, scene, window_meta, LayoutApp, INSTANCE, WINDOW};
@@ -193,7 +194,8 @@ async fn two_gestures_are_two_transactions() {
 }
 
 /// 🔃️ One-shot turn and scaling verbs (palette, agent) are each one transaction yielding their parametric leaf about the
-/// recorded centroid pivot, labelled from the leaf.
+/// recorded centroid pivot, labelled from the leaf — for one frame and for several, whose inverse restores two absolute
+/// rows per frame inside the leaf's declared fold footprint; one undo takes each back exactly.
 #[semio_framework_async_macros::async_test]
 async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     let mut app = layout_app_with_registry().await;
@@ -206,6 +208,34 @@ async fn one_shot_turns_and_scalings_are_one_transaction_each() {
     let rows = edit_rows(&scaled);
     assert_eq!(rows.len(), 1);
     assert_eq!(label(&rows[0], protocol::Locale::De), "1 Rahmen um (2; 2) skalieren");
+    let before = app.0.snapshot().expect("the head before the multi-frame transforms");
+    let pair = vec!["frame-1".to_string(), "frame-text-1".to_string()];
+    let turned = run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: pair.clone(), angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
+    assert_eq!(edit_rows(&turned).iter().map(|row| label(row, protocol::Locale::En)).collect::<Vec<_>>(), vec!["Rotate 2 frames by 90°".to_string()], "a two-frame turn is one row");
+    let scaled = run(&mut app, LayoutCommand::ScaleSelection(scale_selection::ScaleSelection { ids: pair, sx: 0.5, sy: 3.0, phase: None, reason: None })).await;
+    assert_eq!(edit_rows(&scaled).iter().map(|row| label(row, protocol::Locale::De)).collect::<Vec<_>>(), vec!["2 Rahmen um (0,5; 3) skalieren".to_string()], "a two-frame scaling is one row");
+    assert_ne!(app.0.snapshot().expect("the transformed head"), before);
+    reserved(&mut app, "undo", None).await;
+    reserved(&mut app, "undo", None).await;
+    assert_eq!(app.0.snapshot().expect("the undone head"), before, "two undos restore both frames exactly through their multi-row inverses");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
+}
+
+/// 🧲️ A streamed gumball drag of two frames is one transaction holding ONE `drag-frames` leaf over both targets — one row,
+/// both frames moved by the net offset, and one undo restores both.
+#[semio_framework_async_macros::async_test]
+async fn a_streamed_drag_of_two_frames_is_one_transaction() {
+    let mut app = layout_app_with_registry().await;
+    let before = (origin(&app, "frame-1"), origin(&app, "frame-text-1"));
+    let tick = |dx: f64, phase: &str| LayoutCommand::TranslateSelection(gumball::TranslateSelection { ids: vec!["frame-1".into(), "frame-text-1".into()], dx, dy: 1.0, phase: Some(phase.into()), reason: None });
+    run(&mut app, tick(4.0, "stream")).await;
+    run(&mut app, tick(4.0, "stream")).await;
+    let rows = edit_rows(&run(&mut app, tick(2.0, "commit")).await);
+    assert_eq!(rows.iter().map(|row| label(row, protocol::Locale::En)).collect::<Vec<_>>(), vec!["Drag 2 frames by (10, 3)".to_string()], "one gesture, one row, the net leaf");
+    assert!(rows[0].transaction.is_some(), "the row is the gesture's transaction");
+    assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), ((before.0 .0 + 10.0, before.0 .1 + 3.0), (before.1 .0 + 10.0, before.1 .1 + 3.0)));
+    reserved(&mut app, "undo", None).await;
+    assert_eq!((origin(&app, "frame-1"), origin(&app, "frame-text-1")), before, "one undo restores both frames");
     artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 
@@ -225,3 +255,140 @@ async fn a_document_moved_under_an_open_gesture_aborts_it() {
     artifact_app_laws::close_registered_fixture_app(&mut app.0);
 }
 //#endregion 🌊️Gestures
+
+//#region ⏪️TimeTravel
+/// ⏪️ One `historyEdit*` verb from the Blueprint window, refused verbs failing the law.
+async fn history_edit(app: &mut LayoutApp, verb: &str, args: Value) {
+    let args = DslValue::from(&args);
+    let result = app.0.handle_action(verb, Some(&args), &window_meta(WINDOW)).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
+}
+
+async fn time_travel(app: &mut LayoutApp) -> Option<semio_framework::kernel::HistoryTimeTravel> {
+    app.0.history_snapshot().await.expect("history").time_travel
+}
+
+/// ⏳️ Drives the session's replay job until `done` holds for its stage (absent = time travel closed).
+async fn pump(app: &mut LayoutApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
+    for _ in 0..10_000 {
+        if done(time_travel(app).await.map(|status| status.stage)) {
+            return;
+        }
+        app.0.advance_typed_operation_publication().await.expect("a driver turn");
+        while app.0.take_typed_operation_ui_progress().is_some() {}
+    }
+    panic!("the history edit never settled: {:?}", time_travel(app).await);
+}
+
+/// 🧾️ The history rows that carry a document mutation, oldest first.
+async fn document_rows(app: &mut LayoutApp) -> Vec<HistoryEntry> {
+    let mut rows: Vec<_> = app.0.history_snapshot().await.expect("history").upserts.into_iter().filter(|entry| entry.edit_id.is_some() && !entry.mutations.is_empty()).collect();
+    rows.sort_by_key(|entry| entry.seq);
+    rows
+}
+
+/// ✋️ One gumball drag of `frame-1` by `(dx, 0)`, streamed and committed — one row.
+async fn gumball_drag(app: &mut LayoutApp, dx: f64) {
+    run(app, stream(dx, 0.0)).await;
+    assert_eq!(edit_rows(&run(app, phase("commit", None)).await).len(), 1, "the drag is one row");
+}
+
+/// 🧮️ The fresh fold of a log of frame-selection leaves on the demo document.
+fn folded(log: &[crate::mutations::LayoutMutation]) -> crate::LayoutSnapshot {
+    use protocol::{Mutation, MutationDiff};
+    log.iter().fold(crate::standards::v1::subsets::any::schema::default_document(), |document, mutation| mutation.diff(&document).diff().apply(&document).expect("the leaf applies"))
+}
+
+fn drag_leaf(dx: f64) -> crate::mutations::LayoutMutation {
+    crate::mutations::LayoutMutation::DragFrames(crate::mutations::drag_frames::DragFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], dx, dy: 0.0 })
+}
+
+fn turn_leaf(pivot_x: f64, pivot_y: f64) -> crate::mutations::LayoutMutation {
+    crate::mutations::LayoutMutation::RotateFrames(crate::mutations::rotate_frames::RotateFrames { page_id: "page-1".into(), targets: vec!["frame-1".into()], pivot_x, pivot_y, angle: std::f64::consts::FRAC_PI_2 })
+}
+
+/// ⏪️ Time travel edits the gesture's yielded leaf, never the gesture: the gumball drag's offset and then the downstream
+/// turn's pivot are edited through the real `historyEdit*` verbs. Reviewing never touches the committed document; every
+/// overwrite replays the downstream turn onto the edited frame and the head equals the fresh fold of the edited log;
+/// both edits keep their mutation ids and rows.
+#[semio_framework_async_macros::async_test]
+async fn a_gumball_drag_and_its_downstream_turn_edited_in_time_travel_replay_exactly() {
+    let mut app = layout_app_with_registry().await;
+    let rows_before = document_rows(&mut app).await.len();
+    gumball_drag(&mut app, 10.0).await;
+    run(&mut app, LayoutCommand::RotateSelection(rotate_selection::RotateSelection { ids: vec!["frame-1".into()], angle: std::f64::consts::FRAC_PI_2, phase: None, reason: None })).await;
+    let rows = document_rows(&mut app).await;
+    assert_eq!(rows.len(), rows_before + 2, "two gestures, two rows");
+    assert!(rows[rows_before..].iter().all(|row| row.transaction.is_some() && row.mutations.iter().all(|mutation| mutation.editable)), "both rows are tool transactions of editable leaves");
+    assert_eq!(app.0.snapshot().expect("head"), folded(&[drag_leaf(10.0), turn_leaf(40.0, 30.0)]), "the turn recorded the centroid pivot of the dragged frame");
+    let (drag, turn) = (rows[rows_before].mutations[0].mutation_id.clone(), rows[rows_before + 1].mutations[0].mutation_id.clone());
+    let committed = app.0.snapshot().expect("committed head");
+
+    history_edit(&mut app, "historyEditBegin", serde_json::json!({ "mutationId": drag })).await;
+    history_edit(&mut app, "historyEditInput", serde_json::json!({ "path": "/dx", "value": -5.0 })).await;
+    history_edit(&mut app, "historyEditAccept", serde_json::json!({})).await;
+    pump(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = time_travel(&mut app).await.expect("a live session");
+    assert_eq!((status.stage, status.blocking), (semio_framework::kernel::HistoryTimeTravelStage::Reviewing, false), "a clean replay reviews: {status:?}");
+    assert_eq!(app.0.snapshot().expect("committed head"), committed, "reviewing never touches the committed document");
+    history_edit(&mut app, "historyEditFinalize", serde_json::json!({})).await;
+    history_edit(&mut app, "historyEditCommit", serde_json::json!({ "choice": "overwrite" })).await;
+    pump(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(app.0.snapshot().expect("edited head"), folded(&[drag_leaf(-5.0), turn_leaf(40.0, 30.0)]), "the downstream turn replays about its recorded pivot onto the edited drag");
+
+    history_edit(&mut app, "historyEditBegin", serde_json::json!({ "mutationId": turn })).await;
+    history_edit(&mut app, "historyEditInput", serde_json::json!({ "path": "/pivotX", "value": 0.0 })).await;
+    history_edit(&mut app, "historyEditAccept", serde_json::json!({})).await;
+    pump(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    history_edit(&mut app, "historyEditFinalize", serde_json::json!({})).await;
+    history_edit(&mut app, "historyEditCommit", serde_json::json!({ "choice": "overwrite" })).await;
+    pump(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(app.0.snapshot().expect("edited head"), folded(&[drag_leaf(-5.0), turn_leaf(0.0, 30.0)]), "an edited pivot replays exactly");
+    let ids: Vec<_> = document_rows(&mut app).await[rows_before..].iter().map(|row| row.mutations[0].mutation_id.clone()).collect();
+    assert_eq!(ids, vec![drag, turn], "editing never re-mints the gestures' mutations or rows");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
+}
+
+/// 🎯️ Selects `ids` in the elements domain, as a canvas click does — interaction verbs keep working during time travel.
+async fn select(app: &mut LayoutApp, ids: &[&str]) {
+    let ids: Vec<String> = ids.iter().map(|id| id.to_string()).collect();
+    let args = crate::editor::layout::layout_select_action_args(&ids, "replace");
+    let admitted = app.0.handle_action(semio_framework_plugin::INTERACTION_SELECT_ACTION_ID, Some(&args), &window_meta(WINDOW)).await.unwrap_or_else(|fault| panic!("the selection is admitted: {fault:?}"));
+    let result = semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted).await;
+    settle(app, result).await;
+}
+
+/// 🚨️ The fatal-resolution loop: a drag whose targets are edited to a frame that does not exist reports
+/// `mutation.target-missing` (Error) and blocks finalizing; re-targeting it through "use selection" (the `targets`
+/// input's `Reference` reads the elements selection) clears the block, and Exit discards the whole session with zero
+/// trace.
+#[semio_framework_async_macros::async_test]
+async fn a_drag_edited_onto_a_missing_frame_blocks_finalize_until_its_targets_are_fixed() {
+    let mut app = layout_app_with_registry().await;
+    let rows_before = document_rows(&mut app).await.len();
+    gumball_drag(&mut app, 10.0).await;
+    let drag = document_rows(&mut app).await[rows_before].mutations[0].mutation_id.clone();
+    let committed = app.0.snapshot().expect("committed head");
+    history_edit(&mut app, "historyEditBegin", serde_json::json!({ "mutationId": drag })).await;
+    history_edit(&mut app, "historyEditInput", serde_json::json!({ "path": "/targets", "value": ["frame-missing"] })).await;
+    history_edit(&mut app, "historyEditAccept", serde_json::json!({})).await;
+    pump(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = time_travel(&mut app).await.expect("a live session");
+    assert!(status.blocking && status.worst == Some(semio_framework::kernel::Severity::Error), "a missing target is an Error that blocks finalizing: {status:?}");
+    let rows = document_rows(&mut app).await;
+    let outcome = &rows[rows_before].mutations[0];
+    assert!(outcome.messages.iter().any(|message| message.code == "mutation.target-missing"), "the drag reports target-missing: {outcome:?}");
+    select(&mut app, &["frame-text-1"]).await;
+    history_edit(&mut app, "historyEditBegin", serde_json::json!({ "mutationId": drag })).await;
+    history_edit(&mut app, "historyEditUseSelection", serde_json::json!({ "path": "/targets" })).await;
+    history_edit(&mut app, "historyEditAccept", serde_json::json!({})).await;
+    pump(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = time_travel(&mut app).await.expect("a live session");
+    assert!(!status.blocking, "the selection's frame clears the block: {status:?}");
+    history_edit(&mut app, "historyEditExit", serde_json::json!({})).await;
+    pump(&mut app, |stage| stage.is_none()).await;
+    assert_eq!(app.0.snapshot().expect("head"), committed, "exit leaves zero trace");
+    assert_eq!(document_rows(&mut app).await.len(), rows_before + 1, "no row was added or removed");
+    artifact_app_laws::close_registered_fixture_app(&mut app.0);
+}
+//#endregion ⏪️TimeTravel

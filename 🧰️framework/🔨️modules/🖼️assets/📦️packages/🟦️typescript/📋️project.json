@@ -88,6 +88,16 @@
       "options": {
         "command": "bun ./📜️script.ts generate-logo"
       }
+    },
+    "test-mesh-contract": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖼️assets/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test-mesh-contract"
+      }
     }
   }
 }

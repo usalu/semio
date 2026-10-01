@@ -1,7 +1,7 @@
 /** 🧪️ Procedure document facets compose the shared flow and text child identities. */
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document-contract/🟦️.ts";
+import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import artifactSchema from "../../🔣️.json" with { type: "json" };
@@ -10,7 +10,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseProcedureArtifact } from "../../🟦️.ts";
 import { parseProcedureSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProcedureDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
 
 /** 🪆️ Compares first-party parsers with Ajv and every committed Procedure mutation document. */
 export function testProcedureDocumentContractOracle(): void {

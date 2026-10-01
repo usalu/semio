@@ -1,9 +1,10 @@
 #!/usr/bin/env bun
 /** 📋️ Forms TypeScript contract and authoring verification. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 class TestScript extends BundleScript {
   async run(): Promise<void> {
-    const { testFormsDocumentContractOracle, testFormsMutationSchemas, testFormsDesignImport } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts");
+    const { testFormsDocumentContractOracle, testFormsMutationSchemas, testFormsDesignImport } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
     testFormsDocumentContractOracle();
     await testFormsDesignImport();
     await testFormsMutationSchemas();
@@ -29,4 +30,4 @@ class TestScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

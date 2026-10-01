@@ -1,0 +1,69 @@
+{
+  "colors": [
+    {
+      "id": "zero-alpha-shadow",
+      "before": "rgba(0,0,0,0)",
+      "after": "transparent",
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "opaque-mask",
+      "before": "#000",
+      "after": "black",
+      "rgba": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "zero-alpha-mask",
+      "before": "#0000",
+      "after": "transparent",
+      "rgba": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "galleries": [
+    {
+      "id": "gallery-card-border",
+      "selector": "#gallery-card",
+      "property": "borderTopColor",
+      "alpha": 0.3
+    },
+    {
+      "id": "gallery-row-border",
+      "selector": "#gallery-swatches section > div > div",
+      "property": "borderTopColor",
+      "alpha": 0.25
+    },
+    {
+      "id": "gallery-swatch-border",
+      "selector": "#gallery-swatches section > div > div > div:first-child",
+      "property": "borderTopColor",
+      "alpha": 0.4
+    },
+    {
+      "id": "gallery-heading-border",
+      "selector": "#gallery-table th",
+      "property": "borderBottomColor",
+      "alpha": 0.4
+    },
+    {
+      "id": "gallery-cell-border",
+      "selector": "#gallery-table td",
+      "property": "borderBottomColor",
+      "alpha": 0.15
+    }
+  ]
+}

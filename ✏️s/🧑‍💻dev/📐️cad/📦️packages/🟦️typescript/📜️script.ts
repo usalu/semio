@@ -6,7 +6,9 @@ import type { BundleLinter } from "../../../../../🧰️framework/🛍️produc
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { defineLint } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🔌️Dependency-boundary lint across the folded domain files (former per-package `policyFile` checks merged: renderer + stately each carried their own single-file variant). Scoped to the artifact-engine home of the compute modules; `📺️renderer` moved to the app's own `⚙️engine` as app-surface UI and is out of this compute-boundary lint's scope. */
 export const policy = defineLint("@semio-tech/cad-js-modules", (_l: BundleLinter) => {
@@ -147,4 +149,4 @@ class RetainedAuditScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("fixture", FixtureScript).register("generate", GenerateScript).register("retained-audit", RetainedAuditScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runRepoScriptMain(router, import.meta.url, { defaultCommand: "test" });

@@ -88,7 +88,7 @@
           "scenarios": [
             {
               "id": "inserts-room-c-at-the-sorted-position",
-              "directoryName": "🧩️inserts-room-c-at-the-sorted-position"
+              "directoryName": "🧩️inserts"
             }
           ]
         },
@@ -99,7 +99,7 @@
           "scenarios": [
             {
               "id": "removes-room-a-and-cascades-its-edge",
-              "directoryName": "🕳️removes-room-a-and-cascades-its-edge"
+              "directoryName": "🕳️removes"
             }
           ]
         },
@@ -121,7 +121,7 @@
           "scenarios": [
             {
               "id": "widens-room-a-to-a-double-bay",
-              "directoryName": "📐️widens-room-a-to-a-double-bay"
+              "directoryName": "📐️widens"
             }
           ]
         },
@@ -132,7 +132,7 @@
           "scenarios": [
             {
               "id": "joins-room-a-to-room-b-beside",
-              "directoryName": "🔗️joins-room-a-to-room-b-beside"
+              "directoryName": "🔗️joins"
             }
           ]
         },
@@ -143,7 +143,7 @@
           "scenarios": [
             {
               "id": "severs-the-corridor-b-edge",
-              "directoryName": "✂️severs-the-corridor-b-edge"
+              "directoryName": "✂️severs"
             }
           ]
         },
@@ -176,7 +176,7 @@
           "scenarios": [
             {
               "id": "adds-a-stair-tile-to-the-catalogue",
-              "directoryName": "🀄️adds-a-stair-tile-to-the-catalogue"
+              "directoryName": "🀄️adds"
             }
           ]
         },
@@ -187,7 +187,7 @@
           "scenarios": [
             {
               "id": "drops-the-corridor-tile-and-its-rule",
-              "directoryName": "🗑️drops-the-corridor-tile-and-its-rule"
+              "directoryName": "🗑️drops"
             }
           ]
         },
@@ -198,7 +198,7 @@
           "scenarios": [
             {
               "id": "raises-the-room-tile-selection-bias",
-              "directoryName": "⚖️raises-the-room-tile-selection-bias"
+              "directoryName": "⚖️raises"
             }
           ]
         },
@@ -209,7 +209,7 @@
           "scenarios": [
             {
               "id": "swaps-the-corridor-box-for-a-wedge",
-              "directoryName": "🖼️swaps-the-corridor-box-for-a-wedge"
+              "directoryName": "🖼️swaps"
             }
           ]
         },
@@ -220,7 +220,7 @@
           "scenarios": [
             {
               "id": "forbids-two-rooms-side-by-side",
-              "directoryName": "🚦️forbids-two-rooms-side-by-side"
+              "directoryName": "🚦️forbids"
             }
           ]
         },
@@ -231,7 +231,7 @@
           "scenarios": [
             {
               "id": "drops-the-room-corridor-pairing",
-              "directoryName": "🚫️drops-the-room-corridor-pairing"
+              "directoryName": "🚫️drops"
             }
           ]
         },
@@ -242,7 +242,7 @@
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
-              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+              "directoryName": "🎲️reseeds"
             }
           ]
         },
@@ -257,7 +257,7 @@
             },
             {
               "id": "skips-a-slot-the-corridor-lacks",
-              "directoryName": "⚠️skips-a-slot-the-corridor-lacks"
+              "directoryName": "⚠️skips"
             }
           ]
         },
@@ -268,7 +268,7 @@
           "scenarios": [
             {
               "id": "sets-the-corridor-and-room-b",
-              "directoryName": "🎯️sets-the-corridor-and-room-b"
+              "directoryName": "🎯️sets"
             }
           ]
         }

@@ -1,0 +1,282 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/renderer/local-folder-bindings/schema.json",
+  "title": "Local Folder Bindings",
+  "description": "The shared corpus of `os.config.local-folders` both shells assert (ticket 26/09/30 NON-DESTRUCTIVE-HISTORY-EDITING): `commits` run the facet's mutations (the `📎️attach-local-folder` and `✂️detach-local-folder` leaf payloads) from an empty log, saying which are recorded and what the log folds to after each step, then the stored `{version: 1, events}` value; `logs` are stored values (`raw`, `null` = none) and the bindings they replay to; `offers` are the reconnect offer for a session's document identity given the bindings and the attached document; `names` pair a folder path with the name a person knows it by; `texts` are the reconnect band's copy per locale for `folder`. Target-neutral: React's `📎️local-folders` and the wgpu `🧪️wgpu-local-folders` read the same corpus.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "description",
+    "schema",
+    "commits",
+    "logs",
+    "offers",
+    "names",
+    "texts"
+  ],
+  "properties": {
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema": {
+      "const": "os.config.local-folders"
+    },
+    "commits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "steps",
+        "log"
+      ],
+      "properties": {
+        "steps": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/Step"
+          }
+        },
+        "log": {
+          "$ref": "#/definitions/Log"
+        }
+      }
+    },
+    "logs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "raw",
+          "bindings"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "raw": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "bindings": {
+            "$ref": "#/definitions/Bindings"
+          }
+        }
+      }
+    },
+    "offers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "bindings",
+          "identity",
+          "attached",
+          "offer"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bindings": {
+            "$ref": "#/definitions/Bindings"
+          },
+          "identity": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/definitions/Identity"
+              }
+            ]
+          },
+          "attached": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "minLength": 1
+              }
+            ]
+          },
+          "offer": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/attach-local-folder/schema.json#/$defs/LocalFolderBinding"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "names": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": [
+          {
+            "type": "string",
+            "minLength": 1
+          },
+          {
+            "type": "string",
+            "minLength": 1
+          }
+        ]
+      }
+    },
+    "texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "folder",
+        "en",
+        "de"
+      ],
+      "properties": {
+        "folder": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "$ref": "#/definitions/Texts"
+        },
+        "de": {
+          "$ref": "#/definitions/Texts"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Mutation": {
+      "oneOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/attach-local-folder/schema.json"
+        },
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/detach-local-folder/schema.json"
+        }
+      ]
+    },
+    "Bindings": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/os/config/mutation/attach-local-folder/schema.json#/$defs/LocalFolderBinding"
+      }
+    },
+    "Log": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "events"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Mutation"
+          }
+        }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mutation",
+        "recorded",
+        "bindings"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "mutation": {
+          "$ref": "#/definitions/Mutation"
+        },
+        "recorded": {
+          "type": "boolean"
+        },
+        "bindings": {
+          "$ref": "#/definitions/Bindings"
+        }
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "documentId",
+        "pluginId",
+        "appId"
+      ],
+      "properties": {
+        "documentId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pluginId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "appId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "message",
+        "attach",
+        "forget"
+      ],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attach": {
+          "type": "string",
+          "minLength": 1
+        },
+        "forget": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

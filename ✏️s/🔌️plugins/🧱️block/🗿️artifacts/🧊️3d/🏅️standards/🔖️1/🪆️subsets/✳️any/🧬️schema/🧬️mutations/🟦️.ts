@@ -5,7 +5,7 @@
 export type { RenameObjectKind } from "./✏️rename-object-kind/🟦️";
 export type { ChangeObjectKindLabel } from "./🏷️change-object-kind-label/🟦️";
 export type { ChangeObjectKindVariant } from "./🔀️change-object-kind-variant/🟦️";
-export type { ChangeObjectKindDescription } from "./📃️change-object-kind-description/🟦️";
+export type { ChangeObjectKindDescription } from "./📃️change-object-kind/🟦️";
 export type { ChangeObjectKindIcon } from "./🖼️change-object-kind-icon/🟦️";
 export type { ChangeObjectKindUnit } from "./📐change-object-kind-unit/🟦️";
 export type { CreateRepresentation } from "./🧱create-representation/🟦️";
@@ -13,7 +13,7 @@ export type { DeleteRepresentation } from "./🗑️delete-representation/🟦�
 export type { RenameRepresentation } from "./✒️rename-representation/🟦️";
 export type { ChangeRepresentationMeshUrl } from "./🌐change-representation-mesh-url/🟦️";
 export type { ChangeRepresentationLod } from "./🏔️change-representation-lod/🟦️";
-export type { ChangeRepresentationDescription } from "./📜change-representation-description/🟦️";
+export type { ChangeRepresentationDescription } from "./📜change-representation/🟦️";
 export type { AddRepresentationTag } from "./🔖add-representation-tag/🟦️";
 export type { RemoveRepresentationTag } from "./🚫remove-representation-tag/🟦️";
 export type { AddRepresentationAttribute } from "./🧩add-representation-attribute/🟦️";
@@ -23,7 +23,7 @@ export type { DeleteVortexKind } from "./❌delete-vortex-kind/🟦️";
 export type { RenameVortexKind } from "./🖋️rename-vortex-kind/🟦️";
 export type { ChangeVortexKindLabel } from "./🎫change-vortex-kind-label/🟦️";
 export type { ChangeVortexKindColor } from "./🎨change-vortex-kind-color/🟦️";
-export type { ChangeVortexKindDefaultCableKind } from "./🔌change-vortex-kind-default-cable-kind/🟦️";
+export type { ChangeVortexKindDefaultCableKind } from "./🔌change-vortex-kind-default-cable/🟦️";
 export type { CreateVortex } from "./🌀create-vortex/🟦️";
 export type { DeleteVortex } from "./🕳️delete-vortex/🟦️";
 export type { MoveVortex } from "./📍move-vortex/🟦️";
@@ -44,7 +44,7 @@ export type Block3dMutation =
   | { mutation: "renameObjectKind" } & import("./✏️rename-object-kind/🟦️").RenameObjectKind
   | { mutation: "changeObjectKindLabel" } & import("./🏷️change-object-kind-label/🟦️").ChangeObjectKindLabel
   | { mutation: "changeObjectKindVariant" } & import("./🔀️change-object-kind-variant/🟦️").ChangeObjectKindVariant
-  | { mutation: "changeObjectKindDescription" } & import("./📃️change-object-kind-description/🟦️").ChangeObjectKindDescription
+  | { mutation: "changeObjectKindDescription" } & import("./📃️change-object-kind/🟦️").ChangeObjectKindDescription
   | { mutation: "changeObjectKindIcon" } & import("./🖼️change-object-kind-icon/🟦️").ChangeObjectKindIcon
   | { mutation: "changeObjectKindUnit" } & import("./📐change-object-kind-unit/🟦️").ChangeObjectKindUnit
   | { mutation: "createRepresentation" } & import("./🧱create-representation/🟦️").CreateRepresentation
@@ -52,7 +52,7 @@ export type Block3dMutation =
   | { mutation: "renameRepresentation" } & import("./✒️rename-representation/🟦️").RenameRepresentation
   | { mutation: "changeRepresentationMeshUrl" } & import("./🌐change-representation-mesh-url/🟦️").ChangeRepresentationMeshUrl
   | { mutation: "changeRepresentationLod" } & import("./🏔️change-representation-lod/🟦️").ChangeRepresentationLod
-  | { mutation: "changeRepresentationDescription" } & import("./📜change-representation-description/🟦️").ChangeRepresentationDescription
+  | { mutation: "changeRepresentationDescription" } & import("./📜change-representation/🟦️").ChangeRepresentationDescription
   | { mutation: "addRepresentationTag" } & import("./🔖add-representation-tag/🟦️").AddRepresentationTag
   | { mutation: "removeRepresentationTag" } & import("./🚫remove-representation-tag/🟦️").RemoveRepresentationTag
   | { mutation: "addRepresentationAttribute" } & import("./🧩add-representation-attribute/🟦️").AddRepresentationAttribute
@@ -62,7 +62,7 @@ export type Block3dMutation =
   | { mutation: "renameVortexKind" } & import("./🖋️rename-vortex-kind/🟦️").RenameVortexKind
   | { mutation: "changeVortexKindLabel" } & import("./🎫change-vortex-kind-label/🟦️").ChangeVortexKindLabel
   | { mutation: "changeVortexKindColor" } & import("./🎨change-vortex-kind-color/🟦️").ChangeVortexKindColor
-  | { mutation: "changeVortexKindDefaultCableKind" } & import("./🔌change-vortex-kind-default-cable-kind/🟦️").ChangeVortexKindDefaultCableKind
+  | { mutation: "changeVortexKindDefaultCableKind" } & import("./🔌change-vortex-kind-default-cable/🟦️").ChangeVortexKindDefaultCableKind
   | { mutation: "createVortex" } & import("./🌀create-vortex/🟦️").CreateVortex
   | { mutation: "deleteVortex" } & import("./🕳️delete-vortex/🟦️").DeleteVortex
   | { mutation: "moveVortex" } & import("./📍move-vortex/🟦️").MoveVortex

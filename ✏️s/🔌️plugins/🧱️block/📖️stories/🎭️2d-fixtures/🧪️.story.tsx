@@ -108,7 +108,7 @@ export const HexagonalCutConcreteForestLeft: Story = {
   },
 };
 
-/** ➡️ Just `➡️hexagonal-cut-concrete-forest-right`, full width — the mirrored `h4`/`h5`/`h6` kind assignment. */
+/** ➡️ Just `➡️hexagonal-cut-concrete-forest`, full width — the mirrored `h4`/`h5`/`h6` kind assignment. */
 export const HexagonalCutConcreteForestRight: Story = {
   args: {
     exampleIds: ["hexagonal-cut-concrete-forest-right"],

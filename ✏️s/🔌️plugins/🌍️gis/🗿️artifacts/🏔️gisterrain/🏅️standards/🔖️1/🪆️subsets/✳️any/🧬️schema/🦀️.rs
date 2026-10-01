@@ -1,7 +1,7 @@
 //! 🧬️ GIS terrain artifact schema — every field of the artifact with its state class.
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
 use crate::document_dsl::REUSE_TERRAIN_EXAMPLE_TEXT;

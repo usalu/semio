@@ -6,7 +6,8 @@ export type { ChannelVersionConsumerV1, ChannelVersionContributionOwnerV1 } from
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { spawnSync } from "node:child_process";
-import { BundleScript, declaredComponentKind, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView, type RegistryCatalogInputView, type DiscoveredPackage } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { declaredComponentKind, discoverCatalogPackages, getWorkspaceRoot, loadCatalogTaxonomy, registryCatalogInputView, type RegistryCatalogInputView, type DiscoveredPackage } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { parseComponentPackageId } from "../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME } from "../../🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 

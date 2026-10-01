@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:ui:color-primitives:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "colors",
+    "galleries"
+  ],
+  "properties": {
+    "colors": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "before",
+          "after",
+          "rgba"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "before": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "after": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "rgba": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              },
+              {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            ],
+            "additionalItems": false
+          }
+        }
+      }
+    },
+    "galleries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 64,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "selector",
+          "property",
+          "alpha"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+          },
+          "selector": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "property": {
+            "enum": [
+              "borderTopColor",
+              "borderBottomColor"
+            ]
+          },
+          "alpha": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    }
+  }
+}

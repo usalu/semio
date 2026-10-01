@@ -117,15 +117,15 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     Examples:
     | id              | dir               | fixture                          |
     | create-node     | ⚪️create-node     | 📍️appends-node-n3                |
-    | delete-node     | 🕳️delete-node     | 🚫️removes-node-n3-without-6eab3f |
-    | create-element  | 🧩️create-element  | ➖️appends-bar-e2-between-fc1c09  |
-    | delete-element  | 🗑️delete-element  | 🚫️removes-bar-e2-and-3c0260      |
-    | replace-element | ♻️replace-element | ♻️converts-beam-e1-into-a-5d21f5 |
-    | create-section  | 📐️create-section  | 📐️appends-the-ipe300-profile     |
+    | delete-node     | 🕳️delete-node     | 🚫️removes |
+    | create-element  | 🧩️create-element  | ➖️appends  |
+    | delete-element  | 🗑️delete-element  | 🚫️removes      |
+    | replace-element | ♻️replace-element | ♻️converts |
+    | create-section  | 📐️create-section  | 📐️appends     |
     | delete-section  | ✂️delete-section  | 🚫️removes-the-spare-1c235a       |
-    | replace-section | 📏️replace-section | 💪️stiffens-ipe200-with-5e9c08    |
+    | replace-section | 📏️replace-section | 💪️stiffens    |
     | create-region   | 🗺️create-region   | 🧱️appends-a-solid-d78275         |
-    | delete-region   | 🚫️delete-region   | 🚫️removes-the-slab-and-5b301a    |
+    | delete-region   | 🚫️delete-region   | 🚫️removes    |
     | replace-region  | 🔄️replace-region  | 🪜️punches-a-stair-f7b3b1         |
     | replace-node    | 🔁️replace-node    | 🕹️raises-the-ridge-e53b00        |
     | move-selection  | 🧭️move-selection  | 🧭️shifts-the-slab-3f8df5 |
@@ -149,11 +149,11 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | delete-node     | 🕳️delete-node     | 🗑️drops-the-spare-6c285d    |
     | delete-region   | 🚫️delete-region   | 🧹️drops-the-spare-460714    |
     | delete-section  | ✂️delete-section  | ✂️drops-the-spare-dcf609    |
-    | replace-element | ♻️replace-element | 🔧️regrades-the-roof-fb20eb  |
-    | replace-region  | 🔄️replace-region  | 🪟️widens-the-window-09a8ec  |
-    | replace-section | 📏️replace-section | 🛠️thickens-the-chs-e235a5   |
+    | replace-element | ♻️replace-element | 🔧️regrades  |
+    | replace-region  | 🔄️replace-region  | 🪟️widens  |
+    | replace-section | 📏️replace-section | 🛠️thickens   |
     | replace-node    | 🔁️replace-node    | 📍️widens-the-canopy-553d69  |
-    | move-selection  | 🧭️move-selection  | 📏️stretches-the-panel-b4f68b |
+    | move-selection  | 🧭️move-selection  | 📏️stretches |
 
   @id-reject
   @level-exhaustive
@@ -167,12 +167,12 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
     Examples:
     | id                | dir               | fixture                      |
-    | create-element-1  | 🧩️create-element  | 🚫️rejects-a-dangling-b9e64c  |
+    | create-element-1  | 🧩️create-element  | 🚫️rejects  |
     | create-node-1     | ⚪️create-node     | 🚫️rejects-a-duplicate-eb0df0 |
-    | create-region-1   | 🗺️create-region   | 🚫️rejects-a-duplicate-11ca0d |
+    | create-region-1   | 🗺️create-region   | 🚫️rejects |
     | create-region-2   | 🗺️create-region   | 📐️denies-two-point-99954a    |
     | create-region-3   | 🗺️create-region   | 🕳️denies-loose-hole-d9efa1   |
-    | create-section-1  | 📐️create-section  | 🚫️rejects-a-duplicate-e91bc7 |
+    | create-section-1  | 📐️create-section  | 🚫️rejects |
     | create-section-2  | 📐️create-section  | ⚗️denies-zero-area-58b5ca    |
     | delete-element-1  | 🗑️delete-element  | ⛔️rejects-a-missing-611215   |
     | delete-element-2  | 🗑️delete-element  | 🔗️blocks-udl-a1df8e          |
@@ -187,13 +187,13 @@ Feature: Apply every typed fem2d mesh mutation twice — once in Rust, once in P
     | replace-region-1  | 🔄️replace-region  | ⛔️rejects-a-missing-6e0d70   |
     | replace-region-2  | 🔄️replace-region  | 🪪️denies-rename-574c91       |
     | replace-region-3  | 🔄️replace-region  | 👻️dangling-mat-7ef81b        |
-    | replace-region-4  | 🔄️replace-region  | 📐️denies-zero-thick-7d805e   |
-    | replace-section-1 | 📏️replace-section | ⛔️rejects-a-missing-b468f4   |
+    | replace-region-4  | 🔄️replace-region  | 📐️denies   |
+    | replace-section-1 | 📏️replace-section | ⛔️rejects   |
     | replace-section-2 | 📏️replace-section | 🪪️denies-rename-1d02dd       |
     | replace-section-3 | 📏️replace-section | ⚗️denies-zero-iy-404e31      |
     | replace-node-1    | 🔁️replace-node    | ⛔️rejects-a-missing-334de5   |
     | replace-node-2    | 🔁️replace-node    | 🪪️denies-rename-e69720       |
     | move-selection-1   | 🧭️move-selection  | ⛔️rejects-a-missing-f9c98d |
     | move-selection-2   | 🧭️move-selection  | ⏸️moves-nothing-f724d6 |
-    | move-selection-3   | 🧭️move-selection  | 🫓️denies-a-flat-scale-49b312 |
-    | move-selection-4   | 🧭️move-selection  | 🔁️denies-a-twice-named-61d178 |
+    | move-selection-3   | 🧭️move-selection  | 🫓️denies |
+    | move-selection-4   | 🧭️move-selection  | 🔁️denies |

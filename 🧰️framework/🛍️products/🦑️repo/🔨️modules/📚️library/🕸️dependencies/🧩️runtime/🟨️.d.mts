@@ -13,3 +13,7 @@ export type RuntimeComponentClosureRootV1 = string | { readonly id: string; read
 
 /** 🕸️ Resolves a deterministic transitive runtime component closure. */
 export function runtimeComponentClosure(components: readonly RuntimeComponentClosureRowV1[], roots: readonly RuntimeComponentClosureRootV1[]): string[];
+
+/** 📥️ Source admission retains missing input facts separately from admitted closure membership. */
+export type RuntimeInputAdmissionV1 = Readonly<{schemaVersion:1;status:"admitted";selected:readonly string[]}> | Readonly<{schemaVersion:1;status:"refused";missing:Readonly<{kind:"component"|"source";value:string}>}>;
+export function runtimeInputAdmissionV1(components:readonly RuntimeComponentClosureRowV1[],roots:readonly RuntimeComponentClosureRootV1[],sourcePaths:readonly string[],sourceExists:(path:string)=>boolean):RuntimeInputAdmissionV1;

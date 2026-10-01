@@ -114,14 +114,14 @@ Feature: Apply every typed semio TABLE mutation to a real 50-row survey table, a
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id              | dir              | slug                                                      |
-      | create-column   | 🏗️create-column   | 🏗️appends-a-float-column-and-null-pads-every-row            |
-      | delete-column   | 🗑️delete-column   | 🗑️drops-the-middle-column-and-cascades-into-every-row       |
-      | rename-column   | 🏷️rename-column   | ✏️renames-city-to-town-without-touching-any-row             |
-      | reorder-columns | 🔀reorder-columns | 🔀️moves-the-area-column-to-the-front-and-realigns-every-row |
-      | insert-row      | 📥insert-row      | 📥️inserts-a-row-between-the-two-existing-rows               |
+      | create-column   | 🏗️create-column   | 🏗️appends            |
+      | delete-column   | 🗑️delete-column   | 🗑️drops       |
+      | rename-column   | 🏷️rename-column   | ✏️renames             |
+      | reorder-columns | 🔀reorder-columns | 🔀️moves |
+      | insert-row      | 📥insert-row      | 📥️inserts               |
       | remove-row      | ➖remove-row      | 🚫️removes-the-leading-row                                   |
-      | reorder-rows    | 🔃reorder-rows    | 🔃️moves-the-last-row-to-the-front                           |
-      | edit-cell       | ✏️edit-cell       | 👥️rewrites-the-population-cell-of-the-second-row            |
+      | reorder-rows    | 🔃reorder-rows    | 🔃️moves                           |
+      | edit-cell       | ✏️edit-cell       | 👥️rewrites            |
 
   @id-payload-fidelity
   @level-exhaustive

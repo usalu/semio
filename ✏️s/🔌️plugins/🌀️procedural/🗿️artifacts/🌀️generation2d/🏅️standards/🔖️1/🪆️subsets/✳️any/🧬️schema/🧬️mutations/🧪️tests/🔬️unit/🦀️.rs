@@ -105,12 +105,36 @@ async fn delete_widget_inverse_law() {
 }
 
 #[test]
-fn delete_widget_on_unknown_id_is_a_noop_with_no_inverse() {
+fn delete_widget_on_unknown_id_is_rejected_with_no_inverse() {
     let base = empty_generation2d_snapshot();
     let mutation = delete_widget("does-not-exist".into());
     assert!(mutation.inverse(&base).is_empty());
-    let after = round_trip(&base, &mutation);
-    assert_eq!(after, base);
+    let mut projection = Generation2dSnapshotRead::new(base.clone());
+    let refused = apply_generation2d_mutation(&mut projection, &mutation).expect_err("a missing delete target must be rejected");
+    assert_eq!(refused.iter().map(|message| (message.code.0.as_str(), message.level)).collect::<Vec<_>>(), [("mutation.target-missing", protocol::Severity::Error)]);
+    assert_eq!(*projection, base);
+}
+
+/// ⚖️ Law: a checked apply refuses with the diff's own outcome messages — code, level, target and text unchanged, every
+/// code at the level the frozen vocabulary fixes — and never applies a refused diff's empty delta as a success.
+#[test]
+fn checked_apply_propagates_the_vocabulary_outcome_unchanged() {
+    let base = empty_generation2d_snapshot();
+    for mutation in [delete_widget("ghost".into()), move_widget("ghost".into(), WidgetLayout { x: 1.0, y: 2.0 }), move_widget("slider".into(), WidgetLayout { x: f64::NAN, y: 2.0 }), disconnect_synapse("ghost".into()), clear_widget_layout("ghost".into())] {
+        let (diff, expected) = mutation.diff(&base).into_parts();
+        retire_diff(diff);
+        let mut projection = Generation2dSnapshotRead::new(base.clone());
+        match apply_generation2d_mutation(&mut projection, &mutation) {
+            Err(refused) => {
+                assert_eq!(refused, expected, "{mutation:?}");
+                assert!(refused.iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{refused:?}");
+                assert!(refused.iter().all(|message| protocol::outcome_code_level(&message.code.0) == Some(message.level)), "{refused:?}");
+                assert_eq!(*projection, base);
+            }
+            Ok(()) => assert!(expected.iter().all(|message| !matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)), "{mutation:?}"),
+        }
+    }
+    retire_snapshot(base);
 }
 
 #[semio_framework_async_macros::async_test]

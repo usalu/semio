@@ -23,7 +23,7 @@ type Fixture = {
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const readJson = (path: string): any => JSON.parse(readFileSync(path, "utf8"));
-const fixture = readJson(`${here}/../../🧫️fixtures/🔬️window-ownership/🔣️.json`) as Fixture;
+const fixture = readJson(`${here}/../../🧫️fixtures/🔬️window/🔣️.json`) as Fixture;
 const schemaRoot = `${here}/../../../../../../`;
 const schemas: Record<Owner, AnySchema> = {
   model: readJson(`${here}/../../🧬️schema/🔣️.json`),

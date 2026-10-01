@@ -2,7 +2,9 @@
 /** ⚙️ Builds/tests the `semio-framework-repo-mcp` protocol crate; the `repo` stdio server binary lives in `⌨️cli` because it carries the production repository. */
 import { join } from "node:path";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, resolveTestLevel, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const CRATE = "semio-framework-repo-mcp";
 const SERVER_CRATE = "semio-framework-repo-cli";
@@ -34,4 +36,4 @@ class RunScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

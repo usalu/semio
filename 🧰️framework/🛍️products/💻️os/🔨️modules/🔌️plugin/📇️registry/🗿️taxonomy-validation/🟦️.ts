@@ -1,7 +1,8 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { BundleScript, discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { discoverPackages, getWorkspaceRoot, inspectRustModuleGraph, inspectRustModuleGraphFacts, isDiscoverySkipDirectory, schemaFacetFormatEntries } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { registrySchemaValidator } from "../✅️catalog-verification/🟦️.ts";
 import { EXAMPLES_DIRNAME, EXAMPLE_ASSETS_DIRNAME, EXAMPLE_RUST_LEAF, EXAMPLE_TESTS_DIRNAME, EXAMPLE_TS_LEAF, FORBIDDEN_EXAMPLE_PLURAL_DIRS, PLUGIN_AREAS, RUST_LANG, TAXONOMY, isExampleSlugName, primaryFilenameForKind } from "../🔎️discovery/🟦️.ts";
 import { PlaygroundEntry } from "../🎮️playground/🔎️discovery/🟦️.ts";

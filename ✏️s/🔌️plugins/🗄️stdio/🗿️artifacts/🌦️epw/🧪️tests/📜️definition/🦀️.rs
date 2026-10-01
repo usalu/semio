@@ -16,8 +16,10 @@ fn owned_mime_constraint_matches_independent_serde_oracle() {
 }
 
 #[test]
-fn pack_only_snapshot_has_no_relational_codec() {
+fn owned_snapshot_declares_structural_pack_and_relational_capabilities() {
     let codec = store::ArtifactCodec::bare::<EpwSnapshot, EpwMutation>(STDIO_EPW_DOCUMENT_SCHEMA);
-    assert!(codec.snapshot_sqlite.is_none());
+    let spec = <EpwSnapshot as store::ArtifactPack>::record_spec().unwrap();
+    assert_eq!(codec.pack_schema_hash, store::os_pack::schema_hash(&spec));
+    assert!(codec.snapshot_sqlite.is_some());
     declaration(definition().unwrap()).unwrap();
 }

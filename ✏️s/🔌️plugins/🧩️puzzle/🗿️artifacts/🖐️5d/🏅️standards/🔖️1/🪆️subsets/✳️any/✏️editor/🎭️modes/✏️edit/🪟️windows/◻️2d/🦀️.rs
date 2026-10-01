@@ -182,6 +182,7 @@ pub fn puzzle5d_board_scene(envelope: &Puzzle5dScene) -> Board2dScene {
         // from the framework-owned `vortex` domain the ONE 5d interaction snapshot reads — the same
         // domain the world pane projects, so a part picked or hovered in either pane paints in both.
         selection_json: envelope.interaction.selection_json(),
+        highlighted_ids_json: "[]".into(),
         interactive: true,
         hovered_id: envelope.interaction.hovered_id().map(str::to_string),
         active_utility: Some(puzzle5d_scene_mode(&envelope.active_utility).to_string()),

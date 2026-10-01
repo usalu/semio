@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 /** 🧬️ Routes deterministic catalog, metabolism, and animated logo tasks. */
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolve } from "node:path";
+import { runTestBudgeted } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { renderCatalogArtifacts } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builder/📽️projection/🟦️.ts";
 import { assetOutputManifest, checkAssetArtifacts, previewAssetArtifacts, publishAssetArtifacts, writeAssetArtifacts } from "../../🏗️builder/📦️publication/🟦️.ts";
@@ -13,6 +16,14 @@ class GenerateCatalogScript extends BundleScript {
     const artifacts = renderCatalogArtifacts(target);
     writeAssetArtifacts(artifacts);
     console.log(`[asset] wrote ${artifacts.length} catalog artifacts → ${target}`);
+  }
+}
+
+/** 🥽️ Proves schema-owned mesh transport without a concrete product dependency. */
+class MeshContractScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw Error("test-mesh-contract accepts no arguments");
+    await runTestBudgeted(process.execPath, ["test", resolve(this.root, "../../🥽️mesh/🧪️tests/🧩️suite/🟦️.ts")], { cwd: this.repoRoot });
   }
 }
 
@@ -58,6 +69,7 @@ class CheckGeneratedScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir)
   .register("generate", GenerateCatalogScript)
+  .register("test-mesh-contract", MeshContractScript)
   .register("generate-metabolism", GenerateMetabolismScript)
   .register("generate-logo", GenerateLogoScript)
   .register("export-logo", ExportLogoScript)
@@ -65,4 +77,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-generated", CheckGeneratedScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "build" });

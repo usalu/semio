@@ -1,5 +1,5 @@
 //! 📌️ Hub-materialized Check In. A document author names a committed head of the hub's own ledger;
-//! the hub folds the ledger between the active checkpoint and that head onto the active checkpoint's
+//! the hub folds the ledger between the active checkpoint and that head onto the canonical trunk of the active checkpoint's
 //! pair through the package codec's replica gate (`codec.replay-envelopes`,
 //! `store::replay_envelopes_onto_pair`), validates the result, and publishes it as the document's
 //! next active checkpoint. No client pair, pair hash, or parent checkpoint is ever accepted.
@@ -52,6 +52,13 @@ pub trait ReplayingArtifactAuthority {
     async fn materialize_check_in(&self, request: CheckInMaterialization, context: &OperationContext<'_>) -> Result<CheckpointCandidate, AuthorityError>;
 }
 
+/// 📌️ The alternative Check In publishes for `document_id`: the canonical trunk.
+/// Replay clears any viewer's head before it materializes the pair, so this line is what the
+/// published checkpoint contains.
+fn canonical_check_in_line(document_id: &str) -> String {
+    semio_framework_os_kernel::canonical_check_in_line(document_id)
+}
+
 fn validate_check_in(request: &CheckInMaterialization, context: &OperationContext<'_>) -> Result<(), AuthorityError> {
     if request.scope.space_id != request.descriptor.space_id || request.scope.document_id != request.descriptor.document_id {
         return Err(AuthorityError::InvalidScope);
@@ -91,6 +98,10 @@ where
         context.report(AuthorityProgress { stage: AuthorityProgressStage::CatalogResolved, completed_units: 3, total_units: DOCUMENT_CHECK_IN_TOTAL_UNITS })?;
         codec.validate_pair(&request.base_pair, ArtifactValidationStage::Input, context).await?;
         context.report(AuthorityProgress { stage: AuthorityProgressStage::InputValidated, completed_units: 4, total_units: DOCUMENT_CHECK_IN_TOTAL_UNITS })?;
+        let canonical_line = canonical_check_in_line(&request.scope.document_id);
+        if !canonical_line.starts_with("trunk-") {
+            return Err(AuthorityError::InvalidScope);
+        }
         let pair = codec.replay_envelopes(request.base_pair, &request.envelopes, context).await?;
         validate_pair_budget(&pair, context.limits(), ArtifactValidationStage::Output)?;
         codec.validate_pair(&pair, ArtifactValidationStage::Output, context).await?;

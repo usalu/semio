@@ -1,4 +1,5 @@
-import { formatUiNumber, formatUiNumberFixed } from "../🔢️number-format/🟦️.ts";
+import { formatUiNumber } from "../🔢️number-format/🟦️.ts";
+import { uiNumberDisplay, uiNumberDisplayText } from "../🧩️component/🟦️.ts";
 /**
  * ♿️ The TypeScript twin of the contract's own `♿️accessibility/🦀️.rs` projection region.
  *
@@ -151,17 +152,42 @@ export function uiAccessibilityIsFocusableV1(component: Component, activatable: 
   }
 }
 
+/** 🔊️ The number a range control announces for a stored value: unchanged without a display factor, else `stored × factor` cleaned to twelve significant digits; the twin of the Rust `spoken_number`. */
+function spokenNumber(stored: number, factor: number | null): number {
+  if (factor == null) return stored;
+  const shown = uiNumberDisplay(stored, factor);
+  const cleaned = Number(formatUiNumber(shown));
+  return Number.isFinite(cleaned) ? cleaned : shown;
+}
+
+/** 🗣️ The spoken value of a range control: its display text and the unit it shows; the twin of the Rust `spoken_text`. */
+function spokenText(stored: number, factor: number | null, precision: number | null | undefined, unit: string | null): string {
+  const text = uiNumberDisplayText(stored, factor, precision);
+  return unit == null || unit === "" ? text : `${text} ${unit}`;
+}
+
 /** 📶️ `aria-valuemin`/`max`/`now`/`valuetext` for a determinate progress bar, only `aria-busy` while it
  * is indeterminate (a total that is absent, never merely zero), and nothing for every other component. */
 export function uiAccessibilityValueV1(component: Component): UiAccessibilityValueV1 {
   if (component.type === "input") {
     const numeric = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/u.test(component.value) ? Number(component.value) : Number.NaN;
-    const valueText = component.kind === "number" && component.precision != null && Number.isFinite(numeric) ? formatUiNumberFixed(numeric, component.precision) : component.value;
-    return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: Number.isFinite(numeric) ? numeric : null, valueText, busy: false };
+    const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
+    const shown = (value: number | null | undefined): number | null => (value == null ? null : spokenNumber(value, factor));
+    const valueText = component.kind === "number" && (component.precision != null || factor != null) && Number.isFinite(numeric) ? uiNumberDisplayText(numeric, factor, component.precision) : component.value;
+    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: Number.isFinite(numeric) ? shown(numeric) : null, valueText, busy: false };
   }
   if (component.type === "select" || component.type === "iconSelect") return { valueMin: null, valueMax: null, valueNow: null, valueText: component.value, busy: false };
-  if (component.type === "slider") return { valueMin: component.min, valueMax: component.max, valueNow: component.value, valueText: component.unit == null ? null : `${component.value} ${component.unit}`, busy: false };
-  if (component.type === "numberStepper") return { valueMin: component.min ?? null, valueMax: component.max ?? null, valueNow: component.uniform ? component.value : null, valueText: component.uniform ? (component.precision == null ? formatUiNumber(component.value) : formatUiNumberFixed(component.value, component.precision)) : null, busy: false };
+  if (component.type === "slider") {
+    const factor = component.displayFactor ?? null;
+    const unit = component.displayUnit ?? component.unit ?? null;
+    const described = unit != null || component.precision != null || factor != null;
+    return { valueMin: spokenNumber(component.min, factor), valueMax: spokenNumber(component.max, factor), valueNow: spokenNumber(component.value, factor), valueText: described ? spokenText(component.value, factor, component.precision, unit) : null, busy: false };
+  }
+  if (component.type === "numberStepper") {
+    const factor = component.displayFactor ?? null;
+    const shown = (value: number | null | undefined): number | null => (value == null ? null : spokenNumber(value, factor));
+    return { valueMin: shown(component.min), valueMax: shown(component.max), valueNow: component.uniform ? shown(component.value) : null, valueText: component.uniform ? spokenText(component.value, factor, component.precision, component.displayUnit ?? component.unit ?? null) : null, busy: false };
+  }
   if (component.type === "ring") return { valueMin: 0, valueMax: 1, valueNow: component.t, valueText: String(component.t), busy: false };
   if (component.type !== "progress") return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: false };
   if (component.total == null) return { valueMin: null, valueMax: null, valueNow: null, valueText: null, busy: true };

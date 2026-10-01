@@ -8,6 +8,9 @@
     "includedScripts": []
   },
   "scripts": {
-    "verify-writer-window-state": "bun nx run @semio-tech/writer-writer-rs:verify-writer-window-state"
+    "verify-writer-window-state": "bun nx run @semio-tech/writer-writer-rs:verify-writer-window-state",
+    "test-snapshot-sqlite": "nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite",
+    "test-snapshot-sqlite-native": "nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+    "test-snapshot-sqlite-source": "nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite-source"
   }
 }

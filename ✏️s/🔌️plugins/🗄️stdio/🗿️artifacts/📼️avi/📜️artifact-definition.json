@@ -64,7 +64,7 @@
         "artifact_kind": "s.stdio.avi",
         "artifact_schema": "stdio.avi",
         "extension": "semio",
-        "pack_schema_hash": "138e328aedf12596e6b7f7fbca8ba63c5896b458110cc009e47ce203ee44ced5",
+        "pack_schema_hash": "9cf1539f213640bf8dadec0ecea48e514389221e3c2bd94ce22784d0f6f0b640",
         "runtime_capability_id": "s.stdio.avi.standard.1-0.codec.codec-stdio-avi-extension-semio.v1"
       }
     }

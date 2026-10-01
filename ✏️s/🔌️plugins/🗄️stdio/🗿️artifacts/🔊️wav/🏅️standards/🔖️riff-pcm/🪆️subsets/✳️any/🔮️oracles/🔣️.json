@@ -42,7 +42,7 @@
           "scenarios": [
             {
               "id": "resamples-to-16-khz-and-doubles-the-pcm16-amplitude",
-              "directoryName": "🔊️resamples-to-16-khz-and-doubles-the-pcm16-amplitude"
+              "directoryName": "🔊️resamples"
             }
           ]
         }

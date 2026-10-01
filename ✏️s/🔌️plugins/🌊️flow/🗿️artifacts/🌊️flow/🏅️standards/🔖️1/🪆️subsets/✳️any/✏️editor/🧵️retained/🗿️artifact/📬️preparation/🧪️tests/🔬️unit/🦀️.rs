@@ -18,6 +18,10 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                 let envelope = store::create_document_envelope::<FlowSnapshot, FlowMutation>("flow.flow", "retained-recipe", initial, None);
                 let mut store = store::ArtifactStore::new(envelope).await.unwrap();
                 store.install_document_store_owners_exact(crate::retirement::store_owners());
+                if row["id"] == "move-widget" {
+                    store.dispatch(store::ArtifactCommand::CreateAlternative { name: fixture["label"]["unit"].as_str().unwrap().into() }).await.unwrap();
+                }
+                let authored_line = store.envelope().active_alternative_id.clone();
                 let generation = store.generation_now();
                 let mutation = dsl::FromValue::from_value(dsl::DslValue::from(row["mutation"].clone())).unwrap();
                 let factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<FlowSnapshot, FlowMutation>> = std::sync::Arc::new(PreparationFactory);
@@ -64,7 +68,9 @@ async fn semantic_artifact_prepare_publish_retry_cancel_and_close_use_production
                         }
                         if row["id"] == "move-widget" {
                             assert_eq!(json["layout"]["b"], serde_json::json!({ "x": 5.0, "y": 7.0 }));
+                            assert!(authored_line.is_some());
                         }
+                        assert_eq!(store.envelope().edits.last().unwrap().line, authored_line);
                     }
                 }
                 let closed_progress = publication.progress();

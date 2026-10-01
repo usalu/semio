@@ -1013,7 +1013,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
             diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId(schema.to_string()), payload },
             inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId(schema.to_string()), payload: inverse_payload },
             timestamp,
-            transaction: None, verb: edit.verb.clone(),
+            transaction: None, verb: edit.verb.clone(), line: edit.line.clone(),
         });
     }
     Ok(envelopes)
@@ -1041,7 +1041,7 @@ async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> crate::os_sp
         started_at: now_ms().await.to_string(),
         finished_at: None,
         coalesce_key: None,
-        description: None, verb: envelope.verb.clone(),
+        description: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
         ops: vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
         inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![crate::os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
         meta: Some(vec![crate::os_spr::HistoryOpMeta {
@@ -1489,7 +1489,7 @@ async fn rollback_envelope(envelope: &MutationEnvelope) -> Option<MutationEnvelo
         diff: crate::os_spr::ArtifactDiff { schema: envelope.inverse.schema.clone(), payload: envelope.inverse.payload.clone() },
         inverse: crate::os_spr::InverseMutation { schema: envelope.diff.schema.clone(), payload: envelope.diff.payload.clone() },
         timestamp: envelope.timestamp,
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     })
 }
 

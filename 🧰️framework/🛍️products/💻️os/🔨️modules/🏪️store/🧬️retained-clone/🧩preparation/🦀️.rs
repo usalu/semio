@@ -178,6 +178,7 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
             .and_then(|bytes| bytes.checked_add(ARTIFACT_STORE_ONE_ITEM_ID_BYTES * 6))
             .and_then(|bytes| bytes.checked_add(actor_capacity))
             .and_then(|bytes| bytes.checked_add(group_bytes))
+            .and_then(|bytes| bytes.checked_add(authority.line_id().map_or(0, str::len)))
             .ok_or_else(|| "retained clone preparation build capacity overflow".into())
     }
 
@@ -189,7 +190,7 @@ impl<P: RetainedClone, M, E: RetainedCloneEdit<P, M>> RetainedClonePreparation<P
         let authority = self.authority.take().ok_or("retained clone preparation lost its Store authority")?;
         let id = authority.edit_id();
         let mutation_id = authority.stamped_edit_id().map_or_else(|| MutationId(format!("{id}#0")), |identity| MutationId(identity.to_string()));
-        let edit = Edit {
+        let edit = Edit { line: authority.line_id().map(str::to_owned),
             id,
             actor: Some(authority.actor().to_string()),
             forwards: vec![self.mutation.take().ok_or("retained clone preparation lost its forward mutation")?],

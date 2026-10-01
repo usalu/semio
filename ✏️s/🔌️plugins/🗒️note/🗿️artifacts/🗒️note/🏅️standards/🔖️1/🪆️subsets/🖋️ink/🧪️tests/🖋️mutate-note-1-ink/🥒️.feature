@@ -31,9 +31,9 @@ Feature: Apply every typed note document ink mutation twice — once in Rust, on
     Examples:
       | id                     | vector                                                      |
       | change-pencil-width    | ✏️change-pencil-width/✏️thickens-pencil               |
-      | change-eraser-radius   | 🧽️change-eraser-radius/🧽️enlarges-eraser              |
-      | change-block-ink-width | 🖊️change-block-ink-width/🖊️thickens-the-sketch-stroke |
-      | edit-block-ink-stroke  | 🎨️edit-block-ink-stroke/🎨️redraws-the-sketch-polyline |
+      | change-eraser-radius   | 🧽️change-eraser-radius/🧽️enlarges              |
+      | change-block-ink-width | 🖊️change-block-ink-width/🖊️thickens |
+      | edit-block-ink-stroke  | 🎨️edit-block-ink-stroke/🎨️redraws |
 
   @id-inverse
   @level-exhaustive
@@ -49,6 +49,6 @@ Feature: Apply every typed note document ink mutation twice — once in Rust, on
     Examples:
       | id                     | vector                                                      |
       | change-pencil-width    | ✏️change-pencil-width/✏️thickens-pencil               |
-      | change-eraser-radius   | 🧽️change-eraser-radius/🧽️enlarges-eraser              |
-      | change-block-ink-width | 🖊️change-block-ink-width/🖊️thickens-the-sketch-stroke |
-      | edit-block-ink-stroke  | 🎨️edit-block-ink-stroke/🎨️redraws-the-sketch-polyline |
+      | change-eraser-radius   | 🧽️change-eraser-radius/🧽️enlarges              |
+      | change-block-ink-width | 🖊️change-block-ink-width/🖊️thickens |
+      | edit-block-ink-stroke  | 🎨️edit-block-ink-stroke/🎨️redraws |

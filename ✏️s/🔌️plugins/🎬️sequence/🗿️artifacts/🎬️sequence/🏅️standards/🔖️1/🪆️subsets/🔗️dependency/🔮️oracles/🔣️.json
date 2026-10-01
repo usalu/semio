@@ -11,23 +11,23 @@
       "vectors": [
         {
           "mutationId": "connect-steps",
-          "sourceMutationDirectoryName": "🔗️connect-steps",
-          "mutationDirectoryName": "🔗️connect-steps",
+          "sourceMutationDirectoryName": "🔗️connect",
+          "mutationDirectoryName": "🔗️connect",
           "scenarios": [
             {
               "id": "rejects-connecting-a-step-to-itself",
-              "directoryName": "🚫️rejects-connecting-a-step-to-itself"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
         {
           "mutationId": "disconnect-steps",
-          "sourceMutationDirectoryName": "✂️disconnect-steps",
-          "mutationDirectoryName": "✂️disconnect-steps",
+          "sourceMutationDirectoryName": "✂️disconnect",
+          "mutationDirectoryName": "✂️disconnect",
           "scenarios": [
             {
               "id": "rejects-disconnecting-a-missing-edge",
-              "directoryName": "🚫️rejects-disconnecting-a-missing-edge"
+              "directoryName": "🚫️rejects"
             }
           ]
         }
@@ -128,14 +128,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🔗️connect-steps/⬅️before.json",
+          "path": "../🧫️fixtures/🔗️connect/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
           "bytes": 702
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🔗️connect-steps/➡️after.json",
+          "path": "../🧫️fixtures/🔗️connect/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:3420a4651cae4c768d2f806455d140e5cad17f416f309f7cbea1c397aefbbb0f",
           "bytes": 768
@@ -179,14 +179,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/✂️disconnect-steps/⬅️before.json",
+          "path": "../🧫️fixtures/✂️disconnect/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:a6d7316cf3ecae03c395883a76eadfd1c03366e1c296e6699dac87eb83fb0d37",
           "bytes": 702
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/✂️disconnect-steps/➡️after.json",
+          "path": "../🧫️fixtures/✂️disconnect/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:4faa815b3e9e9335f56686b12d85db6c649afea2fe2a74aab03b8a06b0d0f01d",
           "bytes": 634

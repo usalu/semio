@@ -25,6 +25,8 @@ impl Default for Generation3dSnapshot {
     }
 }
 
+#[path="🪶️sqlite/🦀️.rs"]pub mod sqlite;
+
 impl Generation3dSnapshot {
     /// 🧊️ Explicit cold-only disposal of a detached projection. Both fields reject a bare drop —
     /// `host_snapshot.layout` is an `OrderedMap<WidgetLayout>` whose root must be retired
@@ -100,3 +102,5 @@ impl std::fmt::Debug for Generation3dSnapshotRead {
         std::fmt::Debug::fmt(&**self, formatter)
     }
 }
+
+#[cfg(test)]#[path="🧪️tests/🪶️sqlite/🦀️.rs"]mod sqlite_tests;

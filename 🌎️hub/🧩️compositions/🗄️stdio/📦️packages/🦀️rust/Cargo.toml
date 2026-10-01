@@ -188,3 +188,12 @@ artifacts = ["../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifact
 [package.metadata.semio.preparation]
 script = "📜️script.ts"
 command = ["composition", "prepare"]
+
+[[bin]]
+name = "semio-hub-stdio-mutation-bridge"
+path = "../../🏭️bridge/🦀️.rs"
+required-features = ["full-artifact-catalog"]
+
+[package.metadata.semio.mutation-inventory]
+script = "../../🏭️bridge/📜️script.ts"
+roots = ["../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts"]

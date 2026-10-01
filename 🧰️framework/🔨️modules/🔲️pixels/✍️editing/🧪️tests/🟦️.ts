@@ -4,7 +4,7 @@ import sharp from "sharp";
 import Ajv from "ajv";
 import fixtures from "../🧫️fixtures/🔣️.json";
 import schema from "../🧬️schema/🔣️.json";
-import { editImage, selectionMask, selectPixels, combineSelections, SelectionCombineJob, type SelectionMerge, floodSelection, paintStroke, PixelEditJob, PixelSelectionJob, validateImage, type PixelOperation, type SelectionShape } from "../🟦️.ts";
+import { editImage, selectionMask, selectPixels, combineSelections, SelectionCombineJob, type SelectionMerge, floodSelection, paintStroke, PixelEditJob, PixelSelectionJob, strokeBounds, validateImage, type PixelOperation, type PixelPoint, type SelectionShape } from "../🟦️.ts";
 
 const image = () => ({ ...fixtures.image, pixels: Uint8Array.from(fixtures.image.pixels) });
 describe("pixel editing contract", () => {
@@ -212,4 +212,8 @@ test("selection row grants match the shared contract and SVG oracle",async()=>{
   const oracle=await sharp(Buffer.from(f.svg)).ensureAlpha().extractChannel(3).raw().toBuffer();expect([...oracle]).toEqual(f.expected);expect([...job.result()]).toEqual([...oracle]);
   for(const rows of f.cancelAfterRows){const job=new PixelSelectionJob(input.width,input.height,input.shape);if(rows)job.advance(rows);job.cancel();expect(()=>job.result()).toThrow();expect(()=>job.advance(1)).toThrow();}
   for(const rows of f.invalidGrants){const job=new PixelSelectionJob(input.width,input.height,input.shape);expect(()=>job.advance(rows)).toThrow();expect(job.advance(1).completed).toBe(1);}
+});
+
+test("stroke bounds match the shared contract", () => {
+  for (const row of fixtures.strokeBounds) expect(strokeBounds(row.points as PixelPoint[], row.size, row.width, row.height)).toEqual(row.expected);
 });

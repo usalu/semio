@@ -252,7 +252,7 @@ impl protocol::Mutation<SpaceConfig> for SpaceConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set-snapshot",
+            owner: "✏️s/🔌️plugins/🪐️space/⚙️engine/🪐️space/🎚️config/⚙️set",
             semantic_kind: "set-snapshot",
             display_name: "Set Snapshot",
             emoji: "⚙️",

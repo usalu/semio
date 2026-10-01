@@ -1,4 +1,6 @@
-//! 🔢️ S Studio app — workflow parameters panel: add/edit/remove the workflow's own parameter set.
+//! 🔢️ S Studio app — workflow parameters panel: add/edit/remove the workflow's own parameter set. Text fields commit
+//! once on blur or Enter (`Trigger::Commit`), never per keystroke; number fields are continuous controls whose press the
+//! framework scrub machine commits as ONE edit of the absolute `change-parameter` leaf.
 //!
 //! 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20) port: rebuilt on the `semio_framework_ui_
 //! contract` builder DSL (`BuiltNode`), replacing the old `ui_wgpu::wgpu::UiNode` struct literals —
@@ -94,9 +96,10 @@ fn parameter_value_control(parameter: &WorkflowParameter, labels: &SStudioLabels
             let action = patch_parameter_action([("parameterId", ui_value_text(id.as_str())?), ("field", ui_value_text("value")?)])?;
             let builder = semio_framework_ui_contract::input(InputKind::Text)
                 .value(fixed_text(value, "ui.parameters.value-text")?)
+                .commit(fixed_text("blur", "ui.parameters.value-commit")?)
                 .try_id(format!("s-play-parameters.{id}.value"))
                 .map_err(|_| PluginAssemblyError::new("ui.parameters.value-id", "value input id admission failed"))?;
-            bind_action(builder, Trigger::Change, action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.value", "value input admission failed"))
+            bind_action(builder, Trigger::Commit, action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.value", "value input admission failed"))
         }
     }
 }
@@ -166,9 +169,10 @@ fn add_option_row(id: &str, labels: &SStudioLabels) -> UiAssemblyResult<BuiltNod
     let add_action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text("addOption")?)])?;
     let add_input = semio_framework_ui_contract::input(InputKind::Text)
         .placeholder(fixed_label(labels.new_option_placeholder.as_str(), "ui.parameters.add-option-placeholder")?)
+        .commit(fixed_text("blur", "ui.parameters.add-option-commit")?)
         .try_id(format!("s-play-parameters.{id}.add-option.input"))
         .map_err(|_| PluginAssemblyError::new("ui.parameters.add-option-id", "add-option input id admission failed"))?;
-    let add_input = bind_action(add_input, Trigger::Change, add_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.add-option", "add-option input admission failed"))?;
+    let add_input = bind_action(add_input, Trigger::Commit, add_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.add-option", "add-option input admission failed"))?;
     control_row(&format!("s-play-parameters.{id}.add-option"), fixed_label(labels.add_option.as_str(), "ui.parameters.add-option-label")?, add_input)
 }
 
@@ -189,9 +193,10 @@ fn parameter_name_row(parameter: &WorkflowParameter, id: &str, labels: &SStudioL
     let name_action = patch_parameter_action([("parameterId", ui_value_text(id)?), ("field", ui_value_text("name")?)])?;
     let name_input = semio_framework_ui_contract::input(InputKind::Text)
         .value(fixed_text(name, "ui.parameters.name-text")?)
+        .commit(fixed_text("blur", "ui.parameters.name-commit")?)
         .try_id(format!("s-play-parameters.{id}.name.input"))
         .map_err(|_| PluginAssemblyError::new("ui.parameters.name-id", "name input id admission failed"))?;
-    let name_input = bind_action(name_input, Trigger::Change, name_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.name", "name input admission failed"))?;
+    let name_input = bind_action(name_input, Trigger::Commit, name_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.parameters.name", "name input admission failed"))?;
     control_row(&format!("s-play-parameters.{id}.name"), fixed_label(labels.name.as_str(), "ui.parameters.name-label")?, name_input)
 }
 

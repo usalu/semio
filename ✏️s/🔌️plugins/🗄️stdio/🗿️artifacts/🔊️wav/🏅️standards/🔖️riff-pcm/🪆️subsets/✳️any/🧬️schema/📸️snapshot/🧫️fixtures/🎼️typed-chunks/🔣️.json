@@ -43,14 +43,14 @@
         "chunkOrder": [
           {
             "kind": "other",
-            "value": 0
+            "value": "0"
           },
           {
             "kind": "format"
           },
           {
             "kind": "other",
-            "value": 1
+            "value": "1"
           },
           {
             "kind": "samples"
@@ -99,14 +99,14 @@
         "chunkOrder": [
           {
             "kind": "other",
-            "value": 0
+            "value": "0"
           },
           {
             "kind": "format"
           },
           {
             "kind": "other",
-            "value": 1
+            "value": "1"
           },
           {
             "kind": "samples"
@@ -130,10 +130,18 @@
         "data": {
           "kind": "float32",
           "value": [
-            -1.0,
-            0.0,
-            0.5,
-            1.0
+            {
+              "bits": 3212836864
+            },
+            {
+              "bits": 0
+            },
+            {
+              "bits": 1056964608
+            },
+            {
+              "bits": 1065353216
+            }
           ]
         },
         "otherChunks": [
@@ -157,14 +165,14 @@
         "chunkOrder": [
           {
             "kind": "other",
-            "value": 0
+            "value": "0"
           },
           {
             "kind": "format"
           },
           {
             "kind": "other",
-            "value": 1
+            "value": "1"
           },
           {
             "kind": "samples"
@@ -213,14 +221,14 @@
         "chunkOrder": [
           {
             "kind": "other",
-            "value": 0
+            "value": "0"
           },
           {
             "kind": "format"
           },
           {
             "kind": "other",
-            "value": 1
+            "value": "1"
           },
           {
             "kind": "samples"

@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "attaches-a-brep-child-to-an-object-that-has-none",
-              "directoryName": "🧱️attaches-a-brep-child-to-an-object-that-has-none"
+              "directoryName": "🧱️attaches"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "attaches-a-mesh-child-to-an-object-that-has-none",
-              "directoryName": "🕸️attaches-a-mesh-child-to-an-object-that-has-none"
+              "directoryName": "🕸️attaches"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "attaches-a-properties-child-to-an-object-that-has-none",
-              "directoryName": "🏷️attaches-a-properties-child-to-an-object-that-has-none"
+              "directoryName": "🏷️attaches"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "detaches-the-brep-child-and-leaves-the-mesh-child-alone",
-              "directoryName": "💥️detaches-the-brep-child-and-leaves-the-mesh-child-alone"
+              "directoryName": "💥️detaches"
             }
           ]
         },
@@ -107,7 +107,7 @@
           "scenarios": [
             {
               "id": "detaches-the-mesh-child-and-leaves-the-brep-child-alone",
-              "directoryName": "🧨️detaches-the-mesh-child-and-leaves-the-brep-child-alone"
+              "directoryName": "🧨️detaches"
             }
           ]
         },
@@ -129,7 +129,7 @@
           "scenarios": [
             {
               "id": "moves-the-object-to-a-new-translation",
-              "directoryName": "🚚️moves-the-object-to-a-new-translation"
+              "directoryName": "🚚️moves"
             }
           ]
         },
@@ -140,7 +140,7 @@
           "scenarios": [
             {
               "id": "rotates-the-object-a-half-turn-about-z",
-              "directoryName": "🔄️rotates-the-object-a-half-turn-about-z"
+              "directoryName": "🔄️rotates"
             }
           ]
         },
@@ -151,7 +151,7 @@
           "scenarios": [
             {
               "id": "scales-the-object-non-uniformly",
-              "directoryName": "📏️scales-the-object-non-uniformly"
+              "directoryName": "📏️scales"
             }
           ]
         }

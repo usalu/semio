@@ -10,7 +10,7 @@ import { resolveDocumentOpeningBindings, resolveDocumentOpeningTarget, sharedDoc
 import openPlanFixture from "../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json";
 import rendererSchema from "../../../🧬️schema/🔣️.json" with { type: "json" };
 import artifactOpeningFixture from "../../🧱️elements/🛠️ShellHelpers/🧫️fixtures/🚪️open-artifact/🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema);
 /** 🧬️ Compiles one named `$defs` export of the `os.renderer` schema module. */

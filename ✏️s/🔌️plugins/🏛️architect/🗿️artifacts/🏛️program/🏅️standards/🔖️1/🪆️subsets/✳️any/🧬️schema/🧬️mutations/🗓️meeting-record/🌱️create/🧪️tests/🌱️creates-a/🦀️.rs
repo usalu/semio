@@ -1,4 +1,4 @@
-//! 🧪️ `create-meeting-record` fixture — `🌱️creates-a`.
+//! 🧪️ `create-meeting-record` fixture — `🌱️creates`.
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates-a/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates-a/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates-a/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates-a/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates-a/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🗓️meeting-record/🌱️create/🌱️creates/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("create-meeting-record/creates-meeting-record-a: before snapshot decodes")

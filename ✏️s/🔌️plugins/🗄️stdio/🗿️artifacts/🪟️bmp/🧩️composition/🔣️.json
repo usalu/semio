@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_bmp::editor::bmp::BmpEditor",
       "factory": "semio_s_artifact_stdio_bmp::editor::bmp::create_bmp_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "bmp_editor",
+        "sqliteSnapshot": "sqlite_snapshot_bmp_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -23,10 +27,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_bmp::viewer::bmp::BmpViewer",
       "factory": "semio_s_artifact_stdio_bmp::viewer::bmp::create_bmp_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -42,5 +46,23 @@
         "wgpu": 6323
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "BmpMutation",
+      "snapshot": "semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot",
+      "mutation": "semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::mutations::BmpMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.bmp",
+      "standard": "v3",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🏅️standards/🔖️v3/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

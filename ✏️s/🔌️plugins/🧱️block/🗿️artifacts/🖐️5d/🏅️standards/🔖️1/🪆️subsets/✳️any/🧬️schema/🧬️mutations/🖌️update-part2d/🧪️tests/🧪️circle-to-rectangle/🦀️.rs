@@ -9,11 +9,11 @@ use crate::standards::v1::subsets::any::schema::mutations::Block5dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_block5d_mutation, inverse_block5d_mutation};
 use crate::Block5dSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle-to-rectangle/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle-to-rectangle/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle-to-rectangle/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle-to-rectangle/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle-to-rectangle/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️update-part2d/🧪️circle/🎯️outcome/🔣️.json");
 
 fn before() -> Block5dSnapshot {
     serde_json::from_str(BEFORE).expect("before snapshot decodes")

@@ -92,7 +92,7 @@ Feature: Apply every typed fem2d analysis mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                       | dir                        | fixture                    |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-modal-3fbb1a |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles |
 
   @id-frame-vector
   @level-exhaustive
@@ -105,7 +105,7 @@ Feature: Apply every typed fem2d analysis mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                       | dir                        | fixture                  |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🎚️raises-the-mode-908c2b |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🎚️raises |
 
   @id-reject
   @level-exhaustive
@@ -119,5 +119,5 @@ Feature: Apply every typed fem2d analysis mutation twice — once in Rust, once 
     Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
     Examples:
     | id                         | dir                        | fixture                     |
-    | update-analysis-settings-1 | 🎛️update-analysis-settings | 🔁️keeps-the-analysis-196e4a |
-    | update-analysis-settings-2 | 🎛️update-analysis-settings | 🚫️denies-zero-modes-babc1d  |
+    | update-analysis-settings-1 | 🎛️update-analysis-settings | 🔁️keeps |
+    | update-analysis-settings-2 | 🎛️update-analysis-settings | 🚫️denies  |

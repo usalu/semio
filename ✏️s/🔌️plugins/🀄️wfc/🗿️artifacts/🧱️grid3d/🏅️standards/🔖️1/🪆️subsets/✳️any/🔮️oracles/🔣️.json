@@ -100,7 +100,7 @@
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
-              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+              "directoryName": "🎲️reseeds"
             }
           ]
         },
@@ -122,7 +122,7 @@
           "scenarios": [
             {
               "id": "stretches-the-x-axis-columns",
-              "directoryName": "📏️stretches-the-x-axis-columns"
+              "directoryName": "📏️stretches"
             }
           ]
         },
@@ -155,7 +155,7 @@
           "scenarios": [
             {
               "id": "removes-the-air-tile-and-cascades",
-              "directoryName": "🕳️removes-the-air-tile-and-cascades"
+              "directoryName": "🕳️removes"
             }
           ]
         },
@@ -166,7 +166,7 @@
           "scenarios": [
             {
               "id": "raises-the-wall-tile-bias",
-              "directoryName": "⚖️raises-the-wall-tile-bias"
+              "directoryName": "⚖️raises"
             }
           ]
         },
@@ -177,7 +177,7 @@
           "scenarios": [
             {
               "id": "replaces-the-wall-tile-mesh",
-              "directoryName": "🖼️replaces-the-wall-tile-mesh"
+              "directoryName": "🖼️replaces"
             }
           ]
         },
@@ -199,7 +199,7 @@
           "scenarios": [
             {
               "id": "removes-the-floor-wall-rule",
-              "directoryName": "❌️removes-the-floor-wall-rule"
+              "directoryName": "❌️removes"
             }
           ]
         },
@@ -232,7 +232,7 @@
           "scenarios": [
             {
               "id": "carves-out-the-far-edge-cell",
-              "directoryName": "🚫️carves-out-the-far-edge-cell"
+              "directoryName": "🚫️carves"
             }
           ]
         },
@@ -243,7 +243,7 @@
           "scenarios": [
             {
               "id": "restores-the-masked-corner",
-              "directoryName": "🔓️restores-the-masked-corner"
+              "directoryName": "🔓️restores"
             }
           ]
         }

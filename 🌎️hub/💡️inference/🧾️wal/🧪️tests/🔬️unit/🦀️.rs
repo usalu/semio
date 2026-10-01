@@ -66,7 +66,7 @@ fn decode_hex(value: &str) -> Vec<u8> {
 
 fn durable_edit<Mutation>(ordinal: i32, mutation_id: &str, actor: &str, timestamp: protocol::HybridLogicalTimestamp, forward: Mutation, inverse: Vec<Mutation>) -> directory::os_spr::Edit<Mutation> {
     let id = format!("inference-store-edit-{ordinal}");
-    directory::os_spr::Edit {
+    directory::os_spr::Edit { line: None,
         id: id.clone(),
         actor: Some(actor.into()),
         forwards: vec![forward],

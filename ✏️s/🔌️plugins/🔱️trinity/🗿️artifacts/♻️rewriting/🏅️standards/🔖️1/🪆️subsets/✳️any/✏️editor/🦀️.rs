@@ -4,10 +4,9 @@
 //! `RewritingPlayRuntime` field (selection, hover/select var, camera, LOD, …) lives in
 //! concrete-window configuration; the app itself has no config record. Every rule/parameter/
 //! before-fixture edit flows through the semantic `RewriteRuleMutation` vocabulary (`edit-*` body
-//! replaces, `change-*`/`remove-*` map upserts) — see
-//! `crate::rewriting_snapshot_mutations`, the seam commands that still
-//! compute a whole `next: RewritingSnapshot` use to emit granular mutations. The
-//! `TrinityRewritingCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale as `jack`).
+//! replaces, `change-*`/`remove-*` map upserts): every command builds exactly the leaves its intent means, never a diff of a
+//! scratch copy of the whole rule. The `TrinityRewritingCommand` enum stays hand-rolled (TEMPLATE §5.1 fallback, same rationale
+//! as `jack`).
 
 use semio_s_artifact_trinity_jack::JackWorkingScene;
 use crate::editor::rewriting::window_config;
@@ -94,6 +93,15 @@ pub(crate) fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, Pro
         return BTreeMap::new();
     };
     rhs.parameters.iter().map(|param| (param.name.clone(), param.default.clone())).collect()
+}
+
+/// 🔧️ The parameter-binding leaves that carry `before` to `after`: one `change-parameter-binding` per key whose value differs or
+/// is new, one `remove-parameter-binding` per key `after` drops, in key order.
+pub(crate) fn parameter_binding_mutations(before: &BTreeMap<String, PropertyValue>, after: &BTreeMap<String, PropertyValue>) -> Vec<RewriteRuleMutation> {
+    use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, remove_parameter_binding};
+    let changed = after.iter().filter(|(key, value)| before.get(*key) != Some(*value)).map(|(key, value)| change_parameter_binding(key.clone(), value.clone()));
+    let removed = before.keys().filter(|key| !after.contains_key(*key)).map(|key| remove_parameter_binding(key.clone()));
+    changed.chain(removed).collect()
 }
 
 pub(crate) fn default_rule_state() -> RewritingSnapshot {
@@ -201,58 +209,45 @@ pub(crate) fn after_fixture_json(state: &RewritingSnapshot) -> String {
     apply_rewriting_to_fixture(&state.before_fixture_json, state)
 }
 
-fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
-    let (x, y) = rule_layout.get(id).map_or((x, y), |point| (point.x, point.y));
-    Node { id: id.into(), name: name.into(), kind: kind.into(), x, y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
+/// 🧩️ One semantic rule-graph node at its `rule_layout` point, else at its default slot ([`schema::lhs_graph_slots`],
+/// [`schema::rhs_graph_slots`] — the same positions a node drag moves from).
+fn semantic_rule_node(id: &str, kind: &str, name: &str, slots: &[(String, LayoutPoint)], rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
+    let default = slots.iter().find(|(slot, _)| slot == id).map_or(LayoutPoint { x: 0.0, y: 0.0 }, |(_, point)| *point);
+    let point = rule_layout.get(id).copied().unwrap_or(default);
+    Node { id: id.into(), name: name.into(), kind: kind.into(), x: point.x, y: point.y, width: 160.0, height: 56.0, ports: vec![], properties: Default::default() }
 }
 
 fn lhs_semantic_graph_fixture(lhs: &schema::Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
-    let mut nodes = vec![semantic_rule_node("lhs-match", "rewriting.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), 0.0, 0.0, rule_layout)];
+    let slots = schema::lhs_graph_slots(lhs);
+    let mut nodes = vec![semantic_rule_node("lhs-match", "rewriting.match", &format!("{}:{}", lhs.pattern.left_var, lhs.pattern.left_kind), &slots, rule_layout)];
     let mut edges = Vec::new();
     if let Some(where_clause) = lhs.where_clause.as_deref().filter(|value| !value.trim().is_empty()) {
-        nodes.push(semantic_rule_node("lhs-where", "rewriting.where", where_clause, 220.0, 80.0, rule_layout));
+        nodes.push(semantic_rule_node("lhs-where", "rewriting.where", where_clause, &slots, rule_layout));
         edges.push(semio_s_artifact_trinity_jack::Edge { id: "lhs-match-where".into(), kind: "rewriting.flow".into(), source: "lhs-match@out".into(), target: "lhs-where@in".into(), properties: Default::default() });
     }
     JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "lhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
 }
 
 fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> JackSnapshot {
+    let slots = schema::rhs_graph_slots(rhs);
+    let node = |id: String, kind: &str, name: String| semantic_rule_node(&id, kind, &name, &slots, rule_layout);
     let mut nodes = Vec::new();
-    let edges = Vec::new();
-    let mut y = 0.0;
-    for (index, pattern) in rhs.create.iter().enumerate() {
-        let id = format!("rhs-create-{index}");
-        nodes.push(semantic_rule_node(&id, "rewriting.create", &format!("{}:{}", pattern.left_var, pattern.left_kind), (index as f64) * 220.0, y, rule_layout));
-    }
-    y += 80.0;
-    for (index, pattern) in rhs.merge.iter().enumerate() {
-        let id = format!("rhs-merge-{index}");
-        nodes.push(semantic_rule_node(&id, "rewriting.merge", &format!("{}:{}", pattern.left_var, pattern.left_kind), (index as f64) * 220.0, y, rule_layout));
-    }
-    y += 80.0;
-    for (index, assignment) in rhs.set.iter().enumerate() {
-        let id = format!("rhs-set-{index}");
-        nodes.push(semantic_rule_node(&id, "rewriting.set", &format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value), (index as f64) * 220.0, y, rule_layout));
-    }
-    y += 80.0;
-    for (index, name) in rhs.delete.iter().enumerate() {
-        let id = format!("rhs-delete-{index}");
-        nodes.push(semantic_rule_node(&id, "rewriting.delete", name, (index as f64) * 220.0, y, rule_layout));
-    }
-    y += 80.0;
-    for (index, parameter) in rhs.parameters.iter().enumerate() {
-        let id = format!("rhs-parameter-{index}");
+    nodes.extend(rhs.create.iter().enumerate().map(|(index, pattern)| node(format!("rhs-create-{index}"), "rewriting.create", format!("{}:{}", pattern.left_var, pattern.left_kind))));
+    nodes.extend(rhs.merge.iter().enumerate().map(|(index, pattern)| node(format!("rhs-merge-{index}"), "rewriting.merge", format!("{}:{}", pattern.left_var, pattern.left_kind))));
+    nodes.extend(rhs.set.iter().enumerate().map(|(index, assignment)| node(format!("rhs-set-{index}"), "rewriting.set", format!("{}.{} = {:?}", assignment.var, assignment.prop, assignment.value))));
+    nodes.extend(rhs.delete.iter().enumerate().map(|(index, name)| node(format!("rhs-delete-{index}"), "rewriting.delete", name.clone())));
+    nodes.extend(rhs.parameters.iter().enumerate().map(|(index, parameter)| {
         let kind = match parameter.kind {
             ParameterKind::String => "string",
             ParameterKind::Number => "number",
             ParameterKind::Boolean => "boolean",
         };
-        nodes.push(semantic_rule_node(&id, "rewriting.parameter", &format!("{}:{kind}", parameter.name), (index as f64) * 220.0, y, rule_layout));
-    }
+        node(format!("rhs-parameter-{index}"), "rewriting.parameter", format!("{}:{kind}", parameter.name))
+    }));
     if nodes.is_empty() {
-        nodes.push(semantic_rule_node("rhs-empty", "rewriting.create", "result:Piece", 0.0, 0.0, rule_layout));
+        nodes.push(node("rhs-empty".into(), "rewriting.create", "result:Piece".into()));
     }
-    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: edges }, None)
+    JackSnapshot::with_content(JackSnapshot::SCHEMA.into(), "rhs".into(), Some("nakagin".into()), semio_s_artifact_trinity_jack::Manifest::nakagin_default(), Camera { x: 0.0, y: 0.0, zoom: 1.0 }, JackWorkingScene { nodes: nodes, edges: Vec::new() }, None)
 }
 
 pub(crate) fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {

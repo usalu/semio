@@ -818,7 +818,7 @@ fn reorder_animations(doc: &mut json::JsonValue, order: &[usize]) -> Result<(), 
 /// extension NAME at `position` into `document/extensionsRequired`(/`Used`), a plain string array
 /// with no cross-reference from anywhere else in the document (unlike `cameras`/`skins`, no
 /// `apply_node_ref_change` call belongs here), exactly as
-/// `../🧬️schema/🧬️mutations/✅️required-extension/➕️add/🦀️.rs`'s(/`📣️used-extension/➕️add`'s) own
+/// `../🧬️schema/🧬️mutations/✅️required/➕️add/🦀️.rs`'s(/`📣️used-extension/➕️add`'s) own
 /// `validate` checks the position bound. `add-required-extension`'s own production `validate` ALSO
 /// requires the same name to already be present in `extensionsUsed` — this independent reader does
 /// not re-derive that second-array cross-check, since every committed fixture this reader is run

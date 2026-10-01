@@ -1,5 +1,6 @@
 import { runArtifactRustPackageMain } from "../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { BundleScript, runCmd } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { join } from "node:path";
 import { flowTypedRetirementSelfTests } from "../../🧵️retained/🧪️tests/🔬️flow-typed-retirement/🟦️.ts";
 class OwnedVerifyScript extends BundleScript {

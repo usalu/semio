@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import { type SnapshotEditEvent, type SnapshotValue } from "../../🟦️";
 import { prepareSnapshotPatch, applySnapshotPatch, inverseSnapshotPatch } from "../🟦️";
-import { semioSchemaAjvV1 } from "../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const fixture = await Bun.file(new URL("../🧫️fixtures/🔣️.json", import.meta.url)).json() as {
   base: SnapshotValue;

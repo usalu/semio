@@ -7,8 +7,8 @@
 //! `reorder-used-extensions`. Every leaf's own `apply()` (`../../../♾️any/🧬️schema/🧬️mutations/
 //! {✅️required-extension/{➕️add,➖️remove,🚚️move,🔀️reorder},
 //! 📣️used-extension/{➕️add,➖️remove,🚚️move,🔀️reorder},
-//! 🪪️asset/{📝️change-description,🧩️change-extensions,🧾️change-extras,🔖️version},
-//! 📃️document/{🧩️change-extensions,📝️change-extras}}/🦀️.rs`) stays physically owned by `♾️any` —
+//! 🪪️asset/{📝️change,🧩️change,🧾️change-extras,🔖️version},
+//! 📃️document/{🧩️change,📝️change}}/🦀️.rs`) stays physically owned by `♾️any` —
 //! `validate_mutation_leaf_source` requires the exact registered domain/operation owner beneath its
 //! aggregate mutation root, so this case reaches it by import. The oracle performs every kind by independent GLB/JSON-tree
 //! manipulation (`../../../♾️any/🔮️oracles/🦀️.rs`, extended with these 14 kinds by this same change,

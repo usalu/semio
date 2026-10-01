@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 📦️ flow flow Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, runCargo, runVitest, runExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargo, runVitest, runExactCargoLaws, runTestBudgeted } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -11,7 +13,7 @@ import { dirname, extname, join, relative, resolve } from "node:path";
 class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
 if (segments[0] === "flow-window-ownership") {
-      const { testFlowWindowOwnershipOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window-ownership/🟦️.ts");
+      const { testFlowWindowOwnershipOracle } = await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌊️main/🎚️config/🧪️tests/🔬️window/🟦️.ts");
       testFlowWindowOwnershipOracle();
       if (segments[1] === "check" || segments[1] === "native") {
         const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
@@ -25,6 +27,7 @@ if (segments[0] === "flow-window-ownership") {
 }
 class SourceTestScript extends BundleScript {
   async run(): Promise<void> {
+    await runTestBudgeted(process.execPath,["test",resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts")],{cwd:this.repoRoot});
     await import("../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️source-contract/🟦️.ts");
   }
 }
@@ -201,5 +204,5 @@ class AddWidgetRetainedCheckScript extends BundleScript {
   }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-flow-flow", { commands: { verify: OwnedVerifyScript, "test-source": SourceTestScript, "child-identity-check": ChildIdentityCheckScript, "child-edit-check": ChildEditCheckScript, "add-widget-retained-check": AddWidgetRetainedCheckScript } });
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-flow-flow", { snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], commands: { verify: OwnedVerifyScript, "test-source": SourceTestScript, "child-identity-check": ChildIdentityCheckScript, "child-edit-check": ChildEditCheckScript, "add-widget-retained-check": AddWidgetRetainedCheckScript } });
 

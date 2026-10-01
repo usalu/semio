@@ -47,18 +47,18 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   describe("🪜️ interpreted number steppers", () => {
     afterEach(() => cleanup());
 
-    it("sends a +/− bump down the absolute `change` trigger a program that declares only `change` can actually receive", () => {
+    it("sends a +/− bump down the absolute `change` trigger a program that declares only `change` can actually receive, as ONE press", () => {
       const intents: any[] = [];
       const store = new UiDocumentStore(SURFACE);
       store.loadSnapshot({ surface: SURFACE, revision: 1, root: 1, nodes: [stepper(1, "spacing", 10, 0.5, ["change"])] });
-      render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => intents.push(intent) } }));
+      render(createElement(UiNodeView, { store, id: 1, context: { store, onAction: () => {}, onIntent: (intent: unknown) => void intents.push(intent) } }));
       const plus = document.querySelector('[data-slot="stepper-plus"]') as HTMLElement;
       expect(plus).not.toBeNull();
       fireEvent.mouseDown(plus);
       fireEvent.mouseUp(plus);
-      expect(intents.length).toBe(1);
-      expect(intents[0].trigger).toBe("change");
-      expect(intents[0].input).toBe(10.5);
+      expect(intents.map((intent) => intent.trigger)).toEqual(["change", "change"]);
+      expect(intents.map((intent) => [intent.input.value, intent.input.commit])).toEqual([[10.5, false], [10.5, true]]);
+      expect(intents[1].input.gesture).toBe(intents[0].input.gesture);
     });
 
     it("keeps the relative `delta` trigger for a program that declares it", () => {

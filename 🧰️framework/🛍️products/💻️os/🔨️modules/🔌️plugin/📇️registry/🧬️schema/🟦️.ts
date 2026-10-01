@@ -1,5 +1,5 @@
 import contract from "./🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { jsonDocumentDuplicateKeys } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/🔣️json-document/🟦️.ts";
 
 export const REGISTRY_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;

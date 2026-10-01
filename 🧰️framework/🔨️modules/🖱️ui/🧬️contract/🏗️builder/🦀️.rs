@@ -1123,12 +1123,14 @@ pub struct InputBuilder {
     accept: Option<crate::UiText>,
     precision: Option<u16>,
     snaps: crate::UiFixedList<f64>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
 }
 
 /// ⌨️ An input of `kind`, initially empty.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn input(kind: crate::InputKind) -> InputBuilder {
-    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default() }
+    InputBuilder { base: NodeBase::leaf(), kind, value: crate::UiText::default(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, precision: None, snaps: crate::UiFixedList::default(), display_factor: None, limits: None }
 }
 
 impl InputBuilder {
@@ -1188,10 +1190,27 @@ impl InputBuilder {
         self
     }
 
-    /// 💯️ Sets a number field's value, printed at the field's precision when one is set.
+    /// 💯️ Sets a number field's value, printed at the field's precision when one is set — or, once a display factor
+    /// is set, as the exact stored number the renderer shows `× factor` at that precision.
     pub fn number(mut self, value: f64) -> Self {
-        let text = self.precision.map_or_else(|| crate::format_ui_number(value), |precision| crate::format_ui_number_fixed(value, precision));
+        let text = match (self.display_factor, self.precision) {
+            (None, Some(precision)) => crate::format_ui_number_fixed(value, precision),
+            _ => crate::format_ui_number(value),
+        };
         self.value = crate::UiText::clipped(&text);
+        self
+    }
+
+    /// 🪞️ Sets the factor a number field shows its stored value at (`stored × factor`) and divides a typed one back by;
+    /// set it before [`Self::number`].
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🥏️ Sets the hard range a typed number must keep, with the refusals naming its bounds.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
         self
     }
 
@@ -1218,7 +1237,7 @@ impl From<InputBuilder> for BuiltNode {
     fn from(builder: InputBuilder) -> Self {
         assemble(
             builder.base,
-            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept, precision: builder.precision, snaps: builder.snaps }),
+            crate::Component::Input(crate::InputProps { kind: builder.kind, value: builder.value, placeholder: builder.placeholder, commit: builder.commit, min: builder.min, max: builder.max, step: builder.step, accept: builder.accept, precision: builder.precision, snaps: builder.snaps, display_factor: builder.display_factor, limits: builder.limits }),
         )
     }
 }
@@ -1339,13 +1358,33 @@ pub struct SliderBuilder {
     step: f64,
     unit: Option<crate::UiText>,
     snaps: crate::UiFixedList<f64>,
+    appearance: crate::SliderAppearance,
+    scale: crate::UiNumberScale,
+    precision: Option<u16>,
+    display_unit: Option<crate::UiText>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
 }
 
 /// 🎚️ A slider currently at `value`, defaulting to the `0.0..=1.0` normalized range with a `0.1`
 /// step — the common case for an unlabeled proportion.
 // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
 pub fn slider(value: f64) -> SliderBuilder {
-    SliderBuilder { base: NodeBase::leaf(), value, min: 0.0, max: 1.0, step: 0.1, unit: None, snaps: crate::UiFixedList::default() }
+    SliderBuilder {
+        base: NodeBase::leaf(),
+        value,
+        min: 0.0,
+        max: 1.0,
+        step: 0.1,
+        unit: None,
+        snaps: crate::UiFixedList::default(),
+        appearance: crate::SliderAppearance::Track,
+        scale: crate::UiNumberScale::Linear,
+        precision: None,
+        display_unit: None,
+        display_factor: None,
+        limits: None,
+    }
 }
 
 impl SliderBuilder {
@@ -1386,6 +1425,43 @@ impl SliderBuilder {
         }
         Ok(self)
     }
+
+    /// 🎡️ Draws the travel as a straight track or a rotary dial.
+    pub fn appearance(mut self, appearance: crate::SliderAppearance) -> Self {
+        self.appearance = appearance;
+        self
+    }
+
+    /// 📉️ Maps the travel onto the track evenly or by ratio.
+    pub fn scale(mut self, scale: crate::UiNumberScale) -> Self {
+        self.scale = scale;
+        self
+    }
+
+    /// 🔬️ Sets the fraction digits the readout, the spoken value and a typed value use, capped at
+    /// [`crate::UI_NUMBER_PRECISION_MAX`].
+    pub fn precision(mut self, precision: u16) -> Self {
+        self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
+        self
+    }
+
+    /// 🪪️ Sets the unit the display value shows beside it (the stored `unit` otherwise).
+    pub fn display_unit(mut self, unit: crate::UiText) -> Self {
+        self.display_unit = Some(unit);
+        self
+    }
+
+    /// 🫗️ Sets the factor the slider shows its stored value at (`stored × factor`) and divides a typed one back by.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🏔️ Sets the hard range a typed value must keep, making the travel a soft range inside it.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
 }
 
 impl HasBase for SliderBuilder {
@@ -1398,7 +1474,23 @@ impl HasBase for SliderBuilder {
 impl From<SliderBuilder> for BuiltNode {
     // 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
     fn from(builder: SliderBuilder) -> Self {
-        assemble(builder.base, crate::Component::Slider(crate::SliderProps { value: builder.value, min: builder.min, max: builder.max, step: builder.step, unit: builder.unit, snaps: builder.snaps }))
+        assemble(
+            builder.base,
+            crate::Component::Slider(crate::SliderProps {
+                value: builder.value,
+                min: builder.min,
+                max: builder.max,
+                step: builder.step,
+                unit: builder.unit,
+                snaps: builder.snaps,
+                appearance: builder.appearance,
+                scale: builder.scale,
+                precision: builder.precision,
+                display_unit: builder.display_unit,
+                display_factor: builder.display_factor,
+                limits: builder.limits,
+            }),
+        )
     }
 }
 //#endregion 🎚️Slider
@@ -1415,11 +1507,16 @@ pub struct NumberStepperBuilder {
     min: Option<f64>,
     max: Option<f64>,
     precision: Option<u16>,
+    snaps: crate::UiFixedList<f64>,
+    unit: Option<crate::UiText>,
+    display_unit: Option<crate::UiText>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
 }
 
 /// 🧮️ A stepper currently at `value`, stepping by `1.0`, unbounded, showing one uniform value.
 pub fn number_stepper(value: f64) -> NumberStepperBuilder {
-    NumberStepperBuilder { base: NodeBase::leaf(), value, step: 1.0, uniform: true, min: None, max: None, precision: None }
+    NumberStepperBuilder { base: NodeBase::leaf(), value, step: 1.0, uniform: true, min: None, max: None, precision: None, snaps: crate::UiFixedList::default(), unit: None, display_unit: None, display_factor: None, limits: None }
 }
 
 impl NumberStepperBuilder {
@@ -1452,6 +1549,40 @@ impl NumberStepperBuilder {
         self.precision = Some(precision.min(crate::UI_NUMBER_PRECISION_MAX));
         self
     }
+
+    /// 📍️ Appends one detent its page keys stop on. Refused when it would break the detent law against the bounds set
+    /// so far or the list is full.
+    pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
+        let previous = self.snaps.iter().last().copied();
+        if !crate::snaps_are_valid(previous.into_iter().chain([snap]), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY)) || self.snaps.try_push(snap).is_err() {
+            return Err(self);
+        }
+        Ok(self)
+    }
+
+    /// ⚗️ Sets the unit of the stored value (shown beside it without a display unit).
+    pub fn unit(mut self, unit: crate::UiText) -> Self {
+        self.unit = Some(unit);
+        self
+    }
+
+    /// 🔖️ Sets the unit the display value shows beside it.
+    pub fn display_unit(mut self, unit: crate::UiText) -> Self {
+        self.display_unit = Some(unit);
+        self
+    }
+
+    /// ✖️ Sets the factor it shows its stored value at (`stored × factor`) and divides a typed one back by.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// ⛔️ Sets the hard range a typed value must keep, with the refusals naming its bounds.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
 }
 
 impl HasBase for NumberStepperBuilder {
@@ -1462,7 +1593,22 @@ impl HasBase for NumberStepperBuilder {
 
 impl From<NumberStepperBuilder> for BuiltNode {
     fn from(builder: NumberStepperBuilder) -> Self {
-        assemble(builder.base, crate::Component::NumberStepper(crate::NumberStepperProps { value: builder.value, step: builder.step, uniform: builder.uniform, min: builder.min, max: builder.max, precision: builder.precision }))
+        assemble(
+            builder.base,
+            crate::Component::NumberStepper(crate::NumberStepperProps {
+                value: builder.value,
+                step: builder.step,
+                uniform: builder.uniform,
+                min: builder.min,
+                max: builder.max,
+                precision: builder.precision,
+                snaps: builder.snaps,
+                unit: builder.unit,
+                display_unit: builder.display_unit,
+                display_factor: builder.display_factor,
+                limits: builder.limits,
+            }),
+        )
     }
 }
 //#endregion 🔢️NumberStepper
@@ -2042,12 +2188,14 @@ pub struct VectorInputBuilder {
     precision: Option<u16>,
     commit: Option<crate::UiText>,
     snaps: Vec<f64>,
+    display_factor: Option<f64>,
+    limits: Option<crate::UiNumberLimits>,
 }
 
 /// 🆕️ An empty vector input reading `label`.
 pub fn vector_input(label: crate::Label) -> VectorInputBuilder {
     let group = ContainerBuilder { base: NodeBase::stack(crate::Axis::Horizontal), role: crate::ContainerRole::Group, label, description: None, required: None, error: None, default_open: None, drop_overlay: None }.wrap(true).gap(crate::SpaceToken::Sm);
-    VectorInputBuilder { group, unit: None, step: None, min: None, max: None, precision: None, commit: None, snaps: Vec::new() }
+    VectorInputBuilder { group, unit: None, step: None, min: None, max: None, precision: None, commit: None, snaps: Vec::new(), display_factor: None, limits: None }
 }
 
 impl VectorInputBuilder {
@@ -2087,6 +2235,18 @@ impl VectorInputBuilder {
         self
     }
 
+    /// 🔄️ Sets the display factor every axis shows its stored component at.
+    pub fn display_factor(mut self, factor: f64) -> Self {
+        self.display_factor = Some(factor);
+        self
+    }
+
+    /// 🛑️ Sets the hard range every axis's typed component must keep.
+    pub fn limits(mut self, limits: crate::UiNumberLimits) -> Self {
+        self.limits = Some(limits);
+        self
+    }
+
     /// 🧲️ Appends one detent every axis shares — the vector's component snaps. Refused when it would break the detent
     /// law against the bounds set so far or the list is full.
     pub fn try_snap(mut self, snap: f64) -> Result<Self, Self> {
@@ -2108,6 +2268,8 @@ impl VectorInputBuilder {
         field_input.max = self.max;
         field_input.precision = self.precision;
         field_input.commit = self.commit.clone();
+        field_input.display_factor = self.display_factor;
+        field_input.limits = self.limits.clone();
         for snap in &self.snaps {
             let Ok(snapped) = field_input.try_snap(*snap) else { return Err(self) };
             field_input = snapped;

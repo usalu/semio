@@ -28,6 +28,39 @@ export const TIME_TRAVEL_FROZEN_CODE = "timeTravel.frozen";
 /** 🧯️ Fault a cancelled replay leaves behind, so hosts can label it and offer `rerun`. */
 export const TIME_TRAVEL_CANCELLED_CODE = "timeTravel.cancelled";
 
+/** 🛑️ Host refusal: a mutating tool run, an agent transaction or a session on another store holds the instance. */
+export const TIME_TRAVEL_BUSY_CODE = "timeTravel.busy";
+
+/** 👻️ Host refusal: the named mutation is not (or no longer) applied in the edited store. */
+export const TIME_TRAVEL_UNKNOWN_MUTATION_CODE = "timeTravel.unknown-mutation";
+
+/** 🔐️ Host refusal: the mutation declares no input schema or emits foreign steps. */
+export const TIME_TRAVEL_NOT_EDITABLE_CODE = "timeTravel.not-editable";
+
+/** 🔍️ Host refusal: the input pointer addresses no input of the edited mutation. */
+export const TIME_TRAVEL_UNKNOWN_INPUT_CODE = "timeTravel.unknown-input";
+
+/** ❎️ Host refusal: the value does not take the input's shape or fails its payload schema; the draft is kept. */
+export const TIME_TRAVEL_INVALID_INPUT_CODE = "timeTravel.invalid-input";
+
+/** 🫥️ Host refusal: the input's selection domain holds nothing at its granularity. */
+export const TIME_TRAVEL_NO_SELECTION_CODE = "timeTravel.no-selection";
+
+/** 🖊️ Host refusal: a new alternative needs a name and no locale supplied the default. */
+export const TIME_TRAVEL_NAME_REQUIRED_CODE = "timeTravel.name-required";
+
+/** 🔤️ Host refusal: the alternative name is blank or longer than {@link TIME_TRAVEL_TEXT_MAX_BYTES}. */
+export const TIME_TRAVEL_NAME_INVALID_CODE = "timeTravel.name-invalid";
+
+/** 🧬️ Host refusal: the payload schema compiles no validator or describes no inputs, so no draft is admitted. */
+export const TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE = "timeTravel.schema-unavailable";
+
+/** 💥️ Driver fault: the store refused or broke the Report replay. */
+export const TIME_TRAVEL_REPLAY_FAULTED_CODE = "timeTravel.replay-faulted";
+
+/** 🧨️ Driver fault: the finalize commit failed for a reason other than a stale base or a blocking report. */
+export const TIME_TRAVEL_COMMIT_FAILED_CODE = "timeTravel.commit-failed";
+
 const utf8Length = (text: string): number => new TextEncoder().encode(text).length;
 
 /** 🔣️ A fault code is non-empty, free of Unicode `White_Space` and at most {@link TIME_TRAVEL_TEXT_MAX_BYTES}. */
@@ -460,11 +493,23 @@ export const TIME_TRAVEL_LABELS = {
   alternativeNameDefault: { en: "Edited history", de: "Bearbeiteter Verlauf" },
   noChanges: { en: "No changes: showing the current history", de: "Keine Änderungen: aktueller Verlauf wird angezeigt" },
   needsReplay: { en: "Replay needed: later mutations are not checked yet", de: "Neu anwenden nötig: spätere Mutationen sind noch nicht geprüft" },
-  reportBlocking: { en: "Errors in later mutations block finalizing", de: "Fehler in späteren Mutationen verhindern den Abschluss" },
+  reportBlocking: { en: "Errors must be fixed or withdrawn before finalizing", de: "Fehler müssen vor dem Abschließen behoben oder zurückgezogen werden" },
   readyToFinalize: { en: "Ready to finalize", de: "Bereit zum Abschließen" },
   replayCancelled: { en: "Replay cancelled", de: "Neu anwenden abgebrochen" },
   actionRerun: { en: "Replay again", de: "Erneut anwenden" },
   replayProgressValueText: { en: "Replaying {done} of {total} mutations", de: "{done} von {total} Mutationen werden neu angewendet" },
+  refusalBusy: { en: "History editing is busy: finish the running tool or the other history edit first", de: "Verlaufsbearbeitung beschäftigt: zuerst das laufende Werkzeug oder die andere Verlaufsbearbeitung abschließen" },
+  refusalUnknownMutation: { en: "This mutation is no longer in the history", de: "Diese Mutation ist nicht mehr im Verlauf" },
+  refusalNotEditable: { en: "The inputs of this mutation cannot be edited", de: "Die Eingaben dieser Mutation können nicht bearbeitet werden" },
+  refusalUnknownInput: { en: "This input does not exist in the mutation", de: "Diese Eingabe gibt es in der Mutation nicht" },
+  refusalInvalidInput: { en: "Invalid value: the input keeps its previous value", de: "Ungültiger Wert: Die Eingabe behält ihren bisherigen Wert" },
+  refusalNoSelection: { en: "Nothing suitable is selected for this input", de: "Für diese Eingabe ist nichts Passendes ausgewählt" },
+  refusalNameRequired: { en: "Name the new alternative", de: "Einen Namen für die neue Alternative eingeben" },
+  refusalNameInvalid: { en: "Invalid alternative name: use 1 to 256 characters", de: "Ungültiger Name der Alternative: 1 bis 256 Zeichen verwenden" },
+  refusalSchemaUnavailable: { en: "The input schema of this mutation is unavailable", de: "Das Eingabeschema dieser Mutation ist nicht verfügbar" },
+  replayFaulted: { en: "Replay failed: later mutations could not be checked", de: "Erneutes Anwenden fehlgeschlagen: Spätere Mutationen konnten nicht geprüft werden" },
+  commitFailed: { en: "Finalizing failed: the history is unchanged", de: "Abschließen fehlgeschlagen: Der Verlauf ist unverändert" },
+  outcomeIntroduced: { en: "New since this edit", de: "Neu durch diese Bearbeitung" },
 } as const satisfies Record<string, { en: string; de: string }>;
 export type TimeTravelLabelKey = keyof typeof TIME_TRAVEL_LABELS;
 
@@ -478,9 +523,30 @@ export function timeTravelReviewLabel(review: TimeTravelReview): TimeTravelLabel
   return ({ noChanges: "noChanges", needsReplay: "needsReplay", blocked: "reportBlocking", ready: "readyToFinalize" } as const)[review];
 }
 
-/** 🩹️ Label key of a framework-owned fault code (`timeTravel.cancelled`); driver fault codes have none. */
-export function timeTravelFaultLabel(code: string): TimeTravelLabelKey | undefined {
-  return code === TIME_TRAVEL_CANCELLED_CODE ? "replayCancelled" : undefined;
+/** 🗂️ Every `timeTravel.*` code a history-edit verb or driver answers, with the label key a host shows for it. */
+export const TIME_TRAVEL_CODE_LABELS = [
+  [TIME_TRAVEL_FROZEN_CODE, "frozen"],
+  ["timeTravel.illegal", "refusalIllegal"],
+  ["timeTravel.stale", "refusalStale"],
+  ["timeTravel.blocked", "refusalBlocked"],
+  ["timeTravel.empty", "refusalEmpty"],
+  [TIME_TRAVEL_CANCELLED_CODE, "replayCancelled"],
+  [TIME_TRAVEL_BUSY_CODE, "refusalBusy"],
+  [TIME_TRAVEL_UNKNOWN_MUTATION_CODE, "refusalUnknownMutation"],
+  [TIME_TRAVEL_NOT_EDITABLE_CODE, "refusalNotEditable"],
+  [TIME_TRAVEL_UNKNOWN_INPUT_CODE, "refusalUnknownInput"],
+  [TIME_TRAVEL_INVALID_INPUT_CODE, "refusalInvalidInput"],
+  [TIME_TRAVEL_NO_SELECTION_CODE, "refusalNoSelection"],
+  [TIME_TRAVEL_NAME_REQUIRED_CODE, "refusalNameRequired"],
+  [TIME_TRAVEL_NAME_INVALID_CODE, "refusalNameInvalid"],
+  [TIME_TRAVEL_SCHEMA_UNAVAILABLE_CODE, "refusalSchemaUnavailable"],
+  [TIME_TRAVEL_REPLAY_FAULTED_CODE, "replayFaulted"],
+  [TIME_TRAVEL_COMMIT_FAILED_CODE, "commitFailed"],
+] as const satisfies readonly (readonly [string, TimeTravelLabelKey])[];
+
+/** 🩹️ Label key of every `timeTravel.*` code a host shows ({@link TIME_TRAVEL_CODE_LABELS}); `undefined` for any other code. */
+export function timeTravelCodeLabel(code: string): TimeTravelLabelKey | undefined {
+  return TIME_TRAVEL_CODE_LABELS.find(([known]) => known === code)?.[1];
 }
 
 /** 🙅️ Label key of a refusal. */

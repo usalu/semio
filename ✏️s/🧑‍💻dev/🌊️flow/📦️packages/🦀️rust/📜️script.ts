@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🌊️ First-party Flow composition has its own bounded native and portable law runner. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runExactCargoLaws, buildBudgetMs, runBun } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runExactCargoLaws, buildBudgetMs, runBun } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { testFlowCompositionOwnership, flowCompositionLaws } from "../../🧪️tests/🏷️ownership/🟦️.ts";
 class PortSidesScript extends BundleScript { async run(): Promise<void> { runBun(["test", "../../🧪️tests/🔌️port-sides/🟦️.ts"], import.meta.dir); } }
 class SourceScript extends BundleScript {
@@ -23,4 +25,4 @@ class CanonicalScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("canonical-architecture", CanonicalScript).register("port-sides-test", PortSidesScript).register("source-check", SourceScript).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "source-check" });
+await runScriptMain(router, { defaultCommand: "source-check" });

@@ -552,7 +552,7 @@ async fn canvas_escape_cancels_draft_without_committing() {
 /// plugin host supplies: the self-closing `drawing_app()` binds the live instance, while this helper
 /// adds a `ViewModel` naming the canvas window (`setCamera` addresses it) with the active utility and the host's
 /// settle protocol after every dispatch (`settle_registered_typed_operation`) — exactly
-/// `🎚️config/🧪️tests/🔬️window-ownership`'s recipe.
+/// `🎚️config/🧪️tests/🔬️window`'s recipe.
 async fn inline_selection_app() -> (DrawingAppFixture, semio_framework_plugin::ActionMeta) {
     use semio_framework_plugin::{ViewWindowInstance, WindowConfigOwner};
     let app = drawing_app().await;
@@ -1142,8 +1142,8 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
     let path = [[420.0, 320.0], [480.0, 300.0], [520.0, 380.0], [460.0, 360.0]];
     let run = |batched: bool| {
         let (mut session, document, config, history) = session_with("shapeRect");
-        let view = semio_framework_plugin::ArtifactView::new(&document, &history);
-        let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+        let view = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config, window: None };
         session.press(pointer("shapeRect", [0.0, 0.0])).expect("press");
         if batched {
             let [x, y] = path[3];
@@ -1170,8 +1170,8 @@ async fn a_batched_move_drives_the_gesture_to_its_last_sample() {
 async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
     for utility in ["shapeRect", "selectMarquee"] {
         let (mut session, document, config, history) = session_with(utility);
-        let view = semio_framework_plugin::ArtifactView::new(&document, &history);
-        let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+        let view = ArtifactView::new(&document, &history);
+        let cfg = ConfigView { snapshot: &config, window: None };
         session.press(pointer(utility, [0.0, 0.0])).expect("press");
         canvas_pointer_move::handle(&canvas_pointer_move::CanvasPointerMove { shift: false, alt: false, x: 600.0, y: 500.0, width: 800.0, height: 600.0, samples: Vec::new() }, &view, &cfg, &mut session).expect("move");
         assert!(!session.tool.at_rest(), "{utility}: the drag is live before the cancel");
@@ -1182,8 +1182,8 @@ async fn a_cancelled_release_commits_nothing_and_leaves_the_gesture_idle() {
         assert!(session.point_query.is_none(), "{utility}: no marquee/pick query is retained");
     }
     let (mut session, document, config, history) = session_with("selectDirect");
-    let view = semio_framework_plugin::ArtifactView::new(&document, &history);
-    let cfg = semio_framework_plugin::ConfigView { snapshot: &config, window: None };
+    let view = ArtifactView::new(&document, &history);
+    let cfg = ConfigView { snapshot: &config, window: None };
     let emit = canvas_pointer_up::handle(&canvas_pointer_up::CanvasPointerUp { alt: false, x: 400.0, y: 300.0, width: 800.0, height: 600.0, shift: false, ctrl: false, meta: false, cancelled: true }, &view, &cfg, &mut session).expect("cancel");
     assert!(emit.effects.is_empty() && emit.artifact_mutations.is_empty(), "an idle cancel never falls back to a pick");
     assert!(session.tool.at_rest());
@@ -1804,7 +1804,7 @@ async fn modified_node_picks_and_combined_drag_preserve_layers_and_one_history_e
 #[semio_framework_async_macros::async_test]
 async fn fill_rule_selection_edit_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
-    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json")).unwrap();
     let mut before=before;
     let mut second=before.layers[0].clone();
     crate::schema::layer_base_mut(&mut second).id="shape-b".into();
@@ -1877,8 +1877,8 @@ async fn ungroup_selects_promoted_children_and_undoes_as_one_history_entry() {
 #[semio_framework_async_macros::async_test]
 async fn group_isolation_selection_edit_undoes_as_one_history_entry() {
     let mut app=drawing_app().await;
-    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let before:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after:DrawingSnapshot=serde_json::from_str(include_str!("../../../../🎨️style/🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json")).unwrap();
     load_drawing_fixture(&mut app,&before);
     artifact_laws::assert_undo_redo_round_trip(&mut *app,DrawingCommand::PatchLayers(patch_layers::PatchLayers {layer_ids:vec!["group-a".into()],field:"isolation".into(),value:"true".into()}),|app|app.snapshot().unwrap(),before,after).await;
 }

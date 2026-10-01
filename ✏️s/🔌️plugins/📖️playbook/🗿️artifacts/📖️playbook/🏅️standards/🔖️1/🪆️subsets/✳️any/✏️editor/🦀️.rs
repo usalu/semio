@@ -309,7 +309,7 @@ fn playbook_bounded_serialized_bytes<T: protocol::ToValue>(value: &T) -> Result<
 
 fn playbook_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("playbook-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

@@ -104,45 +104,45 @@
       "vectors": [
         {
           "mutationId": "change-object-smooth-shading",
-          "sourceMutationDirectoryName": "🔘️change-object-smooth-shading",
-          "mutationDirectoryName": "🔘️change-object-smooth-shading",
+          "sourceMutationDirectoryName": "🔘️change-object-smooth",
+          "mutationDirectoryName": "🔘️change-object-smooth",
           "scenarios": [
             {
               "id": "turns-on-smooth-shading-for-obj-hull",
-              "directoryName": "🟢️turns-on-smooth-shading-for-obj-hull"
+              "directoryName": "🟢️turns"
             }
           ]
         },
         {
           "mutationId": "change-paint-layer-blend-mode",
-          "sourceMutationDirectoryName": "🎛️change-paint-layer-blend-mode",
-          "mutationDirectoryName": "🎛️change-paint-layer-blend-mode",
+          "sourceMutationDirectoryName": "🎛️change-paint-layer",
+          "mutationDirectoryName": "🎛️change-paint-layer",
           "scenarios": [
             {
               "id": "switches-the-base-layer-to-multiply",
-              "directoryName": "✖️switches-the-base-layer-to-multiply"
+              "directoryName": "✖️switches"
             }
           ]
         },
         {
           "mutationId": "change-paint-layer-opacity",
-          "sourceMutationDirectoryName": "🌫️change-paint-layer-opacity",
-          "mutationDirectoryName": "🌫️change-paint-layer-opacity",
+          "sourceMutationDirectoryName": "🌫️change-paint-layer",
+          "mutationDirectoryName": "🌫️change-paint-layer",
           "scenarios": [
             {
               "id": "fades-the-base-layer-to-half",
-              "directoryName": "🌫️fades-the-base-layer-to-half"
+              "directoryName": "🌫️fades"
             }
           ]
         },
         {
           "mutationId": "change-paint-layer-visible",
-          "sourceMutationDirectoryName": "👁️change-paint-layer-visible",
-          "mutationDirectoryName": "👁️change-paint-layer-visible",
+          "sourceMutationDirectoryName": "👁️change-paint-layer",
+          "mutationDirectoryName": "👁️change-paint-layer",
           "scenarios": [
             {
               "id": "hides-the-base-layer",
-              "directoryName": "🙈️hides-the-base-layer"
+              "directoryName": "🙈️hides"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "attaches-a-mesh-child-handle-to-obj-fin",
-              "directoryName": "🕸️attaches-a-mesh-child-handle-to-obj-fin"
+              "directoryName": "🕸️attaches"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "inserts-obj-mast-between-hull-and-fin",
-              "directoryName": "⛵️inserts-obj-mast-between-hull-and-fin"
+              "directoryName": "⛵️inserts"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "detaches-the-mesh-child-handle-from-obj-hull",
-              "directoryName": "✂️detaches-the-mesh-child-handle-from-obj-hull"
+              "directoryName": "✂️detaches"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "removes-obj-fin-without-touching-the-order",
-              "directoryName": "🚫️removes-obj-fin-without-touching-the-order"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "paints-red-over-the-second-half-of-the-base-layer",
-              "directoryName": "🖌️paints-red-over-the-second-half-of-the-base-layer"
+              "directoryName": "🖌️paints"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "stacks-a-detail-layer-above-the-base-layer",
-              "directoryName": "🪜️stacks-a-detail-layer-above-the-base-layer"
+              "directoryName": "🪜️stacks"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "translates-obj-hull-along-x-and-z",
-              "directoryName": "📍️translates-obj-hull-along-x-and-z"
+              "directoryName": "📍️translates"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "drops-the-detail-layer-at-index-1",
-              "directoryName": "➖️drops-the-detail-layer-at-index-1"
+              "directoryName": "➖️drops"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "retitles-obj-hull",
-              "directoryName": "🏷️retitles-obj-hull"
+              "directoryName": "🏷️retitles"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "retitles-the-base-layer-to-undercoat",
-              "directoryName": "🏷️retitles-the-base-layer-to-undercoat"
+              "directoryName": "🏷️retitles"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "moves-obj-fin-in-front-of-obj-hull",
-              "directoryName": "🔀️moves-obj-fin-in-front-of-obj-hull"
+              "directoryName": "🔀️moves"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "yaws-obj-hull-about-the-y-axis",
-              "directoryName": "🔄️yaws-obj-hull-about-the-y-axis"
+              "directoryName": "🔄️yaws"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "halves-obj-hull-uniformly",
-              "directoryName": "📐️halves-obj-hull-uniformly"
+              "directoryName": "📐️halves"
             }
           ]
         },
@@ -296,27 +296,112 @@
           "scenarios": [
             {
               "id": "dabs-red-across-the-base-061d4c",
-              "directoryName": "🖌️dabs-red-across-the-base-061d4c"
+              "directoryName": "🖌️dabs"
             },
             {
               "id": "erases-a-hole-in-the-base-db0332",
-              "directoryName": "🧽️erases-a-hole-in-the-base-db0332"
+              "directoryName": "🧽️erases"
             },
             {
               "id": "erases-the-clear-layer-dffaa7",
-              "directoryName": "⏸️erases-the-clear-layer-dffaa7"
+              "directoryName": "⏸️erases"
             },
             {
               "id": "paints-a-missing-layer-27a048",
-              "directoryName": "⛔️paints-a-missing-layer-27a048"
+              "directoryName": "⛔️paints"
             },
             {
               "id": "paints-with-no-radius-420804",
-              "directoryName": "🫓️paints-with-no-radius-420804"
+              "directoryName": "🫓️paints"
             },
             {
               "id": "dabs-off-the-texture-fa3d89",
-              "directoryName": "📐️dabs-off-the-texture-fa3d89"
+              "directoryName": "📐️dabs"
+            }
+          ]
+        },
+        {
+          "mutationId": "move-selection",
+          "sourceMutationDirectoryName": "🚚️move-selection",
+          "mutationDirectoryName": "🚚️move-selection",
+          "scenarios": [
+            {
+              "id": "slides-the-whole-plane",
+              "directoryName": "🚚️moves"
+            },
+            {
+              "id": "slides-two-corners-along-x",
+              "directoryName": "📌️pins"
+            },
+            {
+              "id": "lifts-one-vertex-and-skips-an-absent-one",
+              "directoryName": "🧩️part"
+            },
+            {
+              "id": "a-zero-offset-moves-nothing",
+              "directoryName": "⏸️still"
+            },
+            {
+              "id": "refuses-a-missing-object",
+              "directoryName": "⛔️ghost"
+            },
+            {
+              "id": "refuses-an-object-without-mesh",
+              "directoryName": "🕳️bare"
+            },
+            {
+              "id": "refuses-a-vertex-named-twice",
+              "directoryName": "🔁️twice"
+            }
+          ]
+        },
+        {
+          "mutationId": "rotate-selection",
+          "sourceMutationDirectoryName": "🌀️rotate-selection",
+          "mutationDirectoryName": "🌀️rotate-selection",
+          "scenarios": [
+            {
+              "id": "quarter-turns-the-plane-about-y",
+              "directoryName": "🌀️turns"
+            },
+            {
+              "id": "bends-one-corner-about-z",
+              "directoryName": "📐️lifts"
+            },
+            {
+              "id": "a-zero-angle-turns-nothing",
+              "directoryName": "⏸️still"
+            },
+            {
+              "id": "refuses-the-zero-axis",
+              "directoryName": "🫥️void"
+            },
+            {
+              "id": "refuses-a-missing-object",
+              "directoryName": "⛔️ghost"
+            }
+          ]
+        },
+        {
+          "mutationId": "scale-selection",
+          "sourceMutationDirectoryName": "🔍️scale-selection",
+          "mutationDirectoryName": "🔍️scale-selection",
+          "scenarios": [
+            {
+              "id": "doubles-the-plane-along-x",
+              "directoryName": "🔍️wides"
+            },
+            {
+              "id": "halves-one-vertex-and-skips-an-absent-one",
+              "directoryName": "🧩️part"
+            },
+            {
+              "id": "unit-factors-scale-nothing",
+              "directoryName": "⏸️still"
+            },
+            {
+              "id": "refuses-a-zero-factor",
+              "directoryName": "🫓️flat"
             }
           ]
         }
@@ -339,7 +424,10 @@
         "change-paint-layer-opacity",
         "change-paint-layer-blend-mode",
         "edit-paint-layer",
-        "apply-paint-stroke"
+        "apply-paint-stroke",
+        "move-selection",
+        "rotate-selection",
+        "scale-selection"
       ]
     }
   ],
@@ -717,6 +805,69 @@
             "operation": "apply-paint-stroke",
             "bridgeVersion": 1,
             "variant": "ApplyPaintStroke"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "move-selection",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "move-selection",
+            "bridgeVersion": 1,
+            "variant": "MoveSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "rotate-selection",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "rotate-selection",
+            "bridgeVersion": 1,
+            "variant": "RotateSelection"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "lowpoly-1-mutate",
+              "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "scale-selection",
+          "capability": "lowpoly-1-mutate",
+          "payloadSchema": "🧬️.schema.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "scale-selection",
+            "bridgeVersion": 1,
+            "variant": "ScaleSelection"
           },
           "oracleRequirements": [
             {

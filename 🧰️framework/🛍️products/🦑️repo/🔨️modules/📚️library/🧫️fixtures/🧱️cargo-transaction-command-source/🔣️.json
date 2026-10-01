@@ -35,7 +35,9 @@
         "packageNativeRelease",
         "parseCargoBinarySourcesV1",
         "signExecutableForDistribution",
-        "workspaceCargoVersion"
+        "workspaceCargoVersion",
+        "CargoArtifactBuildOptionsV1",
+        "captureCargoArtifacts"
       ],
       "contextChain": [
         "repo-cache-artifact-native-build"

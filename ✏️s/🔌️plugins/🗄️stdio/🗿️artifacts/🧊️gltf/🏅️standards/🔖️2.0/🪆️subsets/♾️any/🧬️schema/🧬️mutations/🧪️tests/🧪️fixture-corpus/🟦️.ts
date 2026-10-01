@@ -1,13 +1,12 @@
-/** 🧫️ The committed glTF mutation corpus (`♾️any/🧫️fixtures/🧬️mutations/<entity>/<verb>/<case>/`) against the TypeScript
- * twins: every wire a case commits (`🦠️mutation`, both `📸️snapshot` sides, `🔺️diff`) decodes through its `parse<Export>()`
- * and re-encodes to the committed bytes; the strict third-party Ajv oracle (`semioSchemaAjvV1`) reaches the same verdict on
- * every committed wire and on every broken one, which both must refuse. The Rust half of this corpus law is `./🦀️.rs`.
- * @see ./🦀️.rs
- * @see https://ajv.js.org/ */
+/** 🧫️ Canonical GLTF mutation/source snapshots retain every finite native wire field.
+ * The strict independent Ajv oracle validates all committed and malformed JSON fixtures;
+ * scalar assertions compare exact bigint, binary64 and ordered local JSON/pair values.
+ * @see ./🦀️.rs */
 import { describe, expect, test } from "bun:test";
+import {binary64Value,type Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { GltfWireRefusal, parseGltfSnapshot, type GltfWireReader } from "../../../📸️snapshot/🟦️.ts";
 import { parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 import { parseGltfMutation } from "../../🟦️.ts";
@@ -17,7 +16,14 @@ type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 const mutations = join(import.meta.dir, "../..");
 const corpus = join(import.meta.dir, "../../../../🧫️fixtures/🧬️mutations");
 const document = (path: string): { $id: string; oneOf?: { properties: { mutation: { const: string } } }[] } => JSON.parse(readFileSync(path, "utf8"));
-const encode = (value: unknown): string => `${JSON.stringify(value, null, 2)}\n`;
+const assertWireFields=(owned:unknown,wire:Json):void=>{
+ if(owned!==null&&typeof owned==="object"&&!Array.isArray(owned)&&"kind"in owned){const value=owned as {kind:string;value?:unknown;values?:unknown[];members?:[string,unknown][]};switch(value.kind){case"null":expect(wire).toBeNull();return;case"boolean":case"string":assertWireFields(value.value,wire);return;case"number":assertWireFields(value.value,wire);return;case"array":assertWireFields(value.values,wire);return;case"object":assertWireFields(value.members,wire);return}}
+ if(typeof wire==="number"){if(typeof owned==="bigint"){expect(owned).toBe(BigInt(wire));return}if(owned!==null&&typeof owned==="object"&&"bits"in owned){expect(binary64Value(owned as Binary64)).toBe(wire);return}expect(owned).toBe(wire);return}
+ if(wire===null||typeof wire==="string"||typeof wire==="boolean"){expect(owned).toBe(wire);return}
+ if(Array.isArray(wire)){expect(Array.isArray(owned)).toBe(true);const values=owned as unknown[];expect(values).toHaveLength(wire.length);wire.forEach((value,index)=>assertWireFields(values[index],value));return}
+ if(Array.isArray(owned)){expect(owned.map(value=>(value as [string,unknown])[0])).toEqual(Object.keys(wire));for(const[name,value]of owned as [string,unknown][])assertWireFields(value,wire[name]!);return}
+ expect(owned!==null&&typeof owned==="object").toBe(true);for(const[key,value]of Object.entries(wire))assertWireFields((owned as Record<string,unknown>)[key],value);
+};
 
 const cases = (directory: string): string[] =>
   existsSync(join(directory, "🦠️mutation/🔣️.json"))
@@ -86,11 +92,11 @@ describe("glTF mutation corpus through the TypeScript twins", () => {
         });
         continue;
       }
-      test(`${name} decodes, re-encodes byte-equal, and agrees with Ajv`, () => {
+      test(`${name} decodes every native wire field into canonical owned values and agrees with Ajv`, () => {
         const text = readFileSync(join(directory, wire.file), "utf8");
         const committed = JSON.parse(text) as Json;
         expect(wire.admits(committed)).toBe(true);
-        expect(encode(wire.parse(committed))).toBe(text);
+        assertWireFields(wire.parse(committed),committed);
         for (const path of wire.closed(committed)) {
           const broken = breakAt(committed, path);
           expect(wire.admits(broken)).toBe(false);

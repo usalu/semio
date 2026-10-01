@@ -646,6 +646,7 @@ fn property_value_from_dsl(value: crate::os_dsl::DslValue) -> PropertyValue {
         crate::os_dsl::DslValue::String(s) => PropertyValue::String(s),
         crate::os_dsl::DslValue::Array(items) => PropertyValue::Array(items.into_iter().map(property_value_from_dsl).collect()),
         crate::os_dsl::DslValue::Object(entries) => PropertyValue::Object(entries.into_iter().map(|(key, entry)| (key, property_value_from_dsl(entry))).collect()),
+        crate::os_dsl::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.into_iter().map(|byte| PropertyValue::Number(f64::from(byte))).collect()),
     }
 }
 
@@ -980,6 +981,7 @@ fn preview_tree_collapsed_summary(value: &crate::os_dsl::DslValue) -> String {
         },
         crate::os_dsl::DslValue::Bool(b) => b.to_string(),
         crate::os_dsl::DslValue::Null => "null".into(),
+        crate::os_dsl::DslValue::Bytes(bytes) => format!("[{} bytes]", bytes.len()),
     }
 }
 

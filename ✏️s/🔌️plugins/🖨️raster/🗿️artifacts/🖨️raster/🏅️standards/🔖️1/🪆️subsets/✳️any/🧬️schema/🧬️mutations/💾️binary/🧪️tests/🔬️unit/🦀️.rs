@@ -1337,7 +1337,7 @@ fn retained_mask_mutations_match_cold_apply_and_undo() {
 #[test]
 fn retained_adjustment_parameters_match_cold_apply_and_undo() {
     use protocol::{Mutation,MutationDiff};
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     for (index,row) in fixture["cases"].as_array().unwrap().iter().enumerate() {
         let parameter=row["parameter"].as_str().unwrap();
         let mut source=serde_json::json!({"schema":"raster.document","id":"retained-tone","layers":[{"kind":"adjustment","id":"tone","name":"Tone","adjustmentKind":"brightnessContrast","params":{"metadata":"preserve"}}]});

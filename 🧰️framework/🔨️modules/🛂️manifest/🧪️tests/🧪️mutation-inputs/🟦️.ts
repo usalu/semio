@@ -12,7 +12,7 @@ import glossaryDocument from "../../🔣️input-labels.json" with { type: "json
 import manifestSchema from "../../🧬️schema/🔣️.json" with { type: "json" };
 import { parseInputLabelGlossary, parseInputUi } from "../../🧬️schema/🟦️.ts";
 import { argControl, InputSchemaError, inputLabelGlossary, mutationInputAudit, mutationInputDefs, mutationInputInstance, referenceIdText, referenceIdValue, type ActionArgDef, type ArgSchema, type ReferenceIdType } from "../../🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 type Finding = { readonly code: string; readonly pointer: string };

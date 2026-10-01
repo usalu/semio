@@ -100,23 +100,23 @@
       "vectors": [
         {
           "mutationId": "change-graph-directed",
-          "sourceMutationDirectoryName": "🧭️change-graph-directed",
-          "mutationDirectoryName": "🧭️change-graph-directed",
+          "sourceMutationDirectoryName": "🧭️change-graph",
+          "mutationDirectoryName": "🧭️change-graph",
           "scenarios": [
             {
               "id": "keeps-an-already-directed-graph-directed",
-              "directoryName": "🧪️keeps-an-already-directed-graph-directed"
+              "directoryName": "🧪️keeps"
             }
           ]
         },
         {
           "mutationId": "change-node-label",
-          "sourceMutationDirectoryName": "🏷️change-node-label",
-          "mutationDirectoryName": "🏷️change-node-label",
+          "sourceMutationDirectoryName": "🏷️change-node",
+          "mutationDirectoryName": "🏷️change-node",
           "scenarios": [
             {
               "id": "rejects-relabelling-a-node-that-is-not-in-the-graph",
-              "directoryName": "🧪️rejects-relabelling-a-node-that-is-not-in-the-graph"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -127,7 +127,7 @@
           "scenarios": [
             {
               "id": "rejects-an-edge-between-two-absent-endpoints",
-              "directoryName": "🧪️rejects-an-edge-between-two-absent-endpoints"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -138,7 +138,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-node-id",
-              "directoryName": "🧪️rejects-a-duplicate-node-id"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -149,7 +149,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-node-that-is-not-in-the-graph",
-              "directoryName": "🧪️rejects-deleting-a-node-that-is-not-in-the-graph"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -160,7 +160,7 @@
           "scenarios": [
             {
               "id": "rejects-a-bulk-delete-where-every-id-is-absent",
-              "directoryName": "🧪️rejects-a-bulk-delete-where-every-id-is-absent"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -171,7 +171,7 @@
           "scenarios": [
             {
               "id": "rejects-severing-an-edge-that-is-not-in-the-graph",
-              "directoryName": "🧪️rejects-severing-an-edge-that-is-not-in-the-graph"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -182,7 +182,7 @@
           "scenarios": [
             {
               "id": "rejects-moving-a-node-that-is-not-in-the-graph",
-              "directoryName": "🧪️rejects-moving-a-node-that-is-not-in-the-graph"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -193,18 +193,18 @@
           "scenarios": [
             {
               "id": "replays-the-identical-empty-graph",
-              "directoryName": "🧪️replays-the-identical-empty-graph"
+              "directoryName": "🧪️replays"
             }
           ]
         },
         {
           "mutationId": "update-graph-algorithm",
-          "sourceMutationDirectoryName": "🧮️update-graph-algorithm",
-          "mutationDirectoryName": "🧮️update-graph-algorithm",
+          "sourceMutationDirectoryName": "🧮️update-graph",
+          "mutationDirectoryName": "🧮️update-graph",
           "scenarios": [
             {
               "id": "restates-the-unset-algorithm-and-its-absent-seed",
-              "directoryName": "🧪️restates-the-unset-algorithm-and-its-absent-seed"
+              "directoryName": "🧪️restates"
             }
           ]
         }

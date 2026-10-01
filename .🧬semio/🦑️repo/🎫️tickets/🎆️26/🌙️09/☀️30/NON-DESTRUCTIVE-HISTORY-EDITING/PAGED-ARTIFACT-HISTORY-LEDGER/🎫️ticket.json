@@ -1,0 +1,11 @@
+{
+  "title": "Paged Artifact History Ledger",
+  "emoji": "📜",
+  "status": "closed",
+  "description": "Lift the fixed 64-slot ArtifactHistoryLedger ceiling (ARTIFACT_HISTORY_LEDGER_CAPACITY = 64, reserve_edit_history_slot). A 65th edit fails with edit history ledger is saturated and nothing compacts, so long editing sessions die and non-destructive history editing can only reach 64 edits. Design and implement bounded-memory paged or compacting ledgers. Constraints: guest wasm memory where dlmalloc never returns pages, 64 KiB contiguous-request ceiling, fixed-capacity owner catalogs, retirement discipline, CursorRevisionAccumulator, batch publication footprints, and config/window-config lanes that share the same ledger. Schema-first, language-agnostic tests, no legacy support. Evidence: NON-DESTRUCTIVE-HISTORY-EDITING explore-event-sourcing-core.md gaps section 10 item 1 and explore-replay-projection.md section 2.2.",
+  "summary": "History ledgers and id catalogs are lossless fixed pages of 64 slots. A further edit opens the next page instead of failing as saturated. Address-space exhaustion is the only capacity fault. A Python list oracle and store dispatches past one page (65 and 80 edits) match. The demo close witness is 16384 one-item steps so a second page of owners can retire.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪fcf22be5ccd443728d54b4922fcd939f"
+  ]
+}

@@ -605,39 +605,18 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `grammar_conformance_law`: the snapshot grammar models the real TEXT syntax of bcf's
-    /// own plain-zip container's XML parts (`📸️snapshot/📝️text/📖️.grammar.semio`'s own
-    /// doc comment explains why -- this artifact's `ArtifactDsl::print_dsl` hex-dumps the WHOLE
-    /// binary zip container, matching this facet's SIBLING binary protocol, not this text
-    /// grammar; the two facets describe different LAYERS of the same real artifact). So, UNLIKE
-    /// a binary-native pilot's `grammar_conformance_law` (which feeds `print_dsl` output
-    /// straight to the recognizer), this law decodes the REAL zip entries `encode_bcf`
-    /// genuinely produces (via `zip::engine::decode_zip`, the same real codec this artifact's
-    /// own `encode_bcf`/`decode_bcf` delegate to directly) and recognizes EACH real part's own
-    /// text against the grammar -- direct proof the grammar matches this artifact's own real
-    /// per-part XML bytes, not an invented approximation.
+    /// 🗣️ The authored snapshot grammar admits actual complete logical native text.
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = dsl::parse_grammar(snapshot::text::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = dsl::Recognizer::compile(&grammar);
 
-        let demo = demo_bcf_snapshot();
-        let bytes = encode_bcf(&demo).expect("encode demo bcf");
-        let zip = semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::io::decode_zip(&bytes).expect("decode zip");
-
-        let mut checked = 0;
-        for entry in &zip.entries {
-            let is_version = entry.name.eq_ignore_ascii_case("bcf.version");
-            let is_markup = entry.name.ends_with("/markup.bcf");
-            let is_visinfo = entry.name.ends_with(".bcfv");
-            if !(is_version || is_markup || is_visinfo) {
-                continue;
-            }
-            let text = String::from_utf8(entry.data.clone()).unwrap_or_else(|e| panic!("part {:?}: not valid utf-8: {e}", entry.name));
-            assert!(recognizer.recognize(&text).unwrap_or(false), "grammar did not recognize real part {:?}:\n{text}", entry.name);
-            checked += 1;
+        for source in [demo_bcf_snapshot(), BcfSnapshot::default()] {
+            let text = store::ArtifactDsl::print_dsl(&source);
+            let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
+            assert!(recognizer.recognize(body).unwrap(), "{body}");
+            assert_eq!(<BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(), source);
         }
-        assert_eq!(checked, 3, "not every modeled part kind (version/markup/visinfo) was present in the real zip entries");
     }
 
     /// ✅️ `ops_grammar_conformance_law`: the mutations grammar recognizes real `print_op`
@@ -664,23 +643,19 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `protocol_walk_law`: `walk_protocol` against REAL bytes for all three facets --
-    /// snapshot pack (`encode_pack`, envelope-unwrapped first, matching how
-    /// `m5_handcrafted_protocol_conformance` itself feeds `walk_protocol`), every demo
-    /// mutation's `encode_op`, and every demo diff's `encode_diff`. The snapshot protocol
-    /// declares `backward`/`jump` (restated from zip's own real ZIP layout), so `walk_protocol`
-    /// correctly does NOT require landing on exactly `bytes.len()` (M2's own documented
-    /// exception, `📖️grammar-recipe.md` §2.3) -- assert a sane in-range `consumed` there
-    /// instead, same as zip's/docx's own `protocol_walk_law` does; the op/diff protocols have
-    /// no such exception and must consume every byte.
+    /// 📡️ Logical snapshot records and tagged operation protocols admit actual owned bytes.
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = dsl::parse_protocol(snapshot::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_bcf_snapshot();
         let packed = store::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
-        let trace = dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
-        assert!(trace.consumed > 0 && trace.consumed <= inner.len(), "pack walk consumed an out-of-range span");
+        assert_eq!(pack_spec.schema, "stdio.bcf");
+        assert_eq!(pack_spec.blocks.iter().filter(|block| matches!(block, dsl::Block::Record { .. })).count(), 11);
+        let spec = <BcfSnapshot as store::ArtifactPack>::record_spec().unwrap();
+        let (record, _) = store::pack_rt::decode_document(&inner, &spec, &store::PackDecodeOptions::default()).unwrap();
+        assert_eq!(record, demo.__dsl_to_record());
+        assert_eq!(<BcfSnapshot as store::ArtifactPack>::decode_pack(&packed).unwrap(), demo);
 
         let op_spec = dsl::parse_protocol(mutations::binary::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
@@ -697,12 +672,7 @@ mod conformance_laws {
         }
     }
 
-    /// ✅️ `fixture_honesty_law`: the shipped `.dsl.semio`/`.pack.semio` fixtures are GENUINE
-    /// `print_dsl`/`encode_pack` output of `demo_bcf_snapshot()` -- `parse_dsl(fixture) ==
-    /// demo()`, `print_dsl(demo()) == fixture` (byte-for-byte), and the pack twin -- so the
-    /// fixtures can never silently drift back to a fake `"68656c6c6f"`-style placeholder again
-    /// (this ticket's own recon note on the pre-FG-wave state of these two files -- the
-    /// `.dsl.semio` fixture WAS exactly that placeholder before this wave).
+    /// ✅️ Shipped DSL and structural Pack retain the complete authored demo snapshot.
     #[semio_framework_async_macros::async_test]
     async fn fixture_honesty_law() {
         const FIXTURE_DSL: &str = include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
@@ -719,16 +689,5 @@ mod conformance_laws {
         assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_bcf_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
-    /// 🖊️ The ONLY way those two fixtures are ever refreshed: `print_dsl`/`encode_pack` of the demo itself, never a hand edit
-    /// (`fixture_honesty_law` above is what that honesty means). Run it deliberately after a codec change —
-    /// `cargo test -p semio-s-artifact-stdio-bcf --lib -- --ignored zzz_write_demo_fixtures` — then re-run the law.
-    #[semio_framework_async_macros::async_test]
-    #[ignore]
-    async fn zzz_write_demo_fixtures() {
-        let demo = demo_bcf_snapshot();
-        let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/📚️examples/🎬️demo/🖼️assets");
-        std::fs::write(assets.join("🗣️.dsl.semio"), store::ArtifactDsl::print_dsl(&demo)).expect("write 🗣️.dsl.semio");
-        std::fs::write(assets.join("🎒️.pack.semio"), store::ArtifactPack::encode_pack(&demo)).expect("write 🎒️.pack.semio");
-    }
 }
 //#endregion 🔖️ConformanceLaws

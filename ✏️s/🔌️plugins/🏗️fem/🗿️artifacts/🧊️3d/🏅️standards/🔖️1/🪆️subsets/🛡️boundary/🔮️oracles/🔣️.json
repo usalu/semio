@@ -16,15 +16,15 @@
           "scenarios": [
             {
               "id": "dangling-node-af37e2",
-              "directoryName": "🚨️dangling-node-af37e2"
+              "directoryName": "🚨️dangling"
             },
             {
               "id": "hall-new-pin-c033f2",
-              "directoryName": "🏗️hall-new-pin-c033f2"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "clamps-the-column-f801c9",
-              "directoryName": "🔒️clamps-the-column-f801c9"
+              "directoryName": "🔒️clamps"
             }
           ]
         },
@@ -35,15 +35,15 @@
           "scenarios": [
             {
               "id": "no-such-support-edd22a",
-              "directoryName": "🚨️no-such-support-edd22a"
+              "directoryName": "🚨️no"
             },
             {
               "id": "hall-cut-pin-66d795",
-              "directoryName": "🏗️hall-cut-pin-66d795"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "releases-the-b3ebb0",
-              "directoryName": "🔓️releases-the-b3ebb0"
+              "directoryName": "🔓️releases"
             }
           ]
         },
@@ -54,23 +54,23 @@
           "scenarios": [
             {
               "id": "dangling-node-d44469",
-              "directoryName": "🚨️dangling-node-d44469"
+              "directoryName": "🚨️dangling"
             },
             {
               "id": "renames-pin-29f41a",
-              "directoryName": "🪪️renames-pin-29f41a"
+              "directoryName": "🪪️renames"
             },
             {
               "id": "same-support-bff8b3",
-              "directoryName": "⏸️same-support-bff8b3"
+              "directoryName": "⏸️same"
             },
             {
               "id": "hall-fixes-base-b5aa1b",
-              "directoryName": "🏗️hall-fixes-base-b5aa1b"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "frees-the-three-7783c9",
-              "directoryName": "🔄️frees-the-three-7783c9"
+              "directoryName": "🔄️frees"
             }
           ]
         }

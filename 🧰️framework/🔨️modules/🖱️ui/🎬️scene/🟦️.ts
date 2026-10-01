@@ -1148,6 +1148,8 @@ export type Board2dScene = {
   readonly cameraJson: string;
   readonly glyphCatalogsJson: string;
   readonly selectionJson: string;
+  /** 🔗️ The ids the board paints highlighted, as a JSON id array — what the open time-travel draft references; absent highlights nothing. */
+  readonly highlightedIdsJson?: string;
   readonly interactive: boolean;
   readonly hoveredId?: string;
   readonly activeUtility?: string;

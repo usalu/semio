@@ -30,13 +30,17 @@ async fn space_command_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&SpaceCommand::ReorganizeWorkflow(crate::engine::space::commands::reorganize_workflow::ReorganizeWorkflow {}));
 }
 
+/// ⚖️ LAW: a palette drop is ONE relative `move-nodes` leaf — the offset from the node's base position — with no
+/// coalesce key, and folding it lands the node exactly on the drop.
 #[semio_framework_async_macros::async_test]
-async fn move_media_node_emits_coalesced_move_operation() {
+async fn move_media_node_emits_one_relative_move() {
     let projection = demo_space_projection().await;
     let config = SpaceConfig::default();
-    let node_id = projection.graph.nodes.first().expect("node").id.clone();
+    let base = projection.graph.nodes.first().expect("node").clone();
+    let node_id = base.id.clone();
     let emit = studio_emit(&projection, &config, &SpaceCommand::MoveMediaNode(crate::engine::space::commands::move_media_node::MoveMediaNode { node_id: node_id.clone(), x: 120.0, y: 160.0 })).await.expect("handle");
-    assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
+    assert_eq!(emit.coalesce_key, None, "a drop is one plain edit, never a coalesced amend");
+    assert!(matches!(emit.artifact_mutations.as_slice(), [WorkflowMutation::MoveNodes(leaf)] if leaf.node_ids == [node_id.clone()] && leaf.dx == 120.0 - base.x && leaf.dy == 160.0 - base.y), "{:?}", emit.artifact_mutations);
     let node = apply_mutations(&projection, &emit.artifact_mutations).await.graph.nodes.into_iter().find(|row| row.id == node_id).expect("node");
     assert!((node.x - 120.0).abs() < 0.01);
     assert!((node.y - 160.0).abs() < 0.01);

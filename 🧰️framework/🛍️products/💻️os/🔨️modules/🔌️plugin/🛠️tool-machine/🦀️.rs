@@ -2,7 +2,8 @@
 //! transient, ephemeral, local-only, never history:
 //! - 🎚️ continuous controls (§13.1): every dispatch whose args carry a `gesture` rides the dispatching window's press in the
 //!   instance's [`ScrubLedger`]; a tick publishes nothing, the release publishes ONE edit, every host abort leaves zero trace.
-//!   Apps supply only the ABSOLUTE leaves of a value: their verb's `Emit::mutations`.
+//!   Apps supply only the ABSOLUTE leaves of a value: their verb's `Emit::mutations`, and the owned children's share
+//!   (`Emit::child_emits`, design §12) — ONE press commits ONE transaction stamped on every member it touched.
 //! - ⌨️ typing (§13.2): every live typing delivery (args carry a `typing` buffer) folds its leaves into the window's run in
 //!   the [`TypingLedger`] through the app's typing algebra (`ArtifactApp::typing_fold`); the run commits as ONE edit on idle,
 //!   a caret jump, blur, page hide, Enter, an explicit apply or any other verb, and aborts only on a conflicting base or a
@@ -64,6 +65,7 @@ pub(super) enum ToolDispatch {
 /// of admitted operations until their completion publishes, and the logical tick that makes every typing clock unique.
 pub struct ToolMachineRuntime<P, M> {
     scrubs: ScrubLedger<M>,
+    child_scrubs: ScrubLedger<ChildEmit>,
     typing: TypingLedger<M>,
     overlay: Option<Arc<P>>,
     overlay_generation: u64,
@@ -79,6 +81,7 @@ impl<P, M> Default for ToolMachineRuntime<P, M> {
     fn default() -> Self {
         Self {
             scrubs: ScrubLedger::default(),
+            child_scrubs: ScrubLedger::default(),
             typing: TypingLedger::default(),
             overlay: None,
             overlay_generation: 0,
@@ -96,6 +99,12 @@ impl<P, M: Mutation<P> + 'static> ToolMachineRuntime<P, M> {
     /// 🔎️ The open presses.
     pub fn scrubs(&self) -> &ScrubLedger<M> {
         &self.scrubs
+    }
+
+    /// 🪆️ The open presses' owned-child shares (design §12): absolute child leaves the release publishes with the press's
+    /// own leaves in ONE transaction; they are never overlaid on the parent document.
+    pub fn child_scrubs(&self) -> &ScrubLedger<ChildEmit> {
+        &self.child_scrubs
     }
 
     /// 🔎️ The open typing runs.
@@ -269,6 +278,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             }
         };
         self.tool_machines.scrubs.abort(&window, Some(phase.gesture()), reason);
+        self.tool_machines.child_scrubs.abort(&window, Some(phase.gesture()), reason);
         self.follow_tool_machines(true);
         ToolDispatch::Settled(match fault {
             Some(fault) => Err(fault),
@@ -318,6 +328,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         let Some(view) = meta.view_state.as_ref().filter(|view| !view.window_instances.is_empty()) else { return Ok(()) };
         let keep = |window: &str| window.is_empty() || view.window_instances.iter().any(|instance| instance.id == window);
         let retired = !self.tool_machines.scrubs.retain_windows(keep).is_empty();
+        self.tool_machines.child_scrubs.retain_windows(keep);
         let clock = self.tool_machines.clock();
         let committed = self.tool_machines.typing.retain_windows(keep, clock).into_iter().filter_map(|(_, step)| step.ok()).collect::<Vec<_>>();
         if retired {
@@ -330,6 +341,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     /// commits before the history verb reaches here).
     pub(super) fn freeze_tool_machines(&mut self) {
         let presses = self.tool_machines.scrubs.abort_all(ToolAbortReason::Frozen);
+        self.tool_machines.child_scrubs.abort_all(ToolAbortReason::Frozen);
         let runs = self.tool_machines.typing.abort_all(ToolAbortReason::Frozen);
         if !presses.is_empty() || !runs.is_empty() {
             self.follow_tool_machines(true);
@@ -356,10 +368,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
     }
 
-    /// 🛠️ The ONE point a tagged operation's completion becomes its publication. A press: the emit's artifact leaves ride
-    /// the window's press on the operation's document revision; a tick or a press that settles empty publishes no artifact
-    /// edit and logs no history row, the release publishes its committed leaves as ONE edit stamped with the press's
-    /// `TransactionRef`. A typed edit: its leaves fold into the window's run; nothing publishes while the run is open, and a
+    /// 🛠️ The ONE point a tagged operation's completion becomes its publication. A press: the emit's artifact leaves and its
+    /// owned-child leaves ride the window's press on the operation's document revision; a tick or a press that settles empty
+    /// publishes no edit and logs no history row, the release publishes its committed leaves as ONE edit per touched member,
+    /// every one stamped with the press's `TransactionRef` (design §12) — a ref the verb minted itself never outlives the press
+    /// that owns the transaction. A typed edit: its leaves fold into the window's run; nothing publishes while the run is open, and a
     /// run the edit ended (idle lapse, caret jump, another buffer) publishes in this emit as ONE edit stamped with its own
     /// `TransactionRef`. Every other lane of the emit (config, effects, events, UI scope) publishes as usual.
     pub(super) fn settle_tool_operation(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, publication: &mut ArtifactToolCompletionValue<A>) -> Result<(), Fault> {
@@ -371,11 +384,17 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
             ToolTag::Scrub(tag) => {
                 let base: String = mounted.canonical_revision.iter().map(|byte| format!("{byte:02x}")).collect();
                 let clock = HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-                let step = self
-                    .tool_machines
-                    .scrubs
-                    .send(&tag.window, &tag.tool, &actor, &base, tag.phase.clone().input(leaves), clock)
-                    .map_err(|refusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool)))?;
+                let refused = |refusal: semio_framework_tool_machine::ToolRefusal| Fault::new(FaultOrigin::Framework, FaultCode::new(refusal.code()), format!("continuous control {:?} refused its press", tag.tool));
+                let children = std::mem::take(&mut emit.child_emits);
+                emit.transaction = None;
+                let step = self.tool_machines.scrubs.send(&tag.window, &tag.tool, &actor, &base, tag.phase.clone().input(leaves), clock).map_err(refused)?;
+                let child_step = self.tool_machines.child_scrubs.send(&tag.window, &tag.tool, &actor, &base, tag.phase.clone().input(children), clock).map_err(refused)?;
+                if let ToolStep::Committed(transaction, children) = child_step {
+                    emit.child_emits = children;
+                    emit.transaction = Some(transaction);
+                    emit.coalesce_key = None;
+                    emit.description = None;
+                }
                 vec![step]
             }
             ToolTag::Typing(tag) => {
@@ -393,7 +412,8 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
                 emit.coalesce_key = None;
                 emit.description = None;
             }
-            None => mounted.command_logged = true,
+            None if emit.transaction.is_none() => mounted.command_logged = true,
+            None => {}
         }
         self.follow_tool_machines(true);
         Ok(())

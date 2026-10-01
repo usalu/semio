@@ -69,7 +69,7 @@ impl semio_framework_plugin::WindowTransientOwner for WriterMainWindowTransientO
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🧩️partial-construction/🦀️.rs"]
+#[path = "🧪️tests/🧩️partial/🦀️.rs"]
 mod preparation_tests;
 
 pub fn current<'a, T>(view: &'a semio_framework_plugin::TransientView<'_, T>) -> Option<&'a WriterMainWindowTransient> {

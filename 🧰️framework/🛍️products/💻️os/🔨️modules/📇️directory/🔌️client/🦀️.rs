@@ -816,6 +816,11 @@ impl Drop for WipeDslValue<'_> {
 fn wipe_dsl_value(value: &mut DslValue) -> usize {
     match value {
         DslValue::String(value) => wipe_string(value),
+        DslValue::Bytes(value) => {
+            let len = value.len();
+            value.fill(0);
+            len
+        }
         DslValue::Array(values) => values.iter_mut().map(wipe_dsl_value).sum(),
         DslValue::Object(entries) => entries.iter_mut().map(|(key, value)| wipe_string(key) + wipe_dsl_value(value)).sum(),
         DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => 0,

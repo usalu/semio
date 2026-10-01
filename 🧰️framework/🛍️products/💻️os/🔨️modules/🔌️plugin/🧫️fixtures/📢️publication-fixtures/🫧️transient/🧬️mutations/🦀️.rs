@@ -1,6 +1,6 @@
 //! 🫧️ Transparent publication-transient mutation roster.
 
-#[path = "📝️change-publication-transient/🦀️.rs"]
+#[path = "📝️change-publication/🦀️.rs"]
 pub mod change_publication_transient;
 pub use change_publication_transient::ChangePublicationTransient;
 

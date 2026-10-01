@@ -88,7 +88,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "writer-graph"
           ]
         }
       }
@@ -107,10 +108,68 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "writer-graph-wire"
           ]
         }
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/🏅️standards/**/*",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source",
+        "forwardAllArgs": true
+      },
+      "dependsOn": [
+        "graph-generate"
+      ]
     }
   }
 }

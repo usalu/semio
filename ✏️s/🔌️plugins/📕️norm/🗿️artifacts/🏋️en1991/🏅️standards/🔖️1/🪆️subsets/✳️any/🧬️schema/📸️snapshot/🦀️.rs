@@ -3,6 +3,12 @@
 use crate::{AccidentalCase, FloorArea, RoofArea, SelfWeightElement, WindFace};
 use framework_schema::ArtifactSchema;
 
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
 //#region 🔖️Snapshot
 /// 📸️ Persisted EN 1991 subject: site + building geometry + design load assumptions (SI: m, Pa, N, K, kg/m³).
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord, ArtifactSchema, value_derive::ToValue, value_derive::FromValue)]
@@ -190,7 +196,7 @@ pub struct En1991Snapshot {
     pub accidental_cases: Vec<crate::AccidentalCase>,
 }
 //#region 🔖️HandcraftedArtifactCodecs
-crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope_id = "norm.en1991");
+crate::impl_norm_artifact_record!(En1991Snapshot, extension = "en1991", envelope_id = "norm.en1991", sqlite = sqlite::sqlite_codec);
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 impl Default for En1991Snapshot {

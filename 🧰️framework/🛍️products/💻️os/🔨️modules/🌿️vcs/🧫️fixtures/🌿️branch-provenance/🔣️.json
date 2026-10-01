@@ -1,0 +1,52 @@
+{
+  "schema": "semio.framework.history.branch-provenance/v1",
+  "vectors": [
+    {
+      "id": "trunk",
+      "edit": {
+        "id": "edit-1",
+        "forwards": [],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "2026-10-01T00:00:00Z",
+        "line": null
+      },
+      "valid": true
+    },
+    {
+      "id": "branch",
+      "edit": {
+        "id": "edit-1",
+        "forwards": [],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "2026-10-01T00:00:00Z",
+        "line": "alternative-1"
+      },
+      "valid": true
+    },
+    {
+      "id": "wrong-kind",
+      "edit": {
+        "id": "edit-1",
+        "forwards": [],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "2026-10-01T00:00:00Z",
+        "line": 7
+      },
+      "valid": false
+    },
+    {
+      "id": "missing",
+      "edit": {
+        "id": "edit-1",
+        "forwards": [],
+        "inverse": [],
+        "sequenceNumber": 1,
+        "startedAt": "2026-10-01T00:00:00Z"
+      },
+      "valid": false
+    }
+  ]
+}

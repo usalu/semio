@@ -31,8 +31,8 @@ test("fill rule refuses unknown values",()=>{for(const value of ["evenOdd","NONZ
 
 import {applyFillRuleEdit} from "../../../../../../\ud83c\udfa8\ufe0fstyle/\ud83e\uddec\ufe0fschema/\ud83e\uddec\ufe0fmutations/\ud83c\udf00\ufe0fset-layer-fill-rule/\ud83e\udda0\ufe0fmutation/\ud83d\udfe6\ufe0f.ts";
 import {applyPatch} from "fast-json-patch";
-import before from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/⬅️before/🔣️.json";
-import after from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/➡️after/🔣️.json";
+import before from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json";
+import after from "../../../../../../🎨️style/🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json";
 test("fill-rule mutation preserves unrelated fields and has an exact inverse",()=>{
   const changed=applyFillRuleEdit(before,{layerId:"shape-a",fillRule:"nonzero"});
   expect(changed).toEqual(after);

@@ -130,18 +130,18 @@ Feature: Apply every typed raster-document mutation twice — once in Rust, once
     Examples:
       | id                           | verdict | dir                             | fixture                     |
       | create-layer                 | applied | 🌱create-layer                   | 🖋️creates-an-ink-8a1bf9     |
-      | delete-layer                 | applied | 🗑️delete-layer                   | 🚫️deletes-the-frame-2d257c  |
-      | reorder-layers               | applied | 🔀reorder-layers                 | ⤴️lifts-the-caption-fe529f   |
-      | rename-layer                 | applied | ✏️rename-layer                   | ✏️renames-the-sketch-73921a  |
-      | change-layer-visible         | applied | 👁️change-layer-visible           | 🙈️hides-the-d0ca7b          |
-      | change-layer-opacity         | applied | 🌫️change-layer-opacity           | 🌫️fades-the-c4cbe8          |
-      | change-layer-blend-mode      | applied | 🎨change-layer-blend-mode        | 💡️switches-the-a17d90       |
-      | move-layer                   | applied | ↔️move-layer                     | 📍️slides-the-stamp-b7bdca   |
-      | resize-layer                 | applied | 📐resize-layer                   | 📐️resizes-the-canvas-41d97f |
-      | change-layer-pixels | applied | 🎨️change-layer-pixels | 🎨️preserves-layer-settings |
-      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment-kind   | 📈️switches-the-tone-d5816a  |
-      | add-layer-asset              | noop    | 🖇️add-layer-asset                | 🖼️declines-to-4af870        |
-      | remove-layer-asset           | refused | 🗂️remove-layer-asset             | 🖼️rejects-removing-1c84a7   |
+      | delete-layer                 | applied | 🗑️delete-layer                   | 🚫️deletes  |
+      | reorder-layers               | applied | 🔀reorder-layers                 | ⤴️lifts   |
+      | rename-layer                 | applied | ✏️rename-layer                   | ✏️renames  |
+      | change-layer-visible         | applied | 👁️change-layer-visible           | 🙈️hides          |
+      | change-layer-opacity         | applied | 🌫️change-layer-opacity           | 🌫️fades          |
+      | change-layer-blend-mode      | applied | 🎨change-layer-blend-mode        | 💡️switches       |
+      | move-layer                   | applied | ↔️move-layer                     | 📍️slides   |
+      | resize-layer                 | applied | 📐resize-layer                   | 📐️resizes |
+      | change-layer-pixels | applied | 🎨️change-layer-pixels | 🎨️preserves |
+      | change-layer-adjustment-kind | applied | 🎚️change-layer-adjustment   | 📈️switches  |
+      | add-layer-asset              | noop    | 🖇️add-layer-asset                | 🖼️declines        |
+      | remove-layer-asset           | refused | 🗂️remove-layer-asset             | 🖼️rejects   |
 
   @id-identity-round-trip
   @level-long

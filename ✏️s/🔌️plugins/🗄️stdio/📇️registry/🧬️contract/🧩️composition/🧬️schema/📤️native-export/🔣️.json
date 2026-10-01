@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "descriptorCodecId",
+    "factory"
+  ],
+  "properties": {
+    "descriptorCodecId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "factory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "factory_id",
+        "runtime_capability_id",
+        "artifact_kind",
+        "artifact_schema",
+        "extension",
+        "pack_schema_hash"
+      ],
+      "properties": {
+        "factory_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "runtime_capability_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_schema": {
+          "type": "string",
+          "minLength": 1
+        },
+        "extension": {
+          "type": "string",
+          "minLength": 1
+        },
+        "pack_schema_hash": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}

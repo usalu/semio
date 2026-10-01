@@ -4,10 +4,10 @@ use crate::{DrawingSnapshot, DrawingLayerNode, PathSegment};
 #[test]
 fn canonical_geometry_scenario_matches_diff_apply_and_inverse() {
     use protocol::{Mutation, MutationDiff};
-    let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let after: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/📸️snapshot/➡️after/🔣️.json")).unwrap();
-    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/🦠️mutation/🔣️.json")).unwrap();
-    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape-curve/🔺️diff/🔣️.json")).unwrap();
+    let before: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let after: DrawingSnapshot = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let mutation: crate::DrawingMutation = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🦠️mutation/🔣️.json")).unwrap();
+    let expected: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️update-path-geometry/✏️reshape/🔺️diff/🔣️.json")).unwrap();
     let result = mutation.diff(&before);
     assert!(result.messages().is_empty());
     assert_eq!(*result.diff(), serde_json::from_value::<crate::DrawingDiff>(expected).unwrap());

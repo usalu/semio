@@ -1,0 +1,32 @@
+{
+  "case": "stepper-detents",
+  "kind": "component",
+  "description": "A NumberStepper in millimetres with detents at 0, 5 and 10 its page keys stop on, one fraction digit, and an upper hard limit whose refusal names it.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "numberStepper",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Gap",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setGap@1"
+  ]
+}

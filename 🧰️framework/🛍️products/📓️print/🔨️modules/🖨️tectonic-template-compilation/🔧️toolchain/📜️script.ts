@@ -3,7 +3,7 @@ import { readFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, lstatSyn
 import { open } from "node:fs/promises";
 import { join, dirname, relative } from "node:path";
 import { spawn } from "node:child_process";
-import { BundleScript, ScriptRouter } from "../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
 import { stageArtifacts } from "../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 

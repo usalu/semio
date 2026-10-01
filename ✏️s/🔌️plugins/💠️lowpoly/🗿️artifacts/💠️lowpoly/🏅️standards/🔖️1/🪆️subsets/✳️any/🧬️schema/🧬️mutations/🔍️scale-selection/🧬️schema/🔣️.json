@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-selection/schema.json",
+  "title": "ScaleSelection",
+  "description": "The gumball's scaling of a selection stated as its intent: the object, the vertices it names (every vertex when empty), the pivot and one factor per axis. The geometry is derived from the object's persisted mesh on every application. Its hard bounds (vertices named once, positive factors) state the payload-intrinsic breaches the diff refuses as `mutation.invariant`; refusals that depend on the base belong to the diff alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "factor",
+    "objectId",
+    "pivot",
+    "vertexIds"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object whose mesh the motion moves.",
+          "de": "Das Objekt, dessen Netz die Bewegung bewegt."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "vertexIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "The vertices the motion carries; empty carries every vertex of the object, absent ones are skipped.",
+          "de": "Die Eckpunkte, die die Bewegung mitnimmt; leer nimmt jeden Eckpunkt des Objekts mit, fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "vertex",
+          "domain": "mesh",
+          "granularity": "vertex"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "pivot": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Pivot",
+          "de": "Bezugspunkt"
+        },
+        "description": {
+          "en": "The point that stays where it is.",
+          "de": "Der Punkt, der an seinem Ort bleibt."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "pivot",
+        "order": 40
+      }
+    },
+    "factor": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Factor",
+          "de": "Faktor"
+        },
+        "description": {
+          "en": "The factor along x, y and z; 1 keeps the size.",
+          "de": "Der Faktor entlang x, y und z; 1 behält die Größe."
+        },
+        "step": 0.01,
+        "precision": 3,
+        "group": "motion",
+        "order": 30
+      }
+    }
+  }
+}

@@ -24,7 +24,7 @@
           "scenarios": [
             {
               "id": "appends-shape-b-at-the-root",
-              "directoryName": "➕️appends-shape-b-at-the-root"
+              "directoryName": "➕️appends"
             }
           ]
         },
@@ -35,7 +35,7 @@
           "scenarios": [
             {
               "id": "removes-group-a-with-its-child",
-              "directoryName": "🚫️removes-group-a-with-its-child"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -46,7 +46,7 @@
           "scenarios": [
             {
               "id": "rejects-a-missing-source-layer",
-              "directoryName": "🚫️rejects-a-missing-source-layer"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -57,7 +57,7 @@
           "scenarios": [
             {
               "id": "moves-shape-a-above-shape-b",
-              "directoryName": "⬆️moves-shape-a-above-shape-b"
+              "directoryName": "⬆️moves"
             }
           ]
         }

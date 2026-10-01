@@ -2,7 +2,9 @@
 /** 📕️ Norm TypeScript package. */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 //#region 🔖️Types
 type RetainedRoute = { id: string; emittedLanes: string[]; publicationLanes: string[]; execution: string; admission: string; reducer: string };
@@ -102,4 +104,4 @@ class OracleSourceScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("oracle-source", OracleSourceScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

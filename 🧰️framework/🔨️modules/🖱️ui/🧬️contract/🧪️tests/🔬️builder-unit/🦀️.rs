@@ -182,7 +182,7 @@ fn slider_without_snaps_wire() -> serde_json::Value {
 #[test]
 fn number_stepper_builder_carries_bounds_precision_and_mixed_state() {
     let node = number_stepper(2.5).step(0.25).min(0.0).max(10.0).precision(2).mixed().try_build().unwrap_or_else(|_| panic!("stepper build"));
-    assert_eq!(node.component, crate::Component::NumberStepper(crate::NumberStepperProps { value: 2.5, step: 0.25, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(2) }));
+    assert_eq!(node.component, crate::Component::NumberStepper(crate::NumberStepperProps { value: 2.5, step: 0.25, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(2), snaps: Default::default(), unit: None, display_unit: None, display_factor: None, limits: None }));
     let capped = number_stepper(1.0).precision(40).try_build().unwrap_or_else(|_| panic!("stepper build"));
     let crate::Component::NumberStepper(props) = &capped.component else { panic!("a stepper") };
     assert_eq!(props.precision, Some(crate::UI_NUMBER_PRECISION_MAX));

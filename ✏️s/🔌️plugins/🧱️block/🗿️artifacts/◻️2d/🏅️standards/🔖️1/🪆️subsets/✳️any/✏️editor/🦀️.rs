@@ -322,7 +322,7 @@ impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> fo
         let post = protocol::MutationDiff::apply(mutation.diff(base.get()).diff(), base.get()).map_err(|error| error.to_string())?;
         let authority = self.authority.as_ref().ok_or_else(|| "Block2d preparation lost its Store authority".to_string())?;
         let id = format!("block2d-retained-{}", authority.next_sequence_number());
-        let edit = protocol::Edit {
+        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![mutation],

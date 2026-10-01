@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "rejects-a-duplicate-tile-id",
-              "directoryName": "🧪️rejects-a-duplicate-tile-id"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-missing-tile",
-              "directoryName": "🧪️rejects-deleting-a-missing-tile"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "rejects-when-every-addressed-tile-is-missing",
-              "directoryName": "🧪️rejects-when-every-addressed-tile-is-missing"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-tile-already-has-that-name",
-              "directoryName": "🧪️no-ops-when-the-tile-already-has-that-name"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-tile-is-already-at-that-index",
-              "directoryName": "🧪️no-ops-when-the-tile-is-already-at-that-index"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-source-is-already-identical",
-              "directoryName": "🧪️no-ops-when-the-source-is-already-identical"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-collection-is-already-empty",
-              "directoryName": "🧪️no-ops-when-the-collection-is-already-empty"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-frame-is-already-identical",
-              "directoryName": "🧪️no-ops-when-the-frame-is-already-identical"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "rejects-a-zero-width-crop",
-              "directoryName": "🧪️rejects-a-zero-width-crop"
+              "directoryName": "🧪️rejects"
             }
           ]
         }

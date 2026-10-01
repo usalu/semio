@@ -94,7 +94,7 @@ struct PreparationState {
     mutation_reader: Option<store::ArtifactCanonicalJsonReader<FlowMutation>>,
     recipe: Option<Recipe>,
     text: Option<TextCopy>,
-    texts: [Option<String>; 10],
+    texts: [Option<String>; 11],
     source_digest: Option<[u8; 32]>,
     digest: Option<[u8; 32]>,
     sealer: Option<store::ArtifactStoreOneItemSealer<FlowSnapshot, FlowMutation>>,
@@ -170,7 +170,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                             return Err("Flow identity reader closed with owners".into());
                         }
                         state.hash = None;
-                        state.phase = if state.phase == 2 { 3 } else { 100 };
+                        state.phase = if state.phase == 2 { 3 } else { 99 };
                     }
                     Close::Pending { released_bytes, .. } => return Ok(progress(state, released_bytes)),
                     Close::Blocked => return Ok(Advance::Blocked),
@@ -271,6 +271,17 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                 }
                 return Ok(progress(state, bytes));
             }
+            99 => {
+                let Some(source) = state.authority.as_ref().unwrap().line_id() else { state.phase = 100; return Ok(progress(state, 0)); };
+                let copy = state.text.get_or_insert_with(TextCopy::default);
+                let bytes = copy.advance(source, grant.maximum_bytes)?;
+                if copy.complete() {
+                    state.texts[10] = copy.take();
+                    state.text = None;
+                    state.phase = 100;
+                }
+                return Ok(match bytes { Some(bytes) => progress(state, bytes), None => Advance::Blocked });
+            }
             100..=109 => {
                 let index = (state.phase - 100) as usize;
                 let copy = state.text.get_or_insert_with(TextCopy::default);
@@ -336,7 +347,7 @@ impl store::ArtifactStoreOneItemPreparation<FlowSnapshot, FlowMutation> for Prep
                     }
                 };
                 let authority = state.authority.as_ref().unwrap();
-                let edit = protocol::Edit {
+                let edit = protocol::Edit { line: state.texts[10].take(),
                     id: state.texts[8].take().unwrap(),
                     actor: state.texts[1].take(),
                     forwards: vec![mutation],

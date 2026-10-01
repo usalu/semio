@@ -4319,8 +4319,21 @@ export function validateTaxonomy(taxonomy: Taxonomy = readTaxonomyUnchecked()): 
       if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || [...alternativeKeys].sort().join("\0") !== expectedAlternatives.join("\0") || contract.realizedNodeCount !== 12) problems.push("semanticDescendantContracts.mutation-fixture-bundle-v1 must encode the exact 12-node data bundle and exclusive diff alternatives.");
     }
     if (id === "draw-editor-command-bundle-v1") {
-      const expectedRequired = ["directory:", "file:🦀️.rs"].sort();
-      if ([...requiredKeys].sort().join("\0") !== expectedRequired.join("\0") || alternativeKeys.length !== 0 || contract.realizedNodeCount !== 2 || contract.pathBudgetReserve.bytes !== 11) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode the exact two-node Rust command declaration and 11-byte reserve.");
+      const manifestSuffix = "/📦️packages/🦀️rust/Cargo.toml";
+      const actual = new Map((contract.requiredNodes ?? []).flatMap((node): (readonly [string, string])[] => {
+        try {
+          return [[`${node.nodeType}:${semanticDescendantNodeRelativePath(node, taxonomy)}`, node.nodeType === "directory" ? "directory" : "kindId" in node ? `${node.kindId}:${node.sourceFilename ?? ""}` : `fixed:${node.fixedFilenameContractId}`]];
+        } catch {
+          return [];
+        }
+      }));
+      const expected = new Map<string, string>([["directory:", "directory"], ["file:🦀️.rs", "rust-source:🦀️.rs"]]);
+      for (const owner of [...actual.keys()].filter((key) => key.startsWith("file:") && key.endsWith(manifestSuffix)).map((key) => key.slice("file:".length, -manifestSuffix.length))) {
+        for (const [name, authority] of [["🦀️.rs", "rust-source:🦀️.rs"], ["📦️packages/🦀️rust/Cargo.toml", "fixed:cargo-manifest"], ["📦️packages/🦀️rust/📋️project.json", "fixed:nx-project-manifest"], ["📦️packages/🦀️rust/📜️script.ts", "fixed:root-script"]] as const) expected.set(`file:${owner}/${name}`, authority);
+        const segments = `${owner}/📦️packages/🦀️rust`.split("/");
+        for (let index = 1; index <= segments.length; index++) expected.set(`directory:${segments.slice(0, index).join("/")}`, "directory");
+      }
+      if (alternativeKeys.length !== 0 || actual.size !== expected.size || [...expected].some(([key, authority]) => actual.get(key) !== authority)) problems.push("semanticDescendantContracts.draw-editor-command-bundle-v1 must encode one root Rust command declaration and only declaration-only nested Rust packages.");
     }
   }
 

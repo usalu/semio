@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🌿️ VCS plugin package command router. */
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { NativeCodecCheckScript, proveVcsNativeCodecReceipts } from "../../🧪️tests/📇️native-codecs/🟦️.ts";
 import { NativeOpenableIdentityCheckScript } from "../../🧪️tests/🪪️native-openable-identity/🟦️.ts";
 
@@ -24,4 +26,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("native-openable-identity-check", NativeOpenableIdentityCheckScript)
   .register("native-codec-check", NativeCodecCheckScript);
 registerPlaygroundSiteBuildCommands(router);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

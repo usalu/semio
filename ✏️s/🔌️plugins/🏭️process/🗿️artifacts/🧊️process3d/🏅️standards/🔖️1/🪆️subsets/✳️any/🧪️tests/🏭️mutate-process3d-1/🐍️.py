@@ -40,21 +40,21 @@ from semio_repo_test import Adapter, Context, Outcome
 _ROOT = "shared://🧬️mutations"
 #: 🧫️ (triad dir, fixture name, wire tag, is this kind step-scoped/hash-bearing?)
 VECTORS = {
-    "create-step": ("🌱create-step", "🪚️accepts-a-rip-cut-step-and-inserts-it", "createStep", True),
-    "delete-step": ("🗑️delete-step", "🚫️accepts-a-step-id-and-removes-it", "deleteStep", True),
-    "rename-step": ("🏷️rename-step", "🔤️accepts-a-new-label-and-applies-it", "renameStep", True),
-    "change-step-enabled": ("🔘change-step-enabled", "⏸️accepts-a-disable-flag-and-applies-it", "changeStepEnabled", True),
-    "change-step-origin": ("🧷change-step-origin", "🏭️accepts-a-machine-provenance-and-applies-it", "changeStepOrigin", True),
-    "replace-step-measure": ("📐replace-step-measure", "🕳️accepts-a-bore-measure-and-replaces-it", "replaceStepMeasure", True),
-    "reorder-steps": ("🔀reorder-steps", "🔀️accepts-a-target-index-and-reorders-them", "reorderSteps", True),
-    "create-machine": ("🏭create-machine", "🪛️adds-a-drill-press-to-the-workshop", "createMachine", False),
-    "delete-machine": ("❌delete-machine", "➖️empties-the-workshop-of-the-saw", "deleteMachine", False),
+    "create-step": ("🌱create-step", "🪚️accepts", "createStep", True),
+    "delete-step": ("🗑️delete-step", "🚫️accepts", "deleteStep", True),
+    "rename-step": ("🏷️rename-step", "🔤️accepts", "renameStep", True),
+    "change-step-enabled": ("🔘change-step-enabled", "⏸️accepts", "changeStepEnabled", True),
+    "change-step-origin": ("🧷change-step-origin", "🏭️accepts", "changeStepOrigin", True),
+    "replace-step-measure": ("📐replace-step-measure", "🕳️accepts", "replaceStepMeasure", True),
+    "reorder-steps": ("🔀reorder-steps", "🔀️accepts", "reorderSteps", True),
+    "create-machine": ("🏭create-machine", "🪛️adds", "createMachine", False),
+    "delete-machine": ("❌delete-machine", "➖️empties", "deleteMachine", False),
     "rename-machine": ("🔖rename-machine", "🏷️retitles-the-saw", "renameMachine", False),
-    "change-machine-icon": ("🎨change-machine-icon", "🪚️swaps-the-saw-icon", "changeMachineIcon", False),
-    "replace-machine-capabilities": ("🔁replace-machine-capabilities", "🕳️trades-the-blade-cut-for-a-gated-pocket-cut", "replaceMachineCapabilities", False),
-    "move-stock": ("📍move-stock", "🎈️lifts-and-tilts-the-stock", "moveStock", False),
-    "change-stock-label": ("🔤change-stock-label", "🔤️relabels-the-oak-beam-as-planed", "changeStockLabel", False),
-    "replace-stock-solid": ("🧊replace-stock-solid", "🧊️reissues-the-stock-brep-child-handle", "replaceStockSolid", False),
+    "change-machine-icon": ("🎨change-machine-icon", "🪚️swaps", "changeMachineIcon", False),
+    "replace-machine-capabilities": ("🔁replace-machine", "🕳️trades", "replaceMachineCapabilities", False),
+    "move-stock": ("📍move-stock", "🎈️lifts", "moveStock", False),
+    "change-stock-label": ("🔤change-stock-label", "🔤️relabels", "changeStockLabel", False),
+    "replace-stock-solid": ("🧊replace-stock-solid", "🧊️reissues", "replaceStockSolid", False),
 }
 
 

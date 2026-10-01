@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "waitMillis": 31250,
+  "expectedPublication": "owned-input",
+  "expectedMachineOutput": { "prepared": true }
+}

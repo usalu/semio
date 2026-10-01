@@ -16,11 +16,11 @@ const schemaRoot = join(import.meta.dirname, "../../🧬️schema/🧬️trusted
 const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as {
   readonly schemaVersion: 1;
   readonly multipleStandards: { readonly artifactKind: string; readonly artifactSchemas: readonly string[]; readonly factoryIds: readonly string[] };
-  readonly expectedOpenTargetKind: string;
+  readonly selections: readonly { readonly id: string; readonly excludedKinds: readonly string[]; readonly expectedCodecCount?: number; readonly expectedOpenTargetCount: number }[];
   readonly expectedPublication: string;
   readonly expectedHubBundle: string;
   readonly structuralCodec: { readonly artifactKind: string; readonly packSchemaHash: string; readonly protocolSourceSha256: string };
-  readonly hostile: { readonly emptyReceipts: string; readonly digestMismatch: string; readonly identityMismatch: string; readonly missingProtocol: string; readonly missingDefinition: string };
+  readonly hostile: { readonly digestMismatch: string; readonly identityMismatch: string; readonly missingProtocol: string; readonly missingDefinition: string };
 };
 const schema = JSON.parse(readFileSync(join(schemaRoot, "🔣️.json"), "utf8"));
 const temporaryRoots: string[] = [];
@@ -35,6 +35,7 @@ const testRoot = (): string => {
 
 afterEach(() => {
   while (temporaryRoots.length) rmSync(temporaryRoots.pop()!, { recursive: true, force: true });
+
 });
 
 describe("trusted stdio catalog", () => {
@@ -56,8 +57,8 @@ describe("trusted stdio catalog", () => {
     expect(validateCatalog).toBeTruthy();
     expect(validateCatalog!(catalog), JSON.stringify(validateCatalog!.errors)).toBe(true);
     expect(catalog.nativeCodecs).toHaveLength(loadFirstPartyStdioNativeCodecReceipts().length);
-    expect(catalog.openTargets).toHaveLength(1);
-    expect(catalog.openTargets[0]?.artifactKind).toBe(fixture.expectedOpenTargetKind);
+    const sourcePayload = JSON.parse(readFileSync(join(import.meta.dirname, "../../📜️native-catalog.json"), "utf8"));
+    expect(catalog.openTargets).toEqual(sourcePayload.openTargets);
     expect(catalog.publication).toBe(fixture.expectedPublication);
     expect(catalog.hubBundle).toBe(fixture.expectedHubBundle);
     expect(catalog.pluginId).toBe("stdio");
@@ -102,15 +103,28 @@ describe("trusted stdio catalog", () => {
     expect(JSON.parse(written.toString("utf8")).hubBundle).toBe("withheld");
   });
 
-  it("fails closed on empty, digest-mismatched, and missing protocol receipts", () => {
+  it("fails closed on digest-mismatched and missing protocol receipts", () => {
     const receipts = loadFirstPartyStdioNativeCodecReceipts();
     const first = receipts[0]!;
-    expect(() => verifyStdioNativeCodecReceipts([])).toThrow(new RegExp(fixture.hostile.emptyReceipts));
     expect(() => verifyStdioNativeCodecReceipts([{ ...first, protocolSourceSha256: "ab".repeat(32) }])).toThrow(new RegExp(fixture.hostile.digestMismatch));
     const outDir = testRoot();
     expect(() => verifyStdioNativeCodecReceipts([{ ...first, packSchemaHash: "ab".repeat(32) }])).toThrow(new RegExp(fixture.hostile.identityMismatch));
     expect(() => verifyStdioNativeCodecReceipts([{ ...first, artifactDefinitionPath: join(outDir, "absent.definition.json") }])).toThrow(new RegExp(fixture.hostile.missingDefinition));
     expect(() => verifyStdioNativeCodecReceipts([{ ...first, protocolPath: join(outDir, "absent.protocol.semio") }])).toThrow(new RegExp(fixture.hostile.missingProtocol));
-    expect(() => publishTrustedStdioCatalogV1({ outDir, receipts: [] })).toThrow(new RegExp(fixture.hostile.emptyReceipts));
+
+  });
+  it("publishes exact selected owner inventories including empty and JSON-absent selections", () => {
+    const receipts = loadFirstPartyStdioNativeCodecReceipts();
+    const current = buildTrustedStdioCatalogV1();
+    for (const vector of fixture.selections) {
+      const selected = receipts.filter(row => !vector.excludedKinds.includes("*") && !vector.excludedKinds.includes(row.artifactKind));
+      const openTargets = current.openTargets.filter(row => selected.some(codec => codec.factoryId === row.factoryId));
+      const receipt = publishTrustedStdioCatalogV1({ outDir: testRoot(), inventory: { receipts: selected, openTargets } });
+      expect(receipt.catalog.nativeCodecs).toHaveLength(vector.expectedCodecCount ?? selected.length);
+      expect(receipt.catalog.openTargets).toHaveLength(vector.expectedOpenTargetCount);
+      expect(createHash("sha256").update(readFileSync(receipt.outPath)).digest("hex")).toBe(receipt.catalogSha256);
+    }
+    expect(() => buildTrustedStdioCatalogV1(undefined, { receipts: [], openTargets: current.openTargets })).toThrow(/open target.*codec/);
+    expect(() => buildTrustedStdioCatalogV1(undefined, { receipts, openTargets: [...current.openTargets, ...current.openTargets] })).toThrow(/duplicate open target/);
   });
 });

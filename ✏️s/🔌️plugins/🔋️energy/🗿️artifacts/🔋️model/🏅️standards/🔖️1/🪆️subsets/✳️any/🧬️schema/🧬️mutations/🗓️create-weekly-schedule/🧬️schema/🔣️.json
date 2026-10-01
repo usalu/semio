@@ -70,8 +70,8 @@
           "de": "Tageszeitpläne"
         },
         "description": {
-          "en": "Seven daily profiles by id, one per weekday slot 0 to 6.",
-          "de": "Sieben Tagesprofile per ID, je eines pro Wochentag 0 bis 6."
+          "en": "Seven daily profiles by id, Sunday through Saturday. Slot 0 is Sunday and slot 6 is Saturday.",
+          "de": "Sieben Tagesprofile per ID, Sonntag bis Samstag. Platz 0 ist Sonntag, Platz 6 ist Samstag."
         },
         "ref": {
           "kind": "schedule",

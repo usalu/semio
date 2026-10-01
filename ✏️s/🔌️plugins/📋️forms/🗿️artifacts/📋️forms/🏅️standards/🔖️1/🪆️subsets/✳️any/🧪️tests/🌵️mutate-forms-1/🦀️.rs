@@ -6,9 +6,9 @@
 //! subject claims is asserted inside its handlers through the shared
 //! `✏️s/🔌️plugins/🗄️stdio/🔮️oracles/⚖️law/🦀️.rs` module.
 //!
-//! ⚠️ What this case can and cannot prove is set by the vectors it has. Nine of the ten pin a rejection
+//! ⚠️ What this case can and cannot prove is set by the vectors it has. Ten of the eleven pin a rejection
 //! or a no-op branch, so the forward assertion is the committed `🎯️outcome`'s status AND code, not a
-//! moved projection, and `GUARD_VECTORS` names all nine. The inverse law is unexempted for all ten: a
+//! moved projection, and `GUARD_VECTORS` names all ten. The inverse law is unexempted for all eleven: a
 //! refused mutation's inverse is EMPTY, and applying nothing must still land on the before-snapshot.
 //!
 //! The `scene` cell each row carries is the before-document's own `definition.steps`; the subject seeds
@@ -33,11 +33,12 @@ const KINDS: &[&str] = &[
     "delete-block",
     "move-block-to-step",
     "replace-block",
+    "change-block-field",
     "change-form-title",
 ];
 
 #[cfg(feature = "sut")]
-/// 👁️ The nine kinds whose committed vector pins a REJECTION or NO-OP branch rather than an effect, so
+/// 👁️ The ten kinds whose committed vector pins a REJECTION or NO-OP branch rather than an effect, so
 /// `before` and `after` are the same document and the observability law cannot hold. Only
 /// `change-form-title` carries an effect vector; successful step/block vectors are still owed.
 const GUARD_VECTORS: &[&str] = &[
@@ -50,6 +51,7 @@ const GUARD_VECTORS: &[&str] = &[
     "delete-block",
     "move-block-to-step",
     "replace-block",
+    "change-block-field",
 ];
 
 #[cfg(feature = "sut")]

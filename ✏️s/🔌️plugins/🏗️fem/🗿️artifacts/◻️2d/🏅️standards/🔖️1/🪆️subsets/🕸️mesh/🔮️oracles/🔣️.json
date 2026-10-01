@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-bar-e2-between-fc1c09",
-              "directoryName": "➖️appends-bar-e2-between-fc1c09"
+              "directoryName": "➖️appends"
             },
             {
               "id": "braces-the-upper-d96634",
@@ -24,7 +24,7 @@
             },
             {
               "id": "rejects-a-dangling-b9e64c",
-              "directoryName": "🚫️rejects-a-dangling-b9e64c"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -62,7 +62,7 @@
             },
             {
               "id": "rejects-a-duplicate-11ca0d",
-              "directoryName": "🚫️rejects-a-duplicate-11ca0d"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "denies-two-point-99954a",
@@ -81,7 +81,7 @@
           "scenarios": [
             {
               "id": "appends-the-ipe300-profile",
-              "directoryName": "📐️appends-the-ipe300-profile"
+              "directoryName": "📐️appends"
             },
             {
               "id": "adds-the-hea220-dfdf34",
@@ -89,7 +89,7 @@
             },
             {
               "id": "rejects-a-duplicate-e91bc7",
-              "directoryName": "🚫️rejects-a-duplicate-e91bc7"
+              "directoryName": "🚫️rejects"
             },
             {
               "id": "denies-zero-area-58b5ca",
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "removes-bar-e2-and-3c0260",
-              "directoryName": "🚫️removes-bar-e2-and-3c0260"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "cuts-the-lower-e4a250",
@@ -127,7 +127,7 @@
           "scenarios": [
             {
               "id": "removes-node-n3-without-6eab3f",
-              "directoryName": "🚫️removes-node-n3-without-6eab3f"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "drops-the-spare-6c285d",
@@ -146,7 +146,7 @@
           "scenarios": [
             {
               "id": "removes-the-slab-and-5b301a",
-              "directoryName": "🚫️removes-the-slab-and-5b301a"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "drops-the-spare-460714",
@@ -192,11 +192,11 @@
           "scenarios": [
             {
               "id": "converts-beam-e1-into-a-5d21f5",
-              "directoryName": "♻️converts-beam-e1-into-a-5d21f5"
+              "directoryName": "♻️converts"
             },
             {
               "id": "regrades-the-roof-fb20eb",
-              "directoryName": "🔧️regrades-the-roof-fb20eb"
+              "directoryName": "🔧️regrades"
             },
             {
               "id": "rejects-a-missing-bd448c",
@@ -227,7 +227,7 @@
             },
             {
               "id": "widens-the-window-09a8ec",
-              "directoryName": "🪟️widens-the-window-09a8ec"
+              "directoryName": "🪟️widens"
             },
             {
               "id": "denies-rename-574c91",
@@ -239,7 +239,7 @@
             },
             {
               "id": "denies-zero-thick-7d805e",
-              "directoryName": "📐️denies-zero-thick-7d805e"
+              "directoryName": "📐️denies"
             }
           ]
         },
@@ -250,15 +250,15 @@
           "scenarios": [
             {
               "id": "stiffens-ipe200-with-5e9c08",
-              "directoryName": "💪️stiffens-ipe200-with-5e9c08"
+              "directoryName": "💪️stiffens"
             },
             {
               "id": "rejects-a-missing-b468f4",
-              "directoryName": "⛔️rejects-a-missing-b468f4"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "thickens-the-chs-e235a5",
-              "directoryName": "🛠️thickens-the-chs-e235a5"
+              "directoryName": "🛠️thickens"
             },
             {
               "id": "denies-rename-1d02dd",
@@ -304,7 +304,7 @@
             },
             {
               "id": "stretches-the-panel-b4f68b",
-              "directoryName": "📏️stretches-the-panel-b4f68b"
+              "directoryName": "📏️stretches"
             },
             {
               "id": "rejects-a-missing-f9c98d",
@@ -316,11 +316,11 @@
             },
             {
               "id": "denies-a-flat-scale-49b312",
-              "directoryName": "🫓️denies-a-flat-scale-49b312"
+              "directoryName": "🫓️denies"
             },
             {
               "id": "denies-a-twice-named-61d178",
-              "directoryName": "🔁️denies-a-twice-named-61d178"
+              "directoryName": "🔁️denies"
             }
           ]
         }

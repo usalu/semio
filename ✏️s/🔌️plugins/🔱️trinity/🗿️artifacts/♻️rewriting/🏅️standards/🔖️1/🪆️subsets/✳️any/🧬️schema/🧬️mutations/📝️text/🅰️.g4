@@ -7,7 +7,7 @@ grammar Trinity_rewriting_mutations;
 
 DOCUMENT: 'schema' [ ]+ 'trinity.rewriting.mutations' ;
 
-line: editBeforeFixture | editLhs | editRhs | changeParameterBinding | removeParameterBinding | changeRuleLayoutPoint | removeRuleLayoutPoint ;
+line: editBeforeFixture | editLhs | editRhs | changeParameterBinding | removeParameterBinding | changeRuleLayoutPoint | removeRuleLayoutPoint | dragWorkingNodes | patchWorkingNodes | dragRuleNodes | setRuleLayoutPoints ;
 editBeforeFixture: 'edit-before-fixture' SP text ;
 editLhs: 'edit-lhs' SP text ;
 editRhs: 'edit-rhs' SP text ;
@@ -15,7 +15,13 @@ changeParameterBinding: 'change-parameter-binding' SP key SP value ;
 removeParameterBinding: 'remove-parameter-binding' SP key ;
 changeRuleLayoutPoint: 'change-rule-layout-point' SP key SP pointBlock ;
 removeRuleLayoutPoint: 'remove-rule-layout-point' SP key ;
+dragWorkingNodes: 'drag-working-nodes' SP targets SP number SP number ;
+patchWorkingNodes: 'patch-working-nodes' SP targets SP key SP value ;
+dragRuleNodes: 'drag-rule-nodes' SP targets SP number SP number ;
+setRuleLayoutPoints: 'set-rule-layout-points' SP placementTable SP targets ;
 pointBlock: '{' NL number SP number '}' ;
+placementTable: '{' ( NL key SP number SP number )* '}' ;
+targets: '[' ( key SP? )* ']' ;
 key: OCTET+ ;
 value: OCTET+ ;
 number: OCTET+ ;

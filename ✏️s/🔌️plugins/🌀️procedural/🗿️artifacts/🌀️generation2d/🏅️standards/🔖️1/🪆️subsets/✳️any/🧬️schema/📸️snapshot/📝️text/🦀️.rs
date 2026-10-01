@@ -365,6 +365,7 @@ impl store::ArtifactDsl for Generation2dSnapshot {
 /// 📦️ `.generation2d` binary pack — same `Generation2dSnapshotDsl` mirror as `ArtifactDsl` above;
 /// `dsl::DslArtifact`'s derive already gives `Generation2dSnapshotDsl` its own `ArtifactPack` impl.
 impl store::ArtifactPack for Generation2dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let document = generation2d_document_to_dsl(self);
         let inner = store::pack_rt::encode_document(&Generation2dSnapshotDsl::__dsl_spec(), &document.__dsl_to_record(), options)?;

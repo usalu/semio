@@ -23,6 +23,7 @@ start mutation
 mutation = create-layer / delete-layer / reorder-layers / rename-layer / change-layer-visible / change-layer-locked
      / change-layer-opacity / change-layer-blend-mode / move-layer / resize-layer
      / change-layer-adjustment-kind / add-layer-asset / remove-layer-asset / change-layer-pixels / change-layer-mask / change-layer-adjustment-parameter / change-layer-transform
+     / paint-stroke
 
 create-layer = "create-layer" SP index SP layer SP ("parent=" id)?
 delete-layer = "delete-layer" SP "id=" id
@@ -71,3 +72,9 @@ change-layer-locked = "change-layer-locked" "id" "=" value "expected" "=" BOOL "
 
 change-layer-transform = "change-layer-transform" SP "id=" id SP expected-transform-block SP transform-block
 expected-transform-block = "expected" "{" "x=" number SP "y=" number SP "a=" number SP "b=" number SP "c=" number SP "d=" number "}"
+
+# One brush or eraser stroke: the target (`pixels` / `mask`), the tool (`brush` / `eraser`), the brush (size, hardness,
+# opacity, then the four unit colour channels), the points split into their x and y columns in drawing order, and the
+# optional selection runs as their JSON text.
+paint-stroke = "paint-stroke" SP "id=" id SP text SP text SP number SP number SP number SP numbers SP numbers SP numbers SP ("selection=" TEXT)?
+numbers = "[" (number ("," number)*)? "]"

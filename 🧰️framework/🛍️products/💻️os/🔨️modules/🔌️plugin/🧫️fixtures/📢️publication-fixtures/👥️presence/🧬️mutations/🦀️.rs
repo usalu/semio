@@ -1,6 +1,6 @@
 //! 👥️ Transparent publication-presence mutation roster.
 
-#[path = "📝️change-publication-presence/🦀️.rs"]
+#[path = "📝️change-publication/🦀️.rs"]
 pub mod change_publication_presence;
 pub use change_publication_presence::ChangePublicationPresence;
 

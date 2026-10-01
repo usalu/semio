@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_zip::editor::zip::base::ZipAnyEditor",
       "factory": "semio_s_artifact_stdio_zip::editor::zip::base::create_zip_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "zip_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_zip_any_editor"
+      }
     },
     {
       "owner": "stdio-binary",
@@ -24,7 +28,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_zip::viewer::zip::base::ZipAnyViewer",
       "factory": "semio_s_artifact_stdio_zip::viewer::zip::base::create_zip_any_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-binary",
@@ -33,7 +38,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_zip::editor::zip::iso21320::ZipIso21320Editor",
       "factory": "semio_s_artifact_stdio_zip::editor::zip::iso21320::create_zip_iso21320_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "zip_iso21320_editor",
+        "sqliteSnapshot": "sqlite_snapshot_zip_iso21320_editor"
+      }
     },
     {
       "owner": "stdio-binary",
@@ -42,22 +51,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_zip::viewer::zip::iso21320::ZipIso21320Viewer",
       "factory": "semio_s_artifact_stdio_zip::viewer::zip::iso21320::create_zip_iso21320_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "zip",
-      "factory_id": "stdio.native.zip.v1",
-      "descriptor_codec_id": "s.stdio.zip.standard.2-0.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.zip.standard.2-0.codec.codec-stdio-zip-extension-zip.v1",
-      "artifact_kind": "s.stdio.zip",
-      "artifact_schema": "stdio.zip",
-      "extension": "zip",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "1007b6c067adf4d961d088cc640268bf897c8ca59109631e9baf4c92cfa9b6c8",
-      "protocol_source_sha256": "451102004b6a9f904fafbd8b936523ea1cb83a38cc632fc0b507ee9ad706b63e",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -86,6 +81,43 @@
         "react": 6299,
         "wgpu": 6399
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "ZipMutation",
+      "snapshot": "semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot",
+      "mutation": "semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::mutations::ZipMutation"
+    },
+    {
+      "name": "ZipIso21320Mutation",
+      "snapshot": "semio_s_artifact_stdio_zip::standards::v2_0::subsets::base::schema::snapshot::ZipSnapshot",
+      "mutation": "semio_s_artifact_stdio_zip::standards::v2_0::subsets::iso21320::schema::mutations::ZipIso21320Mutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.zip",
+      "standard": "2.0",
+      "subset": "iso21320",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🌐️iso21320",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.zip.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🏅️standards/🔖️2.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

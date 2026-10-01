@@ -80,25 +80,32 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                            | vector                                                                       |
-      | create-object                 | 🌱️create-object/⛵️inserts-obj-mast-between-hull-and-fin                |
-      | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
-      | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
-      | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-smooth-shading-obj-hull  |
-      | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
-      | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
-      | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
-      | create-mesh                   | 🕸️create-mesh/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
-      | delete-mesh                   | 🧨delete-mesh/✂️detaches-the-mesh-child-handle-from-obj-hull            |
-      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks-a-detail-layer-above-the-base-layer      |
-      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1               |
-      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat            |
-      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
-      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases-a-hole-in-the-base-db0332 |
-      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs-red-across-the-base-061d4c |
+      | create-object                 | 🌱️create-object/⛵️inserts                |
+      | delete-object                 | 💀️delete-object/🚫️removes           |
+      | reorder-objects               | 🔀️reorder-objects/🔀️moves                 |
+      | rename-object                 | 🏷️rename-object/🏷️retitles                                    |
+      | change-object-smooth-shading  | 🔘️change-object-smooth/🟢️turns  |
+      | move-object                   | ↗️move-object/📍️translates                      |
+      | rotate-object                 | 🔄️rotate-object/🔄️yaws                       |
+      | scale-object                  | 📐️scale-object/📐️halves                             |
+      | create-mesh                   | 🕸️create-mesh/🕸️attaches                |
+      | delete-mesh                   | 🧨delete-mesh/✂️detaches            |
+      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks      |
+      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops               |
+      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles            |
+      | change-paint-layer-visible    | 👁️change-paint-layer/🙈️hides                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer/🌫️fades            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer/✖️switches  |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs |
+      | move-selection                | 🚚️move-selection/🚚️moves |
+      | move-selection                | 🚚️move-selection/📌️pins |
+      | move-selection                | 🚚️move-selection/🧩️part |
+      | rotate-selection              | 🌀️rotate-selection/🌀️turns |
+      | rotate-selection              | 🌀️rotate-selection/📐️lifts |
+      | scale-selection               | 🔍️scale-selection/🔍️wides |
+      | scale-selection               | 🔍️scale-selection/🧩️part |
 
   @id-inverse
   @level-exhaustive
@@ -119,30 +126,37 @@ Feature: Apply every typed lowpoly mutation twice — once in Rust, once in Pyth
     And every field the committed diff declares actually differs
     Examples:
       | id                            | vector                                                                       |
-      | create-object                 | 🌱️create-object/⛵️inserts-obj-mast-between-hull-and-fin                |
-      | delete-object                 | 💀️delete-object/🚫️removes-obj-fin-without-touching-the-order           |
-      | reorder-objects               | 🔀️reorder-objects/🔀️moves-obj-fin-in-front-of-obj-hull                 |
-      | rename-object                 | 🏷️rename-object/🏷️retitles-obj-hull                                    |
-      | change-object-smooth-shading  | 🔘️change-object-smooth-shading/🟢️turns-smooth-shading-obj-hull  |
-      | move-object                   | ↗️move-object/📍️translates-obj-hull-along-x-and-z                      |
-      | rotate-object                 | 🔄️rotate-object/🔄️yaws-obj-hull-about-the-y-axis                       |
-      | scale-object                  | 📐️scale-object/📐️halves-obj-hull-uniformly                             |
-      | create-mesh                   | 🕸️create-mesh/🕸️attaches-a-mesh-child-handle-to-obj-fin                |
-      | delete-mesh                   | 🧨delete-mesh/✂️detaches-the-mesh-child-handle-from-obj-hull            |
-      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks-a-detail-layer-above-the-base-layer      |
-      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1               |
-      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles-the-base-layer-to-undercoat            |
-      | change-paint-layer-visible    | 👁️change-paint-layer-visible/🙈️hides-the-base-layer                    |
-      | change-paint-layer-opacity    | 🌫️change-paint-layer-opacity/🌫️fades-the-base-layer-to-half            |
-      | change-paint-layer-blend-mode | 🎛️change-paint-layer-blend-mode/✖️switches-the-base-layer-to-multiply  |
-      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints-red-over-second-half-base-layer |
-      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases-a-hole-in-the-base-db0332 |
-      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs-red-across-the-base-061d4c |
+      | create-object                 | 🌱️create-object/⛵️inserts                |
+      | delete-object                 | 💀️delete-object/🚫️removes           |
+      | reorder-objects               | 🔀️reorder-objects/🔀️moves                 |
+      | rename-object                 | 🏷️rename-object/🏷️retitles                                    |
+      | change-object-smooth-shading  | 🔘️change-object-smooth/🟢️turns  |
+      | move-object                   | ↗️move-object/📍️translates                      |
+      | rotate-object                 | 🔄️rotate-object/🔄️yaws                       |
+      | scale-object                  | 📐️scale-object/📐️halves                             |
+      | create-mesh                   | 🕸️create-mesh/🕸️attaches                |
+      | delete-mesh                   | 🧨delete-mesh/✂️detaches            |
+      | insert-paint-layer            | ➕️insert-paint-layer/🪜️stacks      |
+      | remove-paint-layer            | ➖️remove-paint-layer/➖️drops               |
+      | rename-paint-layer            | 🔖️rename-paint-layer/🏷️retitles            |
+      | change-paint-layer-visible    | 👁️change-paint-layer/🙈️hides                    |
+      | change-paint-layer-opacity    | 🌫️change-paint-layer/🌫️fades            |
+      | change-paint-layer-blend-mode | 🎛️change-paint-layer/✖️switches  |
+      | edit-paint-layer              | 🎨️edit-paint-layer/🖌️paints |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🧽️erases |
+      | apply-paint-stroke            | 🖌️apply-paint-stroke/🖌️dabs |
+      | move-selection                | 🚚️move-selection/🚚️moves |
+      | move-selection                | 🚚️move-selection/📌️pins |
+      | move-selection                | 🚚️move-selection/🧩️part |
+      | rotate-selection              | 🌀️rotate-selection/🌀️turns |
+      | rotate-selection              | 🌀️rotate-selection/📐️lifts |
+      | scale-selection               | 🔍️scale-selection/🔍️wides |
+      | scale-selection               | 🔍️scale-selection/🧩️part |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the two-object lowpoly document that carries stacked paint layers
-    Given the committed before-snapshot shared://🧬️mutations/➖️remove-paint-layer/➖️drops-the-detail-layer-at-index-1/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/➖️remove-paint-layer/➖️drops/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

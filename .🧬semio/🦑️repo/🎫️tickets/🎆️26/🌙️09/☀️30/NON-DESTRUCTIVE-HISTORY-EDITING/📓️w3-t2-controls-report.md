@@ -115,3 +115,11 @@ See §3 table (filled below as each run completes).
 - Descriptor regeneration: playbook (`updatePlaybook` describe text).
 - Forms parametric leaf decision (§4.3). NodeGraph `setSlider` lane: W3-T2-PROCEDURAL moves gesture/commit to top level.
 - Derived previews reading the overlay (F-7): W3-T2-PROCEDURAL adds `ArtifactOwnedToolJobContext::provisional()`.
+
+## Session 2 — 2026-10-01
+
+Successor S2-CONTROLS (coordinator `⚪552b484a…`). Ownership per the 12:xx coordinator message: `PL/🔋️energy/**`,
+`PL/📋️forms/**`, `PL/📖️playbook/**`, `PL/🌍️gis/**`, `PL/📕️norm/📇️registry/🧬️contract/🖥️app-surface/**`,
+`RE/🗣️Interpreter/🟦️.tsx` (+ tests). `FW/🖱️ui/**` is S2-W1E's and `OS/🔌️plugin/**` S2-W2A's: requests for them are in
+§S2.6. Nothing committed; no ticket tool called. Scratch: `🗑️generated/s2-controls/`. Status: IN PROGRESS (this section is
+rewritten in place as runs complete).

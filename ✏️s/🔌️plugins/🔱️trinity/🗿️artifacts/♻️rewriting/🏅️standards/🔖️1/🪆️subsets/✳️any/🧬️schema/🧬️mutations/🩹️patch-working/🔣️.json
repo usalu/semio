@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩹️patch-working",
+  "semanticKind": "patch-working-nodes",
+  "displayName": "Patch Working Nodes",
+  "emoji": "🩹️",
+  "aggregateVariant": "PatchWorkingNodes",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "patch-working-nodes",
+  "binaryTag": 8,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

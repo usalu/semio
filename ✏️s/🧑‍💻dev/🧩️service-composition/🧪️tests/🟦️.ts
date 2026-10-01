@@ -7,7 +7,7 @@ type ServiceCompositionTestDependenciesV1 = Omit<BackboneWorkerTestDependencies,
 type TestSource = { readonly directory: string; readonly url: string };
 
 import { stubFetch } from "../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🌐️fetch-stub/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import type { BackboneWorkerTestDependencies } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts";
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: ServiceCompositionTestDependenciesV1, registrar: TestSource): Promise<void> {

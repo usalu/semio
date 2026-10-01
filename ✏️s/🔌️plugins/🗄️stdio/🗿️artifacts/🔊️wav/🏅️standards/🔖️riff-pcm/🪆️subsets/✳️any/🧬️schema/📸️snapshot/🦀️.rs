@@ -28,11 +28,8 @@ impl Default for WavFmt {
 /// 📦️ Owned by `wav`: the `data` chunk's samples, typed per `WavFmt`'s
 /// `(audio_format, bits_per_sample)` — `Raw` is the honest fallback for anything this codec
 /// doesn't interpret sample-by-sample (24-bit PCM, ADPCM, WAVE_FORMAT_EXTENSIBLE payloads, …).
-/// 🏷️ Adjacently tagged (`tag`+`content`), not purely internally tagged — serde cannot serialize
-/// an internally-tagged newtype variant wrapping a non-map type (`Vec<T>` here), the same
-/// constraint already on record for `HtmlNode`/`JsonValue` elsewhere in this codebase.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", content = "value", rename_all = "camelCase")]
+/// 🔢️ JSON float samples retain their complete unsigned IEEE 754 words.
+#[derive(Clone, Debug, PartialEq)]
 pub enum WavData {
     Pcm16(Vec<i16>),
     Pcm8(Vec<u8>),
@@ -43,6 +40,55 @@ pub enum WavData {
 impl Default for WavData {
     fn default() -> Self {
         WavData::Raw(Vec::new())
+    }
+}
+
+fn wav_tagged_fields(value: dsl::DslValue) -> Result<(String, Option<dsl::DslValue>), dsl::ValueError> {
+    let dsl::DslValue::Object(mut fields) = value else { return Err(dsl::ValueError::new("WAV variant requires an object")); };
+    let index = fields.iter().position(|(key, _)| key == "kind").ok_or_else(|| dsl::ValueError::new("WAV variant requires kind"))?;
+    let dsl::DslValue::String(kind) = fields.remove(index).1 else { return Err(dsl::ValueError::new("WAV variant kind requires a string")); };
+    let payload = match fields.len() {
+        0 => None,
+        1 if fields[0].0 == "value" => Some(fields.remove(0).1),
+        _ => return Err(dsl::ValueError::new("WAV variant has duplicate or unknown fields")),
+    };
+    Ok((kind, payload))
+}
+
+impl dsl::ToValue for WavData {
+    fn to_value(&self) -> dsl::DslValue {
+        let (kind, value) = match self {
+            Self::Pcm16(samples) => ("pcm16", dsl::ToValue::to_value(samples)),
+            Self::Pcm8(samples) => ("pcm8", dsl::ToValue::to_value(samples)),
+            Self::Raw(samples) => ("raw", dsl::ToValue::to_value(samples)),
+            Self::Float32(samples) => ("float32", dsl::DslValue::Array(samples.iter().map(|sample| dsl::DslValue::Object(vec![("bits".into(), dsl::ToValue::to_value(&sample.to_bits()))])).collect())),
+        };
+        dsl::DslValue::Object(vec![("kind".into(), dsl::DslValue::String(kind.into())), ("value".into(), value)])
+    }
+}
+
+impl dsl::FromValue for WavData {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        let (kind, value) = wav_tagged_fields(value)?;
+        let value = value.ok_or_else(|| dsl::ValueError::new("WAV samples require value"))?;
+        match kind.as_str() {
+            "pcm16" => Ok(Self::Pcm16(dsl::FromValue::from_value(value)?)),
+            "pcm8" => Ok(Self::Pcm8(dsl::FromValue::from_value(value)?)),
+            "raw" => Ok(Self::Raw(dsl::FromValue::from_value(value)?)),
+            "float32" => {
+                let dsl::DslValue::Array(samples) = value else { return Err(dsl::ValueError::new("WAV float samples require an array")); };
+                Ok(Self::Float32(samples.into_iter().map(|sample| {
+                    let dsl::DslValue::Object(mut fields) = sample else { return Err(dsl::ValueError::new("WAV float sample requires its unsigned word")); };
+                    if fields.len() != 1 || fields[0].0 != "bits" { return Err(dsl::ValueError::new("WAV float sample requires exactly bits")); }
+                    let bits: u32 = dsl::FromValue::from_value(fields.remove(0).1)?;
+                    Ok(f32::from_bits(bits))
+                }).collect::<Result<Vec<_>, dsl::ValueError>>()?))
+            }
+            _ => Err(dsl::ValueError::new("WAV samples have an unknown kind")),
+        }
+    }
+    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
+        dsl::edit_through_value(self, path, edit)
     }
 }
 
@@ -120,12 +166,38 @@ pub struct RiffChunk {
 /// 🧭️ One position in the top-level RIFF/WAVE chunk sequence. `Format` and `Samples`
 /// reference the typed primary chunks; `Other` references `other_chunks[index]`. A duplicate
 /// `fmt `/`data` chunk is deliberately an `Other` entry so its original payload survives exactly.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", content = "value", rename_all = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 pub enum WavChunkRef {
     Format,
     Samples,
     Other(u64),
+}
+
+impl dsl::ToValue for WavChunkRef {
+    fn to_value(&self) -> dsl::DslValue {
+        let kind = match self { Self::Format => "format", Self::Samples => "samples", Self::Other(_) => "other" };
+        let mut fields = vec![("kind".into(), dsl::DslValue::String(kind.into()))];
+        if let Self::Other(index) = self { fields.push(("value".into(), dsl::DslValue::String(index.to_string()))); }
+        dsl::DslValue::Object(fields)
+    }
+}
+
+impl dsl::FromValue for WavChunkRef {
+    fn from_value(value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        match wav_tagged_fields(value)? {
+            (kind, None) if kind == "format" => Ok(Self::Format),
+            (kind, None) if kind == "samples" => Ok(Self::Samples),
+            (kind, Some(dsl::DslValue::String(text))) if kind == "other" => {
+                let index = text.parse::<u64>().map_err(|_| dsl::ValueError::new("WAV chunk index requires unsigned64 decimal text"))?;
+                if index.to_string() != text { return Err(dsl::ValueError::new("WAV chunk index requires canonical decimal text")); }
+                Ok(Self::Other(index))
+            }
+            _ => Err(dsl::ValueError::new("WAV chunk reference requires its exact kind and unsigned64 index")),
+        }
+    }
+    fn edit_value_at_path(&mut self, path: &[&str], edit: dsl::ValueEdit) -> Result<(), dsl::ValueError> {
+        dsl::edit_through_value(self, path, edit)
+    }
 }
 
 fn wav_chunk_ref_spec() -> dsl::RecordSpec {

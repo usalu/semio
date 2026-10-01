@@ -63,6 +63,24 @@
       "alternative": "Variant"
     },
     {
+      "id": "several-drafts-accumulated-from-a-review-finalize-once",
+      "steps": [
+        { "begin": 1 },
+        { "input": { "path": "/value", "value": "b" } },
+        { "accept": null },
+        { "replay": "clean" },
+        { "begin": 0 },
+        { "input": { "path": "/value", "value": 7 } },
+        { "accept": null },
+        { "replay": "clean" },
+        { "finalize": null },
+        { "commit": { "choice": "overwrite" } }
+      ],
+      "status": null,
+      "body": "count=5 label=b",
+      "superseded": [0, 1]
+    },
+    {
       "id": "exit-leaves-zero-trace",
       "steps": [{ "begin": 0 }, { "input": { "path": "/value", "value": 7 } }, { "accept": null }, { "replay": "clean" }, { "exit": null }],
       "status": null,

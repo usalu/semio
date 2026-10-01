@@ -3,7 +3,7 @@ import { applyPatch, compare } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️events.json";
 import timestamps from "../../🧫️fixtures/🔣️timestamps.json";
 import responseSchema from "../../🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseFormsResponse, applyResponseEvent, inverseResponseEvent, type FormsResponseEvent } from "../../🟦️.ts";
 
 /** 📨️ Submission, retraction and undo share fixtures and independent JSON Patch outcomes. */

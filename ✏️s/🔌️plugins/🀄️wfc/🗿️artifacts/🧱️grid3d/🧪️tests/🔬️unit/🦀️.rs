@@ -99,9 +99,9 @@ pub fn fixture_vectors() -> Vec<(&'static str, &'static str, crate::Grid3dMutati
     use crate::mutations::*;
     use crate::schema::snapshot::*;
     vec![
-        ("🎲️change-seed", "🎲️reseeds-the-solve-from-7-to-99", change_seed(99)),
+        ("🎲️change-seed", "🎲️reseeds", change_seed(99)),
         ("📐️resize-grid", "📐️grows-the-grid-to-3x2x2", resize_grid(3, 2, 2)),
-        ("📏️change-cell-sizes", "📏️stretches-the-x-axis-columns", change_cell_sizes(Grid3dAxis::X, vec![2.5, 0.5])),
+        ("📏️change-cell-sizes", "📏️stretches", change_cell_sizes(Grid3dAxis::X, vec![2.5, 0.5])),
         ("🔁️change-periodicity", "🔁️wraps-the-x-axis", change_periodicity(true, false, false)),
         (
             "🧱️create-tile",
@@ -113,19 +113,19 @@ pub fn fixture_vectors() -> Vec<(&'static str, &'static str, crate::Grid3dMutati
                 media: Grid3dTileMedia::Mesh { mesh: Grid3dMesh { positions: Vec::new(), indices: Vec::new(), color: Some(Grid3dColor { r: 172, g: 84, b: 62, a: 255 }) } },
             }),
         ),
-        ("🕳️delete-tile", "🕳️removes-the-air-tile-and-cascades", delete_tile("air".into())),
-        ("⚖️change-tile-weight", "⚖️raises-the-wall-tile-bias", change_tile_weight("wall".into(), 5.0)),
+        ("🕳️delete-tile", "🕳️removes", delete_tile("air".into())),
+        ("⚖️change-tile-weight", "⚖️raises", change_tile_weight("wall".into(), 5.0)),
         (
             "🖼️change-tile-media",
-            "🖼️replaces-the-wall-tile-mesh",
+            "🖼️replaces",
             change_tile_media("wall".into(), Grid3dTileMedia::Mesh { mesh: Grid3dMesh { positions: Vec::new(), indices: Vec::new(), color: Some(Grid3dColor { r: 40, g: 44, b: 52, a: 255 }) } }),
         ),
         ("🚦️create-rule", "🚦️allows-air-above-air", create_rule(Grid3dRule { id: "r-top-air-air".into(), tile_a_id: "air".into(), tile_b_id: "air".into(), direction: Grid3dDirection::Top, allowed: true })),
-        ("❌️delete-rule", "❌️removes-the-floor-wall-rule", delete_rule("r-top-floor-wall".into())),
+        ("❌️delete-rule", "❌️removes", delete_rule("r-top-floor-wall".into())),
         ("📌️pin-cell", "📌️pins-the-far-cell-to-wall", pin_cell(Grid3dPinnedCell { x: 1, y: 0, z: 0, tile_id: "wall".into() })),
         ("📍️unpin-cell", "📍️releases-the-origin-cell", unpin_cell(0, 0, 0)),
-        ("🚫️mask-cell", "🚫️carves-out-the-far-edge-cell", mask_cell(Grid3dCell { x: 0, y: 1, z: 1 })),
-        ("🔓️unmask-cell", "🔓️restores-the-masked-corner", unmask_cell(1, 1, 1)),
+        ("🚫️mask-cell", "🚫️carves", mask_cell(Grid3dCell { x: 0, y: 1, z: 1 })),
+        ("🔓️unmask-cell", "🔓️restores", unmask_cell(1, 1, 1)),
     ]
 }
 

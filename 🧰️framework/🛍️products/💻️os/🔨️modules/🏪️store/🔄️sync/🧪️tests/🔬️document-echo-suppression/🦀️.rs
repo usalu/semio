@@ -19,7 +19,7 @@ fn envelope(value: &serde_json::Value) -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

@@ -123,6 +123,12 @@ function expectNumber(value: unknown, at: string): number {
   return value;
 }
 
+function expectUnsigned8(value: unknown, at: string): number {
+  const number = expectNumber(value, at);
+  if (!Number.isInteger(number) || number < 0 || number > 255) throw new En1990ParseError("mistyped", at, "expected unsigned8 integer");
+  return number;
+}
+
 function requireKey(obj: Record<string, unknown>, key: string, at: string): unknown {
   if (!(key in obj)) {
     throw new En1990ParseError("missing", `${at}.${key}`, `required field '${key}' is missing`);
@@ -230,9 +236,9 @@ export function parseEn1990Artifact(value: unknown, at = "$"): En1990Artifact {
     projectId: expectString(requireKey(o, "projectId", at), `${at}.projectId`),
     structureKind: expectString(requireKey(o, "structureKind", at), `${at}.structureKind`),
     altitudeM: expectNumber(requireKey(o, "altitudeM", at), `${at}.altitudeM`),
-    consequenceClass: expectNumber(requireKey(o, "consequenceClass", at), `${at}.consequenceClass`),
-    reliabilityClass: expectNumber(requireKey(o, "reliabilityClass", at), `${at}.reliabilityClass`),
-    designWorkingLifeCategory: expectNumber(requireKey(o, "designWorkingLifeCategory", at), `${at}.designWorkingLifeCategory`),
+    consequenceClass: expectUnsigned8(requireKey(o, "consequenceClass", at), `${at}.consequenceClass`),
+    reliabilityClass: expectUnsigned8(requireKey(o, "reliabilityClass", at), `${at}.reliabilityClass`),
+    designWorkingLifeCategory: expectUnsigned8(requireKey(o, "designWorkingLifeCategory", at), `${at}.designWorkingLifeCategory`),
     designWorkingLifeYears: expectNumber(requireKey(o, "designWorkingLifeYears", at), `${at}.designWorkingLifeYears`),
     referencePeriodYears: expectNumber(requireKey(o, "referencePeriodYears", at), `${at}.referencePeriodYears`),
     supervisionLevel: expectString(requireKey(o, "supervisionLevel", at), `${at}.supervisionLevel`),

@@ -1,0 +1,1507 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-block-field/schema.json",
+  "title": "ChangeBlockField",
+  "description": "Sets ONE field of one question to an absolute value (null clears an optional field).",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "label",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": "string",
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Label",
+              "de": "Beschriftung"
+            },
+            "description": {
+              "en": "Question text shown to the respondent.",
+              "de": "Fragetext, den die befragte Person sieht."
+            },
+            "group": "content",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Label",
+          "de": "Beschriftung"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "description",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Description",
+              "de": "Beschreibung"
+            },
+            "description": {
+              "en": "Help text below the question; empty removes it.",
+              "de": "Hilfetext unter der Frage; leer entfernt ihn."
+            },
+            "group": "content",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Description",
+          "de": "Beschreibung"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "placeholder",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Placeholder",
+              "de": "Platzhalter"
+            },
+            "description": {
+              "en": "Hint shown in an empty answer field.",
+              "de": "Hinweis in einem leeren Antwortfeld."
+            },
+            "group": "content",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Placeholder",
+          "de": "Platzhalter"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "text",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "multiline",
+            "role": "value",
+            "label": {
+              "en": "Text",
+              "de": "Text"
+            },
+            "description": {
+              "en": "Static text of an information block.",
+              "de": "Fester Text eines Informationsblocks."
+            },
+            "group": "content",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Text",
+          "de": "Text"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "unit",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Unit",
+              "de": "Einheit"
+            },
+            "description": {
+              "en": "Unit shown next to a number answer.",
+              "de": "Einheit neben einer Zahlenantwort."
+            },
+            "group": "content",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Unit",
+          "de": "Einheit"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "schema",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Schema",
+              "de": "Schema"
+            },
+            "description": {
+              "en": "Schema id the answer follows.",
+              "de": "Schema-ID, der die Antwort folgt."
+            },
+            "group": "source",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Schema",
+          "de": "Schema"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "src",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Source",
+              "de": "Quelle"
+            },
+            "description": {
+              "en": "Address of the file, e.g. an https or data URL.",
+              "de": "Adresse der Datei, z. B. eine https- oder data-URL."
+            },
+            "group": "source",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Source",
+          "de": "Quelle"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "accept",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Accepted files",
+              "de": "Akzeptierte Dateien"
+            },
+            "description": {
+              "en": "File types an upload accepts, e.g. image/*.",
+              "de": "Dateitypen, die ein Upload annimmt, z. B. image/*."
+            },
+            "group": "source",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Accepted files",
+          "de": "Akzeptierte Dateien"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "fixtureSlug",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "text",
+            "role": "value",
+            "label": {
+              "en": "Fixture slug",
+              "de": "Fixture-Kürzel"
+            },
+            "description": {
+              "en": "Slug of the bundled fixture the question draws its data from.",
+              "de": "Kürzel der mitgelieferten Fixture, aus der die Frage ihre Daten bezieht."
+            },
+            "group": "source",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Fixture slug",
+          "de": "Fixture-Kürzel"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "required",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "boolean",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "toggle",
+            "role": "value",
+            "label": {
+              "en": "Required",
+              "de": "Pflichtfeld"
+            },
+            "description": {
+              "en": "The form cannot be submitted without an answer.",
+              "de": "Das Formular kann ohne Antwort nicht übermittelt werden."
+            },
+            "group": "validation",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Required",
+          "de": "Pflichtfeld"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "min",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Minimum",
+              "de": "Minimum"
+            },
+            "description": {
+              "en": "Smallest accepted number; empty removes the bound.",
+              "de": "Kleinste zulässige Zahl; leer entfernt die Grenze."
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "validation",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Minimum",
+          "de": "Minimum"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "max",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Maximum",
+              "de": "Maximum"
+            },
+            "description": {
+              "en": "Largest accepted number; empty removes the bound.",
+              "de": "Größte zulässige Zahl; leer entfernt die Grenze."
+            },
+            "step": 1,
+            "precision": 2,
+            "group": "validation",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Maximum",
+          "de": "Maximum"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "step",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "exclusiveMinimum": 0,
+          "x-semio-ui": {
+            "widget": "stepper",
+            "role": "value",
+            "label": {
+              "en": "Step",
+              "de": "Schrittweite"
+            },
+            "description": {
+              "en": "Increment of a number answer, greater than zero.",
+              "de": "Schrittweite einer Zahlenantwort, größer als null."
+            },
+            "step": 0.1,
+            "precision": 2,
+            "group": "validation",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Step",
+          "de": "Schrittweite"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "default",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Default",
+              "de": "Standardwert"
+            },
+            "description": {
+              "en": "Answer used until the respondent answers, typed by the question kind.",
+              "de": "Antwort, die gilt, bis die befragte Person antwortet, typisiert nach Fragetyp."
+            },
+            "group": "value",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Default",
+          "de": "Standardwert"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "params",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Parameters",
+              "de": "Parameter"
+            },
+            "description": {
+              "en": "Extra settings of the question type as one JSON object.",
+              "de": "Zusätzliche Einstellungen des Fragetyps als ein JSON-Objekt."
+            },
+            "group": "kind",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Parameters",
+          "de": "Parameter"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "condition",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "oneOf": [
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/definition.json#/$defs/Expression"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Condition",
+              "de": "Bedingung"
+            },
+            "description": {
+              "en": "The question is shown only while this expression holds; empty always shows it.",
+              "de": "Die Frage wird nur angezeigt, solange dieser Ausdruck gilt; leer zeigt sie immer."
+            },
+            "group": "condition",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Condition",
+          "de": "Bedingung"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "options",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "value",
+              "label"
+            ],
+            "properties": {
+              "value": {
+                "type": "string",
+                "minLength": 1,
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "description": {
+                    "en": "Stored answer of this option, unique in the question.",
+                    "de": "Gespeicherte Antwort dieser Option, eindeutig in der Frage."
+                  },
+                  "group": "choices",
+                  "order": 10
+                }
+              },
+              "label": {
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Beschriftung"
+                  },
+                  "group": "choices",
+                  "order": 20
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Options",
+              "de": "Optionen"
+            },
+            "description": {
+              "en": "Choices of a select question, values unique.",
+              "de": "Auswahlmöglichkeiten einer Auswahlfrage, Werte eindeutig."
+            },
+            "group": "choices",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Options",
+          "de": "Optionen"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "blockId",
+        "field",
+        "value"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "changeBlockField"
+        },
+        "blockId": {
+          "type": "string",
+          "minLength": 1,
+          "x-semio-ui": {
+            "widget": "reference",
+            "role": "target",
+            "label": {
+              "en": "Question",
+              "de": "Frage"
+            },
+            "description": {
+              "en": "The question whose field this mutation sets.",
+              "de": "Die Frage, deren Feld diese Mutation setzt."
+            },
+            "ref": {
+              "kind": "question",
+              "domain": "fields",
+              "granularity": "field"
+            },
+            "group": "target",
+            "order": 10
+          }
+        },
+        "field": {
+          "const": "fields",
+          "x-semio-ui": {
+            "role": "discriminator",
+            "label": {
+              "en": "Field",
+              "de": "Feld"
+            },
+            "description": {
+              "en": "The question field this mutation sets.",
+              "de": "Das Fragenfeld, das diese Mutation setzt."
+            }
+          }
+        },
+        "value": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "minLength": 1,
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Key",
+                    "de": "Schlüssel"
+                  },
+                  "description": {
+                    "en": "Component key, unique in the vector.",
+                    "de": "Komponentenschlüssel, eindeutig im Vektor."
+                  },
+                  "group": "choices",
+                  "order": 10
+                }
+              },
+              "label": {
+                "type": "string",
+                "x-semio-ui": {
+                  "widget": "text",
+                  "role": "value",
+                  "label": {
+                    "en": "Label",
+                    "de": "Beschriftung"
+                  },
+                  "group": "choices",
+                  "order": 20
+                }
+              },
+              "value": {
+                "type": "number",
+                "x-semio-ui": {
+                  "widget": "stepper",
+                  "role": "value",
+                  "label": {
+                    "en": "Value",
+                    "de": "Wert"
+                  },
+                  "step": 1,
+                  "precision": 2,
+                  "group": "choices",
+                  "order": 30
+                }
+              }
+            }
+          },
+          "x-semio-ui": {
+            "role": "value",
+            "label": {
+              "en": "Vector fields",
+              "de": "Vektorfelder"
+            },
+            "description": {
+              "en": "Components of a vector question, keys unique.",
+              "de": "Komponenten einer Vektorfrage, Schlüssel eindeutig."
+            },
+            "group": "choices",
+            "order": 30
+          }
+        }
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Vector fields",
+          "de": "Vektorfelder"
+        }
+      }
+    }
+  ]
+}

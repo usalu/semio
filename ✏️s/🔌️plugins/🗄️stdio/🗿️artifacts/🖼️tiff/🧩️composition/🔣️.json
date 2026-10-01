@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_tiff::editor::tiff_any::TiffAnyEditor",
       "factory": "semio_s_artifact_stdio_tiff::editor::tiff_any::create_tiff_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "tiff_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_tiff_any_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_tiff::viewer::tiff_any::TiffAnyViewer",
       "factory": "semio_s_artifact_stdio_tiff::viewer::tiff_any::create_tiff_any_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-image",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_tiff::editor::tiff_baseline::TiffBaselineEditor",
       "factory": "semio_s_artifact_stdio_tiff::editor::tiff_baseline::create_tiff_baseline_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "tiff_baseline_editor",
+        "sqliteSnapshot": "sqlite_snapshot_tiff_baseline_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -41,22 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_tiff::viewer::tiff_baseline::TiffBaselineViewer",
       "factory": "semio_s_artifact_stdio_tiff::viewer::tiff_baseline::create_tiff_baseline_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "tiff",
-      "factory_id": "stdio.native.tiff.v1",
-      "descriptor_codec_id": "s.stdio.tiff.standard.6-0.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.tiff.standard.6-0.codec.codec-stdio-tiff-extension-tiff.v1",
-      "artifact_kind": "s.stdio.tiff",
-      "artifact_schema": "stdio.tiff",
-      "extension": "tiff",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
-      "protocol_source_sha256": "498e64a94f0652c53ffc1839376721e66ba387d38681cc179d7b0bf844bc9b4a",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -85,6 +80,43 @@
         "react": 6225,
         "wgpu": 6325
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "TiffBaselineMutation",
+      "snapshot": "semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot",
+      "mutation": "semio_s_artifact_stdio_tiff::standards::v6_0::subsets::baseline::schema::mutations::TiffBaselineMutation"
+    },
+    {
+      "name": "TiffMutation",
+      "snapshot": "semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::snapshot::TiffSnapshot",
+      "mutation": "semio_s_artifact_stdio_tiff::standards::v6_0::subsets::document::schema::mutations::TiffMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "baseline",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧱️baseline",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.tiff",
+      "standard": "6.0",
+      "subset": "document",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.tiff.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

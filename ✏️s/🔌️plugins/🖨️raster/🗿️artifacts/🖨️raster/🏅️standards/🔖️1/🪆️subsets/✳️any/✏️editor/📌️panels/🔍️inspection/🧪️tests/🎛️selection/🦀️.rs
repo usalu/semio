@@ -66,7 +66,7 @@ async fn inspector_mask_dimensions_resolve_the_attached_image() {
 
 #[test]
 fn inspector_adjustment_parameters_are_localized_bounded_commit_controls() {
-    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🧪️tests/🔣️.json")).unwrap();
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../🧬️schema/🧬️mutations/🎛️change-layer/🧪️tests/🔣️.json")).unwrap();
     let mut document=crate::standards::v1::subsets::any::schema::empty_raster_snapshot();
     let layer=crate::standards::v1::subsets::any::schema::create_layer_of_kind("adjustment");
     let id=layer_node_id(&layer).to_owned();document.layers.push(layer);

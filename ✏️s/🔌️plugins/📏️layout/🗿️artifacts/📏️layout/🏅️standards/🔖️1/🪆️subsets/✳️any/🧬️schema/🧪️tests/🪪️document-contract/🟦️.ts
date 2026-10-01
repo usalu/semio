@@ -1,7 +1,7 @@
 /** 🧪️ Layout parent facets retain the live drawing payload while enforcing its child identity. */
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document-contract/🟦️.ts";
+import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import blobSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️blob/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
@@ -13,7 +13,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import { parseLayoutArtifact } from "../../🟦️.ts";
 import { parseLayoutSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseLayoutDiff } from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
 
 const fields = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFieldsJson", "backgroundDrawing", "referencedModel"] as const;
 

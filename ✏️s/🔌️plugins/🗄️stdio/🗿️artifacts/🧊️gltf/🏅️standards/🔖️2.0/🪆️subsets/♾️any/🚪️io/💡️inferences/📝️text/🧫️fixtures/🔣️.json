@@ -1,0 +1,9 @@
+{
+  "schema": "semio.stdio.gltf.canonical-json-bytes/v1",
+  "cases": [
+    { "id": "empty", "bytes": [], "canonical": "[]" },
+    { "id": "zero", "bytes": [0], "canonical": "[0]" },
+    { "id": "unsigned-boundaries", "bytes": [0,127,128,255], "canonical": "[0,127,128,255]" },
+    { "id": "ordered-sequence", "bytes": [1,2,3,254,255], "canonical": "[1,2,3,254,255]" }
+  ]
+}

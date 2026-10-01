@@ -1,6 +1,6 @@
 {
   "$schema": "./🧬️schema/🔣️.json",
-  "note": "🎚️ The number-control laws every renderer shares: the slider detent law (`snaps` finite, strictly ascending, inside min..=max), the pointer law (clamp, quantize onto the step ladder from min, then pull onto the nearest snap within 3 % of the span, first snap wins a tie), the keyboard law of sliders and number fields (arrows walk the step ladder from min — from 0 without one —, a large arrow ten rungs, and never snap; from an off-ladder detent the first rung beyond it is one rung; page keys jump to the next detent strictly above or below, else ten rungs; Home and End reach the bounds and keep the value without one; an invalid step walks rungs of one; results clamp to the bounds and clean to the decimals of min and step), and the fixed-precision law (the spoken value of a number field or stepper carrying a precision, and exactly `precision` fraction digits, ties away from zero as JavaScript's toFixed at every magnitude, unsigned zero, precision capped at 15, magnitudes from 1e21 fall back to the twelve-digit format). Answered by `snaps_are_valid`/`slider_pointer_value`/`slider_adjacent_snap`/`slider_key_value`/`format_ui_number_fixed`/`round_ui_number` in Rust and their camelCase twins in TypeScript; decimal.js is the third-party rounding oracle.",
+  "note": "🎚️ The number-control laws every renderer shares: the slider detent law (`snaps` finite, strictly ascending, inside min..=max), the axis law (a value's position on a linear or log axis and back, `min`/`max` exactly at the ends), the dial law (a position's needle angle counter-clockwise from three o'clock, the travel's centre at 0, and back, the seam at nine o'clock), the pointer law (clamp, quantize onto the step ladder from min cleaned to its decimals, then pull onto the nearest snap within 3 % of the axis — the log axis for `log` —, first snap wins a tie), the keyboard law of sliders, steppers and number fields (arrows walk one rung of the step ladder from min — from 0 without one —, a large arrow ten rungs, and never stop on a detent off their path; from an off-ladder detent the first rung beyond it is one rung; page keys walk ten rungs and stop on the first detent they reach; a key landing within ladder tolerance of a detent lands on it exactly; Home and End reach the bounds and keep the value without one; an invalid step walks rungs of one; results clamp to the bounds and clean to the decimals of min and step), the display law (shown = stored × displayFactor at the precision or in the twelve-digit format; a typed number whose display text equals a candidate's keeps that exact stored value, any other is rounded to the precision and divided back), the hard-bound law (the limit a typed value crosses, the lower first, an excluded limit refusing itself, the inclusive min/max without declared limits), the fixed-precision law (exactly `precision` fraction digits, ties away from zero as JavaScript's toFixed at every magnitude, unsigned zero, precision capped at 15, magnitudes from 1e21 fall back to the twelve-digit format), the spoken value of a range control (display numbers and text with its unit) and the validator's verdict on documents carrying them (`invalidSnaps`, `invalidNumberRange`: a non-positive display factor, a log travel that is not strictly positive, limits that are inverted or do not admit the key range and every detent). Answered by `snaps_are_valid`/`slider_axis_position`/`slider_axis_value`/`dial_angle`/`dial_position`/`slider_pointer_value`/`slider_adjacent_snap`/`ui_number_key_value`/`ui_number_display_text`/`ui_number_typed_value`/`ui_number_crossed_bound`/`format_ui_number_fixed`/`round_ui_number`/`accessibility_value`/`validate_snapshot` in Rust and their camelCase twins in TypeScript; decimal.js is the third-party rounding oracle, d3-scale (`scaleLog`, `scaleLinear`) the third-party axis and display oracle, and `🧪️s2-w1e-number-controls.py` in the authoring ticket an independent Python implementation that wrote the expectations.",
   "validity": [
     { "case": "ascending-inside", "min": 0, "max": 10, "snaps": [2.5, 5, 7.5], "valid": true },
     { "case": "empty", "min": 0, "max": 10, "snaps": [], "valid": true },
@@ -9,6 +9,26 @@
     { "case": "descending", "min": 0, "max": 10, "snaps": [5, 2.5], "valid": false },
     { "case": "below-min", "min": 0, "max": 10, "snaps": [-1, 5], "valid": false },
     { "case": "above-max", "min": 0, "max": 10, "snaps": [5, 11], "valid": false }
+  ],
+  "axis": [
+    { "case": "linear-midpoint", "value": 5, "min": 0, "max": 10, "scale": "linear", "position": 0.5 },
+    { "case": "log-unit-factor-is-the-middle", "value": 1, "min": 0.1, "max": 10, "scale": "log", "position": 0.4999999999999999 },
+    { "case": "log-quarter-tick", "value": 0.25, "min": 0.1, "max": 10, "scale": "log", "position": 0.19897000433601875 },
+    { "case": "log-half-tick", "value": 0.5, "min": 0.1, "max": 10, "scale": "log", "position": 0.3494850021680093 },
+    { "case": "log-double-tick", "value": 2, "min": 0.1, "max": 10, "scale": "log", "position": 0.6505149978319905 },
+    { "case": "log-quadruple-tick", "value": 4, "min": 0.1, "max": 10, "scale": "log", "position": 0.801029995663981 },
+    { "case": "log-at-min", "value": 0.1, "min": 0.1, "max": 10, "scale": "log", "position": 0 },
+    { "case": "log-at-max", "value": 10, "min": 0.1, "max": 10, "scale": "log", "position": 1 },
+    { "case": "log-clamped-below", "value": 0.05, "min": 0.1, "max": 10, "scale": "log", "position": 0 },
+    { "case": "dial-right-angle", "value": 1.5707963267948966, "min": -3.141592653589793, "max": 3.141592653589793, "scale": "linear", "position": 0.75 }
+  ],
+  "dial": [
+    { "case": "centre-points-at-three-oclock", "position": 0.5, "angle": 0, "back": 0.5 },
+    { "case": "right-angle-points-up", "position": 0.75, "angle": 1.5707963267948966, "back": 0.75 },
+    { "case": "negative-right-angle-points-down", "position": 0.25, "angle": -1.5707963267948966, "back": 0.25 },
+    { "case": "travel-start-on-the-seam", "position": 0, "angle": -3.141592653589793, "back": 0 },
+    { "case": "travel-end-on-the-seam", "position": 1, "angle": 3.141592653589793, "back": 0 },
+    { "case": "one-degree", "position": 0.5027777777777778, "angle": 0.017453292519943233, "back": 0.5027777777777778 }
   ],
   "pointer": [
     { "case": "pulled-onto-snap", "value": 4.8, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5], "expected": 5 },
@@ -20,7 +40,13 @@
     { "case": "continuous-snaps", "value": 3.33, "min": 0, "max": 10, "step": 0, "snaps": [3.3], "expected": 3.3 },
     { "case": "tie-first-snap-wins", "value": 5, "min": 0, "max": 100, "step": 0, "snaps": [4, 6], "expected": 4 },
     { "case": "ladder-starts-at-min", "value": 3.4, "min": 1, "max": 10, "step": 2, "snaps": [], "expected": 3 },
-    { "case": "detent-within-quarter-step", "value": 5.05, "min": 0, "max": 10, "step": 0.5, "snaps": [5.1], "expected": 5.1 }
+    { "case": "detent-within-quarter-step", "value": 5.05, "min": 0, "max": 10, "step": 0.5, "snaps": [5.1], "expected": 5.1 },
+    { "case": "log-pulled-onto-detent", "value": 0.52, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "expected": 0.5 },
+    { "case": "log-outside-radius-keeps-step", "value": 0.7, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "expected": 0.7 },
+    { "case": "log-radius-is-axis-relative", "value": 3.6, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "expected": 4 },
+    { "case": "linear-radius-on-the-same-row", "value": 3.6, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "linear", "expected": 3.6 },
+    { "case": "log-step-cleaned-to-decimals", "value": 0.2549, "min": 0.1, "max": 10, "step": 0.01, "snaps": [], "scale": "log", "expected": 0.25 },
+    { "case": "dial-pulled-onto-right-angle", "value": 1.55, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "scale": "linear", "expected": 1.5707963267948966 }
   ],
   "adjacent": [
     { "case": "page-up", "current": 5, "snaps": [2.5, 5, 7.5], "forward": true, "expected": 7.5 },
@@ -52,7 +78,40 @@
     { "case": "number-field-page-without-detent", "current": 2, "min": null, "max": null, "step": 0.5, "snaps": [], "key": "pageDown", "large": false, "expected": -3 },
     { "case": "number-field-home-without-bound", "current": 2, "min": null, "max": null, "step": 1, "snaps": [], "key": "home", "large": false, "expected": 2 },
     { "case": "number-field-end-to-bound", "current": 2, "min": null, "max": 10, "step": 1, "snaps": [], "key": "end", "large": false, "expected": 10 },
-    { "case": "number-field-clamped-to-min", "current": 1, "min": 0, "max": null, "step": 1, "snaps": [], "key": "decrement", "large": true, "expected": 0 }
+    { "case": "number-field-clamped-to-min", "current": 1, "min": 0, "max": null, "step": 1, "snaps": [], "key": "decrement", "large": true, "expected": 0 },
+    { "case": "dial-arrow-steps-one-degree", "current": 0, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "key": "increment", "large": false, "expected": 0.01745329252 },
+    { "case": "dial-arrow-settles-onto-a-detent", "current": 1.553343034275, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "key": "increment", "large": false, "expected": 1.5707963267948966 },
+    { "case": "dial-arrow-leaves-a-detent", "current": 1.5707963267948966, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "key": "increment", "large": false, "expected": 1.588249619315 },
+    { "case": "dial-page-walks-ten-rungs-before-a-far-detent", "current": 0, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "key": "pageUp", "large": false, "expected": 0.174532925199 },
+    { "case": "dial-page-stops-on-the-detent-it-reaches", "current": 1.483529864195, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "key": "pageUp", "large": false, "expected": 1.5707963267948966 },
+    { "case": "log-page-stops-on-a-detent", "current": 0.45, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "key": "pageUp", "large": false, "expected": 0.5 },
+    { "case": "stepper-page-stops-on-a-detent", "current": 2, "min": null, "max": null, "step": 1, "snaps": [0, 5, 10], "key": "pageUp", "large": false, "expected": 5 },
+    { "case": "stepper-page-down-stops-on-a-detent", "current": 7, "min": null, "max": null, "step": 1, "snaps": [0, 5, 10], "key": "pageDown", "large": false, "expected": 5 }
+  ],
+  "display": [
+    { "case": "radians-as-degrees", "stored": 1.5707963267948966, "factor": 57.29577951308232, "precision": null, "text": "90" },
+    { "case": "negative-half-turn", "stored": -3.141592653589793, "factor": 57.29577951308232, "precision": null, "text": "-180" },
+    { "case": "quarter-right-angle", "stored": 0.7853981633974483, "factor": 57.29577951308232, "precision": null, "text": "45" },
+    { "case": "degrees-at-precision", "stored": 0.1, "factor": 57.29577951308232, "precision": 1, "text": "5.7" },
+    { "case": "without-factor-at-precision", "stored": 2.5, "factor": null, "precision": 2, "text": "2.50" },
+    { "case": "factor-only", "stored": 0.25, "factor": 100, "precision": null, "text": "25" }
+  ],
+  "typed": [
+    { "case": "typed-degrees-keep-the-exact-detent", "typed": 90, "factor": 57.29577951308232, "precision": null, "candidates": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "expected": 1.5707963267948966 },
+    { "case": "typed-degrees-divided-back", "typed": 45, "factor": 57.29577951308232, "precision": null, "candidates": [], "expected": 0.7853981633974483 },
+    { "case": "typed-thirty-degrees", "typed": 30, "factor": 57.29577951308232, "precision": null, "candidates": [0], "expected": 0.5235987755982988 },
+    { "case": "typed-value-rounded-to-precision", "typed": 2.346, "factor": null, "precision": 2, "candidates": [], "expected": 2.35 },
+    { "case": "retyped-display-keeps-the-current-value", "typed": 1, "factor": null, "precision": 2, "candidates": [1.004], "expected": 1.004 },
+    { "case": "typed-percent", "typed": 37.5, "factor": 100, "precision": null, "candidates": [], "expected": 0.375 }
+  ],
+  "limits": [
+    { "case": "negative-factor-crosses-an-excluded-zero", "value": -5, "min": null, "max": null, "limits": { "min": { "value": 0, "exclusive": true } }, "crossed": "min" },
+    { "case": "zero-crosses-its-excluded-bound", "value": 0, "min": null, "max": null, "limits": { "min": { "value": 0, "exclusive": true } }, "crossed": "min" },
+    { "case": "beyond-the-soft-travel-is-admitted", "value": 20, "min": 0.1, "max": 10, "limits": { "min": { "value": 0, "exclusive": true } }, "crossed": null },
+    { "case": "an-included-bound-admits-itself", "value": 0, "min": null, "max": null, "limits": { "min": { "value": 0 } }, "crossed": null },
+    { "case": "above-the-upper-limit", "value": 11, "min": null, "max": null, "limits": { "min": { "value": 0 }, "max": { "value": 10 } }, "crossed": "max" },
+    { "case": "the-travel-is-the-limit-without-limits", "value": 12, "min": 0, "max": 10, "limits": null, "crossed": "max" },
+    { "case": "open-limits-admit-anything", "value": 1000000, "min": -3.141592653589793, "max": 3.141592653589793, "limits": {}, "crossed": null }
   ],
   "fixed": [
     { "case": "binary-tie-away-from-zero", "value": 0.125, "precision": 2, "expected": "0.13", "rounded": 0.13 },
@@ -70,13 +129,17 @@
     { "case": "padded", "value": 3, "precision": 3, "expected": "3.000", "rounded": 3 },
     { "case": "binary-just-below", "value": 2.675, "precision": 2, "expected": "2.67", "rounded": 2.67 },
     { "case": "precision-capped", "value": 0.1, "precision": 20, "expected": "0.100000000000000", "rounded": 0.1 },
-    { "case": "exponent-fallback", "value": 1e21, "precision": 2, "expected": "1e+21", "rounded": 1e21 }
+    { "case": "exponent-fallback", "value": 1e+21, "precision": 2, "expected": "1e+21", "rounded": 1e+21 }
   ],
   "valueTexts": [
     { "case": "number-input-at-precision", "component": { "type": "input", "kind": "number", "value": "2.5", "precision": 2 }, "valueText": "2.50" },
     { "case": "text-input-ignores-precision", "component": { "type": "input", "value": "2.5", "precision": 2 }, "valueText": "2.5" },
     { "case": "stepper-at-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true, "precision": 2 }, "valueText": "2.50" },
-    { "case": "stepper-without-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true }, "valueText": "2.5" }
+    { "case": "stepper-without-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true }, "valueText": "2.5" },
+    { "case": "dial-in-degrees", "component": { "type": "slider", "value": 1.5707963267948966, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "unit": "rad", "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "appearance": "dial", "displayUnit": "°", "displayFactor": 57.29577951308232, "limits": {} }, "valueText": "90 °", "valueNow": 90, "valueMin": -180, "valueMax": 180 },
+    { "case": "log-slider-at-precision", "component": { "type": "slider", "value": 1, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "precision": 2, "limits": { "min": { "value": 0, "exclusive": true, "refusal": "Must be greater than 0" } } }, "valueText": "1.00", "valueNow": 1, "valueMin": 0.1, "valueMax": 10 },
+    { "case": "stepper-with-unit", "component": { "type": "numberStepper", "value": 2, "step": 1, "uniform": true, "snaps": [0, 5, 10], "unit": "mm", "precision": 1 }, "valueText": "2.0 mm", "valueNow": 2, "valueMin": null, "valueMax": null },
+    { "case": "stepper-with-display-factor", "component": { "type": "numberStepper", "value": 0.5, "step": 0.01, "uniform": true, "displayFactor": 100, "displayUnit": "%" }, "valueText": "50 %", "valueNow": 50, "valueMin": null, "valueMax": null }
   ],
   "documents": [
     { "case": "slider-with-snaps", "component": { "type": "slider", "value": 5, "min": 0, "max": 10, "step": 0.5, "snaps": [2.5, 5, 7.5] }, "violation": null },
@@ -85,6 +148,15 @@
     { "case": "number-input-precision", "component": { "type": "input", "kind": "number", "value": "2.50", "precision": 2 }, "violation": null },
     { "case": "number-input-snaps", "component": { "type": "input", "kind": "number", "value": "0", "step": 0.5, "snaps": [-5, 0, 5] }, "violation": null },
     { "case": "number-input-snap-outside-bounds", "component": { "type": "input", "kind": "number", "value": "0", "min": 0, "max": 10, "snaps": [5, 12] }, "violation": "invalidSnaps" },
-    { "case": "stepper-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true, "precision": 2 }, "violation": null }
+    { "case": "stepper-precision", "component": { "type": "numberStepper", "value": 2.5, "step": 0.25, "uniform": true, "precision": 2 }, "violation": null },
+    { "case": "dial-with-snaps", "component": { "type": "slider", "value": 1.5707963267948966, "min": -3.141592653589793, "max": 3.141592653589793, "step": 0.017453292519943295, "unit": "rad", "snaps": [-3.141592653589793, -1.5707963267948966, 0, 1.5707963267948966, 3.141592653589793], "appearance": "dial", "displayUnit": "°", "displayFactor": 57.29577951308232, "limits": {} }, "violation": null },
+    { "case": "log-slider", "component": { "type": "slider", "value": 1, "min": 0.1, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "precision": 2, "limits": { "min": { "value": 0, "exclusive": true, "refusal": "Must be greater than 0" } } }, "violation": null },
+    { "case": "stepper-detents", "component": { "type": "numberStepper", "value": 2, "step": 1, "uniform": true, "snaps": [0, 5, 10], "unit": "mm", "precision": 1 }, "violation": null },
+    { "case": "stepper-detent-outside-bounds", "component": { "type": "numberStepper", "value": 2, "step": 1, "uniform": true, "min": 0, "max": 4, "snaps": [5] }, "violation": "invalidSnaps" },
+    { "case": "log-slider-non-positive-travel", "component": { "type": "slider", "value": 1, "min": 0, "max": 10, "step": 0.01, "snaps": [0.25, 0.5, 1, 2, 4], "scale": "log", "precision": 2 }, "violation": "invalidNumberRange" },
+    { "case": "zero-display-factor", "component": { "type": "slider", "value": 1, "min": 0, "max": 2, "step": 1, "displayFactor": 0 }, "violation": "invalidNumberRange" },
+    { "case": "limits-exclude-the-travel", "component": { "type": "slider", "value": 1, "min": 0, "max": 2, "step": 1, "limits": { "min": { "value": 0, "exclusive": true } } }, "violation": "invalidNumberRange" },
+    { "case": "inverted-limits", "component": { "type": "input", "kind": "number", "value": "1", "limits": { "min": { "value": 5 }, "max": { "value": 1 } } }, "violation": "invalidNumberRange" },
+    { "case": "number-input-with-display-factor", "component": { "type": "input", "kind": "number", "value": "0.5", "displayFactor": 100, "precision": 1 }, "violation": null }
   ]
 }

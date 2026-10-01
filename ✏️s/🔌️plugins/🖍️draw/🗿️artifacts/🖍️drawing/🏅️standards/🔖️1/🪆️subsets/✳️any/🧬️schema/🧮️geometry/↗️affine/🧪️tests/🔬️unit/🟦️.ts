@@ -33,8 +33,8 @@ test("world rotation remains exact inside a nonuniformly scaled parent", () => {
 });
 
 
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
-import mutationSchema from "../../../../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧬️schema/🔣️.json";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
+import mutationSchema from "../../../../../../🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🧬️schema/🔣️.json";
 
 test("transform mutation schema requires shear and accepts exact affine components", () => {
   const validate=semioSchemaAjvV1({allErrors:true}).compile(mutationSchema);

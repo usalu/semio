@@ -544,3 +544,7 @@ semio_framework_plugin::derive_artifact_facets!(
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🪶️sqlite/🦀️.rs"]
+mod sqlite_conformance;
+pub use sqlite_conformance::check_geojson_conformance_controlled;

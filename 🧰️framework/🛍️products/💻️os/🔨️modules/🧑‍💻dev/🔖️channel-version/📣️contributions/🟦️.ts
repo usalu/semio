@@ -1,5 +1,5 @@
 import schema from "./🧬️schema/🔣️.json";
-import { validateJsonSchemaSubset } from "../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 export type ChannelVersionConsumerV1 = Readonly<{
   path: string;

@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { fileURLToPath } from "node:url";
-import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document-contract/🟦️.ts";
+import { assertDocumentContractOracle } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🪪️document/🟦️.ts";
 import ioSchema from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json" with { type: "json" };
 import childSchema from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json" with { type: "json" };
 import semioChildSchema from "../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/🧬️schema/🪆️child/🔣️.json" with { type: "json" };
@@ -10,7 +10,7 @@ import diffSchema from "../../🔺️diff/🔣️.json" with { type: "json" };
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
-import vectors from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import vectors from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
 
 /** 🪪️ Curation owns catalog content references and rejects editor settings in documents. */
 export function testCurationDocumentContractOracle(): void {

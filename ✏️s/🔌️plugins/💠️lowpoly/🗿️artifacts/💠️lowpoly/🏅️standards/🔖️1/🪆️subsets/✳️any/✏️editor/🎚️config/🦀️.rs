@@ -259,7 +259,7 @@ impl Mutation<LowpolyConfig> for LowpolyConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot",
+            owner: "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set",
             semantic_kind: "set-snapshot",
             display_name: "Set Snapshot",
             emoji: "⚙️",

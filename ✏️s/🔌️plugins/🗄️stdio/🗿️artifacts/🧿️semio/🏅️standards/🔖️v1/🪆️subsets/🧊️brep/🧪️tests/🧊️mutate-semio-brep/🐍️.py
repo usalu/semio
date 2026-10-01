@@ -859,7 +859,7 @@ def apply_mutation(document: dict, mutation: dict) -> dict:
     """🧬️ Applies one verb, returning a NEW document. `delete-vertex` CASCADES into every edge that
     starts or ends at it, which is the behaviour the committed `removes-a-corner-vertex-and-cascades-
     into-its-two-incident-edges` vector pins; no other deletion cascades, which is what the committed
-    `🚫️removes-the-closing-edge-and-keeps-its-two-vertices` and `removes-the-only-face-and-leaves-its-
+    `🚫️removes` and `removes-the-only-face-and-leaves-its-
     loop-behind` vectors pin. An unaddressable id is a refusal, never a silent no-op."""
     result = clone(document)
     tag, args = tagged(mutation)

@@ -1,0 +1,5 @@
+{
+ "name":"@semio-tech/flow-flow","version":"0.1.0","description":"Exact persisted Flow parent and composed child snapshot.","type":"module","private":true,"sideEffects":false,"files":["dist"],"types":"./dist/🟦️.d.ts",
+ "scripts":{"build":"bun nx run @semio-tech/flow-flow:build","check":"bun nx run @semio-tech/flow-flow:check","test":"bun nx run @semio-tech/flow-flow:test"},
+ "exports":{".":{"types":"./dist/🟦️.d.ts","import":"./dist/🟦️.js"}},"dependencies":{},"license":"LGPL-3.0-or-later","bundleKind":"library","nx":{"includedScripts":[]}
+}

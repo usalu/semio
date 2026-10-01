@@ -1,0 +1,74 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "vectors"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.history.branch-provenance/v1"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "edit",
+          "valid"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "edit": {
+            "type": "object"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "Edit": {
+      "type": "object",
+      "required": [
+        "id",
+        "line",
+        "forwards",
+        "inverse",
+        "sequenceNumber",
+        "startedAt"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "line": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "forwards": {
+          "type": "array"
+        },
+        "inverse": {
+          "type": "array"
+        },
+        "sequenceNumber": {
+          "type": "integer"
+        },
+        "startedAt": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

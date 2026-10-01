@@ -1,11 +1,5 @@
 {
   "schema": "semio.repo.library.test-level-budgets/v1",
-  "levels": {
-    "fundamental": 15000,
-    "quick": 300000,
-    "long": 900000,
-    "exhaustive": 1800000
-  },
   "packages": {
     "semio-hub-writer": {
       "quick": 600000

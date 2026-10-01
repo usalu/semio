@@ -49,6 +49,9 @@ pub mod knife_mesh_selection;
 //#region 🔖️Constants
 pub const GENERATION_3D_PLAY_APP_ID: &str = "procedural3d-play";
 
+/// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
+pub const GENERATION3D_EDITOR_APP_ID: &str = "s.procedural.generation3d@1/*#editor";
+
 /// 🎯️ An `ActionDescriptor` addressed at this app — the single factory every taxonomy node's chrome
 /// (`🍱️panes/*`, `☑️options/*`) builds its `on_change`/item actions with.
 pub fn generation3d_action(action: &str, args: Option<semio_framework::DslValue>) -> ActionDescriptor {
@@ -1499,7 +1502,7 @@ impl Generation3dContributionsJobFactoryProofs {
 /// and their id prefix, so this one generic helper replaces two copies of the same ~20-line literal.
 fn generation3d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

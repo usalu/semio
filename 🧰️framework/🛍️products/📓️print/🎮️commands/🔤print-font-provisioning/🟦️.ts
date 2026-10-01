@@ -1,4 +1,4 @@
-import { BundleScript } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { stagePrintFonts } from "../../🔨️modules/🔤print-font-catalog/🟦️.ts";
 
 //#region 🔤️PrintFontProvisioning

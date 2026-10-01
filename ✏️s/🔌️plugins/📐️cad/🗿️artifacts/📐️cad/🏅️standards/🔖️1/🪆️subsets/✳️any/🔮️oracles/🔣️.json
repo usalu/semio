@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "hides-the-shape-reference",
-              "directoryName": "🙈️hides-the-shape-reference"
+              "directoryName": "🙈️hides"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "unlocks-the-shape-reference",
-              "directoryName": "🔓️unlocks-the-shape-reference"
+              "directoryName": "🔓️unlocks"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "widens-the-shape-reference-plane",
-              "directoryName": "↔️widens-the-shape-reference-plane"
+              "directoryName": "↔️widens"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-building-slot",
-              "directoryName": "🏢️rehandles-the-occupied-building-slot"
+              "directoryName": "🏢️rehandles"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-energy-slot",
-              "directoryName": "⚡️rehandles-the-occupied-energy-slot"
+              "directoryName": "⚡️rehandles"
             }
           ]
         },
@@ -142,18 +142,18 @@
           "scenarios": [
             {
               "id": "rehandles-the-occupied-shape-slot",
-              "directoryName": "🧱️rehandles-the-occupied-shape-slot"
+              "directoryName": "🧱️rehandles"
             }
           ]
         },
         {
           "mutationId": "create-structure-classic-model",
-          "sourceMutationDirectoryName": "🏛️create-structure-classic-model",
-          "mutationDirectoryName": "🏛️create-structure-classic-model",
+          "sourceMutationDirectoryName": "🏛️create-structure-classic",
+          "mutationDirectoryName": "🏛️create-structure-classic",
           "scenarios": [
             {
               "id": "rehandles-the-occupied-structure-classic-slot",
-              "directoryName": "🏛️rehandles-the-occupied-structure-classic-slot"
+              "directoryName": "🏛️rehandles"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "vacates-the-building-slot",
-              "directoryName": "🏚️vacates-the-building-slot"
+              "directoryName": "🏚️vacates"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "vacates-the-energy-slot",
-              "directoryName": "🔌️vacates-the-energy-slot"
+              "directoryName": "🔌️vacates"
             }
           ]
         },
@@ -219,7 +219,7 @@
           "scenarios": [
             {
               "id": "vacates-the-structure-classic-slot",
-              "directoryName": "🏚️vacates-the-structure-classic-slot"
+              "directoryName": "🏚️vacates"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "moves-the-shape-reference-off-origin",
-              "directoryName": "📍️moves-the-shape-reference-off-origin"
+              "directoryName": "📍️moves"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "reattaches-the-shape-reference-to-a-new-plan",
-              "directoryName": "🖼️reattaches-the-shape-reference-to-a-new-plan"
+              "directoryName": "🖼️reattaches"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "swaps-the-shape-reference-list",
-              "directoryName": "🔄️swaps-the-shape-reference-list"
+              "directoryName": "🔄️swaps"
             }
           ]
         }

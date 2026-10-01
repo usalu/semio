@@ -133,3 +133,74 @@ async fn replace_text_refuses_text_that_is_not_the_artifacts_dsl() {
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
 //#endregion 🪟️KitVerbLaws
+
+//#region 🧮️NetLeafLaws
+const NET_LEAVES: &str = include_str!("../../../🧫️fixtures/🧫️net-leaves/🔣️.json");
+
+/// 🧾️ A leaf as the net-leaves corpus names it: kind and the node path it addresses (the parent path plus the child index for
+/// an insert or a remove).
+fn net_leaf_summary(leaf: &HtmlMutation) -> serde_json::Value {
+    let child = |parent: &[usize], index: usize| parent.iter().copied().chain(std::iter::once(index)).collect::<Vec<_>>();
+    let at = match leaf {
+        HtmlMutation::InsertNode(leaf) => child(&leaf.parent, leaf.index),
+        HtmlMutation::RemoveNode(leaf) => child(&leaf.parent, leaf.index),
+        HtmlMutation::SetElementName(leaf) => leaf.path.clone(),
+        HtmlMutation::SetAttribute(leaf) => leaf.path.clone(),
+        HtmlMutation::SetText(leaf) => leaf.path.clone(),
+        HtmlMutation::SetComment(leaf) => leaf.path.clone(),
+        HtmlMutation::SetRawText(leaf) => leaf.path.clone(),
+        HtmlMutation::SetDoctype(_) | HtmlMutation::SetSnapshot(_) => Vec::new(),
+    };
+    serde_json::json!({ "kind": protocol::SemanticMutation::<HtmlSnapshot>::semantics(leaf).kind, "at": at })
+}
+
+/// ⚖️ LAW (corpus `🧫️fixtures/🧫️net-leaves`): an applied HTML text is exactly the corpus's net node leaves; applied in order
+/// they carry the committed document to exactly the applied text, and every leaf undoes with ONE row of its own, so the edit
+/// reverts leaf by leaf back to the committed document.
+#[test]
+fn an_applied_text_is_its_net_node_leaves_and_they_reach_exactly_that_text() {
+    let corpus: serde_json::Value = serde_json::from_str(NET_LEAVES).expect("net-leaves corpus");
+    for case in corpus["cases"].as_array().expect("cases") {
+        let id = case["id"].as_str().expect("id");
+        let parse = |field: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(case[field].as_str().expect("text")).unwrap_or_else(|error| panic!("{id}: {field} parses: {error:?}"));
+        let (base, next) = (parse("before"), parse("after"));
+        let leaves = html_net_mutations(&base, &next);
+        assert_eq!(serde_json::Value::Array(leaves.iter().map(net_leaf_summary).collect()), case["leaves"], "{id}: the net leaves");
+        let mut state = base.clone();
+        let mut undo = Vec::new();
+        for leaf in &leaves {
+            let inverse = protocol::Mutation::inverse(leaf, &state);
+            assert_eq!(inverse.len(), 1, "{id}: {leaf:?} undoes with exactly one row");
+            undo.extend(inverse);
+            assert!(crate::standards::v5::subsets::any::schema::mutations::apply_html_mutation(&mut state, leaf).messages().iter().all(|message| message.level != protocol::Severity::Fatal), "{id}: {leaf:?} applies");
+        }
+        assert_eq!(state, next, "{id}: the net leaves reach exactly the applied text");
+        for leaf in undo.iter().rev() {
+            crate::standards::v5::subsets::any::schema::mutations::apply_html_mutation(&mut state, leaf);
+        }
+        assert_eq!(state, base, "{id}: undoing every leaf restores the committed document");
+    }
+}
+
+/// ⚖️ LAW: the kit verb applies the HTML source the main window edits as ONE edit of its net leaves: one changed text is one
+/// `set-text` row labelled from the leaf, the document reads exactly the applied text, and ONE undo restores it.
+#[semio_framework_async_macros::async_test]
+async fn one_applied_html_text_is_one_edit_of_its_net_leaves() {
+    use semio_framework_plugin::PluginApp;
+    let before = "<html><head><title>T</title></head><body><p>One</p></body></html>";
+    let after = "<html><head><title>T</title></head><body><p>Uno</p></body></html>";
+    let parse = |text: &str| <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("html parses");
+    let mut app = kit_fixture_holding(&parse(before)).await;
+    let edits = app.edit_transactions().len();
+    dispatch_settled(&mut app, "textEdit", &[("text", after)]).await.expect("the applied html settles");
+    assert_eq!(app.snapshot().expect("html snapshot"), parse(after));
+    assert_eq!(app.edit_transactions().len(), edits + 1, "one Apply, one edit");
+    let rows: Vec<_> = app.history_snapshot().await.expect("history").upserts.into_iter().filter(|row| row.edit_id.is_some()).collect();
+    let row = rows.iter().max_by_key(|row| row.seq).expect("the applied text's row");
+    assert_eq!(row.mutations.len(), 1, "one changed text is one net leaf: {:?}", row.mutations);
+    assert_eq!(row.mutations[0].label.resolve(protocol::Terminology::Native, protocol::Locale::En), protocol::SemanticMutation::<HtmlSnapshot>::label(&html_net_mutations(&parse(before), &parse(after))[0]).resolve(protocol::Terminology::Native, protocol::Locale::En));
+    semio_framework_plugin::artifact_app_laws::settle_history_verb(&mut app, "undo", semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await;
+    assert_eq!(app.snapshot().expect("html snapshot"), parse(before), "one undo restores the committed document");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+}
+//#endregion 🧮️NetLeafLaws

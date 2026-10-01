@@ -205,12 +205,14 @@ async fn frame_rows_declare_their_granularity_while_the_tree_binds_the_one_inter
     for row in &frames.children {
         assert!(row.bindings.iter().next().is_none(), "a pick row binds no action of its own: {}", row.key.as_str());
         let Component::TreeItem(props) = &row.component else { panic!("tree item") };
+        assert!(props.target.is_none(), "a pick row carries no target of its own: {}", row.key.as_str());
         assert_eq!(props.granularity.as_ref().map(|text| text.as_str()), Some(LAYOUT_GRANULARITY_ELEMENT));
     }
 
     let page = section_node(&tree, LAYOUT_DOCUMENT_SECTIONS[2]).children.get(0).expect("a page row");
-    assert_eq!(page.bindings.iter().next().expect("a page row keeps its own action").action.name.as_str(), "setActivePage");
     let Component::TreeItem(props) = &page.component else { panic!("tree item") };
+    let target = props.target.as_ref().expect("a page row keeps its own action as its row target");
+    assert_eq!((target.scope.as_str(), target.activation.as_ref().map(|verb| verb.as_str())), (LAYOUT_PLAY_APP_ID, Some("setActivePage")), "the page row activates setActivePage");
     assert!(props.granularity.is_none(), "a page is not a target of the elements domain");
 }
 //#endregion 🪟️WindowLaws

@@ -255,7 +255,7 @@ fn footprint(ctx: &Context) -> Result<Outcome, String> {
 /// the committed file is pretty-printed and the writer is compact, so a handler that returned the
 /// input unread would be caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "shared://🧬️mutations/🗑️delete-generation/removes-the-selected-generation-2-and-falls-back/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/🗑️delete/removes-the-selected-generation-2-and-falls-back/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

@@ -98,6 +98,11 @@ async fn edit_rows(app: &mut Replica) -> Vec<HistoryEntry> {
     rows
 }
 
+/// 🔎️ Every edit row as `seq action edit transaction`, for a failing count to name the rows it saw.
+fn describe(rows: &[HistoryEntry]) -> Vec<String> {
+    rows.iter().map(|row| format!("{} {} {:?} {:?}", row.seq, row.action_id, row.edit_id, row.transaction.as_ref().map(|transaction| &transaction.id))).collect()
+}
+
 fn committed(app: &Replica) -> String {
     writer_text(&app.snapshot().expect("projection"))
 }
@@ -147,7 +152,7 @@ async fn one_typing_run_is_one_edit_and_one_row_with_its_transaction() {
     end_run(&mut app, "idle", now + 750).await;
     assert_eq!(committed(&app), "Doc: hello\nend");
     let rows = edit_rows(&mut app).await;
-    assert_eq!(rows.len(), rows_before + 1, "one run, one edit, one row");
+    assert_eq!(rows.len(), rows_before + 1, "one run, one edit, one row: {:?}", describe(&rows));
     let row = rows.last().expect("the run's row");
     let transaction = row.transaction.as_ref().expect("the row is the run's tool transaction");
     assert!(transaction.id.starts_with("tx-") && transaction.tool.ends_with("#textSplice"), "{transaction:?}");

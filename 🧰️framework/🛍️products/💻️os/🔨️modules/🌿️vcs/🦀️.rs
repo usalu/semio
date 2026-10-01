@@ -193,7 +193,395 @@ pub struct Alternative {
     pub checkpoint_ids: Vec<String>,
 }
 
-pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = 64;
+/// 📄 Slots in one history page. One page is the largest contiguous slot allocation.
+pub const ARTIFACT_HISTORY_PAGE_SLOTS: usize = 64;
+/// 📄 Directory pages addressed by one chunk. The chunk is one pointer array and is never reallocated.
+pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = 512;
+/// 📄 Page size of every artifact history ledger. The name is the page, not a session ceiling.
+pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = ARTIFACT_HISTORY_PAGE_SLOTS;
+const ARTIFACT_HISTORY_CONTIGUOUS_CEILING: usize = 64 * 1024;
+
+/// 📄 Dense append/pop catalog paged so a full page opens another fixed page instead of growing one buffer.
+pub struct HistoryPageStack<T> {
+    head: Option<Box<HistoryPageChunk<T>>>,
+    pages: u32,
+    len: usize,
+}
+
+struct HistoryPageChunk<T> {
+    pages: [Option<Box<HistoryValuePage<T>>>; ARTIFACT_HISTORY_DIRECTORY_PAGES],
+    count: u16,
+    next: Option<Box<HistoryPageChunk<T>>>,
+}
+
+struct HistoryValuePage<T> {
+    slots: Box<[Option<T>]>,
+}
+
+impl<T> HistoryPageChunk<T> {
+    fn blank() -> Self {
+        Self { pages: std::array::from_fn(|_| None), count: 0, next: None }
+    }
+}
+
+fn history_value_page<T>() -> Box<[Option<T>]> {
+    let bytes = std::mem::size_of::<Option<T>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history catalog page must stay under the 64 KiB contiguous ceiling");
+    let mut slots = Vec::new();
+    slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history catalog page allocation");
+    slots.resize_with(ARTIFACT_HISTORY_PAGE_SLOTS, || None);
+    slots.into_boxed_slice()
+}
+
+fn history_place_page<T>(head: &mut Option<Box<HistoryPageChunk<T>>>, page_index: usize, page: Box<HistoryValuePage<T>>) {
+    if head.is_none() {
+        *head = Some(Box::new(HistoryPageChunk::blank()));
+    }
+    let chunk = history_descend_chunk(head.as_mut().expect("history catalog chunk"), page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    let offset = page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+    chunk.pages[offset] = Some(page);
+    chunk.count = chunk.count.saturating_add(1);
+}
+
+fn history_descend_chunk<T>(chunk: &mut HistoryPageChunk<T>, remaining: usize) -> &mut HistoryPageChunk<T> {
+    if remaining == 0 {
+        return chunk;
+    }
+    if chunk.next.is_none() {
+        chunk.next = Some(Box::new(HistoryPageChunk::blank()));
+    }
+    history_descend_chunk(chunk.next.as_mut().expect("history catalog chunk link"), remaining - 1)
+}
+
+fn history_page<'a, T>(head: &'a HistoryPageChunk<T>, page_index: usize) -> &'a HistoryValuePage<T> {
+    let chunk = history_chunk_ref(head, page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    chunk.pages[page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref().expect("history catalog page")
+}
+
+fn history_page_mut<'a, T>(head: &'a mut HistoryPageChunk<T>, page_index: usize) -> &'a mut HistoryValuePage<T> {
+    let chunk = history_descend_chunk(head, page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+    chunk.pages[page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_mut().expect("history catalog page")
+}
+
+fn history_chunk_ref<T>(chunk: &HistoryPageChunk<T>, remaining: usize) -> &HistoryPageChunk<T> {
+    if remaining == 0 { chunk } else { history_chunk_ref(chunk.next.as_ref().expect("history catalog chunk link"), remaining - 1) }
+}
+
+impl<T> HistoryPageStack<T> {
+    pub fn new() -> Self {
+        Self::try_new().expect("history catalog first page")
+    }
+
+    pub fn try_new() -> Result<Self, &'static str> {
+        let mut stack = Self { head: None, pages: 0, len: 0 };
+        stack.open_page().map_err(|_| "history catalog page allocation failed")?;
+        Ok(stack)
+    }
+
+    fn open_page(&mut self) -> Result<(), ()> {
+        if self.pages == u32::MAX {
+            return Err(());
+        }
+        let page = Box::new(HistoryValuePage { slots: history_value_page() });
+        history_place_page(&mut self.head, self.pages as usize, page);
+        self.pages += 1;
+        Ok(())
+    }
+
+    fn value_page(&self, page: usize) -> &HistoryValuePage<T> {
+        history_page(self.head.as_ref().expect("history catalog owns its first page"), page)
+    }
+
+    fn value_page_mut(&mut self, page: usize) -> &mut HistoryValuePage<T> {
+        history_page_mut(self.head.as_mut().expect("history catalog owns its first page"), page)
+    }
+
+    pub fn len(&self) -> usize {
+        self.len
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.len == 0
+    }
+
+    pub fn capacity(&self) -> usize {
+        self.pages as usize * ARTIFACT_HISTORY_PAGE_SLOTS
+    }
+
+    /// ➕ True while another entry can open a fresh page or fill an allocated slot.
+    pub fn admits_one(&self) -> bool {
+        self.len < self.capacity() || self.pages < u32::MAX
+    }
+
+    pub fn push(&mut self, value: T) {
+        if self.try_push(value).is_err() { panic!("history catalog admits the entry"); }
+    }
+
+    pub fn try_push(&mut self, value: T) -> Result<(), T> {
+        if self.len == self.capacity() && self.open_page().is_err() {
+            return Err(value);
+        }
+        let index = self.len;
+        self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS] = Some(value);
+        self.len += 1;
+        Ok(())
+    }
+
+    pub fn pop(&mut self) -> Option<T> {
+        if self.len == 0 {
+            return None;
+        }
+        self.len -= 1;
+        let index = self.len;
+        self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].take()
+    }
+
+    pub fn remove(&mut self, index: usize) -> T {
+        assert!(index < self.len, "history catalog index outside the live order");
+        let removed = self.value_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].take().expect("occupied history catalog slot");
+        for cursor in index + 1..self.len {
+            let next = self.value_page_mut(cursor / ARTIFACT_HISTORY_PAGE_SLOTS).slots[cursor % ARTIFACT_HISTORY_PAGE_SLOTS].take().expect("occupied history catalog slot");
+            let previous = cursor - 1;
+            self.value_page_mut(previous / ARTIFACT_HISTORY_PAGE_SLOTS).slots[previous % ARTIFACT_HISTORY_PAGE_SLOTS] = Some(next);
+        }
+        self.len -= 1;
+        removed
+    }
+
+    pub fn get(&self, index: usize) -> Option<&T> {
+        (index < self.len).then(|| self.value_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].as_ref().expect("occupied history catalog slot"))
+    }
+
+    pub fn last(&self) -> Option<&T> {
+        self.len.checked_sub(1).and_then(|index| self.get(index))
+    }
+
+    pub fn contains(&self, value: &T) -> bool
+    where
+        T: PartialEq,
+    {
+        self.iter().any(|item| item == value)
+    }
+
+    pub fn iter(&self) -> HistoryPageIter<'_, T> {
+        HistoryPageIter { stack: self, index: 0, end: self.len }
+    }
+
+    pub fn extend<I: IntoIterator<Item = T>>(&mut self, values: I) {
+        for value in values {
+            self.push(value);
+        }
+    }
+
+    pub fn starts_with(&self, prefix: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        prefix.len() <= self.len && self.iter().zip(prefix.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn is_prefix_of_slice(&self, full: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        self.len <= full.len() && self.iter().zip(full.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn eq_slice(&self, other: &[T]) -> bool
+    where
+        T: PartialEq,
+    {
+        self.len == other.len() && self.iter().zip(other.iter()).all(|(item, expected)| item == expected)
+    }
+
+    pub fn to_vec(&self) -> Vec<T>
+    where
+        T: Clone,
+    {
+        self.iter().cloned().collect()
+    }
+
+    pub fn cloned_from(&self, from: usize) -> Vec<T>
+    where
+        T: Clone,
+    {
+        self.iter().skip(from).cloned().collect()
+    }
+}
+
+impl<T> Default for HistoryPageStack<T> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl<T: Clone> Clone for HistoryPageStack<T> {
+    fn clone(&self) -> Self {
+        let mut cloned = Self::new();
+        while cloned.pages < self.pages {
+            cloned.open_page().expect("cloned history catalog page");
+        }
+        for item in self.iter() {
+            cloned.push(item.clone());
+        }
+        cloned
+    }
+}
+
+impl<T: PartialEq> PartialEq for HistoryPageStack<T> {
+    fn eq(&self, other: &Self) -> bool {
+        self.len == other.len && self.iter().zip(other.iter()).all(|(left, right)| left == right)
+    }
+}
+
+impl<T: Eq> Eq for HistoryPageStack<T> {}
+
+impl<T: PartialEq> PartialEq<[T]> for HistoryPageStack<T> {
+    fn eq(&self, other: &[T]) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq, const N: usize> PartialEq<[T; N]> for HistoryPageStack<T> {
+    fn eq(&self, other: &[T; N]) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<Vec<T>> for HistoryPageStack<T> {
+    fn eq(&self, other: &Vec<T>) -> bool {
+        self.eq_slice(other)
+    }
+}
+
+impl<T: PartialEq> PartialEq<HistoryPageStack<T>> for Vec<T> {
+    fn eq(&self, other: &HistoryPageStack<T>) -> bool {
+        other.eq_slice(self)
+    }
+}
+
+impl<T: std::hash::Hash> std::hash::Hash for HistoryPageStack<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.len.hash(state);
+        for item in self.iter() {
+            item.hash(state);
+        }
+    }
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for HistoryPageStack<T> {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_list().entries(self.iter()).finish()
+    }
+}
+
+impl<T> FromIterator<T> for HistoryPageStack<T> {
+    fn from_iter<I: IntoIterator<Item = T>>(values: I) -> Self {
+        let mut stack = Self::new();
+        stack.extend(values);
+        stack
+    }
+}
+
+impl<T> From<Vec<T>> for HistoryPageStack<T> {
+    fn from(values: Vec<T>) -> Self {
+        let mut stack = Self::new();
+        stack.extend(values);
+        stack
+    }
+}
+
+impl<T> std::ops::Index<usize> for HistoryPageStack<T> {
+    type Output = T;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get(index).expect("history catalog index outside the live order")
+    }
+}
+
+impl<'a, T> IntoIterator for &'a HistoryPageStack<T> {
+    type Item = &'a T;
+    type IntoIter = HistoryPageIter<'a, T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}
+
+pub struct HistoryPageIter<'a, T> {
+    stack: &'a HistoryPageStack<T>,
+    index: usize,
+    end: usize,
+}
+
+impl<'a, T> Iterator for HistoryPageIter<'a, T> {
+    type Item = &'a T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.index >= self.end {
+            return None;
+        }
+        let item = self.stack.get(self.index)?;
+        self.index += 1;
+        Some(item)
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let remaining = self.end.saturating_sub(self.index);
+        (remaining, Some(remaining))
+    }
+}
+
+impl<T> DoubleEndedIterator for HistoryPageIter<'_, T> {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        if self.index >= self.end {
+            return None;
+        }
+        self.end -= 1;
+        self.stack.get(self.end)
+    }
+}
+
+impl<T> std::iter::FusedIterator for HistoryPageIter<'_ , T> {}
+
+impl<T> ExactSizeIterator for HistoryPageIter<'_, T> {}
+
+impl<T: ToValue> ToValue for HistoryPageStack<T> {
+    fn to_value(&self) -> DslValue {
+        DslValue::Array(self.iter().map(ToValue::to_value).collect())
+    }
+}
+
+impl<T: FromValue> FromValue for HistoryPageStack<T> {
+    fn from_value(value: DslValue) -> Result<Self, ValueError> {
+        let values = Vec::<T>::from_value(value)?;
+        let mut stack = Self::try_new().map_err(ValueError::new)?;
+        for value in values {
+            stack.try_push(value).map_err(|_| ValueError::new("history catalog address space exhausted"))?;
+        }
+        Ok(stack)
+    }
+}
+
+/// 📭 Empty when the live order is empty. Resident pages are not part of the wire.
+pub fn history_id_stack_is_empty(stack: &HistoryPageStack<String>) -> bool {
+    stack.is_empty()
+}
+
+#[cfg(test)]
+impl<T: serde::Serialize> serde::Serialize for HistoryPageStack<T> {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_seq(self.iter())
+    }
+}
+
+#[cfg(test)]
+impl<'de, T: serde::Deserialize<'de>> serde::Deserialize<'de> for HistoryPageStack<T> {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let values = Vec::<T>::deserialize(deserializer)?;
+        Ok(values.into())
+    }
+}
 
 //#region 🧩️GroupHistoryVisibility
 /// 🪟 A shared decision bit used by prepared read roots; only its unique publisher can switch it.
@@ -261,8 +649,8 @@ impl ArtifactGroupVisibility {
 
 struct ArtifactHistoryGroupSuffix {
     visibility: std::sync::Arc<ArtifactGroupVisibility>,
-    head: Option<u16>,
-    tail: Option<u16>,
+    head: Option<u32>,
+    tail: Option<u32>,
     len: usize,
 }
 
@@ -273,32 +661,74 @@ mod group_history_visibility_tests;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ArtifactHistoryKey {
-    pub index: u16,
+    pub index: u32,
     pub generation: u32,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct ArtifactHistoryReservation {
     authority: usize,
-    index: u16,
+    index: u32,
     generation: u32,
 }
 
 struct ArtifactHistorySlot<T> {
     generation: u32,
-    previous: Option<u16>,
-    next: Option<u16>,
-    free_next: Option<u16>,
+    previous: Option<u32>,
+    next: Option<u32>,
+    free_next: Option<u32>,
     value: Option<T>,
 }
 
-/// 📚️ Fixed-capacity generation-keyed history authority. Live entries form one stable
-/// linked order; removed slots are tombstoned and reused only after their generation advances.
+struct ArtifactHistorySlotPage<T> {
+    slots: Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]>,
+}
+
+struct ArtifactHistoryPageChunk<T> {
+    pages: [Option<Box<ArtifactHistorySlotPage<T>>>; ARTIFACT_HISTORY_DIRECTORY_PAGES],
+    count: u16,
+    next: Option<Box<ArtifactHistoryPageChunk<T>>>,
+}
+
+impl<T> ArtifactHistoryPageChunk<T> {
+    fn blank() -> Self {
+        Self { pages: std::array::from_fn(|_| None), count: 0, next: None }
+    }
+}
+
+fn artifact_history_slot_page<T>() -> Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]> {
+    let bytes = std::mem::size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history ledger page must stay under the 64 KiB contiguous ceiling");
+    let mut slots = Vec::new();
+    slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history ledger page allocation");
+    slots.resize_with(ARTIFACT_HISTORY_PAGE_SLOTS, std::mem::MaybeUninit::uninit);
+    slots.into_boxed_slice()
+}
+
+fn artifact_history_descend<'a, T>(chunk: &'a mut ArtifactHistoryPageChunk<T>, remaining: usize) -> &'a mut ArtifactHistoryPageChunk<T> {
+    if remaining == 0 {
+        return chunk;
+    }
+    if chunk.next.is_none() {
+        chunk.next = Some(Box::new(ArtifactHistoryPageChunk::blank()));
+    }
+    artifact_history_descend(chunk.next.as_mut().expect("history ledger chunk link"), remaining - 1)
+}
+
+fn artifact_history_chunk<'a, T>(chunk: &'a ArtifactHistoryPageChunk<T>, remaining: usize) -> &'a ArtifactHistoryPageChunk<T> {
+    if remaining == 0 { chunk } else { artifact_history_chunk(chunk.next.as_ref().expect("history ledger chunk link"), remaining - 1) }
+}
+
+/// 📚️ Paged generation-keyed history authority. Live entries form one stable linked order;
+/// removed slots are tombstoned and reused only after their generation advances. A full page
+/// opens another fixed page instead of refusing the entry.
 pub struct ArtifactHistoryLedger<T> {
-    slots: std::mem::ManuallyDrop<Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>>,
-    head: Option<u16>,
-    tail: Option<u16>,
-    free_head: Option<u16>,
+    pages: std::mem::ManuallyDrop<Option<Box<ArtifactHistoryPageChunk<T>>>>,
+    page_count: u32,
+    initialized: u32,
+    head: Option<u32>,
+    tail: Option<u32>,
+    free_head: Option<u32>,
     reservation: Option<ArtifactHistoryReservation>,
     group: Option<ArtifactHistoryGroupSuffix>,
     len: usize,
@@ -320,19 +750,56 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 
 impl<T> ArtifactHistoryLedger<T> {
     pub fn new() -> Self {
-        Self { slots: std::mem::ManuallyDrop::new(Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY)), head: None, tail: None, free_head: None, reservation: None, group: None, len: 0 }
+        let mut ledger = Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0 };
+        ledger.open_page().expect("history ledger first page");
+        ledger
     }
 
-    fn slot(&self, index: u16) -> &ArtifactHistorySlot<T> {
-        unsafe { self.slots[index as usize].assume_init_ref() }
+    fn open_page(&mut self) -> Result<(), ()> {
+        if self.page_count == u32::MAX {
+            return Err(());
+        }
+        let page = Box::new(ArtifactHistorySlotPage { slots: artifact_history_slot_page() });
+        let page_index = self.page_count as usize;
+        if self.pages.is_none() {
+            *self.pages = Some(Box::new(ArtifactHistoryPageChunk::blank()));
+        }
+        {
+            let chunk = artifact_history_descend(self.pages.as_mut().expect("history ledger chunk"), page_index / ARTIFACT_HISTORY_DIRECTORY_PAGES);
+            let offset = page_index % ARTIFACT_HISTORY_DIRECTORY_PAGES;
+            chunk.pages[offset] = Some(page);
+            chunk.count = chunk.count.saturating_add(1);
+        }
+        self.page_count += 1;
+        Ok(())
     }
 
-    fn slot_mut(&mut self, index: u16) -> &mut ArtifactHistorySlot<T> {
-        unsafe { self.slots[index as usize].assume_init_mut() }
+    fn slot_page(&self, page: usize) -> &ArtifactHistorySlotPage<T> {
+        let head = self.pages.as_ref().expect("history ledger owns its first page");
+        artifact_history_chunk(head, page / ARTIFACT_HISTORY_DIRECTORY_PAGES).pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_ref().expect("history ledger page")
+    }
+
+    fn slot_page_mut(&mut self, page: usize) -> &mut ArtifactHistorySlotPage<T> {
+        let head = self.pages.as_mut().expect("history ledger owns its first page");
+        artifact_history_descend(head, page / ARTIFACT_HISTORY_DIRECTORY_PAGES).pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].as_mut().expect("history ledger page")
+    }
+
+    fn slot(&self, index: u32) -> &ArtifactHistorySlot<T> {
+        let index = index as usize;
+        unsafe { self.slot_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_ref() }
+    }
+
+    fn slot_mut(&mut self, index: u32) -> &mut ArtifactHistorySlot<T> {
+        let index = index as usize;
+        unsafe { self.slot_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_mut() }
     }
 
     fn authority(&self) -> usize {
-        self.slots.as_ptr() as usize
+        self.pages.as_ref().map(|chunk| chunk.as_ref() as *const ArtifactHistoryPageChunk<T> as usize).unwrap_or(0)
+    }
+
+    fn allocated_slots(&self) -> usize {
+        self.page_count as usize * ARTIFACT_HISTORY_PAGE_SLOTS
     }
 
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
@@ -350,10 +817,10 @@ impl<T> ArtifactHistoryLedger<T> {
             let generation = self.slot(index).generation.checked_add(1).ok_or(ArtifactHistoryReservationFault::GenerationExhausted)?;
             (index, generation)
         } else {
-            if self.slots.len() == ARTIFACT_HISTORY_LEDGER_CAPACITY {
+            if self.initialized as usize == self.allocated_slots() && self.open_page().is_err() {
                 return Err(ArtifactHistoryReservationFault::Capacity);
             }
-            (self.slots.len() as u16, 1)
+            (self.initialized, 1)
         };
         let reservation = ArtifactHistoryReservation { authority: self.authority(), index, generation };
         self.reservation = Some(ArtifactHistoryReservation { authority: reservation.authority, index, generation });
@@ -381,7 +848,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(key)
     }
 
-    fn insert_owned_slot(&mut self, reservation: ArtifactHistoryReservation, value: T, previous: Option<u16>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
+    fn insert_owned_slot(&mut self, reservation: ArtifactHistoryReservation, value: T, previous: Option<u32>) -> Result<ArtifactHistoryKey, (ArtifactHistoryReservation, T)> {
         if reservation.authority != self.authority() || self.reservation.as_ref() != Some(&reservation) {
             return Err((reservation, value));
         }
@@ -397,8 +864,10 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.next = None;
             slot.free_next = None;
             slot.value = Some(value);
-        } else if index as usize == self.slots.len() && self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY {
-            self.slots.push(std::mem::MaybeUninit::new(ArtifactHistorySlot { generation, previous, next: None, free_next: None, value: Some(value) }));
+        } else if index == self.initialized && (index as usize) < self.allocated_slots() {
+            let offset = index as usize;
+            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, previous, next: None, free_next: None, value: Some(value) });
+            self.initialized += 1;
         } else {
             return Err((reservation, value));
         }
@@ -476,7 +945,7 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(Some(value))
     }
 
-    fn visible_bounds(&self) -> (Option<u16>, Option<u16>, usize) {
+    fn visible_bounds(&self) -> (Option<u32>, Option<u32>, usize) {
         match self.group.as_ref().filter(|group| group.visibility.committed()) {
             Some(group) => (self.head.or(group.head), group.tail.or(self.tail), self.len + group.len),
             None => (self.head, self.tail, self.len),
@@ -504,14 +973,11 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn try_from_preflighted(values: Vec<T>) -> Result<Self, Vec<T>> {
-        if values.len() > ARTIFACT_HISTORY_LEDGER_CAPACITY {
-            return Err(values);
-        }
         let mut ledger = Self::new();
         let mut pending = values.into_iter();
         while let Some(value) = pending.next() {
             if let Err(value) = ledger.try_push(value) {
-                let mut rejected = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY + 1);
+                let mut rejected = Vec::new();
                 while let Some(established) = ledger.pop() {
                     rejected.push(established);
                 }
@@ -528,7 +994,7 @@ impl<T> ArtifactHistoryLedger<T> {
         if self.reservation.is_some() || self.group.is_some() {
             return Err(key);
         }
-        if key.index as usize >= self.slots.len() {
+        if key.index >= self.initialized {
             return Err(key);
         }
         let slot = self.slot(key.index);
@@ -630,11 +1096,13 @@ impl<T> ArtifactHistoryLedger<T> {
             vacancies += 1;
             free = slot.free_next;
         }
-        vacancies + ARTIFACT_HISTORY_LEDGER_CAPACITY.saturating_sub(self.slots.len())
+        let unused = self.allocated_slots().saturating_sub(self.initialized as usize);
+        let next_page = if unused == 0 && self.page_count < u32::MAX { ARTIFACT_HISTORY_PAGE_SLOTS } else { 0 };
+        vacancies + unused + next_page
     }
 
     pub fn has_capacity(&self) -> bool {
-        self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || self.slots.len() < ARTIFACT_HISTORY_LEDGER_CAPACITY)
+        self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || (self.initialized as usize) < self.allocated_slots() || self.page_count < u32::MAX)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -648,7 +1116,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
         assert!(self.group.is_none(), "mutable history iteration requires its staged group to be adopted or aborted");
-        ArtifactHistoryIterMut { slots: &mut *self.slots, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
+        ArtifactHistoryIterMut { ledger: self, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -659,17 +1127,17 @@ impl<T> ArtifactHistoryLedger<T> {
 impl<T> Drop for ArtifactHistoryLedger<T> {
     fn drop(&mut self) {
         assert!(self.terminal_is_empty(), "artifact history ledger reached Drop before every exact entry owner was retired");
-        unsafe { std::mem::ManuallyDrop::drop(&mut self.slots) };
+        unsafe { std::mem::ManuallyDrop::drop(&mut self.pages) };
     }
 }
 
 /// 🧬️ Rebuilds a fresh, independent ledger from every currently-visible entry (mirrors `Serialize`'s
 /// own `read_group`-scoped view) — a pending, uncommitted group's staged entries clone away exactly
 /// as they already serialize away, since a clone is just another reader. `try_from_preflighted` can
-/// only fail by exceeding the fixed capacity, which an already-admitted source ledger never does.
+/// only fail when the page address space is exhausted, which an already-admitted source ledger never does.
 impl<T: Clone> Clone for ArtifactHistoryLedger<T> {
     fn clone(&self) -> Self {
-        Self::try_from_preflighted(self.iter().cloned().collect()).unwrap_or_else(|_| unreachable!("a source ledger's own entries never exceed its exact fixed capacity"))
+        Self::try_from_preflighted(self.iter().cloned().collect()).unwrap_or_else(|_| unreachable!("a source ledger's own entries never exhaust its page address space"))
     }
 }
 
@@ -685,14 +1153,14 @@ impl<T: ToValue> ToValue for ArtifactHistoryLedger<T> {
 impl<T: FromValue> FromValue for ArtifactHistoryLedger<T> {
     fn from_value(value: DslValue) -> Result<Self, ValueError> {
         let values = Vec::<T>::from_value(value)?;
-        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(format!("a history ledger within its fixed capacity ({} entries rejected)", rejected.len())))
+        Self::try_from_preflighted(values).map_err(|rejected| ValueError::new(format!("a history ledger within its page address space ({} entries rejected)", rejected.len())))
     }
 }
 
 pub struct ArtifactHistoryIter<'a, T> {
     ledger: &'a ArtifactHistoryLedger<T>,
-    front: Option<u16>,
-    back: Option<u16>,
+    front: Option<u32>,
+    back: Option<u32>,
     remaining: usize,
 }
 
@@ -746,9 +1214,9 @@ impl<T> DoubleEndedIterator for ArtifactHistoryIter<'_, T> {
 impl<T> ExactSizeIterator for ArtifactHistoryIter<'_, T> {}
 
 pub struct ArtifactHistoryIterMut<'a, T> {
-    slots: *mut Vec<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>,
-    front: Option<u16>,
-    back: Option<u16>,
+    ledger: *mut ArtifactHistoryLedger<T>,
+    front: Option<u32>,
+    back: Option<u32>,
     remaining: usize,
     marker: std::marker::PhantomData<&'a mut T>,
 }
@@ -761,7 +1229,7 @@ impl<'a, T> Iterator for ArtifactHistoryIterMut<'a, T> {
             return None;
         }
         let index = self.front?;
-        let slot = unsafe { (&mut *self.slots)[index as usize].assume_init_mut() };
+        let slot = unsafe { (*self.ledger).slot_mut(index) };
         self.front = slot.next;
         self.remaining -= 1;
         slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
@@ -778,7 +1246,7 @@ impl<T> DoubleEndedIterator for ArtifactHistoryIterMut<'_, T> {
             return None;
         }
         let index = self.back?;
-        let slot = unsafe { (&mut *self.slots)[index as usize].assume_init_mut() };
+        let slot = unsafe { (*self.ledger).slot_mut(index) };
         self.back = slot.previous;
         self.remaining -= 1;
         slot.value.as_mut().map(|value| unsafe { &mut *(value as *mut T) })
@@ -987,6 +1455,8 @@ pub enum VcsError {
     TransactionOpen { transaction_id: String },
     /// 🕳️ A commit, abort or append named a tool transaction that is not the one open on this store.
     UnknownTransaction(String),
+    /// 🧱️ The document's edit history holds `capacity` edits and is full: the edit was refused before anything was recorded.
+    HistoryFull { capacity: usize },
 }
 
 impl std::fmt::Display for VcsError {
@@ -1017,6 +1487,7 @@ impl std::fmt::Display for VcsError {
             Self::HistoryShape { shape, kind } => write!(formatter, "a {} history holds no {} transition", shape.name(), kind.name()),
             Self::TransactionOpen { transaction_id } => write!(formatter, "tool transaction {transaction_id} is open on this store"),
             Self::UnknownTransaction(transaction_id) => write!(formatter, "tool transaction {transaction_id} is not open on this store"),
+            Self::HistoryFull { capacity } => write!(formatter, "the edit history holds at most {capacity} edits and is full"),
         }
     }
 }
@@ -1036,7 +1507,30 @@ impl From<MutationApplyError> for VcsError {
     }
 }
 
-protocol::fault_from_error!(VcsError, crate::os_dsl::FaultOrigin::Module, "module.vcs");
+/// 🚨️ Every `VcsError` is a module fault; the refusals a runtime surfaces as their own notices carry their own codes:
+/// `toolTransaction.open`, `toolTransaction.unknown` and `history.full`.
+impl crate::os_dsl::FaultFrom for VcsError {
+    fn fault_origin(&self) -> crate::os_dsl::FaultOrigin {
+        crate::os_dsl::FaultOrigin::Module
+    }
+
+    fn fault_code(&self) -> crate::os_dsl::FaultCode {
+        crate::os_dsl::FaultCode::new(match self {
+            Self::TransactionOpen { .. } => "toolTransaction.open",
+            Self::UnknownTransaction(_) => "toolTransaction.unknown",
+            Self::HistoryFull { .. } => "history.full",
+            _ => "module.vcs",
+        })
+    }
+
+    fn fault_severity(&self) -> crate::os_dsl::Severity {
+        crate::os_dsl::Severity::Error
+    }
+
+    fn fault_message(&self) -> String {
+        self.to_string()
+    }
+}
 
 //#endregion 🔖️Errors
 //#region 🔖️CollectionDiff

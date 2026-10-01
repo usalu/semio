@@ -102,6 +102,9 @@ async fn canvas_layers_omits_story_text_when_zoomed_out() {
     assert!(!json.contains("Hello layout"), "zoomed-out preview keeps the page workable without story text: {json}");
 }
 
+/// 🧭️ Transform plus a selection arms the live gumball at the centroid the transform tool records; its `meta:gumball`
+/// layer is exactly the host contract (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`), validated by the framework's own
+/// draft-07 validator; select, or an empty selection, arms none.
 #[semio_framework_async_macros::async_test]
 async fn canvas_layers_arms_a_world_gumball_for_the_selection() {
     let doc = crate::standards::v1::subsets::any::schema::default_document();
@@ -109,7 +112,12 @@ async fn canvas_layers_arms_a_world_gumball_for_the_selection() {
     let mut transform = LayoutWindowConfig::default();
     transform.active_utility = "transform".into();
     let json = canvas_layers(&doc, &transform, &LayoutWindowTransient::default(), &selected, true);
-    assert!(json.contains("\"space\":\"world\"") && json.contains("meta:gumball"), "transform plus a selection arms the world gumball: {json}");
+    let layers: Value = serde_json::from_str(&json).expect("layer JSON");
+    let gumball = layers.as_array().expect("layers").iter().find(|layer| layer["id"] == "meta:gumball").unwrap_or_else(|| panic!("transform plus a selection arms the gumball: {json}"));
+    let schema = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🧬️schema/🔣️gumball-meta/🔣️.json"));
+    let validator = semio_framework_schema::OwnedJsonSchemaValidator::compile(schema).expect("the gumball meta schema compiles");
+    validator.validate_json(&gumball.to_string()).unwrap_or_else(|error| panic!("the layer is the host contract: {error:?}\n{gumball}"));
+    assert_eq!((gumball["gumball"]["liveDispatch"].as_bool(), gumball["gumball"]["pivotLayer"].clone()), (Some(true), serde_json::json!([30.0, 30.0])), "a live gumball at frame-1's centre");
     let selecting = canvas_layers(&doc, &LayoutWindowConfig::default(), &LayoutWindowTransient::default(), &selected, true);
     assert!(selecting.contains("meta:utility") && selecting.contains("select") && !selecting.contains("meta:gumball"), "select omits the gumball: {selecting}");
     let idle = canvas_layers(&doc, &transform, &LayoutWindowTransient::default(), &LayoutInteractionSnapshot::default(), true);

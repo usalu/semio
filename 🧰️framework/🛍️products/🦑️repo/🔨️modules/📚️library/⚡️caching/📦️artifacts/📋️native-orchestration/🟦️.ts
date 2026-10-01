@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
-import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { CARGO_RELAY_BUDGET_ENV, buildBudgetMs, cargoStreamingStatus, runCmdStatus } from "../../../🏃️process/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 import { buildCargoArtifacts } from "../🏗️native-build/🟦️.ts";
@@ -45,9 +45,10 @@ export class NativeScript extends BundleScript {
       if ((operation !== "dev" && operation !== "release") || index !== 2 || args.length !== 4 || !manifest) throw new Error("native component dev|release --manifest <Cargo.toml>");
       const cargo = Bun.TOML.parse(readFileSync(resolve(this.repoRoot, manifest), "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
       if (!cargo.package?.name || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package?.metadata?.semio?.["component-kind"] ?? "")) throw new Error(`Not a plugin component manifest: ${manifest}`);
+      const packageName=cargo.package.name;
       await buildCargoArtifacts(
         manifest,
-        pluginComponentRustcArgs(cargo.package.name, `wasm-${operation}`),
+        pluginComponentRustcArgs(packageName, `wasm-${operation}`),
         this.repoRoot,
         {
           command: "rustc",
@@ -57,7 +58,7 @@ export class NativeScript extends BundleScript {
             const artifact = [...files][0];
             assert.ok(artifact);
             const [name, path] = artifact;
-            assert.equal(name, `${cargo.package.name.replaceAll("-", "_")}.wasm`);
+            assert.equal(name, `${packageName.replaceAll("-", "_")}.wasm`);
             assert.deepEqual([...readFileSync(path).subarray(0, 8)], [0, 97, 115, 109, 13, 0, 1, 0], "Invalid WASI component header");
           },
         },

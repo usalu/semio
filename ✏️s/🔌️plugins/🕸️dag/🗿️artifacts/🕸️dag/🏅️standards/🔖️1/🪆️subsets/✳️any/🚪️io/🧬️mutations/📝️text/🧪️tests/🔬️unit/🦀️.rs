@@ -48,5 +48,19 @@ fn every_mutation() -> Vec<DagMutation> {
         disconnect_nodes("edge-1".into()),
         create_node_at(sample_node("node-3"), 1),
         connect_nodes_at("edge-2".into(), "node-1@out".into(), "node-3@in".into(), EdgeRouteStyle::default(), PropertyBag::default(), 0),
+        move_nodes(vec!["node-1".into(), "node-2".into()], 40.0, -12.5),
+        set_node_positions(vec![DagNodePosition { id: "node-1".into(), x: 120.0, y: 40.0 }, DagNodePosition { id: "node-2".into(), x: -30.5, y: 260.0 }]),
+        set_slider("node-1".into(), DagSliderField::Value, 7.5),
+        set_slider("node-1".into(), DagSliderField::Min, -2.0),
+        set_slider("node-1".into(), DagSliderField::Max, 20.0),
     ]
+}
+
+/// ⚡️ The binary twin of [`every_variant_op_text_round_trips`]: every variant decodes from its own encoding unchanged.
+#[semio_framework_async_macros::async_test]
+async fn every_variant_op_binary_round_trips() {
+    for mutation in every_mutation() {
+        let bytes = protocol::OpBinary::encode_op(&mutation).expect("encode");
+        assert_eq!(<DagMutation as protocol::OpBinary>::decode_op(&bytes).expect("decode"), mutation);
+    }
 }

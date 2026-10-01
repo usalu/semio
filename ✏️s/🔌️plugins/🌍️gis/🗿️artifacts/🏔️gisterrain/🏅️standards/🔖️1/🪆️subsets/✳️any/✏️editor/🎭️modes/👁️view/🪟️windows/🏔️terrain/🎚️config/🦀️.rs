@@ -197,7 +197,7 @@ pub fn gis_terrain_window_config_mutation_report_json(camera_json: &str, kind: &
 pub mod schema;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️direct-leaves/🦀️.rs"]
+#[path = "🧪️tests/🧬️direct/🦀️.rs"]
 mod direct_leaf_contracts;
 
 #[cfg(test)]

@@ -223,21 +223,49 @@ pub struct AccessibilityValue {
     pub busy: bool,
 }
 
+/// 🔊️ The number a range control announces for a stored value: unchanged without a display factor, else
+/// `stored × factor` cleaned to twelve significant digits — the number its readout shows.
+fn spoken_number(stored: f64, factor: Option<f64>) -> f64 {
+    match factor {
+        None => stored,
+        Some(_) => {
+            let shown = crate::ui_number_display(stored, factor);
+            crate::format_ui_number(shown).parse().unwrap_or(shown)
+        }
+    }
+}
+
+/// 🗣️ The spoken value of a range control: its display text ([`crate::ui_number_display_text`]) and the unit it shows.
+fn spoken_text(stored: f64, factor: Option<f64>, precision: Option<u16>, unit: Option<&crate::UiText>) -> String {
+    let text = crate::ui_number_display_text(stored, factor, precision);
+    unit.filter(|unit| !unit.as_str().is_empty()).map_or_else(|| text.clone(), |unit| format!("{text} {}", unit.as_str()))
+}
+
 /// 📶️ Projects [`AccessibilityValue`] out of a component; every non-range component answers the empty
 /// default.
 pub fn accessibility_value(component: &crate::Component) -> AccessibilityValue {
     match component {
         crate::Component::Input(props) => {
-            let now = props.value.as_str().parse::<f64>().ok();
-            let text = match (props.kind, props.precision, now) {
-                (crate::InputKind::Number, Some(precision), Some(now)) if now.is_finite() => crate::format_ui_number_fixed(now, precision),
+            let stored = props.value.as_str().parse::<f64>().ok();
+            let shown = |value: f64| if props.kind == crate::InputKind::Number { spoken_number(value, props.display_factor) } else { value };
+            let text = match (props.kind, stored) {
+                (crate::InputKind::Number, Some(stored)) if stored.is_finite() && (props.precision.is_some() || props.display_factor.is_some()) => crate::ui_number_display_text(stored, props.display_factor, props.precision),
                 _ => props.value.as_str().to_string(),
             };
-            AccessibilityValue { min: props.min, max: props.max, now, text: Some(text), busy: false }
+            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: stored.map(shown), text: Some(text), busy: false }
         }
         crate::Component::Select(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
-        crate::Component::Slider(props) => AccessibilityValue { min: Some(props.min), max: Some(props.max), now: Some(props.value), text: props.unit.as_ref().map(|unit| format!("{} {}", props.value, unit.as_str())), busy: false },
-        crate::Component::NumberStepper(props) => AccessibilityValue { min: props.min, max: props.max, now: props.uniform.then_some(props.value), text: props.uniform.then(|| props.precision.map_or_else(|| crate::format_ui_number(props.value), |precision| crate::format_ui_number_fixed(props.value, precision))), busy: false },
+        crate::Component::Slider(props) => {
+            let unit = props.display_unit.as_ref().or(props.unit.as_ref());
+            let described = unit.is_some() || props.precision.is_some() || props.display_factor.is_some();
+            let text = described.then(|| spoken_text(props.value, props.display_factor, props.precision, unit));
+            AccessibilityValue { min: Some(spoken_number(props.min, props.display_factor)), max: Some(spoken_number(props.max, props.display_factor)), now: Some(spoken_number(props.value, props.display_factor)), text, busy: false }
+        }
+        crate::Component::NumberStepper(props) => {
+            let shown = |value: f64| spoken_number(value, props.display_factor);
+            let text = props.uniform.then(|| spoken_text(props.value, props.display_factor, props.precision, props.display_unit.as_ref().or(props.unit.as_ref())));
+            AccessibilityValue { min: props.min.map(shown), max: props.max.map(shown), now: props.uniform.then(|| shown(props.value)), text, busy: false }
+        }
         crate::Component::Ring(props) => AccessibilityValue { min: Some(0.0), max: Some(1.0), now: Some(props.t), text: Some(props.t.to_string()), busy: false },
         crate::Component::IconSelect(props) => AccessibilityValue { text: Some(props.value.as_str().to_string()), ..AccessibilityValue::default() },
         crate::Component::Progress(props) => match props.total {

@@ -6,7 +6,7 @@ import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync,
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createCachePolicyTests } from "./🧪️tests/⚡️cache-contracts/🟦️.ts";
+import { createCachePolicyTests, proveCachePolicy } from "./🧪️tests/⚡️cache-contracts/🟦️.ts";
 import { ArtifactPackageContractScript } from "./📦️artifacts/📋️package-orchestration/🟦️.ts";
 import { AuditScript, PolicyScript } from "./📇️inventory/📋️orchestration/🟦️.ts";
 import { GraphScript } from "./🕸️graph/✅️verification/🟦️.ts";
@@ -15,7 +15,9 @@ import { DoctorScript } from "./🩺️environment/📋️inspection/🟦️.ts"
 import { CacheVerifyScript } from "./🔁️verification/📋️orchestration/🟦️.ts";
 import { CachePruneScript, CacheReportScript } from "./🧹️pruning/📋️orchestration/🟦️.ts";
 import { CargoProvenanceScript } from "./🦀️cargo/🧾️provenance/🟦️.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runBundleScriptMain, runCmd, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, getWorkspaceRoot, orchestratorBudgetOpts, runCmd, wasmBindgenVersion, wasmBuildArguments, wasmBuildEnvironment } from "../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import plugin, { cacheInternals } from "../🟨️.mjs";
 import { stageArtifacts } from "./📦️artifacts/🟦️.ts";
 import { acquireQueuedResourceLease } from "./🔒️leases/🟦️.ts";
@@ -59,6 +61,11 @@ export const testCacheContracts = createCachePolicyTestsInstance.testCacheContra
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    if (args[0] === "cache-policy") {
+      if (args.length !== 1) throw new Error("Expected test cache-policy");
+      proveCachePolicy(this.repoRoot, cacheInternals);
+      return;
+    }
     if (args[0] === "cargo-build-lease") {
       if (args.length !== 1) throw Error("Expected test cargo-build-lease");
       const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -130,4 +137,4 @@ const router = new ScriptRouter(SCRIPT_ROOT)
   .register("cache-prune", CachePruneScript)
   .register("cargo-provenance", CargoProvenanceScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+if (import.meta.main) await runScriptMain(router);

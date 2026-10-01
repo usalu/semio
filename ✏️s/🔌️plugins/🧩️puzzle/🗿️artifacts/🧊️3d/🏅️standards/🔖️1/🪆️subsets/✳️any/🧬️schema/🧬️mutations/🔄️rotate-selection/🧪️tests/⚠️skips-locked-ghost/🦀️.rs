@@ -1,6 +1,6 @@
 //! 🧪️ `rotate-selection` fixture — `⚠️skips-locked-ghost`.
 //!
-//! `object-b` turns about +y; the absent `object-ghost` and the locked `volume-2` are skipped as `mutation.partial`.
+//! `object-b` turns about +y while `object-a` stays, so `attraction-1` is re-derived (`mutation.cascade`); the absent `object-ghost` and the locked `volume-2` are skipped as `mutation.partial`.
 //!
 //! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/🔄️rotate-selection/⚠️skips-locked-ghost/`
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
@@ -72,7 +72,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "rotate-selection/skips-locked-ghost: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(committed["attractions"].is_null() && committed["meta"].is_null() && committed["references"].is_null(), "rotate-selection/skips-locked-ghost: a selection transform touches no relation and no document meta");
+    assert!(committed["meta"].is_null() && committed["references"].is_null(), "rotate-selection/skips-locked-ghost: a selection transform touches no document meta and no reference");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`.

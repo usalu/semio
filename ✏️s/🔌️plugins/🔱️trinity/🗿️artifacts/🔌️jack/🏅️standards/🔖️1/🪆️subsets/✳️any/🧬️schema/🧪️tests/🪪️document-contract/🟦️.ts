@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { AnySchema } from "ajv";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseJackArtifact } from "../../🟦️.ts";
 import { parseJackSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseJackDiff } from "../../🔺️diff/🟦️.ts";
@@ -14,7 +14,7 @@ const schema = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8"));
 
 /** 🪪️ Proves Jack's production parsers and Ajv share the native child-handle document boundary. */
 export function testJackDocumentContract(): void {
-  const cases = json(new URL("../../🧫️fixtures/🪪️document-contract/🔣️.json", import.meta.url)) as {
+  const cases = json(new URL("../../🧫️fixtures/🪪️document/🔣️.json", import.meta.url)) as {
     snapshotFixture: string;
     diffFixture: string;
     expectedChildKind: string;

@@ -1,0 +1,42 @@
+{
+  "annex": "En", "snowZone": "雪\u0000Nord", "altitude": -123.5, "enSk": 850.25,
+  "northGermanLowlandSnow": true, "windZone": 255, "enVb": 25.75, "terrainCategory": 254,
+  "mixedTerrainUpwind": 0, "mixedTerrainDistance": 17.5, "orographyFactor": 1.125,
+  "coastOrIsland": true, "airDensity": 1.25, "height": 20.5, "width": 15.25, "depth": 25.75,
+  "assumedDeltaT": -40.5, "tMax": 37.125, "tMin": -24.25, "t0": 10.75,
+  "thermalElementType": "building 世界", "thermalBridgeType": 255, "deltaTM": -3.5,
+  "storeyCount": 254, "fireMode": "parametric", "fireCurve": "hydrocarbon", "fireDuration": 3600.25,
+  "assumedGasTemperature": 1200.5, "assumedHNet": 25000.75, "fireCompartmentArea": 100.5,
+  "fireCompartmentHeight": 3.25, "fireOpeningFactor": 0.0625, "fireThermalInertia": 1160.75,
+  "fireOccupancy": "office\u0000火", "fireLoadDensityQf": 420000000.5, "assumedQfD": 419999999.25,
+  "constructionActivity": "scaffolding\u0000Gerüst", "assumedConstructionQk": 1500.5,
+  "structureKind": "bridge", "bridgeLane": 253, "bridgeSpan": 20.75, "bridgeLaneWidth": 3.125,
+  "assumedBridgeTandem": 1000.5, "assumedBridgeUdl": 2000.25, "assumedBridgeLm2": 3000.75,
+  "assumedBridgeFootway": 4000.5, "assumedBridgeLm3": 5000.25, "assumedBridgeLm4": 6000.75,
+  "bridgeLoadGroup": "gr1a\u0000橋", "craneClaimed": true, "craneClass": "HC2", "hoistClass": "HC3",
+  "hoistingSpeed": 0.625, "assumedCraneWheel": 150000.5, "assumedCraneHorizontal": 25000.75,
+  "siloClaimed": true, "siloKind": "silo 世界", "siloBulkDensity": 8000.5, "siloHeight": 12.25,
+  "siloHydraulicRadius": 1.5, "siloMu": 0.375, "siloK": 0.4375, "assumedSiloPressure": 50000.25,
+  "assumedSiloPatch": 20000.5, "assumedSiloWallFriction": 15000.75,
+  "floors": [
+    {"id":"duplicate","category":"B1\u0000Nutzung","area":240.5,"assumedQk":2500.25,"assumedQkConcentrated":20000.75,"assumedPartitions":800.5},
+    {"id":"duplicate","category":"C2","area":-2.5,"assumedQk":-3.25,"assumedQkConcentrated":-4.75,"assumedPartitions":-5.5}
+  ],
+  "selfWeightElements": [
+    {"id":"slab-rc","material":"reinforced_concrete 世界","thickness":0.25,"assumedGk":6000.5},
+    {"id":"slab-rc","material":"steel\u0000Stahl","thickness":-0.125,"assumedGk":-2.5}
+  ],
+  "roofs": [
+    {"id":"roof-main","roofType":"duopitch\u0000Dach","pitchDeg":15.5,"cE":1.125,"cT":0.875,"hasParapet":true,"parapetHeight":0.25,"driftObstructionHeight":1.5,"multiSpan":true,"assumedSk":1000.75},
+    {"id":"roof-main","roofType":"flat","pitchDeg":0,"cE":-0.5,"cT":1.5,"hasParapet":false,"parapetHeight":-0.25,"driftObstructionHeight":-1.5,"multiSpan":false,"assumedSk":-1000.75}
+  ],
+  "windFaces": [
+    {"id":"facade-d","zone":"D\u0000Fassade","z":8.25,"cPe10":0.75,"cPe1":0.875,"cPi":-0.25,"cS":1.125,"cD":0.875,"loadedArea":10.5,"assumedWp":1200.25},
+    {"id":"facade-d","zone":"E","z":-2.5,"cPe10":-0.75,"cPe1":-0.875,"cPi":0.25,"cS":0.5,"cD":1.5,"loadedArea":-10.5,"assumedWp":-1200.25}
+  ],
+  "accidentalCases": [
+    {"id":"事故\u0000case","impact":[{"vehicleMass":1000.5,"vehicleSpeed":30.25,"assumedForce":4000.75},{"vehicleMass":-1.5,"vehicleSpeed":-2.25,"assumedForce":-3.75}],"explosion":[{"explosionMass":50.25,"standoff":10.5,"assumedPressure":5000.75},{"explosionMass":-0.25,"standoff":-1.5,"assumedPressure":-5000.75}]},
+    {"id":"事故\u0000case","impact":[],"explosion":[]},
+    {"id":"","impact":[{"vehicleMass":0,"vehicleSpeed":0,"assumedForce":0}],"explosion":[]}
+  ]
+}

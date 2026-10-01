@@ -1,0 +1,53 @@
+{
+  "schema": "semio.repository.cargo-capability-link-vectors/v1",
+  "cases": [
+    {
+      "id": "both-present",
+      "present": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "expected": [
+        "alpha-link",
+        "bravo-link"
+      ]
+    },
+    {
+      "id": "alpha-removed",
+      "present": [
+        "neutral-bravo"
+      ],
+      "expected": [
+        "bravo-link"
+      ]
+    },
+    {
+      "id": "all-removed",
+      "present": [],
+      "expected": []
+    }
+  ],
+  "links": {
+    "schema": "semio.repository.cargo-capability-links/v1",
+    "groups": [
+      {
+        "feature": "neutral-capabilities",
+        "requires": [],
+        "targets": [
+          {
+            "package": "neutral-alpha",
+            "manifest": "../alpha/Cargo.toml",
+            "feature": "alpha-link",
+            "owner": "../alpha"
+          },
+          {
+            "package": "neutral-bravo",
+            "manifest": "../bravo/Cargo.toml",
+            "feature": "bravo-link",
+            "owner": "../bravo"
+          }
+        ]
+      }
+    ]
+  }
+}

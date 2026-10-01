@@ -63,7 +63,10 @@ pub struct En1990Snapshot {
     pub effects: Vec<MemberEffect>,
 }
 
-crate::impl_norm_artifact_record!(En1990Snapshot, extension = "en1990", envelope_id = "norm.en1990");
+#[path = "🪶️sqlite/🦀️.rs"]
+pub mod sqlite;
+
+crate::impl_norm_artifact_record!(En1990Snapshot, extension = "en1990", envelope_id = "norm.en1990", sqlite = sqlite::sqlite_codec);
 
 impl Default for En1990Snapshot {
     fn default() -> Self {
@@ -151,3 +154,7 @@ pub fn encode_en1990_pack(snapshot: &En1990Snapshot) -> Vec<u8> {
     store::ArtifactPack::encode_pack(snapshot)
 }
 //#endregion 🌉️ExternalCodecBridge
+
+#[cfg(test)]
+#[path = "🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;

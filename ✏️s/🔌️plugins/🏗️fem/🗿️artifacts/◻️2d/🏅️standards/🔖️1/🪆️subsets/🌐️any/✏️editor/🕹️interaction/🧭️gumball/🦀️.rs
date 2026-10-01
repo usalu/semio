@@ -8,13 +8,12 @@
 
 use crate::editor::fem2d::interaction::{fem2d_entity_kind, FEM2D_GRANULARITY_ELEMENT, FEM2D_GRANULARITY_LOAD, FEM2D_GRANULARITY_NODE, FEM2D_GRANULARITY_REGION, FEM2D_GRANULARITY_SUPPORT};
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d};
+use crate::editor::fem2d::modes::edit::windows::model::{fem2d_element_endpoints, find_node_2d, screen_2d, ORIGIN_2D, SCALE_2D};
 use crate::editor::fem2d::transient::{FemGumballGesture, FemGumballPhase, FemGumballTool};
 use crate::standards::v1::subsets::any::schema::mutations::move_selection::MoveSelection;
 use crate::standards::v1::subsets::any::schema::mutations::text::Fem2dMutation;
-use crate::{element_id, Fem2dSnapshot, FemLoad, Viewport2d};
+use crate::{element_id, Fem2dSnapshot, FemLoad};
 use machine::Command;
-use semio_framework_plugin::ViewModel;
 use semio_framework_tool_machine::{ToolAbortReason, ToolMachineRunner, ToolRefusal, ToolStep, ToolTransaction, ToolYield};
 use std::cell::RefCell;
 use std::collections::{HashMap, HashSet};
@@ -359,7 +358,10 @@ pub fn fem2d_gumball_active(active_utility: &str, selection_ids: &[String]) -> b
     active_utility == FEM2D_UTILITY_TRANSFORM && !selection_ids.is_empty()
 }
 
-pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], camera: &Viewport2d, active_utility: &str, window_id: Option<&str>) -> Option<dsl::json::Value> {
+/// 🧭️ The `meta:gumball` layer of the Transform utility (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`): handles at the
+/// selection pivot in layer units, the model→layer map of `screen_2d`, and `liveDispatch` — the hosts stream the gesture
+/// so every window previews the open transaction (the results window re-solves while the drag goes on).
+pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], active_utility: &str, window_id: Option<&str>) -> Option<dsl::json::Value> {
     if !fem2d_gumball_active(active_utility, selection_ids) {
         return None;
     }
@@ -372,9 +374,9 @@ pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], c
         "role": "meta",
         "gumball": {
             "active": true,
+            "liveDispatch": true,
             "pivotLayer": [layer_x, layer_y],
-            "pivotModel": [pivot.0, pivot.1],
-            "camera": { "x": camera.x, "y": camera.y, "zoom": camera.zoom },
+            "modelToLayer": { "scale": [SCALE_2D, -SCALE_2D], "offset": [ORIGIN_2D, ORIGIN_2D] },
             "selectionIds": selection_ids,
             "config": {
                 "moveAxes": config.move_axes,
@@ -386,11 +388,6 @@ pub fn fem2d_gumball_meta_layer(doc: &Fem2dSnapshot, selection_ids: &[String], c
     }))
 }
 
-pub fn fem2d_gumball_meta_for_render(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot, camera: &Viewport2d, view: &ViewModel, active_utility: &str) -> Option<dsl::json::Value> {
-    let window_id = crate::editor::fem2d::interaction::canvas_gesture::fem2d_gesture_window_id_for_render(view, crate::editor::fem2d::modes::edit::windows::model::BODY_KEY)
-        .or_else(|| view.window_id.clone());
-    fem2d_gumball_meta_layer(doc, &interaction.selected_ids, camera, active_utility, window_id.as_deref())
-}
 //#endregion 🔖️MetaLayer
 
 //#region 🧪️Tests

@@ -12,7 +12,7 @@ use semio_framework::io_schema::IoPayload;
 /// fixtures the TypeScript mirror's own test reads too.
 const EXAMPLES: &[(&str, &str)] = &[
     ("hexagonal-cut-concrete-forest-left", include_str!("../../../📚️examples/🌲️hexagonal-cut-concrete-forest-left/🖼️assets/🌲️hexagonal-cut-concrete-forest-left/🗣️.dsl.semio")),
-    ("hexagonal-cut-concrete-forest-right", include_str!("../../../📚️examples/➡️hexagonal-cut-concrete-forest-right/🖼️assets/➡️hexagonal-cut-concrete-forest-right/🗣️.dsl.semio")),
+    ("hexagonal-cut-concrete-forest-right", include_str!("../../../📚️examples/➡️hexagonal-cut-concrete-forest/🖼️assets/➡️hexagonal-cut-concrete-forest/🗣️.dsl.semio")),
 ];
 
 #[semio_framework_async_macros::async_test]

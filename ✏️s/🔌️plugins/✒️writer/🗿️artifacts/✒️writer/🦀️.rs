@@ -298,7 +298,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/🧪️tests/🏷️renames-the-document-to-mission-brief/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/🧪️tests/🏷️renames/🦀️.rs"]
                             mod tests_renames_the_document_to_mission_brief;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-writer/📝️text/🦀️.rs"]
                             pub mod text;
@@ -315,7 +315,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/🧪️tests/🔗️republishes-the-brief-under-a-new-uri/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/🧪️tests/🔗️republishes/🦀️.rs"]
                             mod tests_republishes_the_brief_under_a_new_uri;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔗change-uri/📝️text/🦀️.rs"]
                             pub mod text;
@@ -332,7 +332,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/🧪️tests/🔤️switches-the-brief-from-plaintext-to-markdown/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/🧪️tests/🔤️switches/🦀️.rs"]
                             mod tests_switches_the_brief_from_plaintext_to_markdown;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-language/📝️text/🦀️.rs"]
                             pub mod text;
@@ -349,7 +349,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧪️tests/⚠️warns-that-the-brief-body-is-unchanged/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/🧪️tests/⚠️warns/🦀️.rs"]
                             mod tests_warns_that_the_brief_body_is_unchanged;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️edit-text/📝️text/🦀️.rs"]
                             pub mod text;
@@ -366,7 +366,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🧪️tests/⚠️warns-that-an-already-removed-run-leaves-the-brief-unchanged/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/🧪️tests/⚠️warns/🦀️.rs"]
                             mod tests_warns_that_an_already_removed_run_leaves_the_brief_unchanged;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️splice-text/📝️text/🦀️.rs"]
                             pub mod text;
@@ -687,7 +687,7 @@ pub mod editor {
                             pub mod line_height;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/🔢️line-numbers/🦀️.rs"]
                             pub mod line_numbers;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/⇥️tab-size/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/✒️main/☑️options/⇥️tab/🦀️.rs"]
                             pub mod tab_size;
                         }
                     }

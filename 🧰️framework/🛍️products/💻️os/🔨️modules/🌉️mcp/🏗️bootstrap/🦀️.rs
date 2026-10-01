@@ -264,7 +264,8 @@ fn compile_component_worker() -> Result<(), String> {
 /// on stdin into the compiled-code cache and exits — the isolated worker a cancellable cold
 /// compile runs in (`🏠️workspace`'s `CompileFlight`), killed when its last requester cancels. It
 /// reads no credential and serves nothing, so it runs before the process-entry seal too.
-pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocolV1>) {
+pub fn run_mcp_entrypoint(services:Vec<crate::inference::RemoteInferenceProtocolV1>, credentials: Vec<crate::agent_credential::CredentialExchangeProtocolV1>) {
+    if let Err(error) = crate::agent_credential::install_credential_exchange_protocols_v1(credentials) { eprintln!("MCP credential protocol inventory refused: {}", error.message); std::process::exit(1); }
     if let Err(error)=crate::inference::install_remote_inference_protocols_v1(services) {eprintln!("MCP installed service inventory refused: {}",error.message);std::process::exit(1);}
     if std::env::args().nth(1).as_deref() == Some("schemas") {
         print!("{}", crate::schema_mirror_json());

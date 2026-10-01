@@ -7,7 +7,9 @@
  * `#[cfg(target_arch = "wasm32")]` code — which is why these run on every acceptance. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { testRuntimeTreeRetirement } from "../../♻️retirement/🌲️tree/🧪️tests/🔬️runtime-tree-retirement/🟦️.ts";
 import { surfaceOwnershipSelfTests } from "../../🧪️tests/🔬️surface-ownership/🟦️.ts";
 
@@ -53,5 +55,5 @@ class CheckWasmScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript).register("tree-retirement-check", TreeRetirementScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

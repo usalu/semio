@@ -430,7 +430,7 @@ fn spec_vector(ctx: &Context) -> Result<Outcome, String> {
 /// pretty-printed and the writer is compact, so a handler that returned the input unread would be
 /// caught here.
 fn round_trip(ctx: &Context) -> Result<Outcome, String> {
-    const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-node/🌱️appends-a-capsule-to-the-tower/📸️snapshot/⬅️before/🔣️.json";
+    const SNAPSHOT: &str = "shared://🧬️mutations/🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json";
     let committed = ctx.fixture_bytes(SNAPSHOT)?;
     let parsed = ctx.fixture_json(SNAPSHOT)?;
     let reserialized = parsed.to_string();

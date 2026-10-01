@@ -158,7 +158,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "inference-discovery-oracle"
+            "verify",
+            "gis-inference-discovery-oracle"
           ]
         }
       }
@@ -177,7 +178,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "inference-discovery-check"
+            "check",
+            "gis-inference-discovery"
           ]
         }
       }

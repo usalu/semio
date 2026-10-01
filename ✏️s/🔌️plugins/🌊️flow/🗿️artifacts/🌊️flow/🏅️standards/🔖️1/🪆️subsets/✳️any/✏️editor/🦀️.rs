@@ -364,7 +364,7 @@ struct FlowStoreOneItemPreparation<P, M> {
 
 fn flow_store_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("flow-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -1018,7 +1018,6 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let edge = FlowEdge { id: edge_id, from: PortRef { node: payload.widget_id.clone(), port: String::new() }, to: PortRef { node: target_id, port: String::new() }, kind: "data".into() };
             let emit = Emit {
                 child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[SemioFlowMutation::InsertNode(insert_node::InsertNode::new(node)), SemioFlowMutation::InsertEdge(insert_edge::InsertEdge::new(edge))])],
-                coalesce_key: Some(format!("duplicateWidget:{}", payload.widget_id)),
                 ..Default::default()
             };
             self.completed = true;
@@ -1059,7 +1058,7 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
             let mutation = generation_window_transient(command, &composed, &config, &current, view)?;
             self.completed = true;
-            let emit = Emit { coalesce_key: matches!(command, FlowCommand::UpdateGenerationValues(_)).then(|| "generation-values".to_string()), ..Default::default() };
+            let emit = Emit::default();
             let ephemeral = semio_framework_plugin::EphemeralEmit { presence: Vec::new(), transient: Vec::new(), window_transient: mutation.into_iter().collect() };
             return Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral });
         }
@@ -1260,14 +1259,11 @@ impl ArtifactCommandWork<semio_framework_plugin::EditorApp<FlowPlayApp>> for Flo
             }
             let mutations = self.artifact_mutations.take().ok_or_else(|| Fault::from("flow-retained-patch-widgets-owner"))?;
             self.completed = true;
-            let widget_ids_separator = ",";
-            if mutations.is_empty() {
-                return Err(semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.patch-widgets-unchanged"), format!("patchFlowWidgets changed no widget among [{}] with {} = {:?}", payload.widget_ids.join(widget_ids_separator), payload.field, payload.value)));
+            if !mutations.is_empty() {
+                self.retirement.push(retained::Owner::Mutations(mutations));
             }
-            let composed = crate::flow_composed_snapshot(snapshot, &context.children)?;
-            let mut emit = flow_content_edit(&composed, &mutations)?;
-            emit.coalesce_key = Some(format!("patch-{}-{}", payload.field, payload.widget_ids.join(widget_ids_separator)));
-            return Ok(ArtifactCommandWorkStep::Complete(emit));
+            let leaves = patch_flow_widgets::patch_flow_widgets_leaves(&child, payload);
+            return Ok(ArtifactCommandWorkStep::Complete(patch_flow_widgets::widget_leaves_emit(&snapshot.content.child_id, &leaves)));
         }
         self.completed = true;
         flow_direct_store_emit(command, &config, view).map(ArtifactCommandWorkStep::Complete)

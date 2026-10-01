@@ -681,8 +681,9 @@ fn every_command() -> Vec<RasterCommand> {
         RasterCommand::ExportPng(export_png::ExportPng {}),
         RasterCommand::FlattenLayers(flatten_layers::FlattenLayers {name:"Flattened Image".into()}),
         RasterCommand::MergeDown(merge_down::MergeDown {layer_id:"l1".into()}),
-        RasterCommand::EditMask(edit_mask::EditMask {layer_id:"l1".into(),expected_mask:"{}".into(),operation:r#"{"kind":"alphaStroke","points":[[0.5,0.5]],"size":1,"opacity":1,"hardness":1,"alpha":0}"#.into(),selection:None}),
+        RasterCommand::EditMask(edit_mask::EditMask {layer_id:"l1".into(),expected_mask:"{}".into(),operation:r#"{"kind":"alphaFill","alpha":0,"opacity":1}"#.into(),selection:None}),
         RasterCommand::MaskFromSelection(mask_from_selection::MaskFromSelection {layer_id:"l1".into(),expected_image_key:None,selection:"[[0,1,255]]".into()}),
+        RasterCommand::PaintStroke(paint_stroke::PaintStroke { layer_id: "l1".into(), tool: "eraser".into(), xs: vec![0.5, 3.25], ys: vec![1.5, 2.0] }),
     ]
 }
 
@@ -691,9 +692,9 @@ fn every_command() -> Vec<RasterCommand> {
 async fn retained_route_dispositions_are_exact_and_exhaustive() {
     use semio_framework::{ToolCancellationPolicy, ToolExecutionShape,ToolJobFactory};
     use std::collections::BTreeSet;
-    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 25);
-    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 26);
-    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 25);
+    assert_eq!(RASTER_RETAINED_TOOL_IDS.len(), 26);
+    assert_eq!(<RasterPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), 27);
+    assert_eq!(RasterRetainedCommandJobFactory::PUBLICATION_CONTRACTS.len(), 26);
     assert_eq!(raster_retained_contract().shape, ToolExecutionShape::BoundedFirstStep);
     assert_eq!(raster_retained_contract().cancellation, ToolCancellationPolicy::PerOperation);
 

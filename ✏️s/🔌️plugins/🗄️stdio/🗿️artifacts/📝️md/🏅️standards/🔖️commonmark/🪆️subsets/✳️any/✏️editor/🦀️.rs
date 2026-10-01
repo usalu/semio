@@ -1,12 +1,15 @@
 //! ✏️ `md` editor (any) — `ArtifactEditor` surface built on the frozen
 //! `TextWindowKit` window kit (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6).
-//! Emits the frozen `replace-text` action: the incoming text is the artifact's own DSL text envelope (`print_dsl`/`parse_dsl`), round-tripped into a whole-document `SetSnapshot`.
+//! Emits the frozen `replace-text` action: the incoming text is the CommonMark source the main window edits (or the artifact's own
+//! DSL envelope, `print_dsl`/`parse_dsl`, when it carries the preamble); the window is an explicit draft, so one Apply is ONE edit of the net block leaves the applied text means (design §13.2 of ticket
+//! 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING), never a whole-document replace per delivery.
 //! MUST NOT be reached by the sibling `viewer` module (`policyViewerPurityBreaches`).
 
 use crate::editor::md::modes::edit;
 use crate::editor::md::modes::edit::windows::main;
 use crate::standards::v_commonmark::subsets::any::schema::mutations::set_snapshot::SetSnapshot;
-use crate::standards::v_commonmark::subsets::any::schema::mutations::MdMutation;
+use crate::standards::v_commonmark::subsets::any::schema::mutations::{insert_block, remove_block, replace_block, set_inlines, MdMutation, MdPathStep};
+use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdBlock;
 use crate::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot;
 use crate::{MD_DIALECT, STDIO_MD_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::editing::SnapshotEditEvent;
@@ -128,12 +131,13 @@ fn md_retained_extent(_command: &MdEditCommand, _snapshot: &MdSnapshot, _interac
 }
 
 /// ✏️ The one reduction `handle` and the retained route share: the example switch hands the host
-/// its document, `replace-text` becomes this artifact's own mutation.
+/// its document, `replace-text` (the explicit Apply of the text window's draft) becomes the net block leaves that carry the
+/// committed document to the applied text ([`md_net_mutations`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn md_emit(command: &MdEditCommand, _snapshot: &MdSnapshot) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
+fn md_emit(command: &MdEditCommand, snapshot: &MdSnapshot) -> Result<Emit<MdMutation, NoConfigMutation, NoDraftMutation>, Fault> {
     match command {
-        MdEditCommand::ReplaceText { text } => match <MdSnapshot as store::ArtifactDsl>::parse_dsl(text) {
-            Ok(snapshot) => Ok(Emit::mutations(vec![MdMutation::SetSnapshot(SetSnapshot { snapshot })])),
+        MdEditCommand::ReplaceText { text } => match md_applied_text(text) {
+            Ok(next) => Ok(Emit::mutations(md_net_mutations(snapshot, &next))),
             Err(error) => Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.md.invalid-text"), error.to_string())),
         },
         MdEditCommand::EditSnapshot { .. } => Err(Fault::from("stdio-md-snapshot-edit-routed-to-native-reducer")),
@@ -211,6 +215,63 @@ impl ArtifactOwnedToolJobFactory for MdRetainedCommandJobFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = MD_RETAINED_PUBLICATION_CONTRACTS;
 }
 //#endregion 🧵️RetainedRoutes
+
+//#region 🧮️NetLeaves
+/// 📥️ The document an applied text means: the artifact's own DSL envelope when the text carries its preamble (an agent's
+/// whole-document write), else the CommonMark source the main window edits.
+fn md_applied_text(text: &str) -> Result<MdSnapshot, store::TextError> {
+    match store::semio_format::split_text_preamble(text) {
+        Ok(_) => <MdSnapshot as store::ArtifactDsl>::parse_dsl(text),
+        Err(_) => Ok(MdSnapshot::from_text(text)),
+    }
+}
+
+/// 🧮️ The net leaves of one applied text: the block edits that carry `base` to exactly `next`, in application order. Blocks
+/// unchanged at either end of a container stay untouched; a changed paragraph, or a heading that keeps its level, re-sets its
+/// inlines; a block quote, and a list that keeps its shape and item count, recurse into their own blocks; any other changed
+/// block is replaced; surplus blocks are removed (last first) or inserted. History therefore edits the block an author
+/// changed, never the whole document; a schema change alone is the whole-document `set-snapshot`.
+fn md_net_mutations(base: &MdSnapshot, next: &MdSnapshot) -> Vec<MdMutation> {
+    if base.schema != next.schema {
+        return vec![MdMutation::SetSnapshot(SetSnapshot { snapshot: next.clone() })];
+    }
+    let mut leaves = Vec::new();
+    md_net_blocks(&[], &base.blocks, &next.blocks, &mut leaves);
+    leaves
+}
+
+fn md_net_blocks(path: &[MdPathStep], old: &[MdBlock], new: &[MdBlock], leaves: &mut Vec<MdMutation>) {
+    let prefix = old.iter().zip(new).take_while(|(before, after)| before == after).count();
+    let suffix = old[prefix..].iter().rev().zip(new[prefix..].iter().rev()).take_while(|(before, after)| before == after).count();
+    let (old_middle, new_middle) = (&old[prefix..old.len() - suffix], &new[prefix..new.len() - suffix]);
+    let paired = old_middle.len().min(new_middle.len());
+    for (offset, (before, after)) in old_middle.iter().zip(new_middle).enumerate() {
+        md_net_block(path, prefix + offset, before, after, leaves);
+    }
+    for offset in (paired..old_middle.len()).rev() {
+        leaves.push(MdMutation::RemoveBlock(remove_block::RemoveBlock { path: path.to_vec(), index: prefix + offset }));
+    }
+    for (offset, block) in new_middle.iter().enumerate().skip(paired) {
+        leaves.push(MdMutation::InsertBlock(insert_block::InsertBlock { path: path.to_vec(), index: prefix + offset, block: block.clone() }));
+    }
+}
+
+fn md_net_block(path: &[MdPathStep], index: usize, before: &MdBlock, after: &MdBlock, leaves: &mut Vec<MdMutation>) {
+    let nested = |step: MdPathStep| path.iter().cloned().chain(std::iter::once(step)).collect::<Vec<_>>();
+    match (before, after) {
+        _ if before == after => {}
+        (MdBlock::Paragraph { .. }, MdBlock::Paragraph { inlines }) => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
+        (MdBlock::Heading { level, .. }, MdBlock::Heading { level: next_level, inlines }) if level == next_level => leaves.push(MdMutation::SetInlines(set_inlines::SetInlines { path: path.to_vec(), index, inlines: inlines.clone() })),
+        (MdBlock::BlockQuote { blocks }, MdBlock::BlockQuote { blocks: next_blocks }) => md_net_blocks(&nested(MdPathStep::BlockQuote { index }), blocks, next_blocks, leaves),
+        (MdBlock::List { ordered, start, tight, items }, MdBlock::List { ordered: next_ordered, start: next_start, tight: next_tight, items: next_items }) if (ordered, start, tight) == (next_ordered, next_start, next_tight) && items.len() == next_items.len() => {
+            for (item, (blocks, next_blocks)) in items.iter().zip(next_items).enumerate() {
+                md_net_blocks(&nested(MdPathStep::ListItem { index, item }), blocks, next_blocks, leaves);
+            }
+        }
+        _ => leaves.push(MdMutation::ReplaceBlock(replace_block::ReplaceBlock { path: path.to_vec(), index, block: after.clone() })),
+    }
+}
+//#endregion 🧮️NetLeaves
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

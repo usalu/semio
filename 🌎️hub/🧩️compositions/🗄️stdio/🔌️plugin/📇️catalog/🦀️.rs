@@ -125,19 +125,14 @@ fn native_codec_factories() -> Vec<NativeCodecFactory> {
     selected_contributions().into_iter().flat_map(|contribution| (contribution.native_codecs)()).collect()
 }
 
-#[cfg(test)]
-#[test]
-fn diagnostic_live_native_codec_authority() {
-    for factory in native_codec_factories() {
-        let codec = (factory.codec)();
-        let hash = codec.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
-        eprintln!("[DEBUG] native authority artifact={} schema={} extension={} packHash={hash}", factory.artifact, codec.schema, codec.extension);
-    }
-}
-
 /// 🧬 Lists only selected native runtime roots; definition-only artifacts are absent.
 pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKindSpec> {
-    native_codec_factories().into_iter().map(|factory| (factory.kind)()).collect()
+    let mut kinds = Vec::new();
+    for factory in native_codec_factories() {
+        let kind = (factory.kind)();
+        if !kinds.contains(&kind) { kinds.push(kind); }
+    }
+    kinds
 }
 
 #[cfg(feature = "full-artifact-catalog")]

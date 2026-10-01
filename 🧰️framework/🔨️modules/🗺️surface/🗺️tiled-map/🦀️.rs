@@ -1854,7 +1854,7 @@ pub struct MapHost {
     /// 📏️ (c) Preview/Effect — per-layer stroke-weight multipliers, mirrors `Gis2dConfig::SetLayerStrokeScale`.
     layer_stroke_scale: MapLayerStrokeScale,
     /// 📡️ (c) Preview/Effect — interaction event log drained each frame; not persisted, not a document.
-    pub events: Vec<serde_json::Value>,
+    events: Vec<serde_json::Value>,
     /// 🖐️ (c) Preview/Effect — current pan gesture state, discarded on release.
     interaction: MapInteraction,
     /// 🎨️ (d) runtime wiring — color palette derived from the app's UI theme.

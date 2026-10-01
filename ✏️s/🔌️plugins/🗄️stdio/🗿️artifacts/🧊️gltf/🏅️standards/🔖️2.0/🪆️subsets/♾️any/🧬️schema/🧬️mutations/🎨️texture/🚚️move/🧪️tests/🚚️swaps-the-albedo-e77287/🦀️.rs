@@ -1,9 +1,9 @@
-//! 🚚️ `move-texture` implementation case `🚚️swaps-the-albedo-e77287`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/🎨️texture/🚚️move/🚚️swaps-the-albedo-e77287/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! 🚚️ `move-texture` implementation case `🚚️swaps`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/🎨️texture/🚚️move/🚚️swaps/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<MoveTextureMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "move-texture");
-    super::super::component::fixture_corpus_tests::assert_case("🎨️texture/🚚️move/🚚️swaps-the-albedo-e77287");
+    super::super::component::fixture_corpus_tests::assert_case("🎨️texture/🚚️move/🚚️swaps");
 }

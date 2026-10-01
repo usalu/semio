@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/os/plugin/composed-child-history.fixture.json",
+  "title": "PluginComposedChildHistoryFixture",
+  "description": "How the history of a composing document lists the edits of its owned composed-child member stores (design §12 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): per case the member edits the stores hold, the edit ids rows already carry, the parent edit every parent transaction landed, and the backfill a reload derives — member edits of a transaction that also landed a parent edit join that parent's row; every other unlogged member edit forms one row per transaction (or per edit without one), in moment order, labelled from its first leaf.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "note", "cases"],
+  "$defs": {
+    "label": {
+      "description": "One label in English and German.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": { "en": { "type": "string", "minLength": 1 }, "de": { "type": "string", "minLength": 1 } }
+    },
+    "store": {
+      "description": "A composed member store id: `<slot>/<childId>`.",
+      "type": "string",
+      "pattern": "^[^/]+/.+$"
+    },
+    "transaction": {
+      "description": "A tool transaction id (`tx-<hex16>`).",
+      "type": "string",
+      "pattern": "^tx-[0-9a-f]{16}$"
+    },
+    "editId": { "type": "string", "minLength": 1 },
+    "history": {
+      "description": "One edit of a member store: its store, id, authoring transaction, moment (physical milliseconds), description, operation count, printed operation lines and the label of its first leaf (absent when the history lists no mutation row).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["store", "editId", "transaction", "at", "description", "startedAt", "opCount", "opLines"],
+      "properties": {
+        "store": { "$ref": "#/$defs/store" },
+        "editId": { "$ref": "#/$defs/editId" },
+        "transaction": { "oneOf": [{ "$ref": "#/$defs/transaction" }, { "type": "null" }] },
+        "at": { "type": "integer", "minimum": 0 },
+        "description": { "type": ["string", "null"] },
+        "startedAt": { "type": "string", "minLength": 1 },
+        "opCount": { "type": "integer", "minimum": 1 },
+        "opLines": { "type": "array", "items": { "type": "string" } },
+        "firstLabel": { "$ref": "#/$defs/label" }
+      }
+    },
+    "group": {
+      "description": "One backfilled row of member edits: its moment, transaction, edit ids in moment order, label and start text.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "transaction", "editIds", "label", "startedAt"],
+      "properties": {
+        "at": { "type": "integer", "minimum": 0 },
+        "transaction": { "oneOf": [{ "$ref": "#/$defs/transaction" }, { "type": "null" }] },
+        "editIds": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/editId" } },
+        "label": { "$ref": "#/$defs/label" },
+        "startedAt": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "properties": {
+    "$schema": { "type": "string" },
+    "note": { "type": "string", "minLength": 1 },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "histories", "logged", "parentTransactions", "expected"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+          "histories": { "type": "array", "items": { "$ref": "#/$defs/history" } },
+          "logged": { "type": "array", "items": { "$ref": "#/$defs/editId" } },
+          "parentTransactions": { "type": "object", "propertyNames": { "$ref": "#/$defs/transaction" }, "additionalProperties": { "$ref": "#/$defs/editId" } },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["attached", "groups"],
+            "properties": {
+              "attached": { "type": "object", "additionalProperties": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/editId" } } },
+              "groups": { "type": "array", "items": { "$ref": "#/$defs/group" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}

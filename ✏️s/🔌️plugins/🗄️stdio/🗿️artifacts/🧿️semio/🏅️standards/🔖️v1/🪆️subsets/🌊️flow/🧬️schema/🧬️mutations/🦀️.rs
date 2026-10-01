@@ -433,6 +433,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/🔤️relabels-and-repositions-the-transform-node/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/🔤️relabels/🦀️.rs"]
 mod set_snapshot_relabels_and_repositions_the_transform_node;
 //#endregion 🧪️FixtureCases

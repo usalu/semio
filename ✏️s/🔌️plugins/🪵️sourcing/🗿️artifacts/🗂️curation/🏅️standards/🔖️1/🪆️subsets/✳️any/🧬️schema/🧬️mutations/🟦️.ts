@@ -1,7 +1,7 @@
 /** 🗂️ Sourcing curation direct mutation aggregate. */
 import type { CreateCuratedItem } from "./🌱create-curated-item/🟦️.ts";
 import type { DeleteCuratedItem } from "./🗑️delete-curated-item/🟦️.ts";
-import type { ChangeCuratedItemCount } from "./🔢change-curated-item-count/🟦️.ts";
+import type { ChangeCuratedItemCount } from "./🔢change-curated-item/🟦️.ts";
 
 export type SourcingMutation =
   | ({ mutation: "createCuratedItem" } & CreateCuratedItem)

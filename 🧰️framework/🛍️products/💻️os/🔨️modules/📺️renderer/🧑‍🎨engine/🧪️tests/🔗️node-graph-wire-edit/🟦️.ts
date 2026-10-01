@@ -102,18 +102,20 @@ describe("node graph wire edit", () => {
     // wire stayed in flight and the gesture made no edit. Cutting a wire means dragging it AWAY, so
     // the gesture that most needs to leave the canvas was the one that could never finish.
     const source = readFileSync(nodeGraphSource, "utf8");
-    const down = source.slice(source.indexOf('observeFlowTask(session, "pointerDownScreen"') - 1400, source.indexOf('observeFlowTask(session, "pointerDownScreen"'));
-    expect(down).toContain("setPointerCapture(event.pointerId)");
-    const up = source.slice(source.indexOf('observeFlowTask(session, "pointerUpScreen"') - 900, source.indexOf('observeFlowTask(session, "pointerUpScreen"'));
-    expect(up).toContain("releasePointerCapture(event.pointerId)");
+    const pressAt = source.indexOf("issueFlowGestureStep(session.pointerDownScreen(");
+    const releaseAt = source.indexOf("issueFlowGestureStep(session.pointerUpScreen(");
+    expect(pressAt, "the flow host issues its press through the gesture step").toBeGreaterThan(0);
+    expect(releaseAt, "the flow host issues its release through the gesture step").toBeGreaterThan(0);
+    expect(source.slice(pressAt - 1400, pressAt)).toContain("setPointerCapture(event.pointerId)");
+    expect(source.slice(releaseAt - 900, releaseAt)).toContain("releasePointerCapture(event.pointerId)");
   });
 
   it("spells a removal the way the guest reads it, in both renderers", () => {
     // 🩸️ The wgpu renderer wrote `edgeId` — the engine's private numbering's name — while the guest's
     // `disconnect` reads `synapseId`: a well-formed command silently dropped.
-    const guest = readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
+    const guest = readFileSync(resolve(repoRoot, "✏️s/🔌️plugins/🌊️flow/🗿️artifacts/🌊️flow/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/✏️node-graph-edit/🦀️.rs"), "utf8");
     const guestDisconnect = guest.slice(guest.indexOf('"disconnect" =>'));
-    const guestField = /operation\.get\("(\w+)"\)/u.exec(guestDisconnect)?.[1];
+    const guestField = /action_row_fields\(row, operation, &\["operation", "(\w+)"\]\)/u.exec(guestDisconnect)?.[1];
     expect(guestField).toBe("synapseId");
     const wgpu = readFileSync(resolve(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/⚙️EngineCanvas/🎯️targets/🧊️wgpu/🦀️.rs"), "utf8");
     expect(wgpu).toContain(`builder.string(Some("${guestField}"), synapse_id)?`);

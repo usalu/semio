@@ -1,9 +1,9 @@
-//! 🚚️ `move-skin` implementation case `🚚️swaps-the-two-skins-dddb3f`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/🦴️skin/🚚️move/🚚️swaps-the-two-skins-dddb3f/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! 🚚️ `move-skin` implementation case `🚚️swaps`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/🦴️skin/🚚️move/🚚️swaps/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<MoveSkinMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "move-skin");
-    super::super::component::fixture_corpus_tests::assert_case("🦴️skin/🚚️move/🚚️swaps-the-two-skins-dddb3f");
+    super::super::component::fixture_corpus_tests::assert_case("🦴️skin/🚚️move/🚚️swaps");
 }

@@ -34,6 +34,185 @@ def scaled(scale, factors):
     return [current[0] * factors[0], current[1] * factors[1], current[2] * factors[2]]
 
 
+# region 🔖️AttractionPose
+def vec3_sub(a, b):
+    return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
+
+
+def vec3_add(a, b):
+    return [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
+
+
+def vec3_scale(a, s):
+    return [a[0] * s, a[1] * s, a[2] * s]
+
+
+def vec3_cross(a, b):
+    return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
+
+
+def vec3_dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def vec3_len(a):
+    return math.sqrt(vec3_dot(a, a))
+
+
+def vec3_normalize(a):
+    length = vec3_len(a)
+    return a if length < 1e-12 else vec3_scale(a, 1.0 / length)
+
+
+def quat_conjugate(q):
+    return [-q[0], -q[1], -q[2], q[3]]
+
+
+def quat_normalize(q):
+    length = math.sqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3])
+    return list(IDENTITY) if length < 1e-12 else [q[0] / length, q[1] / length, q[2] / length, q[3] / length]
+
+
+def quat_rotate_vector(quat, vector):
+    x, y, z, w = quat
+    vx, vy, vz = vector
+    ix = w * vx + y * vz - z * vy
+    iy = w * vy + z * vx - x * vz
+    iz = w * vz + x * vy - y * vx
+    iw = -x * vx - y * vy - z * vz
+    return [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]
+
+
+def quaternion_from_unit_vectors(source, target):
+    r = vec3_dot(source, target) + 1.0
+    if r < 0.000001:
+        quat = [-source[1], source[0], 0.0, 0.0] if abs(source[0]) > abs(source[2]) else [0.0, -source[2], source[1], 0.0]
+    else:
+        c = vec3_cross(source, target)
+        quat = [c[0], c[1], c[2], r]
+    return quat_normalize(quat)
+
+
+def attraction_align_quat(parent_dir, child_dir):
+    reverse_child = vec3_scale(child_dir, -1.0)
+    if vec3_len(vec3_cross(parent_dir, reverse_child)) < 0.01:
+        if abs(parent_dir[2]) < 0.01:
+            return quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
+        axis = vec3_cross([0.0, 0.0, 1.0], parent_dir)
+        if vec3_len(axis) < 1e-9:
+            axis = vec3_cross([1.0, 0.0, 0.0], parent_dir)
+        axis = vec3_normalize(axis)
+        half = math.pi / 2
+        return quat_normalize([axis[0] * math.sin(half), axis[1] * math.sin(half), axis[2] * math.sin(half), math.cos(half)])
+    return quaternion_from_unit_vectors(reverse_child, parent_dir)
+
+
+def derive_attraction_params(t_a, q_a, p_a, d_a, p_b, d_b, t_b, q_b):
+    """🧮️ The six connection parameters reproducing the attracted pose — operation for operation the Rust kernel."""
+    parent_dir = vec3_normalize(d_a)
+    child_dir = vec3_normalize(d_b)
+    align_q = attraction_align_quat(parent_dir, child_dir)
+    pq = quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir)
+    gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0])
+    shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0])
+    raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0])
+    orientation_local = quat_normalize(quat_mul(q_b, quat_conjugate(q_a)))
+    offset = quat_rotate_vector(quat_conjugate(orientation_local), vec3_add(t_b, p_b))
+    diff = vec3_sub(vec3_sub(offset, t_a), p_a)
+    gap, shift, rise = vec3_dot(diff, gap_dir), vec3_dot(diff, shift_dir), vec3_dot(diff, raise_dir)
+    m = quat_mul(quat_mul(quat_conjugate(pq), quat_mul(align_q, orientation_local)), pq)
+    col_x = quat_rotate_vector(m, [1.0, 0.0, 0.0])
+    col_y = quat_rotate_vector(m, [0.0, 1.0, 0.0])
+    tilt_rad = -math.asin(max(-1.0, min(1.0, col_y[2])))
+    if abs(abs(col_y[2]) - 1.0) < 1e-6:
+        rotation_rad, turn_rad = math.atan2(col_x[1], col_x[0]), 0.0
+    else:
+        col_z = quat_rotate_vector(m, [0.0, 0.0, 1.0])
+        rotation_rad, turn_rad = math.atan2(-col_x[2], col_z[2]), math.atan2(col_y[0], col_y[1])
+    degrees = lambda rad: rad * 180.0 / math.pi
+    return gap, shift, rise, degrees(rotation_rad), degrees(turn_rad), degrees(tilt_rad)
+
+
+def full_id(object_id, vortex_id):
+    return vortex_id if ":" in vortex_id else "%s:%s" % (object_id, vortex_id)
+
+
+def attraction_child_pose(t_a, q_a, p_a, d_a, p_b, d_b, gap, shift, rise, rotation_deg, turn_deg, tilt_deg):
+    """📐️ The attracted pose the six parameters place against the attracting pose — `puzzle3d_attraction_child_pose`."""
+    parent_dir = vec3_normalize(d_a)
+    child_dir = vec3_normalize(d_b)
+    align_q = attraction_align_quat(parent_dir, child_dir)
+    pq = quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir)
+    gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0])
+    shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0])
+    raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0])
+    radians = lambda deg: deg * math.pi / 180.0
+    rotate_q = quat_from_axis_angle(parent_dir[0], parent_dir[1], parent_dir[2], -radians(rotation_deg))
+    turn_axis = quat_rotate_vector(rotate_q, raise_dir)
+    tilt_axis = quat_rotate_vector(rotate_q, shift_dir)
+    turn_q = quat_from_axis_angle(turn_axis[0], turn_axis[1], turn_axis[2], radians(turn_deg))
+    tilt_q = quat_from_axis_angle(tilt_axis[0], tilt_axis[1], tilt_axis[2], radians(tilt_deg))
+    local = quat_conjugate(align_q)
+    local = quat_mul(local, quat_conjugate(rotate_q))
+    local = quat_mul(local, quat_conjugate(turn_q))
+    local = quat_mul(local, quat_conjugate(tilt_q))
+    local = quat_normalize(local)
+    offset = vec3_add(vec3_add(t_a, p_a), vec3_add(vec3_add(vec3_scale(gap_dir, gap), vec3_scale(shift_dir, shift)), vec3_scale(raise_dir, rise)))
+    return vec3_sub(quat_rotate_vector(local, offset), p_b), quat_normalize(quat_mul(local, q_a))
+
+
+def follow_3d(scene, targets, survivors, transform, follow):
+    """🌲️ `puzzle3d_selection_follow`: targets first (payload order), then a breadth-first re-placement of every
+    unlocked attracted object from its moved parent, then every other attraction touching a moved object re-derived."""
+    objects = scene["objects"]
+    moved = [None] * len(objects)
+    queue, followers = [], []
+    for identifier in targets:
+        if identifier not in survivors:
+            continue
+        at = next((index for index, entry in enumerate(objects) if entry["id"] == identifier), None)
+        if at is not None and moved[at] is None:
+            moved[at] = transform(objects[at])
+            queue.append(at)
+    if not follow:
+        return moved, followers, []
+    ports = {full_id(entry["id"], vortex["id"]): (at, port) for at, entry in enumerate(objects) for port, vortex in enumerate(entry["vortices"])}
+    ends = []
+    for attraction in scene["attractions"]:
+        source, target = ports.get(attraction["attracting"]), ports.get(attraction["attracted"])
+        ends.append((source, target) if source is not None and target is not None and source[0] != target[0] else None)
+    placing = [False] * len(ends)
+    while queue:
+        parent = queue.pop(0)
+        for index, end in enumerate(ends):
+            if end is None or end[0][0] != parent or moved[end[1][0]] is not None or objects[end[1][0]]["locked"]:
+                continue
+            (_, port_a), (child, port_b) = end
+            attracting, attraction, attracted = moved[parent], scene["attractions"][index], objects[child]
+            vortex_a, vortex_b = attracting["vortices"][port_a], attracted["vortices"][port_b]
+            origin, orientation = attraction_child_pose(attracting["origin"], attracting.get("orientation") or IDENTITY, vortex_a["position"], vortex_a.get("direction") or [0.0, 0.0, -1.0], vortex_b["position"], vortex_b.get("direction") or [0.0, 0.0, -1.0], attraction["gap"], attraction["shift"], attraction["rise"], attraction["rotation"], attraction["turn"], attraction["tilt"])
+            moved[child] = dict(attracted, origin=origin, orientation=orientation)
+            followers.append(attracted["id"])
+            placing[index] = True
+            queue.append(child)
+    pose = lambda at: objects[at] if moved[at] is None else moved[at]
+    rederived = []
+    for index, (attraction, end) in enumerate(zip(scene["attractions"], ends)):
+        if end is None or placing[index]:
+            continue
+        (a, port_a), (b, port_b) = end
+        if moved[a] is None and moved[b] is None:
+            continue
+        attracting, attracted = pose(a), pose(b)
+        vortex_a, vortex_b = attracting["vortices"][port_a], attracted["vortices"][port_b]
+        gap, shift, rise, rotation, turn, tilt = derive_attraction_params(attracting["origin"], attracting.get("orientation") or IDENTITY, vortex_a["position"], vortex_a.get("direction") or [0.0, 0.0, -1.0], vortex_b["position"], vortex_b.get("direction") or [0.0, 0.0, -1.0], attracted["origin"], attracted.get("orientation") or IDENTITY)
+        updated = dict(attraction, gap=gap, shift=shift, rise=rise, rotation=rotation, turn=turn, tilt=tilt)
+        if updated != attraction:
+            rederived.append(updated)
+    return moved, followers, rederived
+# endregion 🔖️AttractionPose
+
+
 # region 🔖️Puzzle3d
 SCENE_3D = {
     "schema": "puzzle.3d",
@@ -54,23 +233,25 @@ SCENE_3D = {
 
 
 def transform_3d(payload):
+    """🧮️ `(object transform, volume transform, identity, follow)` — whether the leaf moves poses, so attracted
+    objects follow (a scaling does not)."""
     kind = payload["mutation"]
     if kind == "dragSelection":
         dx, dy, dz = payload["offset"]
         move = lambda record: dict(record, origin=[record["origin"][0] + dx, record["origin"][1] + dy, record["origin"][2] + dz])
-        return move, move, payload["offset"] == [0.0, 0.0, 0.0]
+        return move, move, payload["offset"] == [0.0, 0.0, 0.0], True
     if kind == "rotateSelection":
         turn = quat_from_axis_angle(payload["axis"][0], payload["axis"][1], payload["axis"][2], payload["angle"])
         rotate = lambda record: dict(record, orientation=quat_mul(turn, record.get("orientation") or IDENTITY))
-        return rotate, rotate, payload["angle"] == 0.0 or turn == IDENTITY
+        return rotate, rotate, payload["angle"] == 0.0 or turn == IDENTITY, True
     factors = payload["factors"]
     grow = lambda record: dict(record, scale=scaled(record.get("scale"), factors))
-    return grow, grow, factors == [1.0, 1.0, 1.0]
+    return grow, grow, factors == [1.0, 1.0, 1.0], False
 
 
 def outcome_3d(scene, payload):
-    """🎯️ The same classification and outcome rules as `puzzle3d_selection_diff`."""
-    move_object, move_volume, identity = transform_3d(payload)
+    """🎯️ The same classification, attraction re-solve and outcome rules as `puzzle3d_selection_diff`."""
+    move_object, move_volume, identity, follow = transform_3d(payload)
     targets = payload["targets"]
     missing, locked, survivors = [], [], []
     for identifier in targets:
@@ -83,40 +264,80 @@ def outcome_3d(scene, payload):
             survivors.append(identifier)
     if not survivors:
         return None, {"status": "rejected", "code": "mutation.target-missing", "path": list(targets)}
-    messages = [{"code": "mutation.partial", "level": "warn", "target": ids} for ids in (missing, locked) if ids]
+    messages = [{"code": "mutation.partial", "level": "warning", "target": ids} for ids in (missing, locked) if ids]
     after = copy.deepcopy(scene)
-    patched = {"objects": [], "targetVolumes": []}
+    patched = {"objects": [], "targetVolumes": [], "attractions": []}
+    followers = []
     if not identity:
-        for member, transform in (("objects", move_object), ("targetVolumes", move_volume)):
-            for at, record in enumerate(after[member]):
-                if record["id"] in survivors:
-                    moved = transform(record)
-                    if moved != record:
-                        after[member][at] = moved
-                        patched[member].append({"id": record["id"], "patch": {"replacement": moved}})
+        moved, followers, rederived = follow_3d(scene, targets, set(survivors), move_object, follow)
+        for at, record in enumerate(scene["objects"]):
+            if moved[at] is not None and moved[at] != record:
+                after["objects"][at] = moved[at]
+                patched["objects"].append({"id": record["id"], "patch": {"replacement": moved[at]}})
+        for at, record in enumerate(scene["targetVolumes"]):
+            if record["id"] in survivors:
+                next_record = move_volume(record)
+                if next_record != record:
+                    after["targetVolumes"][at] = next_record
+                    patched["targetVolumes"].append({"id": record["id"], "patch": {"replacement": next_record}})
+        for updated in rederived:
+            after["attractions"] = [updated if entry["id"] == updated["id"] else entry for entry in after["attractions"]]
+            patched["attractions"].append({"id": updated["id"], "patch": {"replacement": updated}})
     delta = lambda entries: {"added": [], "patched": entries, "removed": [], "reordered": None} if entries else None
-    diff = {"artifact": None, "attractions": None, "domain": None, "meta": None, "objects": delta(patched["objects"]), "references": None, "schema": None, "targetVolumes": delta(patched["targetVolumes"])}
-    if not patched["objects"] and not patched["targetVolumes"]:
-        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warn", "target": list(targets)}]}
+    diff = {"artifact": None, "attractions": delta(patched["attractions"]), "domain": None, "meta": None, "objects": delta(patched["objects"]), "references": None, "schema": None, "targetVolumes": delta(patched["targetVolumes"])}
+    if not patched["objects"] and not patched["targetVolumes"] and not patched["attractions"]:
+        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warning", "target": list(targets)}]}
+    if followers or patched["attractions"]:
+        messages.append({"code": "mutation.cascade", "level": "info", "target": followers + [entry["id"] for entry in patched["attractions"]]})
     return (after, diff), dict({"status": "applied"}, **({"messages": messages} if messages else {}))
 
 
+def chain_scene_3d():
+    """⛓️ A resolved attraction chain for the re-solve vectors: `object-a` attracts `object-b`, which attracts the
+    LOCKED `object-c` and the free `object-d`; every attraction's six parameters are derived from the committed
+    poses, so the base is exactly what resolving it reproduces."""
+    scene = copy.deepcopy(SCENE_3D)
+    vortex = lambda identifier, position, direction: {"id": identifier, "vortexKind": "vortex-kind-a", "position": position, "direction": direction, "hidden": False, "locked": False}
+    scene["objects"] = [
+        {"id": "object-a", "objectKind": "object-kind-a", "anchor": "fixed", "origin": [0.0, 0.0, 0.0], "orientation": list(IDENTITY), "vortices": [vortex("vortex-1", [1.0, 0.0, 0.0], [1.0, 0.0, 0.0])], "hidden": False, "locked": False},
+        {"id": "object-b", "objectKind": "object-kind-b", "anchor": "fixed", "origin": [2.0, 0.0, 0.0], "vortices": [vortex("vortex-2", [-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0]), vortex("vortex-3", [1.0, 0.0, 0.0], [1.0, 0.0, 0.0])], "hidden": False, "locked": False},
+        {"id": "object-c", "objectKind": "object-kind-b", "anchor": "fixed", "origin": [4.0, 0.0, 0.0], "vortices": [vortex("vortex-4", [-1.0, 0.0, 0.0], [-1.0, 0.0, 0.0])], "hidden": False, "locked": True},
+        {"id": "object-d", "objectKind": "object-kind-b", "anchor": "fixed", "origin": [2.0, 2.0, 0.0], "vortices": [vortex("vortex-5", [0.0, -1.0, 0.0], [0.0, -1.0, 0.0])], "hidden": False, "locked": False},
+    ]
+    pairs = [("attraction-ab", "object-a", 0, "object-b", 0), ("attraction-bc", "object-b", 1, "object-c", 0), ("attraction-bd", "object-b", 1, "object-d", 0)]
+    by_id = {entry["id"]: entry for entry in scene["objects"]}
+    scene["attractions"] = []
+    for identifier, source, source_port, target, target_port in pairs:
+        a, b = by_id[source], by_id[target]
+        va, vb = a["vortices"][source_port], b["vortices"][target_port]
+        gap, shift, rise, rotation, turn, tilt = derive_attraction_params(a["origin"], a.get("orientation") or IDENTITY, va["position"], va["direction"], vb["position"], vb["direction"], b["origin"], b.get("orientation") or IDENTITY)
+        scene["attractions"].append({"id": identifier, "attracting": "%s:%s" % (source, va["id"]), "attracted": "%s:%s" % (target, vb["id"]), "gap": gap, "shift": shift, "rise": rise, "rotation": rotation, "turn": turn, "tilt": tilt, "x": 0.0, "y": 0.0})
+    return scene
+
+
 CASES_3D = [
-    ("✋️drag-selection", "✋️drags-two-objects", {"mutation": "dragSelection", "targets": ["object-a", "object-b"], "offset": [1.5, -2.0, 0.5]}, "Drags `object-a` and `object-b` by (1.5, -2, 0.5): both origins move by the one offset, read off the base; the attraction between them is not re-solved."),
-    ("✋️drag-selection", "🎯️drags-object-and-volume", {"mutation": "dragSelection", "targets": ["object-a", "volume-1"], "offset": [0.0, 0.0, 3.0]}, "One drag over an object AND a target volume (ids classified by document membership): `object-a` and `volume-1` both lift by 3."),
-    ("✋️drag-selection", "⚠️skips-locked-ghost", {"mutation": "dragSelection", "targets": ["object-b", "object-c", "volume-2", "object-ghost"], "offset": [1.0, 1.0, 0.0]}, "`object-b` moves by (1, 1, 0); the absent `object-ghost` and the locked `object-c` and `volume-2` are skipped with one Warning-level `mutation.partial` per reason."),
+    ("✋️drag-selection", "✋️drags-two-objects", {"mutation": "dragSelection", "targets": ["object-a", "object-b"], "offset": [1.5, -2.0, 0.5]}, "Drags `object-a` and `object-b` by (1.5, -2, 0.5): both origins move by the one offset, read off the base, and `attraction-1`, which touches both, is re-derived from the moved poses (`mutation.cascade`)."),
+    ("✋️drag-selection", "🎯️drags", {"mutation": "dragSelection", "targets": ["object-a", "volume-1"], "offset": [0.0, 0.0, 3.0]}, "One drag over an object AND a target volume (ids classified by document membership): `object-a` and `volume-1` both lift by 3, and `object-b`, which `object-a` attracts, is re-placed from the lifted `object-a` (Info-level `mutation.cascade`)."),
+    ("✋️drag-selection", "⚠️skips-locked-ghost", {"mutation": "dragSelection", "targets": ["object-b", "object-c", "volume-2", "object-ghost"], "offset": [1.0, 1.0, 0.0]}, "`object-b` moves by (1, 1, 0) away from `object-a`, so `attraction-1` is re-derived from the moved pose (`mutation.cascade`); the absent `object-ghost` and the locked `object-c` and `volume-2` are skipped with one Warning-level `mutation.partial` per reason."),
     ("✋️drag-selection", "🚫️rejects-ghosts", {"mutation": "dragSelection", "targets": ["object-ghost", "volume-ghost"], "offset": [1.0, 0.0, 0.0]}, "Every target is absent: Error-level `mutation.target-missing`, nothing moves."),
     ("✋️drag-selection", "⏸️keeps-a-zero-offset", {"mutation": "dragSelection", "targets": ["object-a"], "offset": [0.0, 0.0, 0.0]}, "A zero offset is a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
-    ("🔄️rotate-selection", "🔄️turns-two-objects", {"mutation": "rotateSelection", "targets": ["object-a", "object-b"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "A quarter turn about +z: `object-a` turns from the identity and `object-b`, which carries no orientation, gains one; neither origin moves."),
-    ("🔄️rotate-selection", "🎯️turns-object-and-volume", {"mutation": "rotateSelection", "targets": ["object-a", "volume-1"], "axis": [1.0, 0.0, 0.0], "angle": math.pi}, "A half turn about +x over an object AND a target volume, each about its own origin."),
-    ("🔄️rotate-selection", "⚠️skips-locked-ghost", {"mutation": "rotateSelection", "targets": ["object-b", "volume-2", "object-ghost"], "axis": [0.0, 1.0, 0.0], "angle": QUARTER}, "`object-b` turns about +y; the absent `object-ghost` and the locked `volume-2` are skipped as `mutation.partial`."),
+    ("🔄️rotate-selection", "🔄️turns-two-objects", {"mutation": "rotateSelection", "targets": ["object-a", "object-b"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "A quarter turn about +z: `object-a` turns from the identity and `object-b`, which carries no orientation, gains one; neither origin moves, and `attraction-1`, which touches both, is re-derived from the turned poses (`mutation.cascade`)."),
+    ("🔄️rotate-selection", "🎯️turns", {"mutation": "rotateSelection", "targets": ["object-a", "volume-1"], "axis": [1.0, 0.0, 0.0], "angle": math.pi}, "A half turn about +x over an object AND a target volume, each about its own origin; `object-b`, which `object-a` attracts, is re-placed from the turned `object-a` (`mutation.cascade`)."),
+    ("🔄️rotate-selection", "⚠️skips-locked-ghost", {"mutation": "rotateSelection", "targets": ["object-b", "volume-2", "object-ghost"], "axis": [0.0, 1.0, 0.0], "angle": QUARTER}, "`object-b` turns about +y while `object-a` stays, so `attraction-1` is re-derived (`mutation.cascade`); the absent `object-ghost` and the locked `volume-2` are skipped as `mutation.partial`."),
     ("🔄️rotate-selection", "🚫️rejects-ghosts", {"mutation": "rotateSelection", "targets": ["object-ghost"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "The only target is absent: Error-level `mutation.target-missing`, nothing turns."),
     ("🔄️rotate-selection", "⏸️keeps-a-zero-angle", {"mutation": "rotateSelection", "targets": ["object-a"], "axis": [0.0, 0.0, 1.0], "angle": 0.0}, "A zero angle is a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
     ("🔍️scale-selection", "🔍️scales-two-objects", {"mutation": "scaleSelection", "targets": ["object-a", "object-b"], "factors": [2.0, 1.0, 0.5]}, "Factors (2, 1, 0.5): `object-a`'s uniform scale becomes a per-axis triple, and `object-b`, which carries no scale, reads as one."),
-    ("🔍️scale-selection", "🎯️scales-object-and-volume", {"mutation": "scaleSelection", "targets": ["object-a", "volume-1"], "factors": [3.0, 3.0, 3.0]}, "A uniform factor 3 over an object AND a target volume, each about its own origin."),
+    ("🔍️scale-selection", "🎯️scales", {"mutation": "scaleSelection", "targets": ["object-a", "volume-1"], "factors": [3.0, 3.0, 3.0]}, "A uniform factor 3 over an object AND a target volume, each about its own origin."),
     ("🔍️scale-selection", "⚠️skips-locked-ghost", {"mutation": "scaleSelection", "targets": ["volume-1", "object-c", "object-ghost"], "factors": [0.5, 0.5, 0.5]}, "`volume-1` halves; the absent `object-ghost` and the locked `object-c` are skipped with one `mutation.partial` per reason."),
     ("🔍️scale-selection", "🚫️rejects-ghosts", {"mutation": "scaleSelection", "targets": ["object-ghost", "volume-ghost"], "factors": [2.0, 2.0, 2.0]}, "Every target is absent: Error-level `mutation.target-missing`, nothing scales."),
     ("🔍️scale-selection", "⏸️keeps-unit-factors", {"mutation": "scaleSelection", "targets": ["object-a"], "factors": [1.0, 1.0, 1.0]}, "Unit factors are a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
+]
+
+CHAIN_CASES_3D = [
+    ("✋️drag-selection", "⛓️follow", {"mutation": "dragSelection", "targets": ["object-a"], "offset": [0.0, 0.0, 1.0]}, "Drags the chain root `object-a` up by 1: `object-b` and `object-d`, which hang off it, are re-placed from their moved parents with unchanged attractions; the LOCKED `object-c` stays, so `attraction-bc` is re-derived — one Info-level `mutation.cascade` names both followers and the re-derived attraction."),
+    ("✋️drag-selection", "🪢️cross", {"mutation": "dragSelection", "targets": ["object-b"], "offset": [0.0, 1.0, 0.0]}, "Drags the middle link `object-b` by (0, 1, 0): `object-d` is re-placed from it, while `attraction-ab` (from the unmoved `object-a`) and `attraction-bc` (to the locked `object-c`) are re-derived from the moved pose."),
+    ("🔄️rotate-selection", "⛓️orbits", {"mutation": "rotateSelection", "targets": ["object-a"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "A quarter turn of the chain root `object-a` about +z: `object-b` and `object-d` are re-placed from the turned root by the placement kernel, the locked `object-c` stays and `attraction-bc` is re-derived."),
+    ("🔍️scale-selection", "⛓️stays", {"mutation": "scaleSelection", "targets": ["object-a"], "factors": [2.0, 2.0, 2.0]}, "Scaling moves no pose: only `object-a`'s scale doubles, nothing follows and no attraction is re-derived."),
 ]
 
 INVARIANTS_3D = [
@@ -178,7 +399,7 @@ def outcome_5d(scene, payload):
             missing.append(identifier)
     if not survivors:
         return None, {"status": "rejected", "code": "mutation.target-missing", "path": list(targets)}
-    messages = [{"code": "mutation.partial", "level": "warn", "target": ids} for ids in (missing, locked, unreached) if ids]
+    messages = [{"code": "mutation.partial", "level": "warning", "target": ids} for ids in (missing, locked, unreached) if ids]
     after = copy.deepcopy(scene)
     patched = {"parts": [], "targetVolumes": []}
     if not identity:
@@ -194,24 +415,24 @@ def outcome_5d(scene, payload):
     delta = lambda entries: {"added": [], "patched": entries, "removed": [], "reordered": None} if entries else None
     diff = {"artifact": None, "domain": None, "fasteners": None, "kindCatalogs": None, "kindCatalogsExtra": None, "kindCompatibility": None, "label": None, "meta": None, "parts": delta(patched["parts"]), "schema": None, "targetVolumes": delta(patched["targetVolumes"])}
     if not patched["parts"] and not patched["targetVolumes"]:
-        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warn", "target": list(targets)}]}
+        return (after, diff), {"status": "no-op", "messages": messages + [{"code": "mutation.no-op", "level": "warning", "target": list(targets)}]}
     return (after, diff), dict({"status": "applied"}, **({"messages": messages} if messages else {}))
 
 
 CASES_5D = [
     ("✋️drag-selection2d", "✋️drags-two-parts", {"mutation": "dragSelection2d", "targets": ["part-a", "part-b"], "dx": 5.0, "dy": -2.5}, "Drags the board projections of `part-a` and `part-b` by (5, -2.5); their world poses stay."),
-    ("✋️drag-selection2d", "⚠️skips-locked-volume-ghost", {"mutation": "dragSelection2d", "targets": ["part-a", "part-c", "volume-1", "part-ghost"], "dx": 1.0, "dy": 1.0}, "`part-a` moves on the board; the absent `part-ghost`, the locked `part-c` and `volume-1`, which the board does not paint, are skipped with one `mutation.partial` per reason."),
+    ("✋️drag-selection2d", "⚠️skips", {"mutation": "dragSelection2d", "targets": ["part-a", "part-c", "volume-1", "part-ghost"], "dx": 1.0, "dy": 1.0}, "`part-a` moves on the board; the absent `part-ghost`, the locked `part-c` and `volume-1`, which the board does not paint, are skipped with one `mutation.partial` per reason."),
     ("✋️drag-selection2d", "🚫️rejects-ghosts", {"mutation": "dragSelection2d", "targets": ["part-ghost"], "dx": 1.0, "dy": 0.0}, "The only target is absent: Error-level `mutation.target-missing`, nothing moves."),
     ("✋️drag-selection2d", "⏸️keeps-a-zero-offset", {"mutation": "dragSelection2d", "targets": ["part-a"], "dx": 0.0, "dy": 0.0}, "A zero offset is a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
-    ("🚚️drag-selection3d", "🚚️drags-part-and-volume", {"mutation": "dragSelection3d", "targets": ["part-a", "volume-1"], "offset": [1.5, -2.0, 0.5]}, "Drags `part-a`'s world origin and `volume-1` by (1.5, -2, 0.5); the board projection stays."),
+    ("🚚️drag-selection3d", "🚚️drags", {"mutation": "dragSelection3d", "targets": ["part-a", "volume-1"], "offset": [1.5, -2.0, 0.5]}, "Drags `part-a`'s world origin and `volume-1` by (1.5, -2, 0.5); the board projection stays."),
     ("🚚️drag-selection3d", "⚠️skips-locked-ghost", {"mutation": "dragSelection3d", "targets": ["part-b", "part-c", "volume-2", "part-ghost"], "offset": [0.0, 0.0, 3.0]}, "`part-b` lifts by 3; the absent `part-ghost` and the locked `part-c` and `volume-2` are skipped as `mutation.partial`."),
     ("🚚️drag-selection3d", "🚫️rejects-ghosts", {"mutation": "dragSelection3d", "targets": ["part-ghost", "volume-ghost"], "offset": [1.0, 0.0, 0.0]}, "Every target is absent: Error-level `mutation.target-missing`, nothing moves."),
     ("🚚️drag-selection3d", "⏸️keeps-a-zero-offset", {"mutation": "dragSelection3d", "targets": ["part-a"], "offset": [0.0, 0.0, 0.0]}, "A zero offset is a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
-    ("🔄️rotate-selection3d", "🔄️turns-part-and-volume", {"mutation": "rotateSelection3d", "targets": ["part-a", "part-b", "volume-1"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "A quarter turn about +z: `part-a` turns from the identity, `part-b`, which carries no orientation, gains one, and `volume-1` turns about its own origin."),
+    ("🔄️rotate-selection3d", "🔄️turns", {"mutation": "rotateSelection3d", "targets": ["part-a", "part-b", "volume-1"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "A quarter turn about +z: `part-a` turns from the identity, `part-b`, which carries no orientation, gains one, and `volume-1` turns about its own origin."),
     ("🔄️rotate-selection3d", "⚠️skips-locked-ghost", {"mutation": "rotateSelection3d", "targets": ["part-b", "volume-2", "part-ghost"], "axis": [1.0, 0.0, 0.0], "angle": math.pi}, "A half turn of `part-b` about +x; the absent `part-ghost` and the locked `volume-2` are skipped as `mutation.partial`."),
     ("🔄️rotate-selection3d", "🚫️rejects-ghosts", {"mutation": "rotateSelection3d", "targets": ["part-ghost"], "axis": [0.0, 0.0, 1.0], "angle": QUARTER}, "The only target is absent: Error-level `mutation.target-missing`, nothing turns."),
     ("🔄️rotate-selection3d", "⏸️keeps-a-zero-angle", {"mutation": "rotateSelection3d", "targets": ["part-a"], "axis": [0.0, 0.0, 1.0], "angle": 0.0}, "A zero angle is a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
-    ("🔍️scale-selection3d", "🔍️scales-parts-and-volume", {"mutation": "scaleSelection3d", "targets": ["part-a", "part-b", "volume-1"], "factors": [2.0, 1.0, 0.5]}, "Factors (2, 1, 0.5): `part-a`'s uniform scale becomes a per-axis triple, `part-b`, which carries no scale, reads as one, and `volume-1` scales its triple."),
+    ("🔍️scale-selection3d", "🔍️scales", {"mutation": "scaleSelection3d", "targets": ["part-a", "part-b", "volume-1"], "factors": [2.0, 1.0, 0.5]}, "Factors (2, 1, 0.5): `part-a`'s uniform scale becomes a per-axis triple, `part-b`, which carries no scale, reads as one, and `volume-1` scales its triple."),
     ("🔍️scale-selection3d", "⚠️skips-locked-ghost", {"mutation": "scaleSelection3d", "targets": ["part-b", "part-c", "part-ghost"], "factors": [3.0, 3.0, 3.0]}, "`part-b` triples; the absent `part-ghost` and the locked `part-c` are skipped with one `mutation.partial` per reason."),
     ("🔍️scale-selection3d", "🚫️rejects-ghosts", {"mutation": "scaleSelection3d", "targets": ["part-ghost"], "factors": [2.0, 2.0, 2.0]}, "The only target is absent: Error-level `mutation.target-missing`, nothing scales."),
     ("🔍️scale-selection3d", "⏸️keeps-unit-factors", {"mutation": "scaleSelection3d", "targets": ["part-a"], "factors": [1.0, 1.0, 1.0]}, "Unit factors are a Warning-level `mutation.no-op`: the default diff, nothing to undo."),
@@ -303,7 +524,7 @@ DECLARED_MESSAGES = '''
 fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
     let level = |text: &str| match text {{
         "info" => protocol::Severity::Info,
-        "warn" => protocol::Severity::Warning,
+        "warning" => protocol::Severity::Warning,
         "error" => protocol::Severity::Error,
         "fatal" => protocol::Severity::Fatal,
         other => panic!("{kind}/{slug}: unknown message level {{other:?}}"),
@@ -322,7 +543,7 @@ fn produces_committed_diff() {{
     let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "{kind}/{slug}: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!({untouched}, "{kind}/{slug}: a selection transform touches no relation and no document meta");
+    assert!({untouched}, "{kind}/{slug}: a selection transform touches {untouched_text}");
 }}
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`.
@@ -468,8 +689,8 @@ fn inverse_of_a_refusal_is_empty() {{
 '''
 
 NAMES = {
-    "3d": {"Diff": "Puzzle3dDiff", "Mutation": "Puzzle3dMutation", "Snapshot": "Puzzle3dSnapshot", "apply": "apply_puzzle3d_mutation", "inverse": "inverse_puzzle3d_mutation", "untouched": 'committed["attractions"].is_null() && committed["meta"].is_null() && committed["references"].is_null()'},
-    "5d": {"Diff": "Puzzle5dDiff", "Mutation": "Puzzle5dMutation", "Snapshot": "Puzzle5dSnapshot", "apply": "apply_puzzle5d_mutation", "inverse": "inverse_puzzle5d_mutation", "untouched": 'committed["fasteners"].is_null() && committed["meta"].is_null()'},
+    "3d": {"Diff": "Puzzle3dDiff", "Mutation": "Puzzle3dMutation", "Snapshot": "Puzzle3dSnapshot", "apply": "apply_puzzle3d_mutation", "inverse": "inverse_puzzle3d_mutation", "untouched": 'committed["meta"].is_null() && committed["references"].is_null()', "untouched_text": "no document meta and no reference"},
+    "5d": {"Diff": "Puzzle5dDiff", "Mutation": "Puzzle5dMutation", "Snapshot": "Puzzle5dSnapshot", "apply": "apply_puzzle5d_mutation", "inverse": "inverse_puzzle5d_mutation", "untouched": 'committed["fasteners"].is_null() && committed["meta"].is_null()', "untouched_text": "no relation and no document meta"},
 }
 
 
@@ -536,10 +757,12 @@ def main():
     if artifact == "3d":
         for leaf, case, payload, description in CASES_3D:
             print(leaf, case, write_case("3d", SCENE_3D, outcome_3d, leaf, case, payload, description))
+        for leaf, case, payload, description in CHAIN_CASES_3D:
+            print(leaf, case, write_case("3d", chain_scene_3d(), outcome_3d, leaf, case, payload, description))
         for leaf, case, payload, path, description in INVARIANTS_3D:
             write_invariant("3d", SCENE_3D, leaf, case, payload, path, description)
             print(leaf, case, "invariant")
-        mount("3d", CASES_3D, INVARIANTS_3D)
+        mount("3d", CASES_3D + CHAIN_CASES_3D, INVARIANTS_3D)
     else:
         scene = scene_5d()
         for leaf, case, payload, description in CASES_5D:

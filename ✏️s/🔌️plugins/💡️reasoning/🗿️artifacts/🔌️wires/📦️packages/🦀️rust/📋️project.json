@@ -105,7 +105,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "reasoning-wires-graph"
           ]
         }
       }
@@ -124,7 +125,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "reasoning-wires-graph-wire"
           ]
         }
       }

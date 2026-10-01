@@ -1,10 +1,11 @@
+import { fileURLToPath } from "node:url";
 import { test, expect } from "bun:test";
 import Ajv from "ajv";
 import TOML from "@iarna/toml";
 import glob from "fast-glob";
 import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, unlinkSync } from "node:fs";
 import { join } from "node:path";
-import { parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
+import { parseCargoWorkspaceContribution, discoverCargoWorkspaces, cargoWorkspaceMembers, cargoWorkspaceForManifest, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoCommandRequiresOwnerPreparationV1, publishCargoWorkspaceMembership, parseCargoPreparation, prepareCargoOwners } from "../🟦️.ts";
 const fixture = JSON.parse(readFileSync(new URL("../🧫️fixtures/🔣️.json", import.meta.url), "utf8"));
 const schema = JSON.parse(readFileSync(new URL("../🧬️schema/🔣️.json", import.meta.url), "utf8"));
 const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -92,4 +93,19 @@ test("preparation follows actual selected dependency scopes and deduplicates sha
  prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"));expect(readFileSync(join(root,"events.jsonl"),"utf8")).toBe('["general"]\n');writeFileSync(join(root,"events.jsonl"),"");
  prepareCargoOwners(root,cargoWorkspaceForManifest(root,"product/Cargo.toml"));expect(readFileSync(join(root,"events.jsonl"),"utf8").trim().split("\n").sort()).toEqual(['["general"]','["specific"]']);
  const path=join(root,"framework/kernel/Cargo.toml");writeFileSync(path,readFileSync(path,"utf8").replace('../../📜️script.ts','../../../📜️script.ts'));expect(()=>prepareCargoOwners(root,cargoWorkspaceForManifest(root,"Cargo.toml"))).toThrow();
+});
+
+test("every compiling native command prepares owners and keeps diagnostics off machine stdout", () => {
+ const schema=JSON.parse(readFileSync(new URL("../🧬️schema/🏃️invocation/🔣️.json",import.meta.url),"utf8")),corpus=JSON.parse(readFileSync(new URL("../🧫️fixtures/🏃️invocation/🔣️.json",import.meta.url),"utf8"));
+ const oracle=new Ajv({strict:true}).compile(schema);
+ for(const vector of corpus.cases){expect(oracle(vector)).toBe(true);expect(cargoCommandRequiresOwnerPreparationV1(vector.command)).toBe(vector.requiresOwnerPreparation);expect(oracle({...vector,requiresOwnerPreparation:!vector.requiresOwnerPreparation})).toBe(false);}
+ const root=mkdtempSync(join(artifactRoot!,"cargo-machine-output-"));
+ put(root,"Cargo.toml",workspace(["framework/*"]));
+ put(root,"framework/kernel/Cargo.toml",pkg("neutral-kernel",'[package.metadata.semio.preparation]\nscript="../../📜️script.ts"\ncommand=["publish"]\n'));
+ put(root,"📜️script.ts",'console.log("[preparation] owned input refreshed");');
+ const api=fileURLToPath(new URL("../🟦️.ts",import.meta.url));
+ put(root,"proof/📜️script.ts",`import {prepareCargoWorkspaceInvocation} from ${JSON.stringify(api)};prepareCargoWorkspaceInvocation(${JSON.stringify(root)},["run","--manifest-path","Cargo.toml"],${JSON.stringify(root)});console.log(JSON.stringify({machine:"retained"}));`);
+ const child=Bun.spawnSync([process.execPath,join(root,"proof/📜️script.ts")],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"pipe"});
+ if(child.exitCode!==0)throw new Error(Buffer.from(child.stderr).toString());
+ expect(child.exitCode).toBe(0);expect(Buffer.from(child.stdout).toString()).toBe('{"machine":"retained"}\n');expect(Buffer.from(child.stderr).toString()).toContain("owned input refreshed");
 });

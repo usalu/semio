@@ -16,19 +16,19 @@ fn vector(id: &str) -> Result<Vector, String> {
     macro_rules! committed {
         ($name:literal, $observable:expr) => {
             Vector {
-                before: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
-                mutation: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/", $name, "/🦠️mutation/🔣️.json")),
-                after: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/", $name, "/📸️snapshot/➡️after/🔣️.json")),
-                diff: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/", $name, "/🔺️diff/🔣️.json")),
-                outcome: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page/", $name, "/🎯️outcome/🔣️.json")),
+                before: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
+                mutation: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🦠️mutation/🔣️.json")),
+                after: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/➡️after/🔣️.json")),
+                diff: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🔺️diff/🔣️.json")),
+                outcome: include_str!(concat!("../../✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory/", $name, "/🎯️outcome/🔣️.json")),
                 observable: $observable,
             }
         };
     }
     Ok(match id {
-        "apply-directory-page-applied" => committed!("✅️apply-directory-page-applied", true),
-        "apply-directory-page-no-op" => committed!("🟰️apply-directory-page-no-op", false),
-        "apply-directory-page-rejected" => committed!("🚫️apply-directory-page-rejected", false),
+        "apply-directory-page-applied" => committed!("✅️apply", true),
+        "apply-directory-page-no-op" => committed!("🟰️apply", false),
+        "apply-directory-page-rejected" => committed!("🚫️apply", false),
         other => return Err(format!("no committed vector for {other:?}")),
     })
 }

@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
 import { applyEquationGraphWindowConfigMutation, type EquationGraphWindowConfigMutation } from "../../🧬️schema/🧬️mutations/🟦️";
 
 /** 🧪️ Validates exact Equation graph-window partitions with Ajv and independent JSON Patch. */
 export function testEquationGraphWindowConfigOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8"));
   const configSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   const mutationSchema = JSON.parse(readFileSync(new URL("../../🧬️schema/🧬️mutations/🔣️.json", import.meta.url), "utf8"));
   const ajv = semioSchemaAjvV1({ allErrors: true });

@@ -57,11 +57,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "change-catalog-generation" => Vector {
-            before: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🦠️mutation/🔣️.json"),
-            after: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps-the-catalog-generation-to-7/🎯️outcome/🔣️.json"),
+            before: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🦠️mutation/🔣️.json"),
+            after: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../🧫️fixtures/🧬️mutations/🔢️change-catalog-generation/🧪️bumps/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-s-home-1: no committed specification vector is registered for kind {other:?}"),
     }

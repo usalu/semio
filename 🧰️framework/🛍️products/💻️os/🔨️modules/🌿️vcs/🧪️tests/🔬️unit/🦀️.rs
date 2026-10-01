@@ -105,14 +105,14 @@ async fn collection_op_remove_and_invert() {
 #[semio_framework_async_macros::async_test]
 async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
     let mut ledger = ArtifactHistoryLedger::new();
-    let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY);
-    for index in 0..ARTIFACT_HISTORY_LEDGER_CAPACITY {
-        keys.push(ledger.try_push(format!("history-{index:02}")).expect("fixed ledger admits its exact capacity"));
+    let admitted = ARTIFACT_HISTORY_PAGE_SLOTS + 1;
+    let mut keys = Vec::with_capacity(admitted);
+    for index in 0..admitted {
+        keys.push(ledger.try_push(format!("history-{index:02}")).expect("a full page opens the next page"));
     }
-    let rejected = ledger.try_push("history-overflow".to_string()).expect_err("capacity + 1 returns the exact rejected owner");
-    assert_eq!(rejected, "history-overflow");
     assert_eq!(ledger.iter().next().map(String::as_str), Some("history-00"));
-    assert_eq!(ledger.iter().next_back().map(String::as_str), Some("history-63"));
+    assert_eq!(ledger.get(ARTIFACT_HISTORY_PAGE_SLOTS).map(String::as_str), Some("history-64"));
+    assert_eq!(ledger.iter().next_back().map(String::as_str), Some("history-64"));
 
     let removed = ledger.remove_key(keys[17]).expect("live generation removes its exact owner");
     assert_eq!(removed, "history-17");
@@ -126,36 +126,80 @@ async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
     while ledger.pop().is_some() {
         drained += 1;
     }
-    assert_eq!(drained, ARTIFACT_HISTORY_LEDGER_CAPACITY);
+    assert_eq!(drained, admitted);
     assert!(ledger.terminal_is_empty());
 }
 
-/// 🪑️ `vacancies` answers exactly how many further inserts the ledger admits — a reuse of a tombstone counts, a held
-/// reservation leaves none — so a batch of inserts can be refused before its first one (the reprojection preflight).
+/// 🪑️ `vacancies` counts tombstones, unused slots in allocated pages, and one not-yet-opened page once those pages are full.
+/// A held reservation leaves none, so a batch of inserts can be refused before its first one.
 #[semio_framework_async_macros::async_test]
 async fn fixed_history_ledger_vacancies_count_every_admissible_insert() {
     let mut ledger = ArtifactHistoryLedger::new();
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_LEDGER_CAPACITY);
-    let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_LEDGER_CAPACITY);
-    for index in 0..ARTIFACT_HISTORY_LEDGER_CAPACITY {
-        assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_LEDGER_CAPACITY - index);
-        keys.push(ledger.try_push(format!("history-{index:02}")).expect("fixed ledger admits its exact capacity"));
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS);
+    let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_PAGE_SLOTS);
+    for index in 0..ARTIFACT_HISTORY_PAGE_SLOTS {
+        assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS - index);
+        keys.push(ledger.try_push(format!("history-{index:02}")).expect("the first page admits every slot"));
     }
-    assert_eq!(ledger.vacancies(), 0);
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS, "a full page still admits the next page");
     ledger.remove_key(keys[3]).expect("live generation removes its exact owner");
     ledger.remove_key(keys[9]).expect("live generation removes its exact owner");
-    assert_eq!(ledger.vacancies(), 2);
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS + 2);
     let reservation = ledger.reserve_one().expect("a tombstone admits a reservation");
     assert_eq!(ledger.vacancies(), 0, "a held reservation admits no further insert");
     ledger.cancel_reservation(reservation).expect("the exact reservation cancels");
-    assert_eq!(ledger.vacancies(), 2);
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS + 2);
     for vacancy in 0..2 {
-        ledger.try_push(format!("refill-{vacancy}")).expect("every counted vacancy admits one insert");
+        ledger.try_push(format!("refill-{vacancy}")).expect("every counted tombstone admits one insert");
     }
-    assert_eq!(ledger.vacancies(), 0);
-    assert!(ledger.try_push("overflow".to_string()).is_err());
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS);
+    ledger.try_push("next-page".to_string()).expect("the 65th entry opens the next page");
+    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS - 1);
     while ledger.pop().is_some() {}
     assert!(ledger.terminal_is_empty());
+}
+
+/// 🐍 The live order after the fixture's pushes, logical removal, and tail replacement equals a Python list.
+#[semio_framework_async_macros::async_test]
+async fn paged_history_ledger_matches_the_python_list_oracle() {
+    let fixture = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🌿️vcs/🧬️schema/📸️paged-history-ledger/🔣️.json");
+    let law: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(fixture).expect("paged ledger fixture")).expect("paged ledger fixture json");
+    let pushes = law["pushes"].as_u64().expect("pushes") as usize;
+    let remove_logical = law["removeLogical"].as_u64().expect("removeLogical") as usize;
+    let replacement = law["replacement"].as_str().expect("replacement").to_string();
+    let script = concat!(env!("CARGO_MANIFEST_DIR"), "/../../🔨️modules/🌿️vcs/🧪️tests/🔬️paged-ledger/📜️oracle.py");
+    let output = std::process::Command::new("python3").arg(script).output().expect("python3 list oracle");
+    assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
+    let expected: Vec<String> = serde_json::from_slice(&output.stdout).expect("python list oracle json");
+    let mut ledger = ArtifactHistoryLedger::new();
+    let mut keys = Vec::with_capacity(pushes);
+    for index in 0..pushes {
+        keys.push(ledger.try_push(index.to_string()).expect("each edit opens a page when the current page is full"));
+    }
+    ledger.remove_key(keys[remove_logical]).expect("the fixture's logical index is a live generation");
+    ledger.try_push(replacement).expect("the replacement occupies the tail");
+    let actual: Vec<String> = ledger.iter().cloned().collect();
+    assert_eq!(actual, expected);
+    while ledger.pop().is_some() {}
+    assert!(ledger.terminal_is_empty());
+}
+
+/// 📄 A catalog of edit ids admits a 65th entry by opening another page and keeps prefix equality with a slice.
+#[semio_framework_async_macros::async_test]
+async fn history_page_stack_admits_past_one_page() {
+    let mut stack = HistoryPageStack::new();
+    assert!(stack.admits_one());
+    for index in 0..ARTIFACT_HISTORY_PAGE_SLOTS + 1 {
+        stack.push(index.to_string());
+    }
+    assert_eq!(stack.len(), ARTIFACT_HISTORY_PAGE_SLOTS + 1);
+    assert_eq!(stack[ARTIFACT_HISTORY_PAGE_SLOTS], "64");
+    assert!(stack.starts_with(&[0.to_string(), 1.to_string()]));
+    assert_eq!(stack.remove(17), "17");
+    assert_eq!(stack.len(), ARTIFACT_HISTORY_PAGE_SLOTS);
+    while stack.pop().is_some() {}
+    assert!(stack.is_empty());
+    assert!(stack.capacity() >= ARTIFACT_HISTORY_PAGE_SLOTS);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -338,3 +382,64 @@ async fn content_addressed_entity_and_mint_helpers_are_deterministic() {
     assert!(create_document_vcs_id("draft").await.starts_with("draft-"));
 }
 //#endregion 🆔️Ids
+
+/// ↔️ Paged traversal follows the portable deque oracle across front/back crossings and exhaustion.
+#[test]
+fn paged_history_stack_traversal_follows_the_portable_deque_vectors() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📸️paged-history-stack/🔣️.json")).unwrap();
+    for vector in corpus["vectors"].as_array().unwrap() {
+        let mut stack: HistoryPageStack<String> = (0..vector["pushes"].as_u64().unwrap()).map(|i| i.to_string()).collect();
+        if let Some(index) = vector["removeLogical"].as_u64() { stack.remove(index as usize); }
+        if let Some(value) = vector["replacement"].as_str() { stack.push(value.into()); }
+        let forward: Vec<String> = stack.iter().cloned().collect();
+        assert_eq!(serde_json::to_value(&forward).unwrap(), vector["forward"]);
+        assert_eq!(serde_json::to_value(stack.iter().rev().cloned().collect::<Vec<_>>()).unwrap(), vector["reverse"]);
+        let mut oracle: std::collections::VecDeque<_> = forward.into();
+        let mut iterator = stack.iter();
+        let mut actual = Vec::new();
+        for direction in vector["directions"].as_array().unwrap() {
+            let value = if direction == "front" { iterator.next().cloned() } else { iterator.next_back().cloned() };
+            let expected = if direction == "front" { oracle.pop_front() } else { oracle.pop_back() };
+            assert_eq!(value, expected);
+            assert_eq!(iterator.len(), oracle.len());
+            assert_eq!(iterator.size_hint(), (oracle.len(), Some(oracle.len())));
+            actual.push(value);
+        }
+        assert_eq!(serde_json::to_value(actual).unwrap(), vector["expected"]);
+        assert_eq!(serde_json::to_value(iterator.cloned().collect::<Vec<_>>()).unwrap(), vector["remaining"]);
+        assert_eq!(stack.len(), vector["forward"].as_array().unwrap().len());
+        eprintln!("[DEBUG] paged-history vector={} owned={} traversal=front-back exact-size=true", vector["id"], stack.len());
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn history_branch_provenance_follows_portable_required_wire_vectors() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌿️branch-provenance/🔣️.json")).unwrap();
+    for vector in fixture["vectors"].as_array().unwrap() {
+        let decoded = crate::os_spr::Edit::<DslValue>::from_value(vector["edit"].clone().into());
+        assert_eq!(decoded.is_ok(), vector["valid"].as_bool().unwrap(), "{}", vector["id"]);
+        let Ok(edit) = decoded else { continue };
+        let actual: serde_json::Value = edit.to_value().into();
+        assert_eq!(actual["line"], vector["edit"]["line"]);
+        let mut log = crate::os_spr::HistoryLog::default();
+        log.doc_id = "document-1".into();
+        log.schema = "neutral.counter.v1".into();
+        log.edits.push(crate::os_spr::HistoryEdit {
+            id: edit.id.clone(), actor: None, line: edit.line.clone(), started_at: edit.started_at,
+            finished_at: None, coalesce_key: None, description: None, verb: None,
+            ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None,
+        });
+        let text = crate::os_spr::history::print_ops_text(&log).unwrap();
+        let text_twin = crate::os_spr::history::parse_ops_text(&text).unwrap();
+        assert_eq!(text_twin.edits[0].line, edit.line);
+        let binary = crate::os_spr::encode_history(&log, &crate::os_spr::EncodeOptions::default()).await.unwrap();
+        let binary_twin = crate::os_spr::decode_history(&binary, &crate::os_spr::DecodeOptions::default()).await.unwrap();
+        assert_eq!(binary_twin.edits[0].line, edit.line);
+        let start = text.find(" line=[").unwrap();
+        let end = start + text[start..].find(']').unwrap() + 1;
+        let mut missing = text.clone();
+        missing.replace_range(start..end, "");
+        assert!(crate::os_spr::history::parse_ops_text(&missing).is_err());
+        eprintln!("[DEBUG] branch-provenance vector={} line={:?} text-binary-twins=true missing-line-refused=true", vector["id"], edit.line);
+    }
+}

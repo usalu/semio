@@ -81,7 +81,7 @@
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
-              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+              "directoryName": "🎲️reseeds"
             }
           ]
         },
@@ -92,7 +92,7 @@
           "scenarios": [
             {
               "id": "grows-the-sample-to-6-by-4",
-              "directoryName": "📐️grows-the-sample-to-6-by-4"
+              "directoryName": "📐️grows"
             }
           ]
         },
@@ -103,7 +103,7 @@
           "scenarios": [
             {
               "id": "paints-a-2-by-2-block-of-colour-1",
-              "directoryName": "🖌️paints-a-2-by-2-block-of-colour-1"
+              "directoryName": "🖌️paints"
             }
           ]
         },
@@ -114,7 +114,7 @@
           "scenarios": [
             {
               "id": "appends-a-third-colour",
-              "directoryName": "🎨️appends-a-third-colour"
+              "directoryName": "🎨️appends"
             }
           ]
         },
@@ -125,7 +125,7 @@
           "scenarios": [
             {
               "id": "recolours-the-second-entry",
-              "directoryName": "🖍️recolours-the-second-entry"
+              "directoryName": "🖍️recolours"
             }
           ]
         },
@@ -136,7 +136,7 @@
           "scenarios": [
             {
               "id": "drops-the-unused-third-colour",
-              "directoryName": "🧽️drops-the-unused-third-colour"
+              "directoryName": "🧽️drops"
             }
           ]
         },
@@ -147,7 +147,7 @@
           "scenarios": [
             {
               "id": "shrinks-the-output-and-cascades-a-pin",
-              "directoryName": "🖼️shrinks-the-output-and-cascades-a-pin"
+              "directoryName": "🖼️shrinks"
             }
           ]
         },
@@ -158,7 +158,7 @@
           "scenarios": [
             {
               "id": "widens-the-window-to-three",
-              "directoryName": "⚙️widens-the-window-to-three"
+              "directoryName": "⚙️widens"
             }
           ]
         },
@@ -169,7 +169,7 @@
           "scenarios": [
             {
               "id": "pins-the-origin-cell-to-colour-1",
-              "directoryName": "📌️pins-the-origin-cell-to-colour-1"
+              "directoryName": "📌️pins"
             }
           ]
         },
@@ -180,7 +180,7 @@
           "scenarios": [
             {
               "id": "releases-the-pinned-origin-cell",
-              "directoryName": "📍️releases-the-pinned-origin-cell"
+              "directoryName": "📍️releases"
             }
           ]
         },
@@ -191,11 +191,11 @@
           "scenarios": [
             {
               "id": "paints-a-diagonal-stroke-in-colour-1",
-              "directoryName": "✍️paints-a-diagonal-stroke-in-colour-1"
+              "directoryName": "✍️paints"
             },
             {
               "id": "clips-a-stroke-leaving-the-sample",
-              "directoryName": "⚠️clips-a-stroke-leaving-the-sample"
+              "directoryName": "⚠️clips"
             }
           ]
         }

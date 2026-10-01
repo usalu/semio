@@ -3262,8 +3262,7 @@ pub mod ui {
     // the moved type — it named `ActionDescriptor` (this crate's own type, defined just below via
     // `UiTreeItemAction`'s sibling), which the wasm-safe scene crate cannot depend on.
     //
-    // `TableCell`/`table_row_json` stay here unmoved: they build the `rows_json` STRING that flows
-    // into `TableScene.rows_json`, so `TableScene` never had a typed dependency on them.
+    // `TableCell` stays here; `TableScene` receives its rows through the scene wire string.
 
     //#region 🔖️TableCells
     /// 🧾️ A typed table cell value: plain text/number, or an interactive stepper/button group.
@@ -3278,19 +3277,6 @@ pub mod ui {
         Buttons { buttons: Vec<UiTreeItemAction> },
     }
 
-    /// 🧾️ Builds one `rows_json` record: an id, an optional drag payload, and typed/plain cells keyed by column id.
-    pub fn table_row_json(id: impl Into<String>, drag_payload: Option<&serde_json::Value>, cells: &[(&str, TableCell)]) -> serde_json::Value {
-        let mut row = serde_json::Map::new();
-        row.insert("id".into(), serde_json::Value::String(id.into()));
-        if let Some(payload) = drag_payload {
-            row.insert("_drag".into(), payload.clone());
-        }
-        for (column_id, cell) in cells {
-            let value = serde_json::to_value(cell).unwrap_or(serde_json::Value::Null);
-            row.insert((*column_id).to_string(), value);
-        }
-        serde_json::Value::Object(row)
-    }
     //#endregion 🔖️TableCells
 
     /* 🖼️ Paint-2d scene: WASM `RasterSession` sync channels for the composite/navigator windows, see framework/surface/paint/rs/lib.rs. */

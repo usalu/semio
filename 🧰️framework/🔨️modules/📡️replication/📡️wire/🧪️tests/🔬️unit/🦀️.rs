@@ -13,7 +13,7 @@ async fn sample_envelope(id: &str) -> crate::causal::MutationEnvelope {
         diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
         inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -156,7 +156,7 @@ async fn client_frame_commands_keep_exact_hlc_fields() {
         diff: crate::causal::ArtifactDiff { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
         inverse: crate::causal::InverseMutation { schema: crate::ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     };
     let frame = ClientFrame::Commands { batch_id: 7, envelopes: vec![envelope] };
     assert_eq!(encode_client_frame(&frame, Lane::Command).await, bytes_from_hex("000107010c7472616e736974696f6e2d310a646f63756d656e742d31076163746f722d3101046f702d310001057469746c651b73656d696f2e686973746f72792d7472616e736974696f6e2e7631030102031b73656d696f2e686973746f72792d7472616e736974696f6e2e76310090e4d0b287d3aeeefe01818080808080801080808080808080801000"));

@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 import { resolve } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargoTestBudgeted, resolveTestLevel } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargoTestBudgeted, resolveTestLevel } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runOwnedCommand } from "../../../📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 
 /** 🧪️ Checks the neutral host without compiling any contributed adapter. */
@@ -20,4 +22,4 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("check", CheckScript).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });

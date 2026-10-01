@@ -1,4 +1,4 @@
-//! 🧪️ `rename-zone` fixture — `⛔️refuses-a-missing-zone`: refuses an absent zone.
+//! 🧪️ `rename-zone` fixture — `⛔️refuses`: refuses an absent zone.
 //!
 //! The committed `(before, mutation, after, diff, outcome)` quintet beside this file IS the
 //! specification; `scenario` is the typed source it was generated from
@@ -9,11 +9,11 @@ use crate::mutations::fixtures::{self, snapshot, Case};
 use crate::mutations::EnergyModelMutation;
 use crate::EnergyModelSnapshot;
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses-a-missing-zone/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses-a-missing-zone/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses-a-missing-zone/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses-a-missing-zone/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses-a-missing-zone/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏠️rename-zone/⛔️refuses/🎯️outcome/🔣️.json");
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
@@ -22,7 +22,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
 }
 
 fn case() -> Case {
-    Case { kind: "rename-zone", directory: "🏠️rename-zone/⛔️refuses-a-missing-zone", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
+    Case { kind: "rename-zone", directory: "🏠️rename-zone/⛔️refuses", before: BEFORE, after: AFTER, mutation: MUTATION, diff: DIFF, outcome: OUTCOME, scenario }
 }
 
 #[semio_framework_async_macros::async_test]

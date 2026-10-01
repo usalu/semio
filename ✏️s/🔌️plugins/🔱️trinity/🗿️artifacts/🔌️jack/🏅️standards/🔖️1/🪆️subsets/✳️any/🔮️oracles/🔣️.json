@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "keeps-a-node-property-at-the-value-it-already-holds",
-              "directoryName": "🏷️keeps-a-node-property-at-the-value-it-already-holds"
+              "directoryName": "🏷️keeps"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "rejects-an-edge-whose-endpoints-are-absent",
-              "directoryName": "🚫️rejects-an-edge-whose-endpoints-are-absent"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "rejects-a-node-id-the-scene-already-holds",
-              "directoryName": "🚫️rejects-a-node-id-the-scene-already-holds"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "rejects-cutting-an-edge-the-scene-never-had",
-              "directoryName": "🚫️rejects-cutting-an-edge-the-scene-never-had"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -108,7 +108,7 @@
           "scenarios": [
             {
               "id": "rejects-deleting-a-node-the-scene-never-had",
-              "directoryName": "🚫️rejects-deleting-a-node-the-scene-never-had"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -119,7 +119,7 @@
           "scenarios": [
             {
               "id": "keeps-a-node-at-the-point-it-already-occupies",
-              "directoryName": "📍️keeps-a-node-at-the-point-it-already-occupies"
+              "directoryName": "📍️keeps"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "keeps-an-edge-without-the-property-it-never-had",
-              "directoryName": "🧹️keeps-an-edge-without-the-property-it-never-had"
+              "directoryName": "🧹️keeps"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "keeps-the-name-a-node-already-carries",
-              "directoryName": "✏️keeps-the-name-a-node-already-carries"
+              "directoryName": "✏️keeps"
             }
           ]
         },

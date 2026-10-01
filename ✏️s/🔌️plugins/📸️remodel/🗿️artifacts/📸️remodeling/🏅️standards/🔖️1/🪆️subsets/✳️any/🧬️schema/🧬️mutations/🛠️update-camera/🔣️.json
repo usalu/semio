@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera",
+  "semanticKind": "update-camera-calibration",
+  "displayName": "Update Camera Calibration",
+  "emoji": "🛠️",
+  "aggregateVariant": "UpdateCameraCalibration",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "update-camera-calibration",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

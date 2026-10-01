@@ -2,7 +2,9 @@
 /** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
 import { join } from "node:path";
 import type { BundleLinter } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, defineLint, dependencyBoundaryBreachesForBundleDir, devToolingEnv, getWorkspaceRoot, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runBunx, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { defineLint, dependencyBoundaryBreachesForBundleDir, devToolingEnv, getWorkspaceRoot, goLevelTestArgs, resolveTestLevel, runBunx, runCanonicalGoTests, runVitest } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 export const policy = defineLint("@repo/server/coordinator-bundle", (l: BundleLinter) => {
   const repoRoot = getWorkspaceRoot();
@@ -43,4 +45,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("dev", DevScript).register("start", StartScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "build" });
+await runRepoScriptMain(router, import.meta.url, { defaultCommand: "build" });

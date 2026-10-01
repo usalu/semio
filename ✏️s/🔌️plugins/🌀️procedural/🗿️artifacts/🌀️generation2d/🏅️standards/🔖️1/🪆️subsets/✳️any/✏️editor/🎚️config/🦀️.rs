@@ -164,7 +164,7 @@ impl Mutation<Generation2dConfig> for Generation2dConfigMutation {
     const DESCRIPTORS: &'static [protocol::MutationLeafDescriptor] = &[
         protocol::MutationLeafDescriptor {
             schema_version: 1,
-            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set-snapshot",
+            owner: "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/⚙️set",
             semantic_kind: "set-snapshot",
             display_name: "Set Snapshot",
             emoji: "⚙️",

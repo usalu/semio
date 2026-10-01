@@ -1,0 +1,32 @@
+{
+  "case": "dial-with-snaps",
+  "kind": "component",
+  "description": "A rotary Slider (dial) over -π..π stored in radians and shown in degrees: detents at -180°, -90°, 0°, 90° and 180° painted as ticks, one-degree arrow steps, open hard limits.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "slider",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Angle",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setAngle@1"
+  ]
+}

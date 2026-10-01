@@ -42,9 +42,10 @@
         "coalesceKey": "typing",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
-        "finishedAt": "2026-09-29T11:00:09Z"
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": null
       },
-      "expectedDigest": "87ef04718e7724e860fe74985366c195ba2820713ce1a26f3a17f5a5ff1baa14"
+      "expectedDigest": "68305d4ff194947d2d2361c7d47a452f7d550ec1198067c771a05455103d7565"
     },
     {
       "name": "grown-to-two",
@@ -113,9 +114,10 @@
         "coalesceKey": "typing",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
-        "finishedAt": "2026-09-29T11:00:09Z"
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": null
       },
-      "expectedDigest": "3d2a6e092a9f185e673405f674282ec3c4c892033ce8299d464e304acba2f105"
+      "expectedDigest": "3727851624c58cd1938d47fa46619a57b56702c71199fd40490514b2f066ffa9"
     },
     {
       "name": "grown-to-ten-thousand",
@@ -126,10 +128,11 @@
         "coalesceKey": "typing",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
-        "finishedAt": "2026-09-29T11:00:09Z"
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": null
       },
       "generatedOperations": 10000,
-      "expectedDigest": "747be7889c6633277ad5da84894482d72fe237662080d81ff233a77ae83c7093"
+      "expectedDigest": "f70ff78132ffd44360e138f2c0e1298956800cbcba843c23889a5a75c8ad7675"
     },
     {
       "name": "single-operation-with-verb",
@@ -173,9 +176,10 @@
         "coalesceKey": "typing",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
-        "finishedAt": "2026-09-29T11:00:09Z"
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": null
       },
-      "expectedDigest": "cfc84c1bac1dbcb08d5396e6e9a0d8845da78289dd5a5f8ad3c55c4f4cf793aa"
+      "expectedDigest": "677d7d64d997d806a2287b27fb81aea9f7c18d67f48b9ad72c6e61e60f790c00"
     },
     {
       "name": "grown-to-two-with-verb",
@@ -245,9 +249,128 @@
         "coalesceKey": "typing",
         "sequenceNumber": 7,
         "startedAt": "2026-09-29T11:00:00Z",
-        "finishedAt": "2026-09-29T11:00:09Z"
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": null
       },
-      "expectedDigest": "27ee003857f2a5786f9de0c216cf569627751d682b8dae1843a7c9823354c1e9"
+      "expectedDigest": "83cdf3acf9a298e22b9b93f7d42fbc0321a580e75a4baa1c98d6aa855424503b"
+    },
+    {
+      "name": "single-operation-authored-line",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": "alternative-1"
+      },
+      "expectedDigest": "8abb43ccfb38f6ba70820560a9a2a3e94c5bf6b77ebf0814d72ee18d7e42bc7b"
+    },
+    {
+      "name": "grown-to-two-authored-line",
+      "edit": {
+        "id": "edit-typing",
+        "actor": "actor-1",
+        "forwards": [
+          {
+            "SetN": {
+              "n": 1
+            }
+          },
+          {
+            "SetN": {
+              "n": 2
+            }
+          }
+        ],
+        "inverse": [
+          {
+            "SetN": {
+              "n": 0
+            }
+          },
+          {
+            "SetN": {
+              "n": 1
+            }
+          }
+        ],
+        "mutationMeta": [
+          {
+            "mutation_id": "edit-typing#0",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 0,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 42,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          },
+          {
+            "mutation_id": "edit-typing#1",
+            "dependencies": [
+              "prior-1"
+            ],
+            "base_version": 1,
+            "author_id": "actor-1",
+            "timestamp": {
+              "actor": 1,
+              "physical_ms": 43,
+              "logical": 0
+            },
+            "undo_policy": "ExactBaseOnly",
+            "label": "Edit text",
+            "group_id": "group-typing"
+          }
+        ],
+        "description": "typing 🧵",
+        "coalesceKey": "typing",
+        "sequenceNumber": 7,
+        "startedAt": "2026-09-29T11:00:00Z",
+        "finishedAt": "2026-09-29T11:00:09Z",
+        "line": "alternative-🌿"
+      },
+      "expectedDigest": "06ef756a19f9d560ce3952a066786f9e1e970c772104fe2313dc19abb43a84b7"
     }
   ]
 }

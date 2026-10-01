@@ -1,0 +1,94 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.framework.vcs.paged-history-stack/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "vectors"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.framework.vcs.paged-history-stack/v1"
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "pushes",
+          "removeLogical",
+          "replacement",
+          "directions",
+          "expected",
+          "remaining",
+          "forward",
+          "reverse"
+        ],
+        "properties": {
+          "pushes": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 32768
+          },
+          "removeLogical": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0
+          },
+          "replacement": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "directions": {
+            "type": "array",
+            "maxItems": 32768,
+            "items": {
+              "enum": [
+                "front",
+                "back"
+              ]
+            }
+          },
+          "expected": {
+            "type": "array",
+            "maxItems": 32768,
+            "items": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "remaining": {
+            "type": "array",
+            "maxItems": 32768,
+            "items": {
+              "type": "string"
+            }
+          },
+          "forward": {
+            "type": "array",
+            "maxItems": 32768,
+            "items": {
+              "type": "string"
+            }
+          },
+          "reverse": {
+            "type": "array",
+            "maxItems": 32768,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

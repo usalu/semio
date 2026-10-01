@@ -3,7 +3,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo, runExactCargoLaws } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { buildCargoArtifacts } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { blake3Hex } from "../../../🔏️hash/🟦️.ts";
@@ -382,4 +384,4 @@ class PresencePeerCodecScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("build", BuildScript).register("test-source", SourceTestScript).register("test-local-interaction-source", LocalInteractionSourceTestScript).register("test-local-interaction-native", LocalInteractionNativeTestScript).register("retained-verification-check", RetainedVerificationScript).register("retained-record-observation-check", RetainedRecordObservationScript).register("presence-peer-codec-check", PresencePeerCodecScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "test" });

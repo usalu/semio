@@ -140,35 +140,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
           "bytes": 82
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:425c95ba32bc681d0a85273341c8d7f96d6202620d67eb88da2156d6d54fa52a",
           "bytes": 79
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f78a646a0a7fefab11d3316f265a4eb4e416c510181549c48143b333b7ab959f",
           "bytes": 87
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f78a646a0a7fefab11d3316f265a4eb4e416c510181549c48143b333b7ab959f",
           "bytes": 87
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change-active-tile-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🀄️change-active-tile/✅️change/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -205,35 +205,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
           "bytes": 82
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:2511971433b00e1bff962a1756fa82aecb153cb3fe8dd58d6d7518bc7fb9da3e",
           "bytes": 99
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:cd8e91b85e74024cece89dd371d8d28255c38206e5914d69d8a23e03a8db06e7",
           "bytes": 84
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:cd8e91b85e74024cece89dd371d8d28255c38206e5914d69d8a23e03a8db06e7",
           "bytes": 84
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -270,35 +270,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7c66a000878c6cf913b57009e6882f87864108d8d2865c6c315a3154a8a457de",
           "bytes": 82
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:607165bcbccd9673f1d7e3f2d66d4be0abadd6306640aa4d27ed36343d36ad8f",
           "bytes": 177
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:da9335a33c8e246e4eed7aa8ce68170c36d8da88911b83b6e3418b5605af0a39",
           "bytes": 89
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:da9335a33c8e246e4eed7aa8ce68170c36d8da88911b83b6e3418b5605af0a39",
           "bytes": 89
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

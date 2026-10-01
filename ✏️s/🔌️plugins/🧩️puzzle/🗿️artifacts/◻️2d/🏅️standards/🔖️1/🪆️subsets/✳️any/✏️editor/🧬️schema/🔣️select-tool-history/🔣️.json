@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle2d/editor/select-tool-history/schema.json",
+  "title": "Puzzle2dSelectToolHistoryFixture",
+  "description": "🛠️⏪️ Scenarios that author a log through the puzzle 2d select tool, edit it in a time-travel session and finalize it as an overwrite (`🧫️fixtures/🧫️select-tool-history/🔣️.json`).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "description", "board", "scenarios"],
+  "properties": {
+    "schema": { "const": "s.puzzle2d.select-tool-history.v1" },
+    "description": { "type": "string" },
+    "board": {
+      "type": "object",
+      "required": ["schema", "nodes", "edges"],
+      "properties": {
+        "schema": { "const": "puzzle.2d.fixture" },
+        "nodes": { "type": "array", "items": { "type": "object", "required": ["id", "x", "y"], "properties": { "id": { "type": "string" }, "x": { "type": "number" }, "y": { "type": "number" }, "locked": { "type": "boolean" } } } },
+        "edges": { "type": "array" }
+      }
+    },
+    "scenarios": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Scenario" } }
+  },
+  "definitions": {
+    "Point": { "type": "array", "items": { "type": "number" }, "minItems": 2, "maxItems": 2 },
+    "Ids": { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+    "Leaf": { "type": "object", "required": ["mutation"], "properties": { "mutation": { "enum": ["dragSelection", "rotateSelection", "scaleSelection", "createNode", "changeNodeLocked"] } } },
+    "Severity": { "enum": ["info", "warning", "error", "fatal"] },
+    "Outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worst", "code", "target"],
+      "properties": { "row": { "type": "integer", "minimum": 0 }, "index": { "type": "integer", "minimum": 0 }, "worst": { "$ref": "#/definitions/Severity" }, "code": { "type": "string" }, "target": { "$ref": "#/definitions/Ids" } }
+    },
+    "Input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "control"],
+      "properties": {
+        "path": { "type": "string", "pattern": "^/" },
+        "control": { "enum": ["reference", "stepper", "dial", "slider"] },
+        "domain": { "type": "string" },
+        "granularity": { "type": "string" },
+        "many": { "type": "boolean" },
+        "snapSource": { "type": "string" },
+        "step": { "type": "number", "exclusiveMinimum": 0 },
+        "scale": { "enum": ["linear", "log"] },
+        "snaps": { "type": "array", "items": { "type": "number" } }
+      }
+    },
+    "Expect": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "rows": { "type": "integer", "minimum": 0 },
+        "row": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["index", "leaf"],
+          "properties": { "index": { "type": "integer", "minimum": 0 }, "leaf": { "$ref": "#/definitions/Leaf" }, "label": { "type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": { "en": { "type": "string" }, "de": { "type": "string" } } }, "tool": { "type": "string" } }
+        },
+        "stage": { "enum": ["editing", "replaying", "reviewing", "choosing", "finalizing", null] },
+        "review": { "enum": ["noChanges", "needsReplay", "blocked", "ready"] },
+        "blocking": { "type": "boolean" },
+        "worst": { "$ref": "#/definitions/Severity" },
+        "outcomes": { "type": "array", "items": { "$ref": "#/definitions/Outcome" } },
+        "nextProblem": { "type": "object", "additionalProperties": false, "required": ["row"], "properties": { "row": { "type": "integer", "minimum": 0 } } },
+        "inputs": { "type": "array", "items": { "$ref": "#/definitions/Input" } },
+        "preview": { "type": "object", "additionalProperties": { "$ref": "#/definitions/Point" } },
+        "absent": { "$ref": "#/definitions/Ids" },
+        "highlighted": { "$ref": "#/definitions/Ids" },
+        "draft": { "type": "object" }
+      }
+    },
+    "Step": {
+      "type": "object",
+      "minProperties": 1,
+      "maxProperties": 2,
+      "properties": {
+        "drag": { "type": "object", "additionalProperties": false, "required": ["selection", "from", "path", "to"], "properties": { "selection": { "$ref": "#/definitions/Ids" }, "from": { "$ref": "#/definitions/Point" }, "path": { "type": "array", "items": { "$ref": "#/definitions/Point" } }, "to": { "$ref": "#/definitions/Point" } } },
+        "pick": { "type": "string" },
+        "select": { "$ref": "#/definitions/Ids" },
+        "translate": { "type": "object", "additionalProperties": false, "required": ["dx", "dy"], "properties": { "dx": { "type": "number" }, "dy": { "type": "number" }, "step": { "type": "number", "exclusiveMinimum": 0 } } },
+        "rotate": { "type": "object", "additionalProperties": false, "required": ["angle"], "properties": { "angle": { "type": "number" } } },
+        "scale": { "type": "object", "additionalProperties": false, "required": ["factor"], "properties": { "factor": { "type": "number", "exclusiveMinimum": 0 } } },
+        "ingest": { "$ref": "#/definitions/Leaf" },
+        "gridFactor": { "type": "number", "exclusiveMinimum": 0 },
+        "begin": { "oneOf": [{ "const": "nextProblem" }, { "type": "object", "additionalProperties": false, "required": ["row"], "properties": { "row": { "type": "integer", "minimum": 0 } } }] },
+        "input": { "type": "object", "additionalProperties": false, "required": ["path", "value"], "properties": { "path": { "type": "string", "pattern": "^/" }, "value": {} } },
+        "useSelection": { "type": "string", "pattern": "^/" },
+        "withdraw": { "type": "null" },
+        "accept": { "type": "null" },
+        "finalize": { "const": "overwrite" },
+        "expect": { "$ref": "#/definitions/Expect" }
+      },
+      "additionalProperties": false
+    },
+    "Scenario": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description", "steps", "log", "drafts", "head"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+        "description": { "type": "string" },
+        "steps": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Step" } },
+        "log": { "type": "array", "minItems": 1, "items": { "$ref": "#/definitions/Leaf" } },
+        "drafts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["index"],
+            "properties": { "index": { "type": "integer", "minimum": 0 }, "leaf": { "$ref": "#/definitions/Leaf" }, "withdrawn": { "const": true } },
+            "oneOf": [{ "required": ["leaf"] }, { "required": ["withdrawn"] }]
+          }
+        },
+        "head": {
+          "type": "object",
+          "additionalProperties": { "type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": { "x": { "type": "number" }, "y": { "type": "number" }, "locked": { "type": "boolean" } } }
+        },
+        "report": { "type": "array", "items": { "$ref": "#/definitions/Outcome" } }
+      }
+    }
+  }
+}

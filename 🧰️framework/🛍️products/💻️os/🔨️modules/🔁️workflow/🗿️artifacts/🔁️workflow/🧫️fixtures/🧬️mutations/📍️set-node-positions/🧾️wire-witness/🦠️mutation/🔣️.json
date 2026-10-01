@@ -1,0 +1,15 @@
+{
+  "operation": "setNodePositions",
+  "positions": [
+    {
+      "nodeId": "n1",
+      "x": 120.0,
+      "y": 40.0
+    },
+    {
+      "nodeId": "n2",
+      "x": -30.5,
+      "y": 260.0
+    }
+  ]
+}

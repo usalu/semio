@@ -460,7 +460,7 @@ fn encode_schedules(model: &Model, document: &mut Object, diagnostics: &mut Vec<
     }
 
     for weekly in &schedules.weekly {
-        diagnostics.push(EpJsonDiagnostic::new("epjson.schedule.weekly-unsupported", schedule_name(weekly.id), "a weekly schedule is not written to epJSON: ScheduleSet::weekly_value indexes its 7 daily ids with a 1-based day of week clamped to 6, so Sunday collapses onto Saturday and the mapping onto Schedule:Compact day types is not yet decidable"));
+        diagnostics.push(EpJsonDiagnostic::new("epjson.schedule.weekly-unsupported", schedule_name(weekly.id), "a weekly schedule is not written to epJSON: this codec does not emit Schedule:Week:Daily. daily_schedule_ids are Sunday through Saturday, slot 0 Sunday"));
     }
     for annual in &schedules.annual {
         diagnostics.push(EpJsonDiagnostic::new(

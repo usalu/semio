@@ -1,0 +1,36 @@
+{
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "name": "@semio-tech/writer-writer",
+  "version": "0.1.0",
+  "description": "Writer artifact snapshot schema and semantic SQLite package.",
+  "type": "module",
+  "private": true,
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "types": "./dist/🟦️.d.ts",
+  "scripts": {
+    "build": "bun nx run @semio-tech/writer-writer:build",
+    "check": "bun nx run @semio-tech/writer-writer:check",
+    "test": "bun nx run @semio-tech/writer-writer:test"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/🟦️.d.ts",
+      "import": "./dist/🟦️.js"
+    }
+  },
+  "dependencies": {},
+  "license": "LGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/usalu/semio.git",
+    "directory": "✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🟦️typescript"
+  },
+  "bundleKind": "library",
+  "nx": {
+    "includedScripts": []
+  }
+}

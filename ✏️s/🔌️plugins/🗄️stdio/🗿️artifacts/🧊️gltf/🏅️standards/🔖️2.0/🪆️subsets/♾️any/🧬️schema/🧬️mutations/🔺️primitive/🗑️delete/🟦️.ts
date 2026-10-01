@@ -4,8 +4,8 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfDeletePrimitivePayload {
-  mesh: number;
-  primitive: number;
+  mesh: bigint;
+  primitive: bigint;
 }
 
 export type DeletePrimitiveMutation = GltfPhase<GltfDeletePrimitivePayload, GltfDiff>;

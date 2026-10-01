@@ -90,7 +90,7 @@ pub struct GatewayError {
     pub message: String,
     #[serde(default)]
     #[value(default, serialize_with = "json_value_to_dsl", deserialize_with = "dsl_to_json_value")]
-    pub details: serde_json::Value,
+    pub(crate) details: serde_json::Value,
     pub retryable: bool,
 }
 
@@ -108,7 +108,7 @@ impl GatewayError {
         Self { code, message: message.into(), details: serde_json::Value::Null, retryable: false }
     }
 
-    pub fn with_details(mut self, details: serde_json::Value) -> Self {
+    pub(crate) fn with_details(mut self, details: serde_json::Value) -> Self {
         self.details = details;
         self
     }
@@ -121,14 +121,14 @@ impl GatewayError {
     /// 🧾️ Structured payload for an MCP `CallToolResult{isError:true, structuredContent: ..}` — a
     /// TOOL-execution failure, never turned into a JSON-RPC error response (`protocol`'s dispatcher
     /// is the single call site that makes this choice; see its own module doc).
-    pub fn to_tool_error_payload(&self) -> serde_json::Value {
+    pub(crate) fn to_tool_error_payload(&self) -> serde_json::Value {
         serde_json::json!({ "code": self.code, "message": self.message, "details": self.details, "retryable": self.retryable })
     }
 
     /// 🧾️ `(json_rpc_code, message, data)` for a JSON-RPC error response — used only when a
     /// `GatewayError` represents a PROTOCOL failure (malformed request, unknown method/capability id
     /// resolved before any tool body ran).
-    pub fn to_json_rpc_parts(&self) -> (i64, String, serde_json::Value) {
+    pub(crate) fn to_json_rpc_parts(&self) -> (i64, String, serde_json::Value) {
         (self.code.json_rpc_code(), self.message.clone(), serde_json::json!({ "gatewayCode": self.code, "details": self.details, "retryable": self.retryable }))
     }
 }

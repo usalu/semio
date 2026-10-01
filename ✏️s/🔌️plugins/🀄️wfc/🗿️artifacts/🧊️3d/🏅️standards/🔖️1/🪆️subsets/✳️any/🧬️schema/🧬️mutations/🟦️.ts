@@ -19,7 +19,7 @@ export interface ChangeTileWeight { id: string; weight: number; }
 export interface ChangeTileMedia { id: string; media: TileMedia3d; }
 export interface CreateRule { index: number; rule: GraphRule; }
 export interface DeleteRule { id: string; }
-export interface ChangeSeed { seed: number; }
+export interface ChangeSeed { seed: bigint; }
 export interface DragSlots { targets: string[]; dx: number; dy: number; dz: number; }
 export interface Wfc3dSlotPosition { id: string; x: number; y: number; z: number; }
 export interface SetSlotPositions { positions: Wfc3dSlotPosition[]; }

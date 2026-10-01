@@ -1,4 +1,4 @@
-//! 🧪️ `replace-access-rule` fixture — `♻️replaces-a`.
+//! 🧪️ `replace-access-rule` fixture — `♻️replaces`.
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces-a/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces-a/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces-a/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces-a/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces-a/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🔑️access-rule/♻️replace/♻️replaces/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("replace-access-rule/replaces-access-rule-a: before snapshot decodes")

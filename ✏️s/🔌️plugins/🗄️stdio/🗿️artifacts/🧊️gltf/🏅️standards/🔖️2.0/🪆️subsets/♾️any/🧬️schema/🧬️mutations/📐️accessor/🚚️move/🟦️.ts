@@ -4,8 +4,8 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfMoveAccessorPayload {
-  index: number;
-  position: number;
+  index: bigint;
+  position: bigint;
 }
 
 export type MoveAccessorMutation = GltfPhase<GltfMoveAccessorPayload, GltfDiff>;

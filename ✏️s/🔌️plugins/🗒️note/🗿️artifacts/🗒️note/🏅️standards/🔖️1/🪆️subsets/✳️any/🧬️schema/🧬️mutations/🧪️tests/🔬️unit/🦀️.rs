@@ -317,3 +317,65 @@ async fn delete_asset_missing_target_is_error() {
     assert_missing_target_is_error(&base, &delete_asset("ghost".into())).await;
 }
 //#endregion 🔖️OutcomeLaws
+
+//#region ⏪️TimeTravel
+/// ⏪️ Opens a standalone Note store over `base`, commits `log` one edit per leaf, supersedes the leaf at `index` with
+/// `edited` and drives the Report replay to its end: the preview base is the fold of the prefix, the replay is the
+/// fresh fold of the edited log (Error/Fatal leaves fold as no-ops), and a clean report overwrites to exactly that state.
+async fn replay_history_edit(base: &NoteSnapshot, log: &[NoteMutation], index: usize, edited: &NoteMutation) -> protocol::ReplayReport {
+    use protocol::OpBinary;
+    let mut store = crate::standards::v1::subsets::any::io::snapshot::binary::new_note_store(store::create_document_envelope::<NoteSnapshot, NoteMutation>(crate::NOTE_DOCUMENT_SCHEMA, "drag-time-travel", base.clone(), None)).await.expect("the store opens");
+    for mutation in log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("a block edit applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[index].clone(), protocol::InputReplacement::Input { schema: crate::NOTE_DOCUMENT_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let prefix = log[..index].iter().fold(base.clone(), |snapshot, mutation| apply_note_mutation(&snapshot, mutation).expect("the prefix folds"));
+    assert_eq!(store.state_before(&ids[index], &drafts).expect("the preview base folds").as_ref(), &prefix, "the preview base is the state right before the edited leaf, nothing downstream");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[index])).expect("the replay begins at the edited leaf");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    let report = store.replay_report(&result).expect("report");
+    let fresh = log.iter().enumerate().fold(base.clone(), |snapshot, (position, mutation)| {
+        let mutation = if position == index { edited } else { mutation };
+        if mutation.diff(&snapshot).messages().iter().any(|message| matches!(message.level, protocol::Severity::Error | protocol::Severity::Fatal)) { snapshot } else { apply_note_mutation(&snapshot, mutation).expect("the edited log folds") }
+    });
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    if !report.blocks_finalize() {
+        store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+        assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    }
+    store.close();
+    report
+}
+
+/// ⏪️ Time travel edits a block drag's inputs, never the ink tool: re-offsetting the first drag replays the downstream
+/// move and drag onto the edited offsets, never blocks finalizing, and reports the edited leaf plus every downstream one.
+#[semio_framework_async_macros::async_test]
+async fn a_block_drag_edited_in_history_replays_its_downstream() {
+    let base = sample_snapshot();
+    let log = [drag_blocks(vec!["b1".into(), "b2".into()], 10.0, 5.0), move_block("b3".into(), 40.0, 40.0), drag_blocks(vec!["b1".into(), "b3".into()], 1.0, -2.0)];
+    let report = replay_history_edit(&base, &log, 0, &drag_blocks(vec!["b1".into(), "b2".into()], -4.0, 2.5)).await;
+    assert!(!report.blocks_finalize(), "{report:?}");
+    assert_eq!(report.outcomes.len(), log.len(), "the replay reports the edited drag and every downstream leaf");
+}
+
+/// 🚨️ Retargeting a block drag onto a block that does not exist reports the edited leaf's own
+/// `mutation.target-missing` Error, which blocks finalizing until it is edited again or withdrawn.
+#[semio_framework_async_macros::async_test]
+async fn a_block_drag_retargeted_onto_a_missing_block_blocks_finalizing() {
+    let base = sample_snapshot();
+    let log = [drag_blocks(vec!["b1".into()], 10.0, 5.0), drag_blocks(vec!["b1".into()], 1.0, 1.0)];
+    let report = replay_history_edit(&base, &log, 0, &drag_blocks(vec!["ghost".into()], 10.0, 5.0)).await;
+    assert!(report.blocks_finalize(), "{report:?}");
+    assert!(report.outcomes[0].messages.iter().any(|message| message.code.0 == "mutation.target-missing"), "{report:?}");
+}
+
+/// 🗣️ The drag's history row label reads the block count and the offset in English and German.
+#[test]
+fn a_block_drag_label_reads_the_count_and_offset() {
+    let label = |mutation: NoteMutation| (mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::En), mutation.label().resolve(protocol::Terminology::Native, protocol::Locale::De));
+    assert_eq!(label(drag_blocks(vec!["b1".into()], 2.5, -10.0)), ("Drag 1 block by (2.5, -10)".to_string(), "1 Block um (2,5; -10) ziehen".to_string()));
+    assert_eq!(label(drag_blocks(vec!["b1".into(), "b2".into()], 0.0, 3.0)), ("Drag 2 blocks by (0, 3)".to_string(), "2 Blöcke um (0; 3) ziehen".to_string()));
+}
+//#endregion ⏪️TimeTravel

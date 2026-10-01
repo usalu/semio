@@ -1,5 +1,5 @@
 import { join } from "node:path";
-import { BundleScript } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../../../../🏗️build/🛂staging-environment/🟦️.ts";
 import { proveScopedDirectorySocketRevocationFixture } from "../🧾️fixture-verification/🟦️.ts";

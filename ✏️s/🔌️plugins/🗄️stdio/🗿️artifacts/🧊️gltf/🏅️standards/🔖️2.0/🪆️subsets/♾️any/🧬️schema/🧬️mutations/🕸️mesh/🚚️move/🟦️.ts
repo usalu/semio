@@ -4,8 +4,8 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfMoveMeshPayload {
-  index: number;
-  position: number;
+  index: bigint;
+  position: bigint;
 }
 
 export type MoveMeshMutation = GltfPhase<GltfMoveMeshPayload, GltfDiff>;

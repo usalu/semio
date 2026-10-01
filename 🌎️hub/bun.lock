@@ -46,6 +46,26 @@
         "vitest": "^4.0.17",
       },
     },
+    "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/wfc-2d",
+      "version": "0.1.0",
+    },
+    "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/wfc-grid2d",
+      "version": "0.1.0",
+    },
+    "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/wfc-bitmap",
+      "version": "0.1.0",
+    },
+    "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/wfc-3d",
+      "version": "0.1.0",
+    },
+    "../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/wfc-grid3d",
+      "version": "0.1.0",
+    },
     "../✏️s/🔌️plugins/🌀️procedural/📦️packages/🟦️typescript": {
       "name": "@semio-tech/procedural-js",
       "version": "0.1.0",
@@ -704,8 +724,8 @@
       "name": "@semio-tech/stdio-bmp",
       "version": "0.1.0",
     },
-    "../✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript": {
-      "name": "@semio-tech/note-js",
+    "../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript": {
+      "name": "@semio-tech/note-note-js",
       "version": "0.1.0",
       "dependencies": {
         "@semio-tech/cad-js-module-aec-building": "workspace:*",
@@ -1484,6 +1504,9 @@
         "typescript": "^5.9.3",
         "vitest": "^4.0.17",
       },
+    },
+    "🔐️auth/🔌️client/📦️packages/🦀️rust": {
+      "name": "@semio-tech/hub-auth-client-rs",
     },
     "🔨️modules/🛡️admin/📦️packages/🟦️typescript": {
       "name": "os-hub-admin",
@@ -2406,6 +2429,8 @@
 
     "@semio-tech/gis-js": ["@semio-tech/gis-js@workspace:../✏️s/🔌️plugins/🌍️gis/📦️packages/🟦️typescript"],
 
+    "@semio-tech/hub-auth-client-rs": ["@semio-tech/hub-auth-client-rs@workspace:🔐️auth/🔌️client/📦️packages/🦀️rust"],
+
     "@semio-tech/imperative-js": ["@semio-tech/imperative-js@workspace:../✏️s/🔌️plugins/📜️imperative/📦️packages/🟦️typescript"],
 
     "@semio-tech/imperative-procedure-rs": ["@semio-tech/imperative-procedure-rs@workspace:../✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/📦️packages/🦀️rust"],
@@ -2426,7 +2451,7 @@
 
     "@semio-tech/norm-js": ["@semio-tech/norm-js@workspace:../✏️s/🔌️plugins/📕️norm/📦️packages/🟦️typescript"],
 
-    "@semio-tech/note-js": ["@semio-tech/note-js@workspace:../✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript"],
+    "@semio-tech/note-note-js": ["@semio-tech/note-note-js@workspace:../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript"],
 
     "@semio-tech/note-note-rs": ["@semio-tech/note-note-rs@workspace:../✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🦀️rust"],
 
@@ -2617,6 +2642,16 @@
     "@semio-tech/ui-styling": ["@semio-tech/ui-styling@workspace:../🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript"],
 
     "@semio-tech/vcs-js": ["@semio-tech/vcs-js@workspace:../✏️s/🔌️plugins/🌿️vcs/📦️packages/🟦️typescript"],
+
+    "@semio-tech/wfc-2d": ["@semio-tech/wfc-2d@workspace:../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/◻️2d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/wfc-3d": ["@semio-tech/wfc-3d@workspace:../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧊️3d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/wfc-bitmap": ["@semio-tech/wfc-bitmap@workspace:../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🖼️bitmap/📦️packages/🟦️typescript"],
+
+    "@semio-tech/wfc-grid2d": ["@semio-tech/wfc-grid2d@workspace:../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/📦️packages/🟦️typescript"],
+
+    "@semio-tech/wfc-grid3d": ["@semio-tech/wfc-grid3d@workspace:../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🧱️grid3d/📦️packages/🟦️typescript"],
 
     "@semio-tech/wfc-js": ["@semio-tech/wfc-js@workspace:../✏️s/🔌️plugins/🀄️wfc/📦️packages/🟦️typescript"],
 

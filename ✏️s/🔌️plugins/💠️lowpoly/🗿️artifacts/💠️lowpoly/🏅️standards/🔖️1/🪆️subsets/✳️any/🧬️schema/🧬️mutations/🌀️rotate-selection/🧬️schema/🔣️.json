@@ -1,0 +1,153 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rotate-selection/schema.json",
+  "title": "RotateSelection",
+  "description": "The gumball's turn of a selection stated as its intent: the object, the vertices it names (every vertex when empty), the pivot, the axis and the angle in radians. The geometry is derived from the object's persisted mesh on every application. Its hard bounds (vertices named once) and its `x-semio-invariant` (a non-zero axis) state the payload-intrinsic breaches the diff refuses as `mutation.invariant`; refusals that depend on the base belong to the diff alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "angle",
+    "axis",
+    "objectId",
+    "pivot",
+    "vertexIds"
+  ],
+  "x-semio-invariant": [
+    {
+      "id": "axis-nonzero",
+      "description": {
+        "en": "The rotation axis is not the zero vector.",
+        "de": "Die Drehachse ist nicht der Nullvektor."
+      }
+    }
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object whose mesh the motion moves.",
+          "de": "Das Objekt, dessen Netz die Bewegung bewegt."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "vertexIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "The vertices the motion carries; empty carries every vertex of the object, absent ones are skipped.",
+          "de": "Die Eckpunkte, die die Bewegung mitnimmt; leer nimmt jeden Eckpunkt des Objekts mit, fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "vertex",
+          "domain": "mesh",
+          "granularity": "vertex"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "pivot": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Pivot",
+          "de": "Drehpunkt"
+        },
+        "description": {
+          "en": "The point the axis passes through.",
+          "de": "Der Punkt, durch den die Achse verläuft."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "pivot",
+        "order": 40
+      }
+    },
+    "axis": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Axis",
+          "de": "Achse"
+        },
+        "description": {
+          "en": "The direction the vertices turn about; its length does not matter.",
+          "de": "Die Richtung, um die sich die Eckpunkte drehen; ihre Länge spielt keine Rolle."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "motion",
+        "order": 30
+      }
+    },
+    "angle": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "dial",
+        "role": "value",
+        "label": {
+          "en": "Angle",
+          "de": "Winkel"
+        },
+        "description": {
+          "en": "Right-handed turn about the axis.",
+          "de": "Rechtshändige Drehung um die Achse."
+        },
+        "unit": "rad",
+        "displayUnit": "deg",
+        "displayFactor": 57.29577951308232,
+        "step": 0.017453292519943295,
+        "softMin": -3.141592653589793,
+        "softMax": 3.141592653589793,
+        "snaps": [
+          -3.141592653589793,
+          -1.5707963267948966,
+          0,
+          1.5707963267948966,
+          3.141592653589793
+        ],
+        "group": "motion",
+        "order": 35
+      }
+    }
+  }
+}

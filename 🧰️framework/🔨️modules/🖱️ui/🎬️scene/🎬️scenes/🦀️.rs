@@ -2340,6 +2340,10 @@ pub struct Board2dScene {
     pub glyph_catalogs_json: String,
     #[serde(default = "board2d_default_selection_json")]
     pub selection_json: String,
+    /// 🔗️ The ids the board paints highlighted, as a JSON id array — what the open time-travel draft references
+    /// (`InteractionView::draft_references`); `[]` highlights nothing.
+    #[serde(default = "board2d_default_highlighted_ids_json", skip_serializing_if = "board2d_highlights_nothing")]
+    pub highlighted_ids_json: String,
     #[serde(default)]
     pub interactive: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -2424,6 +2428,7 @@ scene_pack_wire!(Board2dScenePack, Board2dScene {
     domain_id: Option<String>,
     suggestion_menu_json: Option<String>,
     tool_run_trace: Option<String>,
+    highlighted_ids_json: String,
     #[serde(default)]
     lanes: Vec<SceneLaneRef>,
 });
@@ -2551,6 +2556,14 @@ pub fn board2d_default_selection_json() -> String {
     "[]".into()
 }
 // 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
+pub fn board2d_default_highlighted_ids_json() -> String {
+    "[]".into()
+}
+// 🚫️async: E1 pure predicate consumed by external-trait impls (serde skip) — see R9
+pub fn board2d_highlights_nothing(highlighted_ids_json: &str) -> bool {
+    highlighted_ids_json == "[]"
+}
+// 🚫️async: E1 pure accessor consumed by external-trait impls (serde default) — see R9
 pub fn board2d_default_selection_method() -> String {
     "rectangle".into()
 }
@@ -2585,6 +2598,7 @@ impl Board2dScene {
             camera_json,
             glyph_catalogs_json: board2d_default_glyph_catalogs_json(),
             selection_json: board2d_default_selection_json(),
+            highlighted_ids_json: board2d_default_highlighted_ids_json(),
             interactive,
             hovered_id: None,
             active_utility: None,
@@ -2616,6 +2630,9 @@ impl ToValue for Board2dScene {
         value_push(&mut entries, "cameraJson", &self.camera_json);
         value_push(&mut entries, "glyphCatalogsJson", &self.glyph_catalogs_json);
         value_push(&mut entries, "selectionJson", &self.selection_json);
+        if !board2d_highlights_nothing(&self.highlighted_ids_json) {
+            value_push(&mut entries, "highlightedIdsJson", &self.highlighted_ids_json);
+        }
         value_push(&mut entries, "interactive", &self.interactive);
         value_push_option(&mut entries, "hoveredId", &self.hovered_id);
         value_push_option(&mut entries, "activeUtility", &self.active_utility);
@@ -2648,6 +2665,7 @@ impl FromValue for Board2dScene {
             camera_json: value_decode(&entries, "cameraJson")?,
             glyph_catalogs_json: value_decode_default(&entries, "glyphCatalogsJson", board2d_default_glyph_catalogs_json)?,
             selection_json: value_decode_default(&entries, "selectionJson", board2d_default_selection_json)?,
+            highlighted_ids_json: value_decode_default(&entries, "highlightedIdsJson", board2d_default_highlighted_ids_json)?,
             interactive: value_decode_default(&entries, "interactive", Default::default)?,
             hovered_id: value_decode_option(&entries, "hoveredId")?,
             active_utility: value_decode_option(&entries, "activeUtility")?,

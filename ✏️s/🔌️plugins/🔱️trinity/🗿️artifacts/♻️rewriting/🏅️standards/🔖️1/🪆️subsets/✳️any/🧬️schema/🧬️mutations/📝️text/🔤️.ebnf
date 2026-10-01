@@ -12,7 +12,11 @@ line = edit before fixture
      | change parameter binding
      | remove parameter binding
      | change rule layout point
-     | remove rule layout point ;
+     | remove rule layout point
+     | drag working nodes
+     | patch working nodes
+     | drag rule nodes
+     | set rule layout points ;
 edit before fixture = 'edit-before-fixture', space, text ;
 edit lhs = 'edit-lhs', space, text ;
 edit rhs = 'edit-rhs', space, text ;
@@ -20,7 +24,13 @@ change parameter binding = 'change-parameter-binding', space, key, space, value 
 remove parameter binding = 'remove-parameter-binding', space, key ;
 change rule layout point = 'change-rule-layout-point', space, key, space, point block ;
 remove rule layout point = 'remove-rule-layout-point', space, key ;
+drag working nodes = 'drag-working-nodes', space, targets, space, number, space, number ;
+patch working nodes = 'patch-working-nodes', space, targets, space, key, space, value ;
+drag rule nodes = 'drag-rule-nodes', space, targets, space, number, space, number ;
+set rule layout points = 'set-rule-layout-points', space, placement table, space, targets ;
 point block = '{', newline, number, space, number, '}' ;
+placement table = '{', { newline, key, space, number, space, number }, '}' ;
+targets = '[', { key, [ space ] }, ']' ;
 key = octet, { octet } ;
 value = octet, { octet } ;
 number = octet, { octet } ;

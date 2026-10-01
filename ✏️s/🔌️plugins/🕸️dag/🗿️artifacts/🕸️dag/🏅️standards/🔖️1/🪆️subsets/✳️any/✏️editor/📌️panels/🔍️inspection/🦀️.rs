@@ -53,12 +53,15 @@ fn input_field(id: &str, title: &str, kind: InputKind, value: &str, placeholder:
     if let Some(placeholder) = placeholder {
         control = control.placeholder(label(placeholder)?);
     }
-    if kind == InputKind::Text {
+    let trigger = if kind == InputKind::Text {
         control = control.commit(UiText::try_from_str("blur").ok_or_else(admission_error)?);
-    }
+        Trigger::Commit
+    } else {
+        Trigger::Change
+    };
     control = match args {
-        Some(args) => control.try_on_with(Trigger::Change, action, args).map_err(|_| admission_error())?,
-        None => control.try_on(Trigger::Change, action).map_err(|_| admission_error())?,
+        Some(args) => control.try_on_with(trigger, action, args).map_err(|_| admission_error())?,
+        None => control.try_on(trigger, action).map_err(|_| admission_error())?,
     };
     control_row(id, title, control.try_build().map_err(|_| admission_error())?)
 }

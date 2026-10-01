@@ -96,9 +96,9 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id              | dir               | fixture                  |
-    | create-support  | 🛡️create-support  | 🛞️adds-a-vertical-6161a1 |
+    | create-support  | 🛡️create-support  | 🛞️adds |
     | delete-support  | 🗑️delete-support  | 🔓️releases-the-82b34f    |
-    | replace-support | 🔁️replace-support | 🔒️upgrades-the-834e4a    |
+    | replace-support | 🔁️replace-support | 🔒️upgrades    |
 
   @id-frame-vector
   @level-exhaustive
@@ -111,9 +111,9 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id              | dir               | fixture                     |
-    | create-support  | 🛡️create-support  | 🔻️props-the-canopy-b9d719   |
-    | delete-support  | 🗑️delete-support  | 🕊️frees-the-roof-tie-44562b |
-    | replace-support | 🔁️replace-support | 🔩️pins-the-left-base-7891ec |
+    | create-support  | 🛡️create-support  | 🔻️props   |
+    | delete-support  | 🗑️delete-support  | 🕊️frees |
+    | replace-support | 🔁️replace-support | 🔩️pins |
 
   @id-reject
   @level-exhaustive
@@ -127,8 +127,8 @@ Feature: Apply every typed fem2d boundary mutation twice — once in Rust, once 
     Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
     Examples:
     | id                | dir               | fixture                     |
-    | create-support-1  | 🛡️create-support  | 🚫️rejects-a-dangling-b0d60b |
-    | delete-support-1  | 🗑️delete-support  | ⛔️rejects-a-missing-23f3c3  |
-    | replace-support-1 | 🔁️replace-support | ⛔️rejects-a-missing-afbf6d  |
-    | replace-support-2 | 🔁️replace-support | 🪪️denies-rename-63ec90      |
-    | replace-support-3 | 🔁️replace-support | 👻️dangling-node-98d979      |
+    | create-support-1  | 🛡️create-support  | 🚫️rejects |
+    | delete-support-1  | 🗑️delete-support  | ⛔️rejects  |
+    | replace-support-1 | 🔁️replace-support | ⛔️rejects  |
+    | replace-support-2 | 🔁️replace-support | 🪪️denies      |
+    | replace-support-3 | 🔁️replace-support | 👻️dangling      |

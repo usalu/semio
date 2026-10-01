@@ -41,7 +41,7 @@ test("actual source directories resolve across physical owners and reject escape
       malformed("missing");
       expect(() => registryArtifactSourceRoots(root, row.crate)).toThrow("nofollow");
       const source = "[package.metadata.semio.sources]\nartifacts = " + JSON.stringify([row.declared]) + "\n";
-      const view: RegistryCatalogInputView = { readText: () => source, entries: () => [], kind: (path) => path.endsWith("Cargo.toml") ? "file" : path === row.expected.split("/")[0] ? "symlink" : "directory" };
+      const view: RegistryCatalogInputView = { readText: () => source, readBytes: () => new TextEncoder().encode(source), entries: () => [], kind: (path) => path.endsWith("Cargo.toml") ? "file" : path === row.expected.split("/")[0] ? "symlink" : "directory" };
       expect(() => registryArtifactSourceRoots(root, row.crate, view)).toThrow("nofollow");
     }
   } finally { rmSync(root, { recursive: true, force: true }); }

@@ -41,6 +41,215 @@ mod run_bytes_base64 {
 }
 //#endregion 🔖️Shared
 
+//#region 🧲️SelectionMotion
+/// 🧲️ What one relative selection leaf (`move-selection`, `rotate-selection`, `scale-selection`) does to the vertices it
+/// names on one object's persisted mesh: an offset, a turn by `angle` radians about `axis` through `pivot`, or per-axis
+/// `factor`s about `pivot` — the parameters the gesture stated, never the geometry it left behind, so the leaf replays
+/// onto whatever mesh the object holds by then (design `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §17.6).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LowpolySelectionMotion {
+    Offset([f32; 3]),
+    Turn { pivot: [f32; 3], axis: [f32; 3], angle: f32 },
+    Stretch { pivot: [f32; 3], factor: [f32; 3] },
+}
+
+impl LowpolySelectionMotion {
+    /// 🧪️ The payload-intrinsic breach a selection leaf refuses as `mutation.invariant`: a vertex named twice, a
+    /// non-finite number, the zero rotation axis (`x-semio-invariant` `axis-nonzero`) or a non-positive factor.
+    pub fn invariant_violation(&self, vertex_ids: &[u32]) -> Option<String> {
+        let finite = |values: &[f32]| values.iter().all(|value| value.is_finite());
+        let mut seen = std::collections::BTreeSet::new();
+        if let Some(twice) = vertex_ids.iter().find(|id| !seen.insert(**id)) {
+            return Some(format!("Vertex {twice} is named more than once."));
+        }
+        match self {
+            Self::Offset(offset) if !finite(offset) => Some("The offset must be finite.".into()),
+            Self::Turn { pivot, axis, angle } if !finite(pivot) || !finite(axis) || !angle.is_finite() => Some("The pivot, axis and angle must be finite.".into()),
+            Self::Turn { axis, .. } if axis.iter().all(|value| *value == 0.0) => Some("The rotation axis must not be the zero vector.".into()),
+            Self::Stretch { pivot, factor } if !finite(pivot) || !factor.iter().all(|value| value.is_finite() && *value > 0.0) => Some("The pivot must be finite and every factor positive and finite.".into()),
+            _ => None,
+        }
+    }
+
+    /// 🫥️ Whether the motion leaves every vertex where it is: no offset, no angle, unit factors.
+    pub fn is_identity(&self) -> bool {
+        match self {
+            Self::Offset(offset) => *offset == [0.0; 3],
+            Self::Turn { angle, .. } => *angle == 0.0,
+            Self::Stretch { factor, .. } => *factor == [1.0; 3],
+        }
+    }
+
+    fn apply(&self, mesh: &mut semio_framework_3d::mesh::HalfedgeMesh, vertices: &[semio_framework_3d::mesh::VertexId]) -> semio_framework_3d::mesh::MeshResult<()> {
+        use semio_framework_3d::mesh::Vec3;
+        match *self {
+            Self::Offset(offset) => mesh.move_vertices(vertices, Vec3(offset)),
+            Self::Turn { pivot, axis, angle } => mesh.rotate_vertices(vertices, Vec3(axis), angle, Vec3(pivot)),
+            Self::Stretch { pivot, factor } => mesh.scale_vertices(vertices, Vec3(factor), Vec3(pivot)),
+        }
+    }
+
+    /// 🏷️ The history label of moving `vertices` (every vertex when 0) of `object_id`: "Move 2 vertices of "obj-1" by
+    /// (0.5, 0, 0)" / "2 Eckpunkte von "obj-1" um (0,5; 0; 0) verschieben", and the rotate and scale twins.
+    pub fn label(&self, object_id: &str, vertices: usize) -> protocol::LocalizedLabel {
+        let number = |value: f32, german: bool| {
+            let text = format!("{}", (f64::from(value) * 1_000.0).round() / 1_000.0);
+            if german { text.replace('.', ",") } else { text }
+        };
+        let triple = |values: &[f32; 3], german: bool| values.iter().map(|value| number(*value, german)).collect::<Vec<_>>().join(if german { "; " } else { ", " });
+        let (en, de) = match vertices {
+            0 => (format!("\"{object_id}\""), format!("\"{object_id}\"")),
+            1 => (format!("1 vertex of \"{object_id}\""), format!("1 Eckpunkt von \"{object_id}\"")),
+            count => (format!("{count} vertices of \"{object_id}\""), format!("{count} Eckpunkte von \"{object_id}\"")),
+        };
+        match self {
+            Self::Offset(offset) => protocol::LocalizedLabel::native(&format!("Move {en} by ({})", triple(offset, false)), &format!("{de} um ({}) verschieben", triple(offset, true))),
+            Self::Turn { axis, angle, .. } => {
+                let degrees = angle.to_degrees();
+                protocol::LocalizedLabel::native(&format!("Rotate {en} by {}° about ({})", number(degrees, false), triple(axis, false)), &format!("{de} um die Achse ({}) um {}° drehen", triple(axis, true), number(degrees, true)))
+            }
+            Self::Stretch { factor, .. } => protocol::LocalizedLabel::native(&format!("Scale {en} by ({})", triple(factor, false)), &format!("{de} mit ({}) skalieren", triple(factor, true))),
+        }
+    }
+}
+
+/// 🔺️ The sparse diff of applying `motion` to `vertex_ids` (every vertex when empty) of `object_id`'s persisted mesh,
+/// read off the BASE mesh: the object's re-encoded mesh content and the content-addressed handle it hashes to. Fatal
+/// `invariant` for a payload no mesh can satisfy, Fatal `apply.invalid-base` for mesh content that does not decode,
+/// Error `target-missing` when the object, its mesh or every named vertex is absent, Warning `partial` for the named
+/// vertices it skips and Warning `no-op` when nothing moves.
+pub fn lowpoly_selection_motion_diff(base: &LowpolySnapshot, object_id: &str, vertex_ids: &[u32], motion: &LowpolySelectionMotion) -> protocol::MutationOutcome<LowpolyDiff> {
+    use semio_framework_3d::mesh::{HalfedgeMesh, VertexId};
+    if let Some(reason) = motion.invariant_violation(vertex_ids) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", reason, [object_id.to_string()]);
+    }
+    let Some(object) = base.objects.iter().find(|object| object.id == object_id) else {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" does not exist."), [object_id.to_string()]);
+    };
+    if object.mesh.is_none() || object.mesh_content.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("Object \"{object_id}\" carries no mesh."), [object_id.to_string()]);
+    }
+    let Ok(mut mesh) = HalfedgeMesh::from_json(&object.mesh_content) else {
+        return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", format!("The mesh of object \"{object_id}\" does not decode."), [object_id.to_string()]);
+    };
+    let count = u32::try_from(mesh.vertex_count()).unwrap_or(u32::MAX);
+    let (present, skipped): (Vec<u32>, Vec<u32>) = if vertex_ids.is_empty() { ((0..count).collect(), Vec::new()) } else { vertex_ids.iter().partition(|id| **id < count) };
+    if present.is_empty() {
+        return protocol::MutationOutcome::error("mutation.target-missing", format!("None of the {} named vertices exists on object \"{object_id}\".", vertex_ids.len()), [object_id.to_string()]);
+    }
+    let partial = (!skipped.is_empty()).then(|| protocol::MutationMessage::warn("mutation.partial", format!("{} of {} named vertices skipped (not on object \"{object_id}\"): {skipped:?}", skipped.len(), vertex_ids.len())).at([object_id.to_string()]));
+    let no_op = || protocol::MutationMessage::warn("mutation.no-op", format!("The motion moves no vertex of object \"{object_id}\".")).at([object_id.to_string()]);
+    if motion.is_identity() {
+        return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
+    }
+    let vertices: Vec<VertexId> = present.into_iter().map(VertexId).collect();
+    if motion.apply(&mut mesh, &vertices).is_err() {
+        return protocol::MutationOutcome::fatal("mutation.invariant", format!("The motion degenerates the mesh of object \"{object_id}\"."), [object_id.to_string()]);
+    }
+    let Ok(content) = mesh.to_json() else {
+        return protocol::MutationOutcome::fatal("mutation.apply.invalid-base", format!("The moved mesh of object \"{object_id}\" does not encode."), [object_id.to_string()]);
+    };
+    if content == object.mesh_content {
+        return protocol::MutationOutcome::new(LowpolyDiff::default()).absorb_messages(partial.into_iter().chain([no_op()]));
+    }
+    let patch = crate::LowpolyObjectPatch { mesh: Some(Some(crate::mesh_child_handle(object_id, &content))), mesh_content: Some(content), ..crate::LowpolyObjectPatch::default() };
+    protocol::MutationOutcome::new(crate::diff::diff_objects_patch(object_id.to_string(), patch)).absorb_messages(partial)
+}
+
+/// ↩️ The exact undo of a selection motion on `base`: ONE `create-mesh` restoring the object's prior handle and mesh
+/// content (point-invertible however many vertices moved, never a negated motion that would accumulate float error);
+/// nothing when the motion moves nothing.
+pub fn lowpoly_selection_motion_inverse(base: &LowpolySnapshot, object_id: &str, vertex_ids: &[u32], motion: &LowpolySelectionMotion) -> Vec<LowpolyMutation> {
+    if lowpoly_selection_motion_diff(base, object_id, vertex_ids, motion).diff().objects.is_none() {
+        return Vec::new();
+    }
+    let Some((object, handle)) = base.objects.iter().find(|object| object.id == object_id).and_then(|object| object.mesh.as_ref().map(|handle| (object, handle))) else {
+        return Vec::new();
+    };
+    vec![LowpolyMutation::CreateMesh(super::create_mesh::CreateMesh { id: object_id.to_string(), child_id: handle.child_id.clone(), target: handle.target.clone(), mesh_workspace: object.mesh_content.clone() })]
+}
+//#endregion 🧲️SelectionMotion
+
+//#region 🧪️Laws
+/// ⚖️ The laws every committed quintet of a single-row-inverse lowpoly leaf holds (`apply-paint-stroke` and the three
+/// selection motions), written once beside the aggregate and called by each scenario's `🧪️tests/<case>/🦀️.rs`.
+#[cfg(test)]
+pub mod laws {
+    use crate::{LowpolyDiff, LowpolyMutation, LowpolySnapshot};
+
+    fn from_json<T: dsl::FromValue>(text: &str) -> T {
+        let parsed: serde_json::Value = serde_json::from_str(text).expect("fixture json parses");
+        dsl::FromValue::from_value(dsl::DslValue::from(parsed)).expect("fixture json decodes")
+    }
+
+    fn to_json<T: dsl::ToValue>(value: &T) -> serde_json::Value {
+        dsl::ToValue::to_value(value).into()
+    }
+
+    fn produced(mutation: &LowpolyMutation, before: &LowpolySnapshot) -> Vec<(String, String)> {
+        <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(mutation, before)
+            .messages()
+            .iter()
+            .map(|message| (to_json(&message.level).as_str().unwrap_or_default().to_string(), message.code.0.clone()))
+            .collect()
+    }
+
+    /// ▶️ The leaf carries `before` to exactly the committed `after` and produces exactly the committed delta.
+    pub fn forward(before: &str, mutation: &str, after: &str, diff: &str) {
+        let (before, mutation, after): (LowpolySnapshot, LowpolyMutation, LowpolySnapshot) = (from_json(before), from_json(mutation), from_json(after));
+        let raised = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::diff(&mutation, &before);
+        assert_eq!(to_json(raised.diff()), serde_json::from_str::<serde_json::Value>(diff).expect("diff parses"), "the produced delta is the committed 🔺️diff");
+        let (applied, _) = protocol::apply_mutation(&before, &mutation).expect("the leaf applies");
+        assert_eq!(applied, after, "the applied layer is the committed after-snapshot");
+        let committed: LowpolyDiff = from_json(diff);
+        assert_eq!(<LowpolyDiff as protocol::MutationDiff<LowpolySnapshot>>::apply(&committed, &before).expect("the committed diff applies"), after, "the committed diff alone carries before to after");
+    }
+
+    /// ↩️ The computed inverse — ONE row writing the overwritten state back — restores `before` exactly.
+    pub fn inverse_restores(before: &str, mutation: &str) {
+        let (base, mutation): (LowpolySnapshot, LowpolyMutation) = (from_json(before), from_json(mutation));
+        let inverse = <LowpolyMutation as protocol::Mutation<LowpolySnapshot>>::inverse(&mutation, &base);
+        assert_eq!(inverse.len(), 1, "the leaf inverts to ONE row: {inverse:?}");
+        let (mut snapshot, _) = protocol::apply_mutation(&base, &mutation).expect("forward applies");
+        for step in &inverse {
+            snapshot = protocol::apply_mutation(&snapshot, step).expect("inverse step applies").0;
+        }
+        assert_eq!(snapshot, base, "the inverse restores the before-snapshot");
+    }
+
+    /// 🎯️ The declared outcome — status and ordered diagnostics — is what the leaf emits.
+    pub fn declared_outcome(before: &str, mutation: &str, outcome: &str) {
+        let (before, mutation): (LowpolySnapshot, LowpolyMutation) = (from_json(before), from_json(mutation));
+        let outcome: serde_json::Value = serde_json::from_str(outcome).expect("outcome parses");
+        let declared: Vec<(String, String)> = match outcome["status"].as_str() {
+            Some("rejected") => { let code = outcome["code"].as_str().unwrap_or_default(); vec![(to_json(&protocol::outcome_code_level(code).expect("a vocabulary code")).as_str().unwrap_or_default().to_string(), code.to_string())] }
+            _ => outcome["messages"].as_array().map(|rows| rows.iter().map(|row| (row["level"].as_str().unwrap_or_default().to_string(), row["code"].as_str().unwrap_or_default().to_string())).collect()).unwrap_or_default(),
+        };
+        assert_eq!(produced(&mutation, &before), declared, "the raised diagnostics are the committed 🎯️outcome");
+    }
+
+    /// ⛔️ A refused or no-op leaf leaves the document byte-identical and emits the declared diagnostic.
+    pub fn refusal(before: &str, mutation: &str, after: &str, outcome: &str) {
+        declared_outcome(before, mutation, outcome);
+        let (base, mutation, after): (LowpolySnapshot, LowpolyMutation, LowpolySnapshot) = (from_json(before), from_json(mutation), from_json(after));
+        assert_eq!(after, base, "the committed after-snapshot is the before-snapshot");
+        let snapshot = protocol::apply_mutation(&base, &mutation).map_or_else(|_| base.clone(), |(next, _)| next);
+        assert_eq!(snapshot, base, "a refused or no-op leaf leaves the document untouched");
+    }
+
+    /// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
+    pub fn canonical(before: &str, after: &str, mutation: &str, diff: Option<&str>) {
+        for text in [before, after] {
+            assert_eq!(to_json(&from_json::<LowpolySnapshot>(text)), serde_json::from_str::<serde_json::Value>(text).expect("snapshot parses"), "a committed snapshot is canonical");
+        }
+        assert_eq!(to_json(&from_json::<LowpolyMutation>(mutation)), serde_json::from_str::<serde_json::Value>(mutation).expect("mutation parses"), "the committed mutation is canonical");
+        if let Some(diff) = diff {
+            assert_eq!(to_json(&from_json::<LowpolyDiff>(diff)), serde_json::from_str::<serde_json::Value>(diff).expect("diff parses"), "the committed diff is canonical");
+        }
+    }
+}
+//#endregion 🧪️Laws
+
 //#region 🔖️Mutations
 #[derive(Clone, Debug, PartialEq, dsl::Mutations, value_derive::ToValue, value_derive::FromValue)]
 #[mutations(snapshot = LowpolySnapshot, diff = LowpolyDiff, schema = "s.lowpoly.lowpoly")]
@@ -63,6 +272,9 @@ pub enum LowpolyMutation {
     ChangePaintLayerBlendMode(super::change_paint_layer_blend_mode::ChangePaintLayerBlendMode),
     EditPaintLayer(super::edit_paint_layer::EditPaintLayer),
     ApplyPaintStroke(super::apply_paint_stroke::ApplyPaintStroke),
+    MoveSelection(super::move_selection::MoveSelection),
+    RotateSelection(super::rotate_selection::RotateSelection),
+    ScaleSelection(super::scale_selection::ScaleSelection),
 }
 
 //#region 🏷️Kinds
@@ -89,6 +301,9 @@ pub const KINDS: &[&str] = &[
     "change-paint-layer-blend-mode",
     "edit-paint-layer",
     "apply-paint-stroke",
+    "move-selection",
+    "rotate-selection",
+    "scale-selection",
 ];
 //#endregion 🏷️Kinds
 //#endregion 🔖️Mutations

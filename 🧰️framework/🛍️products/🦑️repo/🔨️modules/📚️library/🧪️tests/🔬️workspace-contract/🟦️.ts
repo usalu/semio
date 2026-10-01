@@ -11,9 +11,10 @@ import { parseArgs } from "node:util";
 import { policyCanonicalArtifactKindBreaches, policyCanonicalChildKindBreaches, policyDissolvedKindRedefinitionBreaches, policyEmojiPrefixBreaches, policyModeCompletenessBreaches, policyPluginDependencyParityBreaches, policyWindowCompletenessBreaches } from "../../../../../../../📜️script.ts";
 import { playgroundStaticSiteBuildOptions } from "../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { newScaffoldMutationTree } from "../../🏗️authoring/🧬️mutation-tree/🟦️.ts";
-import { BundleScript, DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, ScriptRouter, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, findRepoRoot, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { DAEMON_BUDGET_MS, ORCHESTRATOR_BUDGET_MS, PLAYGROUND_LOCKED_EXAMPLE_ENV, PLAYGROUND_PORTS, allPlaygroundReservedPorts, areaOf, budgetTimeoutHint, canReuseDevPort, capturedTestFailureDiagnostics, clearDiscoveryCache, computeWorkspaces, daemonBudgetMs, daemonBudgetOpts, defineLint, dependencyBoundaryBreachesForBundleDir, dependencyBoundaryBreachesForFile, describeDevPortOccupant, devServerUrl, devToolingEnv, diffWorkspaces, discoverBurndown, discoverOwners, discoverPackageProblems, discoverPackages, dispatchSubcommand, frameworkOsPlaygroundDevEnv, getWorkspaceRoot, gitSpawnEnv, goLevelTestArgs, isAdapterBoundaryFile, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, loadTaxonomy, nextestArtifactLocation, orchestratorBudgetMs, orchestratorBudgetOpts, parseTsImportSpecs, partitionNextestExecutionFilters, playgroundDevPort, playgroundPlayViteDefine, policyDiscoveredAllowlist, readSemioMarker, resolveCargoPackageName, resolveCargoPackageNames, resolveDevPort, resolveFrameworkOsPlaygroundPlugin, resolveWorkspaceTaxonomyAuthority, resolveWorkspaceTaxonomyAuthorityFromDirectory, runCmd, runCmdStatus, runProbe, testLevelAtLeast, testLevelBudgetMs, validateTaxonomy, vitestLevelArgs, wgpuDevPlayUrl, type FileLinter } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter, findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, canonicalPrimaryFilenameForKind, createRustMutationCodecOwnershipInspector, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, fixedSourceDispositionDecision, generatorNxPreviewCommand, inspectMutationMetadataSource, inspectRustModuleGraph, inspectRustModuleGraphFacts, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustStructure, inspectRustVirtualSources, leadingEmojiIdentity, loadCatalogTaxonomy, mutationDirectLeafInlinedBehaviorFacets, pathEmojiStatuteFindings, projectCargoProviderManifest, registryCompilerInputDependencies, renderRustStructuralFactsJson, renderSemanticCensusJson, resolveCargoProviderBinding, resolveRustPathAttributes, scopedFileKindIdForSourcePath, semanticPathProjectionAuthority, taxonomyCliAttemptPreparationsProblems, taxonomyCliBackupPreparationProblems, taxonomyCliBackupWritePreparationProblems, taxonomyCliEditPreparationProblems, taxonomyCliEditWritePreparationProblems, taxonomyCliJsonWritePreparationProblems, taxonomyCliLeaseDirectoryProblems, taxonomyCliRestorePreparationProblems, validateGeneratorContractsAgainstWorkspace, type FixedDirectoryContract, type FixedFilenameContract, type PackageSourceDisposition, type RegistryCompilerInputRole, type SemanticProjectionAuthorityNode, type Taxonomy } from "../../🔍️discovery/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { taxonomyCliArtifactPath } from "../../🧹️normalization/🎮️command-contract/🟦️.ts";
 import { applyTaxonomyPlan, artifactProjectionTail, canonicalJson, generatorInputPaths, inventoryTaxonomy, loadNormalizationTaxonomy, noFollowTreeDigest, opaqueTreeDigest, parseGeneratorPreviewManifest, parseTaxonomyPlan, planTaxonomy, repositoryLocalSymlinkTargetPath, taxonomyPlanDigest, taxonomyPlatformPathViolationCodes, taxonomyScopedGitPathspec, verifyTaxonomy, type OpaqueTreeDigest, type TaxonomyApplyOptions, type TaxonomyApplyResult, type TaxonomyInventory, type TaxonomyInventoryOptions, type TaxonomyPlan, type TaxonomyProgress } from "../../🧹️normalization/🟦️.ts";
 import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";
@@ -84,7 +85,7 @@ interface FixedParentCases {
 describe("extension Cargo installation owner", () => {
   test("preserves the authored extension directory alongside the independent TOML identity", async () => {
     const library = await import("../../📦️packages/🟦️typescript/🟦️.ts");
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const folder = join(import.meta.dir, "../../🧫️fixtures/📦️extension-installation-owner");
     const fixture = JSON.parse(readFileSync(join(folder, "🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/📦️extension-installation-owner/🔣️.json"), "utf8")));
@@ -110,7 +111,7 @@ describe("extension Cargo installation owner", () => {
 describe("current JCO destination authority", () => {
   test("preserves tool-owned declaration pairing and the exact vendored shim payloads", async () => {
     const ts = await import("typescript");
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe"), host = join(fixtureRoot, "🌐️browser-host"), bundles = join(fixtureRoot, "🌐️browser-bundles");
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
     const taxonomy = loadTaxonomy();
@@ -149,7 +150,7 @@ describe("current JCO destination authority", () => {
   test("separates current paths from immutable evidence and agrees with the schema oracle", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const taxonomy = JSON.parse(readFileSync(join(import.meta.dir, "../../🔣️taxonomy.json"), "utf8"));
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const fixtureRoot = join(root, "🧰️framework/🛍️products/💻️os/🧫️fixtures/🧩️jcoprobe");
     const schema = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🧬️schema/🔣️.json"), "utf8"));
     const validate = new Ajv({ strict: true }).compile(schema.$defs.JcoProbeDestinationV1);
@@ -180,7 +181,7 @@ describe("finite exact fixed parent scope", () => {
   test("admits only declared parents and one exact leaf through both classifiers", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts");
     const ts = await import("typescript");
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const vector: FixedParentCases = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🧫️fixtures/📦️deployment/🔒️fixed-parent-cases.json"), "utf8"));
     const common = { authority: "fixture compiler", reason: "exact parent fixture", configurability: "unconfigurable", verification: "finite exact fixed parent scope", expires: null } as const;
     const parents: Readonly<Record<string, FixedDirectoryContract>> = Object.fromEntries(Object.entries(vector.parents).map(([id, path]): [string, FixedDirectoryContract] => [id, { ...common, pathPattern: path, scope: { kind: "exact-path", path } }]));
@@ -265,7 +266,7 @@ describe("fresh-clone generator outputs", () => {
 describe("materialized JCO interface filename boundaries", () => {
   test("admits the exact physical matrix through indexed and direct resolvers", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
-    const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy), pathMatcher = discovery.createTaxonomyPathMatcher();
+    const taxonomy = loadTaxonomy(), root = findWorkspaceRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy), pathMatcher = discovery.createTaxonomyPathMatcher();
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => id.startsWith("dev-jco-interface-"));
     const parentIds = taxonomy.fixedDirectoryContractSets!["dev-jco-all-interfaces"];
     expect(contracts).toHaveLength(31);
@@ -294,7 +295,7 @@ describe("materialized JCO interface filename boundaries", () => {
       physicalFiles += physical.length;
       for (const filename of physical) {
         const stem = filename.slice(0, -".d.ts".length);
-        expect(ts.resolveModuleName("." + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("./" + stem + ".js", join(root, parent, "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, parent, filename).replaceAll("\\", "/"));
       }
       for (const filename of ["custom.d.ts", "semio-framework-types.d.ts.extra", "🧪️custom.d.ts"]) expect(resolver.filenameIdsForPath(parent + "/" + filename, { parentFixedDirectoryContractIds: [parentId] })).toEqual([]);
     }
@@ -310,7 +311,7 @@ describe("materialized JCO interface filename boundaries", () => {
 describe("materialized JCO companion boundaries", () => {
   test("preserves only the 69 exact compiler-linked triples", async () => {
     const discovery = await import("../../🔍️discovery/🟦️.ts"), ts = await import("typescript"), picomatch = (await import("picomatch")).default;
-    const taxonomy = loadTaxonomy(), root = findRepoRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy);
+    const taxonomy = loadTaxonomy(), root = findWorkspaceRoot(import.meta.dir), resolver = discovery.createFixedContractResolver(taxonomy);
     const contracts = Object.entries(taxonomy.fixedFilenameContracts).filter(([id]) => /^dev-(plugin|extension)-component-/u.test(id));
     expect(contracts).toHaveLength(207);
     const options = { allowJs: true, moduleResolution: ts.ModuleResolutionKind.Bundler, module: ts.ModuleKind.ESNext };
@@ -324,7 +325,7 @@ describe("materialized JCO companion boundaries", () => {
       }
       if (id.endsWith("-js")) {
         const declaration = path.slice(0, -3) + ".d.ts", core = basename(path).slice(0, -3) + ".core.wasm";
-        expect(ts.resolveModuleName("." + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
+        expect(ts.resolveModuleName("./" + basename(path), join(root, dirname(path), "consumer.ts"), options, ts.sys).resolvedModule?.resolvedFileName.replaceAll("\\", "/")).toBe(join(root, declaration).replaceAll("\\", "/"));
         expect(readFileSync(join(root, path), "utf8")).toContain(core);
       }
       if (id.endsWith("-wasm")) expect(new Uint8Array(await Bun.file(join(root, path)).slice(0, 8).arrayBuffer())).toEqual(new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]));
@@ -342,7 +343,7 @@ describe("Flow compiler output boundaries", () => {
   test("uses handpicked output owners and preserves exact compiler companion pairing", async () => {
     const ts = await import("typescript");
     const { parse: parseJsonc } = await import("jsonc-parser");
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const flow = join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow");
     const text = readFileSync(join(flow, "🫀️core/🧪️bindings.json"), "utf8"), vector = JSON.parse(text);
     expect(parseJsonc(text)).toEqual(vector);
@@ -864,7 +865,7 @@ describe("active ticket clean protection", () => {
 describe("Windows checkout ticket paths", () => {
   test("rejects Windows-illegal components and keeps ticket files below the legacy path limit", async () => {
     const { cleanIsWindowsIllegalName } = await import("../../🧼️workspace-cleanup/🛡️protection/🟦️.ts");
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     const fixturePath = join(import.meta.dir, "../../🧫️fixtures/🪟️windows-checkout-paths");
     const fixture = JSON.parse(readFileSync(join(fixturePath, "🔣️.json"), "utf8")) as {
       version: number;
@@ -1598,7 +1599,7 @@ describe("bundle-script", () => {
   });
 
   test("findRepoRoot reaches monorepo from repo/lib/js", () => {
-    const root = findRepoRoot(import.meta.dir);
+    const root = findWorkspaceRoot(import.meta.dir);
     expect(existsSync(join(root, "nx.json"))).toBe(true);
   });
 
@@ -1642,7 +1643,7 @@ describe("dependency-boundary", () => {
   test("flags direct third-party import outside adapter", () => {
     const content = `import React from "react";\nexport const a = React.createElement("div");\n`;
     const file = "🧰️framework/🧪️boundary-probe.ts";
-    const breachs = dependencyBoundaryBreachesForFile(findRepoRoot(import.meta.dir), file, content, file);
+    const breachs = dependencyBoundaryBreachesForFile(findWorkspaceRoot(import.meta.dir), file, content, file);
     expect(breachs.length).toBeGreaterThan(0);
     expect(breachs[0]?.kind).toBe("dependency-boundary/import/direct-third-party");
   });
@@ -1664,7 +1665,7 @@ describe("dependency-boundary", () => {
 
 describe("ui scrollbar styling", () => {
   test("🎨️ui.css defines scrollbar tokens and native plus Scrollable rules", () => {
-    const repoRoot = findRepoRoot(import.meta.dir);
+    const repoRoot = findWorkspaceRoot(import.meta.dir);
     const css = readFileSync(join(repoRoot, "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🖌️ui/🎨️.css"), "utf8");
     expect(css).toContain("--scrollbar-size:");
     expect(css).toContain("--scrollbar-thumb:");
@@ -2245,7 +2246,7 @@ describe("playground static sites", () => {
 });
 
 describe("package boundary guards", () => {
-  const repoRoot = findRepoRoot();
+  const repoRoot = findWorkspaceRoot();
 
   test("vite and vitest configs avoid cross-package @semio-tech aliases", () => {
     const offenders: string[] = [];
@@ -3049,7 +3050,7 @@ describe("loadTaxonomy", () => {
     mkdirSync(join(sandbox, "📤️output"), { recursive: true });
     writeFileSync(join(sandbox, "🌱️source/🟦️.ts"), "neutral input\n");
     const contract = { ownership: "owned" as const, ownerPath: "owner", target: "owner:generate", previewTarget: "owner:preview-generated", inputPatterns: ["authority.json"], outputRoots: [{ path: "📤️output", inclusion: "ignored" as const }], compilerInputManifest: { kind: "compiler-input-manifest-v1" as const, manifestOutputPath: manifestPath, manifestSchemaPath: "authority.json", staticAuthorityPath: "authority.json", maxFiles: 2 }, reason: "neutral" };
-    const taxonomy = loadNormalizationTaxonomy({ repoRoot: findRepoRoot(import.meta.dir) });
+    const taxonomy = loadNormalizationTaxonomy({ repoRoot: findWorkspaceRoot(import.meta.dir) });
     writeFileSync(join(sandbox, "authority.json"), "{}\n");
     writeFileSync(join(sandbox, manifestPath), JSON.stringify(fixture.compilerManifest));
     expect(generatorInputPaths({ repoRoot: sandbox }, contract, taxonomy)).toEqual(["authority.json", "🌱️source/🟦️.ts"]);
@@ -3196,7 +3197,7 @@ describe("validateTaxonomy", () => {
   });
 
   test("freezes the four canonical testing collections and the obsolete-category stems", () => {
-    const taxonomy = JSON.parse(readFileSync(join(findRepoRoot(import.meta.dir), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Taxonomy;
+    const taxonomy = JSON.parse(readFileSync(join(findWorkspaceRoot(import.meta.dir), "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as Taxonomy;
     expect({ tests: taxonomy.testsDirName, fixtures: taxonomy.testFixturesDirName, examples: taxonomy.testExamplesDirName, oracles: taxonomy.testOraclesDirName }).toEqual({ tests: "🧪️tests", fixtures: "🧫️fixtures", examples: "📚️examples", oracles: "🔮️oracles" });
     expect("testContributionDirName" in taxonomy).toBe(false);
     expect("testContributionDirectoryOverrides" in taxonomy).toBe(false);
@@ -3648,7 +3649,7 @@ function semanticFixture(options: { readonly secondProductionConsumer?: boolean;
     write("🧰️framework/💡️inferences/📏width/🦀️.rs", "use super::super::modules::measure::measure;\npub fn width() -> u32 { measure(1) }\n");
     if (options.secondProductionConsumer) write("🧰️framework/💡️inferences/↕️height/🦀️.rs", "use super::super::modules::measure::measure;\npub fn height() -> u32 { measure(1) }\n");
   }
-  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../📏measure/🦀️.rs"]\npub mod measure;\n');
+  if (options.glueConsumer) write("🧰️framework/💡️inferences/📏width/📦️packages/🦀️rust/🦀️.rs", '#[path = "../../../../🔨️modules/📏measure/🦀️.rs"]\npub mod measure;\n');
   write("🧰️framework/💡️inferences/🔣️.json", JSON.stringify({ "x-semio": { kind: "collection", members: [
     { directory: "📏width", id: "width", kind: "inference", responsibility: "derived width", inference: { inputs: ["value"], target: "width" } },
     ...(options.secondProductionConsumer ? [{ directory: "↕️height", id: "height", kind: "inference", responsibility: "derived height", inference: { inputs: ["value"], target: "height" } }] : []),
@@ -4290,6 +4291,7 @@ type DrawSourceScenario = Readonly<{
   cargoModuleRoot: DrawSourceScenarioInput;
   cadConsumerMount: Readonly<{ path: string; meaning: string }>;
   owner: Readonly<{ artifactId: string; standardVersion: string; subsetId: string; commandDirectoryName: string }>;
+  commandBundle: Readonly<{ directoryKinds: Readonly<Record<string, Taxonomy["semanticDirectoryKinds"][string]>>; descendantContract: Taxonomy["semanticDescendantContracts"][string] }>;
   members: readonly DrawSourceScenarioInput[];
   consumers: readonly DrawSourceScenarioInput[];
   retention: Readonly<{ fixtureOwnerSegments: readonly string[]; transactionTicketSegments: readonly string[]; parentSegments: readonly string[]; recordFilename: string; disposition: string; cases: readonly Readonly<{ kind: "directory" | "symlink" | "file" | "missing" | "unreadable"; allowed: boolean; creates: number }>[] }>;
@@ -4321,6 +4323,16 @@ function projectionGolden(contractId: ArtifactProjectionGoldenEntry["contractId"
   const projection = ARTIFACT_PROJECTION_GOLDEN.projections.find((candidate) => candidate.contractId === contractId);
   if (!projection) throw new Error(`Missing projection golden ${contractId}.`);
   return projection;
+}
+
+/** 📦️ Overlays the authored Draw scenario's own sealed command-bundle authority (two declaration-only nested Rust packages) on a taxonomy, so the scenario's package-move coverage never binds to the live Draw command bundle. */
+function drawScenarioTaxonomy<T extends Readonly<{ semanticDirectoryKinds: object; semanticDescendantContracts: object }>>(taxonomy: T): T {
+  return { ...taxonomy, semanticDirectoryKinds: { ...taxonomy.semanticDirectoryKinds, ...DRAW_SOURCE_SCENARIO.commandBundle.directoryKinds }, semanticDescendantContracts: { ...taxonomy.semanticDescendantContracts, "draw-editor-command-bundle-v1": DRAW_SOURCE_SCENARIO.commandBundle.descendantContract } };
+}
+
+/** 🗺️ Selects the authority a golden projection is planned against: the live taxonomy for CAD, the scenario overlay for the authored Draw bundle. */
+function projectionTaxonomy(projection: ArtifactProjectionGoldenEntry): Taxonomy {
+  return projection.contractId === "artifact-editor-command-bundle-v1" ? drawScenarioTaxonomy(loadTaxonomy()) : loadTaxonomy();
 }
 
 function drawSourceScenarioContent(content: string, projection: ArtifactProjectionGoldenEntry): string {
@@ -4394,7 +4406,7 @@ function projectionAuthority(projection: ArtifactProjectionGoldenEntry, nodes = 
     nodes,
     occupiedPaths,
     sourceRoot: projection.sourceRoot,
-  });
+  }, projectionTaxonomy(projection));
 }
 
 describe.if(testLevelAtLeast("long"))("artifact path projection authority", () => {
@@ -4625,6 +4637,8 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
       { ...DRAW_SOURCE_SCENARIO, members: DRAW_SOURCE_SCENARIO.members.map((row, index) => index === 1 ? { ...row, path: DRAW_SOURCE_SCENARIO.members[0]!.path } : row) },
       { ...DRAW_SOURCE_SCENARIO, consumers: DRAW_SOURCE_SCENARIO.consumers.map((row, index) => index === 0 ? { ...row, path: "../../📦️packages/Cargo.toml" } : row) },
       { ...DRAW_SOURCE_SCENARIO, owner: { ...DRAW_SOURCE_SCENARIO.owner, artifactId: "🧪️counterfeit" } },
+      { ...DRAW_SOURCE_SCENARIO, commandBundle: { ...DRAW_SOURCE_SCENARIO.commandBundle, directoryKinds: {} } },
+      { ...DRAW_SOURCE_SCENARIO, commandBundle: { ...DRAW_SOURCE_SCENARIO.commandBundle, descendantContract: { ...DRAW_SOURCE_SCENARIO.commandBundle.descendantContract, realizedNodeCount: 2 } } },
       { ...DRAW_SOURCE_SCENARIO, producerContext: { ...DRAW_SOURCE_SCENARIO.producerContext, compilerRoots: ["../../📦️packages/📜️script.ts"] } },
       { ...DRAW_SOURCE_SCENARIO, oracle: { ...DRAW_SOURCE_SCENARIO.oracle, activatedGeneratorIds: [] } },
       { ...DRAW_SOURCE_SCENARIO, cargoModuleRoot: { ...DRAW_SOURCE_SCENARIO.cargoModuleRoot, path: "../../📦️packages/🦀️.rs" } },
@@ -4715,14 +4729,12 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     for (const path of [...contract.inputPatterns, ...DRAW_SOURCE_SCENARIO.producerContext.workspaceInputs, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(context.files[path]?.content).toBe(authored.get(path) ?? readFileSync(join(getWorkspaceRoot(), path), "utf8"));
     for (const path of authored.keys()) expect(readPaths).not.toContain(path);
     for (const path of DRAW_SOURCE_SCENARIO.producerContext.runtimeModules) expect(context.modules.some((row) => row.path === path)).toBe(true);
-    const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith(".")).map(({ plugin }) => plugin.slice(2));
+    const nxPlugins = (JSON.parse(context.files["nx.json"]!.content) as { plugins: { plugin: string }[] }).plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2));
     for (const path of [...DRAW_SOURCE_SCENARIO.producerContext.runtimeModules, ...DRAW_SOURCE_SCENARIO.producerContext.runtimeData]) expect(nxPlugins.some((plugin) => context.files[plugin]!.content.includes(posix.relative(posix.dirname(plugin), path))), path).toBe(true);
     expect(readPaths).toEqual([...new Set(readPaths)]);
     const nx = JSON.parse(context.files["nx.json"]!.content);
-    for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("."))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
+    for (const row of nx.plugins.filter((entry: { plugin: string }) => entry.plugin.startsWith("./"))) expect(context.files[row.plugin.slice(2)]).toBeDefined();
     const nxScript = (JSON.parse(context.files["package.json"]!.content) as { scripts: Record<string, string> }).scripts.nx!.match(/^bun \.\/(\S+) nx$/u)?.[1];
-    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
-    if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
     if (nxScript === undefined) throw new Error("package.json names no `bun ./<script> nx` runner");
     expect(DRAW_SOURCE_SCENARIO.producerContext.compilerRoots).toEqual([nxScript]);
     for (const row of context.modules) {
@@ -4884,14 +4896,14 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
         return { path: destinationPath, nodeKind: "file" as const, content };
       });
       const nodes = [...[...directories].map((path) => ({ path, nodeKind: "directory" as const })), ...files];
-      const result = semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes, layout: "destination" });
+      const result = semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes, layout: "destination" }, projectionTaxonomy(projection));
       expect(result.problems).toEqual([]);
       expect(result.mappings).toEqual(projection.mappings);
       expect(result.mappingDigest).toBe(projection.mappingDigest);
       const invalid = nodes.map((node) => node.nodeKind === "file" && node.path === files[0]!.path ? { ...node, path: `${node.path}.unexpected` } : node);
-      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: invalid, layout: "destination" }).problems.length).toBeGreaterThan(0);
+      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: invalid, layout: "destination" }, projectionTaxonomy(projection)).problems.length).toBeGreaterThan(0);
       const symlink = nodes.map((node) => node.path === files[0]!.path ? { path: node.path, nodeKind: "symlink" as const } : node);
-      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: symlink, layout: "destination" }).problems.some((problem) => problem.includes("forbidden symlink"))).toBe(true);
+      expect(semanticPathProjectionAuthority({ artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot, nodes: symlink, layout: "destination" }, projectionTaxonomy(projection)).problems.some((problem) => problem.includes("forbidden symlink"))).toBe(true);
     }
   });
 
@@ -4983,32 +4995,45 @@ describe.if(testLevelAtLeast("long"))("artifact path projection authority", () =
     expect(projectionAuthority(projection, nodes, [projection.mappings[0]!.destinationPath]).problems.some((problem) => problem.includes("occupied"))).toBe(true);
   });
 
-  test("artifact-editor-command-projection preserves the strict fixed-file union and owned filesystem parity", () => {
-    const projection = projectionGolden("artifact-editor-command-bundle-v1");
+  test("artifact-editor-command-projection preserves the strict fixed-file union, the sealed scenario package bundle, and live command parity", () => {
+    const projection = projectionGolden("artifact-editor-command-bundle-v1"), live = loadTaxonomy(), scenario = drawScenarioTaxonomy(live);
+    const options = { artifactRoot: projection.sourceRoot.slice(0, projection.sourceRoot.indexOf("/🏅️standards/")), contractId: projection.contractId, sourceRoot: projection.sourceRoot };
     const nodes = projectionAuthorityNodes(projection, "authored-draw", () => { throw new Error("Live Draw source must not be read by the strict fixed-file union"); });
     const result = projectionAuthority(projection, nodes);
-    const platformBoundary = ownedFilePaths(join(getWorkspaceRoot(), projection.destinationRoot))
-      .filter((path) => !path.split("/").includes("🧪️tests"))
-      .map((path) => `${projection.destinationRoot}/${path}`)
-      .sort(projectionByteSort);
-    expect(platformBoundary).toEqual(projection.mappings.map(({ destinationPath }) => destinationPath).sort(projectionByteSort));
+    expect(validateTaxonomy(scenario)).toEqual([]);
     expect(result.problems).toEqual([]);
     expect(result.mappings).toEqual(projection.mappings);
     expect(result.mappingDigest).toBe(projection.mappingDigest);
     expect(result.destinationDirectoryCount).toBe(projection.destinationDirectoryCount);
     expect(result.destinationNodeCount).toBe(projection.destinationNodeCount);
     expect(result.maxPathBytes).toBe(projection.maxPathBytes);
+    expect(result.mappings.filter(({ destinationPath }) => destinationPath.endsWith("/📦️packages/🦀️rust/Cargo.toml"))).toHaveLength(DRAW_SOURCE_SCENARIO.oracle.workspaceMemberCount);
+    expect(semanticPathProjectionAuthority({ ...options, nodes }, live).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
+
+    const destinationRoot = join(getWorkspaceRoot(), projection.destinationRoot), liveFiles = ownedFilePaths(destinationRoot).map((path) => `${projection.destinationRoot}/${path}`).sort(projectionByteSort);
+    const liveDirectories = new Set<string>([projection.destinationRoot]);
+    for (const path of liveFiles) for (let parent = dirname(path); parent !== projection.destinationRoot; parent = dirname(parent)) liveDirectories.add(parent);
+    const liveNodes: SemanticProjectionAuthorityNode[] = [...[...liveDirectories].map((path) => ({ path, nodeKind: "directory" as const })), ...liveFiles.map((path) => ({ path, nodeKind: "file" as const, content: readFileSync(join(getWorkspaceRoot(), path), "utf8") }))];
+    const current = semanticPathProjectionAuthority({ ...options, nodes: liveNodes, layout: "destination" }, live);
+    expect(current.problems).toEqual([]);
+    expect(current.mappings.map(({ destinationPath }) => destinationPath).sort(projectionByteSort)).toEqual(liveFiles);
+    expect(semanticPathProjectionAuthority({ ...options, nodes: liveNodes, layout: "destination" }, scenario).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
 
     const partial = nodes.filter(({ path }) => !path.endsWith("/🔄️fsm/✨️macros/📦️packages/🦀️rust/📋️project.json"));
     expect(projectionAuthority(projection, partial).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
     const extra = [...nodes, { path: `${projection.sourceRoot}/🔣️extra.json`, nodeKind: "file" as const, content: "{}" }];
     expect(projectionAuthority(projection, extra).problems.some((problem) => problem.includes("exact command bundle"))).toBe(true);
 
-    const invalid = structuredClone(loadTaxonomy()) as Taxonomy;
+    const invalid = structuredClone(live) as Taxonomy;
     const contract = invalid.semanticDescendantContracts["draw-editor-command-bundle-v1"] as unknown as { requiredNodes: Record<string, unknown>[] };
     const sourceNode = contract.requiredNodes.find((node) => node.kindId === "rust-source" && !(node.pathSegments as unknown[]).length)!;
     sourceNode.kindId = "json";
     expect(validateTaxonomy(invalid).some((problem) => problem.includes("draw-editor-command-bundle-v1"))).toBe(true);
+    const undeclared = structuredClone(scenario) as Taxonomy;
+    const bundle = undeclared.semanticDescendantContracts["draw-editor-command-bundle-v1"] as unknown as { requiredNodes: Record<string, unknown>[]; realizedNodeCount: number };
+    bundle.requiredNodes = bundle.requiredNodes.filter((node) => node.fixedFilenameContractId !== "root-script" || (node.pathSegments as unknown[]).length !== 3);
+    bundle.realizedNodeCount -= 1;
+    expect(validateTaxonomy(undeclared).some((problem) => problem.includes("declaration-only nested Rust packages"))).toBe(true);
   });
 });
 //#endregion 🛤️ArtifactPathProjectionAuthority
@@ -5439,7 +5464,7 @@ function artifactProjectionProducerInputs(taxonomy: Taxonomy, readInput: (path: 
     }
   }
   const nx = JSON.parse(read("nx.json").content) as { plugins: { plugin: string }[] };
-  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...context.runtimeModules, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith(".")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
+  const pending: { path: string; role: RegistryCompilerInputRole }[] = [...context.compilerRoots, ...context.runtimeModules, ...authority.implementationEntryPaths, ...nx.plugins.filter(({ plugin }) => plugin.startsWith("./")).map(({ plugin }) => plugin.slice(2))].map((path) => ({ path, role: "implementation-entry" }));
   const modules = new Map<string, { path: string; kind: "module" | "json-data"; imports: readonly string[] }>();
   while (pending.length) {
     const { path, role } = pending.shift()!, previous = modules.get(path);
@@ -5510,13 +5535,17 @@ function artifactProjectionPrepareProducer(repoRoot: string, taxonomy: Taxonomy,
 /** 🏗️ Materializes the permanent language-neutral CAD/Draw authority under one isolated normalization scope. */
 function artifactProjectionNormalizationFixture(name: string, references = false): NormalizationFixture {
   const files = artifactProjectionSourceFiles(references);
-  return normalizationFixture(`artifact-projection-${name}`, files, references ? ({ repoRoot, ticketDir, workspace }) => {
+  return normalizationFixture(`artifact-projection-${name}`, files, ({ repoRoot, ticketDir, workspace }) => {
+    const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
+    const schema = drawScenarioTaxonomy(JSON.parse(readFileSync(schemaPath, "utf8")));
+    if (!references) {
+      writeFileSync(schemaPath, `${JSON.stringify(schema, null, 2)}\n`);
+      return;
+    }
     expect(lstatSync(ticketDir).isDirectory()).toBe(true);
     expect(lstatSync(ticketDir).isSymbolicLink()).toBe(false);
     expect(existsSync(join(repoRoot, ".git"))).toBe(false);
     const scope = relative(repoRoot, workspace).replaceAll("\\", "/");
-    const schemaPath = join(repoRoot, NORMALIZATION_SCHEMA_REL);
-    const schema = JSON.parse(readFileSync(schemaPath, "utf8"));
     const producer = artifactProjectionProducerInputs(schema);
     if (producer.files[NORMALIZATION_SCHEMA_REL]!.content !== readFileSync(schemaPath, "utf8")) throw new Error("Producer taxonomy changed during fixture preparation");
     normalizationWriteFiles(repoRoot, Object.fromEntries(Object.entries(producer.files).map(([path, input]) => [path, input.content])));
@@ -5564,7 +5593,7 @@ function artifactProjectionNormalizationFixture(name: string, references = false
     const rootScript = join(workspace, "📜️script.ts");
     writeFileSync(rootScript, readFileSync(rootScript, "utf8").replaceAll("__SCOPE__", scope));
     artifactProjectionPrepareProducer(repoRoot, schema, producer);
-  } : undefined, ARTIFACT_PROJECTION_RUN_PARENT);
+  }, ARTIFACT_PROJECTION_RUN_PARENT);
 }
 
 function scopedUnrelatedProjectionStaleFixture(name: string): Readonly<{ fixture: NormalizationFixture; externalPath: string; staleToken: string }> {
@@ -5908,7 +5937,7 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
     const fixture = normalizationFixture("projection-schema-boundary", { "🧪️subject/🟦️.ts": "export const value = 1;\n" });
     try {
       const schemaPath = join(fixture.repoRoot, NORMALIZATION_SCHEMA_REL);
-      const original = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticPathProjectionReferenceConsumerContracts: Record<string, Record<string, unknown>>; semanticDescendantContracts: Record<string, { requiredNodes: Record<string, unknown>[] }> };
+      const original = JSON.parse(readFileSync(schemaPath, "utf8")) as { semanticDirectoryKinds: Record<string, unknown>; semanticPathProjectionReferenceConsumerContracts: Record<string, Record<string, unknown>>; semanticDescendantContracts: Record<string, { requiredNodes: Record<string, unknown>[] }> };
       const consumer = structuredClone(original);
       consumer.semanticPathProjectionReferenceConsumerContracts["cad-spatial-kernel-geometry"]!.consumerIdentity = "counterfeit";
       writeFileSync(schemaPath, `${JSON.stringify(consumer, null, 2)}\n`);
@@ -5921,6 +5950,14 @@ describe.if(testLevelAtLeast("long"))("taxonomy normalization", () => {
       library.compatibilityAlias = true;
       writeFileSync(schemaPath, `${JSON.stringify(descendant, null, 2)}\n`);
       expect(() => inventoryTaxonomy(fixture.options)).toThrow("discovery contract validation failed");
+      const packaged = drawScenarioTaxonomy(structuredClone(original));
+      writeFileSync(schemaPath, `${JSON.stringify(packaged, null, 2)}\n`);
+      expect(inventoryTaxonomy(fixture.options).entries.some(({ sourcePath }) => sourcePath === `${fixture.scope}/🧪️subject/🟦️.ts`)).toBe(true);
+      const unnamed = structuredClone(packaged);
+      const nested = unnamed.semanticDescendantContracts["draw-editor-command-bundle-v1"]!.requiredNodes.find((node) => node.nodeType === "file" && node.kindId === "rust-source" && (node.pathSegments as unknown[]).length === 2)!;
+      delete nested.sourceFilename;
+      writeFileSync(schemaPath, `${JSON.stringify(unnamed, null, 2)}\n`);
+      expect(() => inventoryTaxonomy(fixture.options)).toThrow(/discovery contract validation failed|invalid source-filename descendant authority/u);
     } finally {
       rmSync(fixture.root, { recursive: true, force: true });
     }
@@ -7507,7 +7544,7 @@ describe("direct mutation ownership", () => {
       const inventory = inventoryMutationTaxonomy(root, { assignmentLedger: fixture.assignmentLedger, assignmentLedgerPath: "ticket/📋️mutation-assignments.json" });
       const inventorySchema = JSON.parse(readFileSync(inventorySchemaPath, "utf8"));
       expect(new Ajv({ strict: true }).compile(inventorySchema)(JSON.parse(JSON.stringify(inventory)))).toBe(true);
-      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith(".git") && !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
+      const sourceRoster = fastGlob.sync("**/*", { cwd: root, onlyFiles: true, followSymbolicLinks: false, dot: true }).filter((path) => !path.startsWith(".git/") && !path.startsWith("compose/")).sort((left, right) => Buffer.from(left).compare(Buffer.from(right)));
       expect(inventory.sourceRoster.filter(({ role }) => role === "source").map(({ path }) => path)).toEqual(sourceRoster);
       expect(inventory.sourceRoster.some(({ path }) => path.startsWith("compose/"))).toBe(false);
       const alpha = inventory.records.find(({ targetMutationDirectoryName }) => targetMutationDirectoryName === "➕️insert-page")!;

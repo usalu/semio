@@ -45,3 +45,20 @@ fn sqlite_snapshot_jpg_baseline_validation_cancels_during_owned_component_scan()
  let mut snapshot=fixture();let diagnostics=check_baseline_conformance_with(&snapshot,&mut |_,_|Ok(())).unwrap();assert_eq!(diagnostics.len(),1);assert_eq!(diagnostics[0].code.0,"stdio.jpg.baseline.component-sampling");assert_eq!(diagnostics[0].severity,dsl::Severity::Warning);
  snapshot.frame.as_mut().unwrap().components=vec![snapshot.frame.as_ref().unwrap().components[0];2000];let mut reached=false;assert!(check_baseline_conformance_with(&snapshot,&mut |position,total|{if position==256&&total==2000{reached=true;Err("cancelled".into())}else{Ok(())}}).is_err());assert!(reached);
 }
+
+#[test]
+fn sqlite_snapshot_jpg_actual_erased_records_retain_all_owned_fields() {
+ use semio_framework_os_kernel::{io_schema::ArtifactDialect,sqlite_snapshot::SnapshotEncoding};
+ let mut complete=fixture();complete.schema="owned 世界\0".into();complete.re_encode_quality=Some(0);complete.sof_marker=255;complete.arithmetic=true;complete.jfif_version=(0,255);
+ let absent=JpgSnapshot{schema:"independent empty state".into(),width:u32::MAX,height:0,pixels:Vec::new(),..JpgSnapshot::default()};
+ let empty=JpgSnapshot{jfif_thumbnail:Some(JfifThumbnail{width:0,height:255,rgb_data:Vec::new()}),frame:Some(JpgFrameHeader{precision:255,width:0,height:u16::MAX,components:Vec::new()}),restart_interval:Some(0),..absent.clone()};
+ let codec=(crate::native_codecs()[0].codec)();let provider=codec.snapshot_sqlite.expect("JPG owner SQLite provider");let dialect:ArtifactDialect=crate::JPG_ANY_DIALECT.into();
+ for snapshot in [complete,absent,empty]{
+  let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();
+  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{
+   let payload=(provider.import)(&codec.schema,&dialect,expected.clone(),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
+   let restored=(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap().value;
+   assert_eq!(restored,expected,"all seventeen owned JPG fields survive the erased record bridge");
+  }
+ }
+}

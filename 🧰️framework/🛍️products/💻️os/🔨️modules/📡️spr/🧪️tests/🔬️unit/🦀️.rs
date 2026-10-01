@@ -6,7 +6,7 @@ use super::*;
 async fn build_history_bytes(doc_id: &str, schema: &str, edit_count: usize) -> Vec<u8> {
     let mut appender = HistoryAppender::begin(Vec::new(), doc_id, schema, &WriteOptions::default()).await.unwrap();
     for i in 0..edit_count {
-        let edit = HistoryEdit {
+        let edit = HistoryEdit { line: None,
             id: format!("e{i}"),
             actor: None,
             started_at: format!("2026-07-27T00:00:{i:02}Z"),
@@ -41,7 +41,7 @@ async fn compile_ops_decompile_ops_round_trip() {
     let log = HistoryLog {
         doc_id: "doc-1".to_string(),
         schema: "schema-1".to_string(),
-        edits: vec![HistoryEdit {
+        edits: vec![HistoryEdit { line: None,
             id: "e0".to_string(),
             actor: Some("actor-1".to_string()),
             started_at: "2026-07-27T00:00:00Z".to_string(),
@@ -55,6 +55,8 @@ async fn compile_ops_decompile_ops_round_trip() {
         transitions: vec![HistoryTransitionRecord { id: "transition-1".to_string(), actor: "actor-1".to_string(), hlt: (1, 1_700_000_000_000, 2), dependencies: vec!["e0".to_string()], observed: Some("peer-op".to_string()), payload: vec![0, 1, 3, 0xff] }],
         composition: None,
         conflicts: Vec::new(),
+        viewer_line: None,
+        viewer_checkpoint: None,
     };
     let ops_text = print_ops_text(&log).unwrap();
 

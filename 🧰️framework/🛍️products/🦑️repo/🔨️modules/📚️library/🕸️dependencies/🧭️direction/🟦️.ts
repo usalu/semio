@@ -1,5 +1,6 @@
 import { lstatSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { bunRepositoryMembership } from "../../🗂️workspaces/🟦️bun/🟦️.ts";
 
 export type DependencyDirectionRule = Readonly<{ name: string; severity: string; from: { path: readonly string[]; pathNot?: readonly string[] }; to: { path: readonly string[]; pathNot?: readonly string[] } }>;
 export type DependencyDirectionEdge = Readonly<{ rule: string; from: string; to: string }>;
@@ -33,8 +34,15 @@ function validateScope(scope: DependencyDirectionGraphScope): void {
 
 /** 📦️ Reads present authored workspace owners; deleted owners contribute no packages. */
 export function dependencyDirectionWorkspacePackages(root: string, excludedPaths: readonly string[]): DependencyDirectionGraphScope["workspacePackages"] {
-  const workspaces = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).workspaces as unknown;
-  if (!Array.isArray(workspaces) || workspaces.some((path) => typeof path !== "string" || !path || path.includes("\\") || path.startsWith("/") || path.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("Dependency direction requires authored workspace paths");
+  const membership = bunRepositoryMembership(root);
+  for (const scope of membership.scopes) for (const path of scope.declaration.members) {
+    if (path.startsWith("!") || /[*?]/u.test(path)) continue;
+    const owner = join(root, scope.directory, path);
+    let entry;
+    try { entry = lstatSync(owner); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") continue; throw error; }
+    if (entry.isDirectory()) lstatSync(join(owner, "package.json"));
+  }
+  const workspaces = membership.packages;
   return workspaces.filter((path) => !pathMatches(excludedPaths, path)).flatMap((owner) => {
     let directory;
     try { directory = lstatSync(join(root, owner)); } catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return []; throw error; }
@@ -115,7 +123,8 @@ export function dependencyDirectionEdges(report: unknown, rules: readonly Depend
         const exported = pkg.exports.some((path) => new RegExp(`^${path.split("*").map((part) => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`, "u").test(subpath));
         if (!exported) problems.push(`Dependency direction graph uses an undeclared authored package export: ${from} → ${specifier}`);
       }
-      for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, to) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))) edges.push({ rule: rule.name, from, to });
+      const installed = to.split("/").lastIndexOf("node_modules"), ownership = installed < 0 ? to : to.split("/").slice(installed).join("/");
+      for (const rule of applicable) if (!matches(rule.to.pathNot ?? [], to) && (matches(rule.to.path, ownership) || (pkg && (matches(rule.to.path, specifier) || matches(rule.to.path, `${pkg.owner}/`))))) edges.push({ rule: rule.name, from, to });
     }
   }
   if (summary.totalDependenciesCruised !== dependencyCount) throw new Error("Dependency direction graph omits framework sources or dependencies");

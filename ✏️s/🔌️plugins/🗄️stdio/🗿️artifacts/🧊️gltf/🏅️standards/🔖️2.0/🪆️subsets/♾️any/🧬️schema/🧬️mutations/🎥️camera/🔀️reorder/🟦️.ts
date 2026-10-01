@@ -4,7 +4,7 @@ import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfReorderCamerasPayload {
-  order: number[];
+  order: bigint[];
 }
 
 export type ReorderCamerasMutation = GltfPhase<GltfReorderCamerasPayload, GltfDiff>;

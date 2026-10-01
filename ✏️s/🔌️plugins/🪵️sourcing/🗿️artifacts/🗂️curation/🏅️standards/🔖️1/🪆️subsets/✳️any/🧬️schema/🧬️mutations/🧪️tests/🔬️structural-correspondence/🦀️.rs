@@ -89,10 +89,10 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "change-curated-item-count";
         let variant = "ChangeCuratedItemCount";
-        let directory = "🔢change-curated-item-count";
+        let directory = "🔢change-curated-item";
         let tag = 2;
         let outcomes = &["applied", "no-op", "rejected"][..];
-        let owner = mutation_root.join("🔢change-curated-item-count");
+        let owner = mutation_root.join("🔢change-curated-item");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));

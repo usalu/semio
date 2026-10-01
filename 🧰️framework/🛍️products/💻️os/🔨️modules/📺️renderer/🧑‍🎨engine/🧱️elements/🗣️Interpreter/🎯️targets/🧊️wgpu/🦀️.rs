@@ -11,7 +11,7 @@ use crate::scenes::{queue_canvas_image_upload_sized, queue_canvas_image_upload_w
 use infinite_world::world::{WorldAssetFault, WorldAssetMetadataId, WorldAssetRequestKind};
 use serde_json::Value;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Mutex, MutexGuard, OnceLock};
+use std::sync::{Mutex, MutexGuard};
 use ui_contract::{SurfaceId, UiDocumentLease};
 #[cfg(test)]
 use ui_wgpu::wgpu::UiPresence;
@@ -25,19 +25,46 @@ pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
 /// 🧵️ Worker-safe retained cell used by renderer state that may resume on any shared-pool worker.
 /// 🔓️ `pub(crate)`: the Shell's native `CHROME_PREFS` static (`🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:16117`)
 /// holds one and named the type bare, which never resolved outside this module.
+///
+/// 🧪️ Under `cfg(test)` every test thread owns its own state of every cell ([`test_worker_cell`]): libtest runs each law
+/// on a thread of its own, so no law meets another law's engine, documents or chrome registry — in parallel or in
+/// sequence — and the renderer suite is one usable gate instead of an order-dependent one.
 pub(crate) struct WorkerCell<T> {
-    inner: OnceLock<Mutex<T>>,
+    #[cfg(not(test))]
+    inner: std::sync::OnceLock<Mutex<T>>,
+    #[cfg(test)]
+    inner: std::marker::PhantomData<fn() -> T>,
 }
 
 impl<T> WorkerCell<T> {
     pub(crate) const fn new() -> Self {
-        Self { inner: OnceLock::new() }
+        #[cfg(not(test))]
+        return Self { inner: std::sync::OnceLock::new() };
+        #[cfg(test)]
+        return Self { inner: std::marker::PhantomData };
     }
 }
 
-impl<T: Default> WorkerCell<T> {
+#[cfg(test)]
+thread_local! {
+    /// 🧪️ This test thread's state of each worker cell, by the cell's address; leaked for the thread's (one law's) life.
+    static TEST_WORKER_CELLS: std::cell::RefCell<std::collections::HashMap<usize, &'static dyn std::any::Any>> = std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// 🧪️ The calling test thread's own instance of the worker-cell state at `key`, created from `T::default()` on first use.
+/// Every renderer `WorkerCell` (this module's, the scenes' and the engine canvas') resolves through it under `cfg(test)`.
+#[cfg(test)]
+pub(crate) fn test_worker_cell<T: Default + 'static>(key: usize) -> &'static Mutex<T> {
+    let state = TEST_WORKER_CELLS.with(|cells| *cells.borrow_mut().entry(key).or_insert_with(|| Box::leak(Box::new(Mutex::new(T::default()))) as &'static dyn std::any::Any));
+    state.downcast_ref::<Mutex<T>>().expect("one worker cell holds one state type")
+}
+
+impl<T: Default + 'static> WorkerCell<T> {
     pub(crate) fn state(&self) -> &Mutex<T> {
-        self.inner.get_or_init(|| Mutex::new(T::default()))
+        #[cfg(not(test))]
+        return self.inner.get_or_init(|| Mutex::new(T::default()));
+        #[cfg(test)]
+        return test_worker_cell::<T>(std::ptr::from_ref(self).addr());
     }
 
     /// 🔒️ Crate-visible like `state`: `🐚️Shell/🎯️targets/🧊️wgpu`'s `with_chrome_prefs` drives this
@@ -48,6 +75,11 @@ impl<T: Default> WorkerCell<T> {
 
     pub(crate) fn borrow_mut(&self) -> MutexGuard<'_, T> {
         self.borrow()
+    }
+
+    /// 🔒️ The state unless another holder has it right now — the engine canvas's non-blocking registry turns.
+    pub(crate) fn try_borrow_mut(&self) -> Option<MutexGuard<'_, T>> {
+        self.state().try_lock().ok()
     }
 
     pub(crate) fn with<R>(&self, apply: impl FnOnce(&Self) -> R) -> R {
@@ -6414,6 +6446,21 @@ pub fn discard_presented_input_candidate(witness: u64) -> bool {
 
 fn accessibility_window_is_visible(window_id: &str) -> bool {
     ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.iter().any(|visible| visible == window_id)
+}
+
+/// 🎯️ The first node a visible retained window offers to `pick` from its accessibility projection (the one the ARIA mirror
+/// reads), addressed exactly as a reader's accessibility event addresses it — so the shell can move keyboard focus to it
+/// through [`dispatch_accessibility_event`]. Visible windows are asked in publication order; `None` when none shows it.
+pub(crate) fn visible_retained_accessibility_target(pick: impl Fn(&[ui_contract::AccessibilityProjectionNode]) -> Option<usize>) -> Option<ui_render::AccessibilityTarget> {
+    let visible = ACCESSIBILITY_VISIBLE_WINDOWS.borrow().published.clone();
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        visible.iter().find_map(|window_id| {
+            let nodes = ui_wgpu::wgpu::accessibility::accessibility_projection(engine.tree(window_id)?);
+            let node = nodes.get(pick(&nodes)?)?;
+            Some(ui_render::AccessibilityTarget { window_id: window_id.clone(), window_generation: engine.surface_generation(window_id)?, node_id: node.node_id, node_key: node.key.clone() })
+        })
+    })
 }
 
 #[cfg(test)]

@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "removes-the-perspective-camera-and-renumbers-the-node",
-              "directoryName": "🚫️removes-the-2257c3"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "swaps-the-perspective-and-orthographic-cameras",
-              "directoryName": "🚚️swaps-the-ce536e"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -49,7 +49,7 @@
           "scenarios": [
             {
               "id": "flips-the-perspective-and-orthographic-cameras",
-              "directoryName": "🔀️flips-the-0609c1"
+              "directoryName": "🔀️flips"
             }
           ]
         }

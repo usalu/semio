@@ -18,7 +18,7 @@ path = "../../🦀️.rs"
 [features]
 default = []
 component-app-assembly = []
-# 🧩️ Conversion Features
+# 🧩️ Capability Features
 conversion-animation = ["conversion-animation-gif","conversion-animation-gltf","conversion-animation-mp4"]
 conversion-animation-gif = ["dep:semio-s-artifact-stdio-gif"]
 conversion-animation-gltf = ["dep:semio-s-artifact-stdio-gltf"]
@@ -76,7 +76,7 @@ conversion-value-xml = ["dep:semio-s-artifact-stdio-xml"]
 conversion-video = ["conversion-video-avi","conversion-video-mp4"]
 conversion-video-avi = ["dep:semio-s-artifact-stdio-avi"]
 conversion-video-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
-# /🧩️ Conversion Features
+# /🧩️ Capability Features
 
 [dependencies]
 pack = { workspace = true }
@@ -93,7 +93,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-# 🧩️ Conversion Dependencies
+# 🧩️ Capability Dependencies
 semio-s-artifact-stdio-avi = { workspace = true, optional = true }
 semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
 semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
@@ -123,7 +123,7 @@ semio-s-artifact-stdio-txt = { workspace = true, optional = true }
 semio-s-artifact-stdio-wav = { workspace = true, optional = true }
 semio-s-artifact-stdio-xml = { workspace = true, optional = true }
 semio-s-artifact-stdio-zip = { workspace = true, optional = true }
-# /🧩️ Conversion Dependencies
+# /🧩️ Capability Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }
 

@@ -1,6 +1,24 @@
 use super::*;
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_PATH_SEPARATOR};
 
+#[test]
+fn intrinsic_bytes_details_use_a_bounded_leaf_and_validate_the_json_octet_domain() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    let schema = crate::pack::json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"integer","minimum":0,"maximum":255}}"#).unwrap();
+    let wrong = crate::pack::json::from_json_str::<DslValue>(r#"{"type":"array","items":{"type":"string"}}"#).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
+        let value = DslValue::Bytes(bytes.clone());
+        let provider = DslSnapshotDetailsProvider::<NativeLazySnapshot>::from_value(DslValue::Object(vec![("octets".into(), value.clone())]));
+        let path = [SnapshotDetailPathSegment::Key("octets".into())];
+        assert_eq!(provider.value(&path), Some(SnapshotDetailValue::Bytes { len: bytes.len() }));
+        assert_eq!(provider.child_count(&path), 0);
+        assert!(template_candidate_is_valid(&schema, &schema, &value, 0));
+        assert_eq!(template_candidate_is_valid(&wrong, &wrong, &value, 0), bytes.is_empty());
+    }
+}
+
+
 struct LazyPixels {
     count: usize,
 }

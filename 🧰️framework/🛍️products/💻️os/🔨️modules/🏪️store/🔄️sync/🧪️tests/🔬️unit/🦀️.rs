@@ -33,7 +33,7 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 3, physical_ms: 9_007_199_254_740_992, logical: 5 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -863,7 +863,7 @@ async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snaps
 }
 
 async fn sample_operation_envelope(edit_id: &str, n: i32) -> MutationEnvelope {
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: edit_id.into(),
         actor: None,
         forwards: vec![DemoMutation::SetN { n }],
@@ -1116,7 +1116,7 @@ async fn wire_fixtures_stay_byte_identical_across_rust_and_ts() {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 0 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1000, logical: 0 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     };
 
     let hello = ClientFrame::SocketHelloV1 { wire_version: 1, protocol_version: 1, schema: "demo/v1".to_string(), pack_schema_hash: [7u8; 32], resume_token: None, frontier: None };
@@ -1190,7 +1190,7 @@ async fn sample_wire_envelope_for_fixtures() -> MutationEnvelope {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 6 }).expect("encode demo op") },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("demo/v1".to_string()), payload: OpBinary::encode_op(&DemoMutation::SetN { n: 5 }).expect("encode demo op") },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 42, physical_ms: 1001, logical: 0 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -1345,7 +1345,7 @@ async fn artifact_host_presence_heartbeat_stamps_the_observed_tool_run_summary()
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn op_envelope_from_stored_edit_round_trips_through_ingest() {
-    let edit = crate::os_spr::HistoryEdit {
+    let edit = crate::os_spr::HistoryEdit { line: None,
         id: "ext-1".into(),
         actor: Some("peer".into()),
         started_at: "0".into(),
@@ -1481,7 +1481,7 @@ mod actor_tests {
         })
         .await;
 
-        let external_edit = crate::os_spr::HistoryEdit {
+        let external_edit = crate::os_spr::HistoryEdit { line: None,
             id: "external-1".into(),
             actor: Some("peer".into()),
             started_at: "0".into(),

@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "solid-to-linear-gradient",
-              "directoryName": "🌈️solid-to-linear-gradient"
+              "directoryName": "🌈️solid"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "adds-a-dashed-stroke",
-              "directoryName": "🖊️adds-a-dashed-stroke"
+              "directoryName": "🖊️adds"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "normal-to-multiply",
-              "directoryName": "✖️normal-to-multiply"
+              "directoryName": "✖️normal"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "dims-shape-a-to-half",
-              "directoryName": "🌫️dims-shape-a-to-half"
+              "directoryName": "🌫️dims"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "evenodd-to-nonzero",
-              "directoryName": "🌀️evenodd-to-nonzero"
+              "directoryName": "🌀️evenodd"
             }
           ]
         }

@@ -206,10 +206,26 @@ pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<V
 /// `raster_document_from_dwg_drawing`/`raster_image_layer_and_asset` below); any other mime is honestly
 /// reported as an error, never silently coerced.
 pub fn semio_image_snapshot_from_raster_asset(asset: &RasterImageAsset) -> Result<SemioImageSnapshot, String> {
-    if asset.mime != "image/png" {
-        return Err(format!("semio_image_snapshot_from_raster_asset: unsupported mime {:?} (only image/png round-trips today)", asset.mime));
+    match asset.mime.as_str() {
+        "image/png" => semio_image_from_png_bytes(&asset.data),
+        RASTER_IMAGE_PACK_MIME => <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&asset.data).map_err(|error| format!("semio_image_snapshot_from_raster_asset: the image pack does not decode: {error}")),
+        other => Err(format!("semio_image_snapshot_from_raster_asset: unsupported mime {other:?} (image/png and {RASTER_IMAGE_PACK_MIME} round-trip)")),
     }
-    semio_image_from_png_bytes(&asset.data)
+}
+
+/// 🧊️ The media type of an asset whose bytes are the `s.stdio.semio/v1/image` pack of its decoded image: the lossless
+/// carrier a replayed `paint-stroke` mints its painted image through and its inverse restores the prior image through
+/// — every pixel, profile and metadata entry survives the round trip and no replay ever encodes a PNG.
+pub const RASTER_IMAGE_PACK_MIME: &str = "application/x-semio-image";
+
+/// 🧊️ `image` as an asset in the lossless [`RASTER_IMAGE_PACK_MIME`] carrier.
+pub fn raster_image_pack_asset(image: &SemioImageSnapshot) -> RasterImageAsset {
+    RasterImageAsset { mime: RASTER_IMAGE_PACK_MIME.into(), data: <SemioImageSnapshot as store::ArtifactPack>::encode_pack(image) }
+}
+
+/// 🖼️ A one-frame straight-alpha RGBA8 image of `width × height` over `rgba8`.
+pub fn semio_image_from_rgba8(width: u32, height: u32, rgba8: Vec<u8>) -> SemioImageSnapshot {
+    SemioImageSnapshot { schema: STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA.into(), width, height, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8 }], icc: None, metadata: Vec::new() }
 }
 
 pub fn raster_asset_from_semio_image_snapshot(image: &SemioImageSnapshot) -> Result<RasterImageAsset, String> {

@@ -12,6 +12,10 @@
     { "value": { "mutation": "changeParameterBinding", "key": "a", "newValue": ["Ü", true, 4, null, { "nested": "😀" }] }, "bytes": 22 },
     { "value": { "mutation": "removeParameterBinding", "key": "abc" }, "bytes": 3 },
     { "value": { "mutation": "changeRuleLayoutPoint", "key": "node", "newPoint": { "x": 1, "y": 2 } }, "bytes": 20 },
-    { "value": { "mutation": "removeRuleLayoutPoint", "key": "node" }, "bytes": 4 }
+    { "value": { "mutation": "removeRuleLayoutPoint", "key": "node" }, "bytes": 4 },
+    { "value": { "mutation": "dragWorkingNodes", "targets": ["a", "Ü"], "dx": 1.5, "dy": -2 }, "bytes": 19 },
+    { "value": { "mutation": "patchWorkingNodes", "targets": ["a"], "field": "name", "value": "😀" }, "bytes": 9 },
+    { "value": { "mutation": "dragRuleNodes", "targets": ["rhs-set-0"], "dx": 0, "dy": 80 }, "bytes": 25 },
+    { "value": { "mutation": "setRuleLayoutPoints", "points": [{ "key": "lhs-match", "x": 1, "y": 2 }], "cleared": ["node"] }, "bytes": 29 }
   ]
 }

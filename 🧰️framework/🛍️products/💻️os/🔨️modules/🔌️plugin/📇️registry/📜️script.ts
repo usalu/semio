@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 📦️ Verifies owner-supplied deployment inventory without compiled component prerequisites. */
 class DeploymentContractTestScript extends BundleScript {
@@ -70,4 +72,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-playground-default-contract", PlaygroundDefaultContractTestScript)
   .registerLazy("new", async () => (await import("./🌳️surface-scaffold/🟦️.ts")).NewScript)
   .registerLazy("surface-schema", async () => (await import("./🧬️surface-schema/🟦️.ts")).SurfaceSchemaScript);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "generate" });

@@ -33,7 +33,7 @@ type Fixture = {
 };
 
 const json = (url: URL): AnySchema => JSON.parse(readFileSync(url, "utf8")) as AnySchema;
-const fixture = json(new URL("../../🧫️fixtures/🔬️window-ownership/🔣️.json", import.meta.url)) as Fixture;
+const fixture = json(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url)) as Fixture;
 const schemas = {
   register: json(new URL("../../🧬️schema/🔣️.json", import.meta.url)),
   adjacency: json(new URL("../../../../↔️adjacency/🎚️config/🧬️schema/🔣️.json", import.meta.url)),

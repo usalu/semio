@@ -1,0 +1,2 @@
+# 🫳️ Relative drag-rule-nodes / DragRuleNodes payload.
+input DragRuleNodesInput { targets: [String!]!, dx: Float!, dy: Float! }

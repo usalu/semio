@@ -16,7 +16,7 @@ use semio_framework_artifact_playbook_playbook::{FormGeneration, GenerationPlayS
 use std::collections::BTreeMap;
 
 //#region 🔖️Examples
-pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom-column/🖼️assets/🍄️hexagonal-mushroom-column/🗣️.dsl.semio");
+pub const GENERATION3D_EXAMPLE_HEX_COLUMN_TEXT: &str = include_str!("../../../📚️examples/🍄️hexagonal-mushroom/🖼️assets/🍄️hexagonal-mushroom/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_RECT_EXTRUDE_TEXT: &str = include_str!("../../../📚️examples/📦️rectangle-extrude-volume/🖼️assets/📦️rectangle-extrude-volume/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_SPHERE_TORUS_TEXT: &str = include_str!("../../../📚️examples/🍩️sphere-cut-with-torus/🖼️assets/🍩️sphere-cut-with-torus/🗣️.dsl.semio");
 pub const GENERATION3D_EXAMPLE_BOX_FILLET_TEXT: &str = include_str!("../../../📚️examples/📐️box-fillet-preview/🖼️assets/📐️box-fillet-preview/🗣️.dsl.semio");
@@ -346,6 +346,7 @@ impl store::ArtifactDsl for Generation3dSnapshot {
 }
 
 impl store::ArtifactPack for Generation3dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <Generation3dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&generation3d_document_to_dsl(self), options)
     }

@@ -645,7 +645,7 @@ struct VcsOneItemPreparation<P, M> {
 
 fn vcs_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("vcs-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

@@ -83,27 +83,9 @@ import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framewo
 import { decodeTrustedPluginModuleBundleV1, encodeTrustedPluginModuleBundleV1, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, TRUSTED_PLUGIN_MODULE_SCHEMA, utf8OrderV1, type TrustedPluginModuleBundleV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
 import { proveGisComponentColdMapPatch } from "../../../🌎️hub/🧩️compositions/🌍️gis/🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
 /** 🌎️ `os-hub` router: `bun ./📜️script.ts <setup|build|test|dev>`. */
-import {
-  BundleScript,
-  ScriptRouter,
-  OS_HUB_PORT,
-  OS_HUB_PORT_ENV,
-  runBundleScriptMain,
-  runCargo,
-  runCargoTestBudgeted,
-  runExactCargoLaws,
-  runExactCargoLawProcess,
-  runCmd,
-  runProbe,
-  spawnDaemon,
-  terminateOwnedChildTree,
-  buildBudgetMs,
-  orchestratorBudgetOpts,
-  resolveTestLevel,
-  readStableBuildFile,
-  viteConfigLoader,
-  type ExactCargoLawGroup,
-} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { OS_HUB_PORT, OS_HUB_PORT_ENV, runCargo, runCargoTestBudgeted, runExactCargoLaws, runExactCargoLawProcess, runCmd, runProbe, spawnDaemon, terminateOwnedChildTree, buildBudgetMs, orchestratorBudgetOpts, resolveTestLevel, readStableBuildFile, viteConfigLoader, type ExactCargoLawGroup } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { hubSchemaExport } from "../🟦️typescript/🟦️.ts";
 import { exactCargoStageEnvironments } from "../../🏗️build/🛂staging-environment/🟦️.ts";
 import { orderedDirectoryPublicationOracle } from "../../📇️directory/📣️publication/🧪️tests/🧾️ordered-append-broadcast/🟦️.ts";
@@ -17804,4 +17786,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("secure-local-smoke", SecureLocalSmokeScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "dev" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "dev" });

@@ -62,6 +62,7 @@ pub fn definition() -> WindowKindDefinition {
             ..ActionDefinition::bounded_catalog("unpin-pixel", LocalizedLabel::native("Unpin Pixel", "Pixel lösen"), ActionKind::Mutation)
         },
     ]);
+    definition.actions.extend(crate::editor::bitmap::modes::edit::windows::input::canvas_actions());
     for action in &mut definition.actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
     }

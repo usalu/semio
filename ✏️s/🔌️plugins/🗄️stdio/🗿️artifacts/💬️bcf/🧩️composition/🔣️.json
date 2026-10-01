@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_bcf::editor::bcf::BcfAnyEditor",
       "factory": "semio_s_artifact_stdio_bcf::editor::bcf::create_bcf_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "bcf_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_bcf_any_editor"
+      }
     },
     {
       "owner": "stdio-bim",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_bcf::viewer::bcf::BcfAnyViewer",
       "factory": "semio_s_artifact_stdio_bcf::viewer::bcf::create_bcf_any_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "bcf",
-      "factory_id": "stdio.native.bcf.v1",
-      "descriptor_codec_id": "s.stdio.bcf.standard.2-1.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1",
-      "artifact_kind": "s.stdio.bcf",
-      "artifact_schema": "stdio.bcf",
-      "extension": "bcf",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
-      "protocol_source_sha256": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6250,
         "wgpu": 6350
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "BcfMutation",
+      "snapshot": "semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::schema::snapshot::BcfSnapshot",
+      "mutation": "semio_s_artifact_stdio_bcf::standards::v2_1::subsets::any::schema::mutations::BcfMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.bcf",
+      "standard": "2.1",
+      "subset": "markup",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.bcf.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🏅️standards/🔖️2.1/🪆️subsets/🖊️markup/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

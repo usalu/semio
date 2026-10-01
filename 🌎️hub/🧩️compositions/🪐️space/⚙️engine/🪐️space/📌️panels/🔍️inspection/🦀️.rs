@@ -247,12 +247,12 @@ pub fn render(projection: &WorkflowSnapshot, selected_node_ids: &[String], term_
         let node_ids_for_label = node_ids_arg(selected_node_ids)?;
         let label_action = crate::engine::space::s_play_action("patchAppInstances", Some(ui_value_map([("nodeIds", node_ids_for_label), ("field", ui_value_text("label")?)])?))?;
         let label_value = if label_uniform { node_labels.first().cloned().unwrap_or_default() } else { String::new() };
-        let mut label_control = input(InputKind::Text).value(fixed_text(&label_value, "ui.inspector.label-text")?);
+        let mut label_control = input(InputKind::Text).value(fixed_text(&label_value, "ui.inspector.label-text")?).commit(fixed_text("blur", "ui.inspector.label-commit")?);
         if !label_uniform {
             label_control = label_control.placeholder(fixed_label(term_labels.mixed_placeholder.as_str(), "ui.inspector.label-placeholder")?);
         }
         let label_control = label_control.try_id(format!("{ROOT}.app-instance.label.input")).map_err(|_| PluginAssemblyError::new("ui.inspector.label-input-id", "label input id admission failed"))?;
-        let label_control = bind_action(label_control, Trigger::Change, label_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.inspector.label-input", "label input admission failed"))?;
+        let label_control = bind_action(label_control, Trigger::Commit, label_action)?.try_build().map_err(|_| PluginAssemblyError::new("ui.inspector.label-input", "label input admission failed"))?;
         instance_fields
             .try_push(control_row(&format!("{ROOT}.app-instance.label"), term_labels.label.as_str(), "ui.inspector.label-field", label_control)?)
             .map_err(|_| PluginAssemblyError::new("ui.inspector.instance-fields", "app-instance field admission failed"))?;

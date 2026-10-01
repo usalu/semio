@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "command",
+    "requiresOwnerPreparation"
+  ],
+  "properties": {
+    "command": {
+      "type": "string",
+      "minLength": 1
+    },
+    "requiresOwnerPreparation": {
+      "type": "boolean"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "command": {
+            "enum": [
+              "build",
+              "check",
+              "test",
+              "metadata",
+              "fetch",
+              "update",
+              "tree",
+              "clippy",
+              "rustc",
+              "nextest",
+              "llvm-cov",
+              "generate-lockfile",
+              "run",
+              "bench",
+              "doc",
+              "rustdoc"
+            ]
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "requiresOwnerPreparation": {
+            "const": true
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "requiresOwnerPreparation": {
+            "const": false
+          }
+        }
+      }
+    }
+  ]
+}

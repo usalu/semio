@@ -174,7 +174,7 @@ fn render_try_question(question: &FormQuestion, values: &Object, contributions: 
                 };
                 let id = format!("forms-try.{key}.{}.stepper", field.key);
                 let mut node =
-                    control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true, min: question.min, max: question.max, precision: None })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
+                    control(ui_admit(ui::BuiltNode::try_new(&id, ui::Component::NumberStepper(ui::NumberStepperProps { value, step: question.step.unwrap_or(0.1), uniform: true, min: question.min, max: question.max, ..Default::default() })))?, &id, field.label.as_deref().unwrap_or(&field.key), args()?)?;
                 let (action, args) = forms_action("setTryValue", Some(args()?))?;
                 ui_admit(node.bindings.try_push(ui::ActionBinding { trigger: ui::Trigger::Delta, action, args, capability: None }))?;
                 let field = ui_admit(ui::field(ui_label(field.label.as_deref().unwrap_or(&field.key))?).try_id(format!("forms-try.{key}.{}", field.key)))?;

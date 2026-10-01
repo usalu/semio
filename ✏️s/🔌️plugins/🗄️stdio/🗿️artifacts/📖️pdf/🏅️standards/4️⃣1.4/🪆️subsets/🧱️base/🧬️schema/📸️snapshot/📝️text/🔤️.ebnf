@@ -4,3 +4,4 @@ page = 'width=', number, 'height=', number, 'text=', text ;
 number = ? semio.dsl exact binary64 scalar, including inf and nan64 bit words ? ;
 string = ? semio.dsl quoted UTF-8 string with escapes ? ;
 text = string | ? semio.dsl bare UTF-8 identifier ? ;
+bytes = 'bytes64', '(', string, ')' ;

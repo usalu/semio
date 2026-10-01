@@ -2,7 +2,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { deepStrictEqual } from "node:assert";
 import Ajv from "ajv";
-import { BundleScript, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🧬️ One compiled export of the GIS plugin's own module contract (`🌎️hub/🧩️compositions/🌍️gis/🧬️schema/🔣️.json`).
  * The GIS scope owns these shapes; this crate is a reader, never a second declaration site. */

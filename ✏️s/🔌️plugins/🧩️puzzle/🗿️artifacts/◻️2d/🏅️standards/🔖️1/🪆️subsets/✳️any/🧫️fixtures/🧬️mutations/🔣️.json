@@ -2,23 +2,23 @@
   "schema": "semio.fixture-catalog/v1",
   "files": [
     {
-      "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/🎯️outcome/🔣️.json",
+      "path": "⚓change-node-anchor/⚓️derives/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "⚓change-node-anchor/⚓️derives/📸️snapshot/➡️after/🔣️.json",
       "sha256": "5d2603aca389512d9c21711fa51cd876e23cef01493a6580effd7303e45c4de7"
     },
     {
-      "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "⚓change-node-anchor/⚓️derives/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/🔺️diff/🔣️.json",
+      "path": "⚓change-node-anchor/⚓️derives/🔺️diff/🔣️.json",
       "sha256": "55a2b2578af41d167793add677a44d253f7747cc7be38196ea23ab1ef4a1a4a0"
     },
     {
-      "path": "⚓change-node-anchor/⚓️derives-a-capsule-pose-from-its-door-edge/🦠️mutation/🔣️.json",
+      "path": "⚓change-node-anchor/⚓️derives/🦠️mutation/🔣️.json",
       "sha256": "364aacb4796609179348bffbbdfa12d38454880dc3464492c2d40b0fa35a84dc"
     },
     {
@@ -42,63 +42,63 @@
       "sha256": "e0b57ae50b0933e1fcebcecd78d66adadd8ae66d3f4140ef250c9328ae4d6ca1"
     },
     {
-      "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "⚓change-node-anchor/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "⚓change-node-anchor/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "⚓change-node-anchor/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "⚓change-node-anchor/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "⚓change-node-anchor/🚫️rejects-anchoring-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "⚓change-node-anchor/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "21eccebcc830648792ad3443ff6a917fafdf993654505ddc86311f0a69da2ce1"
     },
     {
-      "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/🎯️outcome/🔣️.json",
+      "path": "✂️disconnect-handles/✂️severs/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/📸️snapshot/➡️after/🔣️.json",
+      "path": "✂️disconnect-handles/✂️severs/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d3d97bd93b310508a5e1060544ec1e35cd191ace5d4427d3d97706750f984e22"
     },
     {
-      "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✂️disconnect-handles/✂️severs/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/🔺️diff/🔣️.json",
+      "path": "✂️disconnect-handles/✂️severs/🔺️diff/🔣️.json",
       "sha256": "b9d42373998882c28e2cf9974c0971033d8faaa9c1eef3c42aa5561a3ffd7f0d"
     },
     {
-      "path": "✂️disconnect-handles/✂️severs-a-capsule-from-the-first-storey-tambour/🦠️mutation/🔣️.json",
+      "path": "✂️disconnect-handles/✂️severs/🦠️mutation/🔣️.json",
       "sha256": "218c6de65b50bcc07b51cc92e70591b27f8d9800c6cae927f2bc4be7ea3e216c"
     },
     {
-      "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "✂️disconnect-handles/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "✂️disconnect-handles/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✂️disconnect-handles/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "✂️disconnect-handles/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "✂️disconnect-handles/🚫️rejects-severing-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "✂️disconnect-handles/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "03632d32fd674ff5236b346b448a24c1bb39ae2fd485f7003c82ad920114e0bf"
     },
     {
@@ -242,23 +242,23 @@
       "sha256": "38b4f439f6193a2382af9be5311ef8669a1e9ecbf3617cb7a208707f7c1a7b7e"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/🎯️outcome/🔣️.json",
+      "path": "✏️edit-node-text/✏️recodes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/📸️snapshot/➡️after/🔣️.json",
+      "path": "✏️edit-node-text/✏️recodes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d1f763727d9dec7f28f4623f10b596ef607edd848c7d71bbb13db42ad1cc09c5"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✏️edit-node-text/✏️recodes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/🔺️diff/🔣️.json",
+      "path": "✏️edit-node-text/✏️recodes/🔺️diff/🔣️.json",
       "sha256": "a162120fcb23d09d9bd42129b7735465824d486918a0d684589399a33fb2df74"
     },
     {
-      "path": "✏️edit-node-text/✏️recodes-a-capsule-id-code/🦠️mutation/🔣️.json",
+      "path": "✏️edit-node-text/✏️recodes/🦠️mutation/🔣️.json",
       "sha256": "732ab1e006aaa184a393165f3c1734efdcd1b005591048d7b917fa8e33198ee2"
     },
     {
@@ -282,43 +282,43 @@
       "sha256": "cc73c947f7907483f1fb11a664cf63bade0ec9b0f15695e95f2b2c8a02b3b38c"
     },
     {
-      "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "✏️edit-node-text/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "✏️edit-node-text/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "✏️edit-node-text/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "✏️edit-node-text/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "✏️edit-node-text/🚫️rejects-recoding-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "✏️edit-node-text/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "f0eebdb0571c89494c936439f86c4a3bfac0471ccc65ae3b5b6c0b97c0f979f9"
     },
     {
-      "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/🎯️outcome/🔣️.json",
+      "path": "➕add-node-handle/➕️adds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/📸️snapshot/➡️after/🔣️.json",
+      "path": "➕add-node-handle/➕️adds/📸️snapshot/➡️after/🔣️.json",
       "sha256": "fc17799fa835fffc398a6694a10a5dbe8052bb0b1d74437984a292e1d4d877b6"
     },
     {
-      "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/📸️snapshot/⬅️before/🔣️.json",
+      "path": "➕add-node-handle/➕️adds/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/🔺️diff/🔣️.json",
+      "path": "➕add-node-handle/➕️adds/🔺️diff/🔣️.json",
       "sha256": "6a70cb6b727c764c69dbad1502814c648d7cc76b4eb02d10f3462fc8e459e8b0"
     },
     {
-      "path": "➕add-node-handle/➕️adds-a-third-slot-door-to-the-tambour/🦠️mutation/🔣️.json",
+      "path": "➕add-node-handle/➕️adds/🦠️mutation/🔣️.json",
       "sha256": "0d51f6b7421ce96983bb31ed7a64b14304d97ce0cf2e28b415c85504d71344fd"
     },
     {
@@ -342,23 +342,23 @@
       "sha256": "d0c20dfc2c8c88a7b0f86477a9f3cf1f505fbf324dbe66e69963b94fa855d609"
     },
     {
-      "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "➕add-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "➕add-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "➕add-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "➕add-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "➕add-node-handle/🚫️rejects-adding-a-door-to-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "➕add-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "8dff1c53dc01c2203efd4279a7f691df7d7d2dcd5e88c8f6c7ce169ce072bcc8"
     },
     {
@@ -382,63 +382,63 @@
       "sha256": "8bb4ccfb577dfa79c8f091957ebb721e77a218020192a24792a06593a4af8eb9"
     },
     {
-      "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/🎯️outcome/🔣️.json",
+      "path": "➖remove-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "a3a754795b0f9beb957e8368a02b8d74d19c9e67596d35202c4b4bcb668e712e"
     },
     {
-      "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/📸️snapshot/➡️after/🔣️.json",
+      "path": "➖remove-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/📸️snapshot/⬅️before/🔣️.json",
+      "path": "➖remove-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/🔺️diff/🚫️.absent",
+      "path": "➖remove-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "➖remove-node-handle/🚫️rejects-removing-a-door-the-tambour-never-had/🦠️mutation/🔣️.json",
+      "path": "➖remove-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "cc92c1f981ef87a34f57db61b3fb5bc2f2f1637ed8d6b8b5a4ce732f25b16023"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🎯️outcome/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "6c35c8f4f5e3c47b00c97d817b0f62bd7cdb6ca21f17888095d7c99f51870b85"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🔺️diff/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes/🔺️diff/🔣️.json",
       "sha256": "c96cefeba8f6602e65298def25fb8963990f222feec6ec0af56d5e8a5d4547df"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-a-tambour-door-and-severs-its-capsule-edge/🦠️mutation/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes/🦠️mutation/🔣️.json",
       "sha256": "5cc9b75930ec957c81cc00a9a65c1e1d0ea9edd99b11e2c0b279d36b271f1901"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/🎯️outcome/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes2/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes2/📸️snapshot/➡️after/🔣️.json",
       "sha256": "8ba71fe0b38cb66e07666962fd0783c76ddab59164ed14b7438db9f5f8bbd152"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes2/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/🔺️diff/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes2/🔺️diff/🔣️.json",
       "sha256": "be20a907a50387168b44d97e0dfba06300c602a61adb92a3a58eecba363131f9"
     },
     {
-      "path": "➖remove-node-handle/🚫️removes-handle-2-and-severs-edge/🦠️mutation/🔣️.json",
+      "path": "➖remove-node-handle/🚫️removes2/🦠️mutation/🔣️.json",
       "sha256": "993aa8f3d1feaad63e64e8bf973f853af59d5e7fd256ba5029e05c9f9c5113a6"
     },
     {
@@ -462,23 +462,23 @@
       "sha256": "f3a8b2b57e939d3dadb5afc7ab3eee1cab2fb7ad3b1fd079565dc11991f25822"
     },
     {
-      "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/🎯️outcome/🔣️.json",
+      "path": "🆔change-manifest-id/📦️repoints/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/📸️snapshot/➡️after/🔣️.json",
+      "path": "🆔change-manifest-id/📦️repoints/📸️snapshot/➡️after/🔣️.json",
       "sha256": "0e01f100fd3f1cc3a550067f2e59fa55d8711ee409737fa20bd550e7f93adb95"
     },
     {
-      "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🆔change-manifest-id/📦️repoints/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/🔺️diff/🔣️.json",
+      "path": "🆔change-manifest-id/📦️repoints/🔺️diff/🔣️.json",
       "sha256": "8333d6460c8fe13f9c19f8b7f41d93959c8d1b4b0e280e9cd3f4b07d8558583d"
     },
     {
-      "path": "🆔change-manifest-id/📦️repoints-the-tower-at-its-example-manifest/🦠️mutation/🔣️.json",
+      "path": "🆔change-manifest-id/📦️repoints/🦠️mutation/🔣️.json",
       "sha256": "941ce98754fb7d4232258e665bf9d2143ea1c4270bc3b0e330616cdcd0f4c828"
     },
     {
@@ -502,43 +502,43 @@
       "sha256": "bcb2d51949fcf499540d29ad8dd4b05f453196a0f7ed811f15aeaa66a4ba3b88"
     },
     {
-      "path": "🌍create-target-region/🌍️paints-a-tower-footprint/🎯️outcome/🔣️.json",
+      "path": "🌍create-target-region/🌍️paints/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🌍create-target-region/🌍️paints-a-tower-footprint/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌍create-target-region/🌍️paints/📸️snapshot/➡️after/🔣️.json",
       "sha256": "58e819764b4c85bd0313350298350d02657e2f71ede0fd3dba9491494b830c6f"
     },
     {
-      "path": "🌍create-target-region/🌍️paints-a-tower-footprint/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌍create-target-region/🌍️paints/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d41ebc60c45a4140ad996e901cbf03b7798ca6090b3a56bfbced932acea38b3c"
     },
     {
-      "path": "🌍create-target-region/🌍️paints-a-tower-footprint/🔺️diff/🔣️.json",
+      "path": "🌍create-target-region/🌍️paints/🔺️diff/🔣️.json",
       "sha256": "d655290dfbc52223985ff8ebbcd74436aafe47d69ee4a27fb9d3c7cbc39e07c9"
     },
     {
-      "path": "🌍create-target-region/🌍️paints-a-tower-footprint/🦠️mutation/🔣️.json",
+      "path": "🌍create-target-region/🌍️paints/🦠️mutation/🔣️.json",
       "sha256": "64c9e4b81c7d2f8b9a5450714e440f3a09d6cc0f694efee56c8df13674421323"
     },
     {
-      "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/🎯️outcome/🔣️.json",
+      "path": "🌍create-target-region/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "d90c7bc6d58ca87d2b7ff85991730bb6acd2d2232fdacf1d9ba92a46c822b544"
     },
     {
-      "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌍create-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌍create-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/🔺️diff/🚫️.absent",
+      "path": "🌍create-target-region/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🌍create-target-region/🚫️rejects-a-region-id-the-board-already-holds/🦠️mutation/🔣️.json",
+      "path": "🌍create-target-region/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "37c26cba0fb2ecac0ef771c7b2320bb2c134444c4ccbec64bd32b6acf4bcdad1"
     },
     {
@@ -562,63 +562,63 @@
       "sha256": "0b82171fd201ccaa2b5c9e1884da8d64c0deb4f5197cd714481bf391711502f1"
     },
     {
-      "path": "🌟change-node-root/🌳️promotes-the-base-to-root/🎯️outcome/🔣️.json",
+      "path": "🌟change-node-root/🌳️promotes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🌟change-node-root/🌳️promotes-the-base-to-root/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌟change-node-root/🌳️promotes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "5da779dc9019ddc87ffd6aae25ff4fd7a0fe397041768c5617eb51b94077ec61"
     },
     {
-      "path": "🌟change-node-root/🌳️promotes-the-base-to-root/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌟change-node-root/🌳️promotes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌟change-node-root/🌳️promotes-the-base-to-root/🔺️diff/🔣️.json",
+      "path": "🌟change-node-root/🌳️promotes/🔺️diff/🔣️.json",
       "sha256": "6fa70127556571a7d5ee46ac1706f07cda9f91302c3f7195dcf87a4cf469826d"
     },
     {
-      "path": "🌟change-node-root/🌳️promotes-the-base-to-root/🦠️mutation/🔣️.json",
+      "path": "🌟change-node-root/🌳️promotes/🦠️mutation/🔣️.json",
       "sha256": "45d9d67a059f9828e500a104f55791e1d3b6985e0bec811aeb64a31385c74f8d"
     },
     {
-      "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🌟change-node-root/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌟change-node-root/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌟change-node-root/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🌟change-node-root/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🌟change-node-root/🚫️rejects-rooting-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🌟change-node-root/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "c45dd12bb82fc6935f8b220b287cbcd2e53ad1660fbb9448493ec5b03c7bb274"
     },
     {
-      "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/🎯️outcome/🔣️.json",
+      "path": "🌱create-node/🌱️appends/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌱create-node/🌱️appends/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d44321bd568ddcb56e23a232c6bb45ac66bedffa669ad703d59ab317b2c21bca"
     },
     {
-      "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌱create-node/🌱️appends/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/🔺️diff/🔣️.json",
+      "path": "🌱create-node/🌱️appends/🔺️diff/🔣️.json",
       "sha256": "22c54da3bd23ad06233c5eebb24b090df233f9de3944fd842a1e9d72e19169d2"
     },
     {
-      "path": "🌱create-node/🌱️appends-a-capsule-to-the-tower/🦠️mutation/🔣️.json",
+      "path": "🌱create-node/🌱️appends/🦠️mutation/🔣️.json",
       "sha256": "96525f8d57aa00acce263e72f68ceecf010586c87e2cf601e4a0fa2b0cb8bee1"
     },
     {
@@ -642,23 +642,23 @@
       "sha256": "a42f919247a287e8adc3bcd0358b9c50f6aa26b4b61491d834fe09bd9a8c09ea"
     },
     {
-      "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🎯️outcome/🔣️.json",
+      "path": "🌱create-node/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "9b722d0ae5ad5a36aaf67674c10fbabdf825e9c929fe049a72ad256fe333c2d1"
     },
     {
-      "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/📸️snapshot/➡️after/🔣️.json",
+      "path": "🌱create-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🌱create-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🔺️diff/🚫️.absent",
+      "path": "🌱create-node/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🌱create-node/🚫️rejects-a-capsule-id-the-tower-already-holds/🦠️mutation/🔣️.json",
+      "path": "🌱create-node/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "51d1d534f12da2b83f86340d795004bbdc13e4cb67c2ec73cbd2e3fad266713a"
     },
     {
@@ -722,103 +722,103 @@
       "sha256": "303152c170f3619f9d64c4c8c6dddc20f9ce42f948bb32ba53ed3a7b967624e9"
     },
     {
-      "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🎨change-node-icon/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🎨change-node-icon/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🎨change-node-icon/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🎨change-node-icon/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🎨change-node-icon/🚫️rejects-reiconing-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🎨change-node-icon/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "f219ad6a588fdfd7927d85a7174d5b8671376972177f7fcf83bae2ddda6dda51"
     },
     {
-      "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/🎯️outcome/🔣️.json",
+      "path": "🏗️change-node-kind/🏗️rekinds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/📸️snapshot/➡️after/🔣️.json",
+      "path": "🏗️change-node-kind/🏗️rekinds/📸️snapshot/➡️after/🔣️.json",
       "sha256": "50c405be24eb4c432845c838e9c961f871aaa4e4ba1f9f15144330feac3077c7"
     },
     {
-      "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🏗️change-node-kind/🏗️rekinds/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/🔺️diff/🔣️.json",
+      "path": "🏗️change-node-kind/🏗️rekinds/🔺️diff/🔣️.json",
       "sha256": "db7bd10ab97cfb28e66041c9025a4ad5437254047e670231abf5190655fd14e7"
     },
     {
-      "path": "🏗️change-node-kind/🏗️rekinds-a-capsule-j-as-a-capsule-l/🦠️mutation/🔣️.json",
+      "path": "🏗️change-node-kind/🏗️rekinds/🦠️mutation/🔣️.json",
       "sha256": "4593ed06587bfc028ac4bfe80f6d6b761ad061c0730b769c321a44bbac165186"
     },
     {
-      "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/🎯️outcome/🔣️.json",
+      "path": "🏗️change-node-kind/🏷️reassigns/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/📸️snapshot/➡️after/🔣️.json",
+      "path": "🏗️change-node-kind/🏷️reassigns/📸️snapshot/➡️after/🔣️.json",
       "sha256": "f9475ecbcb20221690f93c51f7041643a639df0fc4f2f47d0a150a5b06dc8d86"
     },
     {
-      "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🏗️change-node-kind/🏷️reassigns/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/🔺️diff/🔣️.json",
+      "path": "🏗️change-node-kind/🏷️reassigns/🔺️diff/🔣️.json",
       "sha256": "7c9f43c00a6dbb752f284496e2032fb8a7c6a669a7f06fb32f59538bb0e30b71"
     },
     {
-      "path": "🏗️change-node-kind/🏷️reassigns-node-a-kind/🦠️mutation/🔣️.json",
+      "path": "🏗️change-node-kind/🏷️reassigns/🦠️mutation/🔣️.json",
       "sha256": "da651877022a78f8050038662011fbbc313c40b4e2f4a70fda98877c9d8ec0b3"
     },
     {
-      "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🏗️change-node-kind/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🏗️change-node-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🏗️change-node-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🏗️change-node-kind/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🏗️change-node-kind/🚫️rejects-rekinding-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🏗️change-node-kind/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "450fa25ad0ddc3b6cc7cd4e6292ffb386b8456d821930e6367c58a1d0437f550"
     },
     {
-      "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/🎯️outcome/🔣️.json",
+      "path": "🏷️change-edge-kind/🏷️kinds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/📸️snapshot/➡️after/🔣️.json",
+      "path": "🏷️change-edge-kind/🏷️kinds/📸️snapshot/➡️after/🔣️.json",
       "sha256": "6d73e2554d507e5206f4cddff94c0b7cdf9110529bf8e2e917304ce2389428be"
     },
     {
-      "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🏷️change-edge-kind/🏷️kinds/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/🔺️diff/🔣️.json",
+      "path": "🏷️change-edge-kind/🏷️kinds/🔺️diff/🔣️.json",
       "sha256": "666de1af8860f62356c5c4ffefb4b4333c7fbc89facadbc3e6bf0dcd658eae6c"
     },
     {
-      "path": "🏷️change-edge-kind/🏷️kinds-a-capsule-door-edge-as-a-link/🦠️mutation/🔣️.json",
+      "path": "🏷️change-edge-kind/🏷️kinds/🦠️mutation/🔣️.json",
       "sha256": "a3c7927b576f2087369f7f9b51dc9da1dad71af977a9fad8bac7c34fb09f0322"
     },
     {
@@ -842,43 +842,43 @@
       "sha256": "00d87c7b5a688a2a485d9371c7accf6bdbf486006aa1ebad29c3c57336dcfa76"
     },
     {
-      "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🏷️change-edge-kind/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🏷️change-edge-kind/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🏷️change-edge-kind/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🏷️change-edge-kind/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🏷️change-edge-kind/🚫️rejects-kinding-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🏷️change-edge-kind/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "fd9a1de39343a338f4a62a8bf52a3fa2f2880ff3874929d7a25528e97b9d484b"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/🎯️outcome/🔣️.json",
+      "path": "👀change-edge-visible/🙈️hides/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/➡️after/🔣️.json",
       "sha256": "59ce07213ddcd3f3c29ce64bb64f9264fd8a4f738f37854a20313632760bdd87"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "👀change-edge-visible/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/🔺️diff/🔣️.json",
+      "path": "👀change-edge-visible/🙈️hides/🔺️diff/🔣️.json",
       "sha256": "8e74d58803ed3af7565355de97126b408a051c0856c995378919b046dbc96a4e"
     },
     {
-      "path": "👀change-edge-visible/🙈️hides-a-capsule-door-edge/🦠️mutation/🔣️.json",
+      "path": "👀change-edge-visible/🙈️hides/🦠️mutation/🔣️.json",
       "sha256": "91aec51ff869df288525dcc10eb7e6b1a7e086803d7a5d13db5a7048cab075ce"
     },
     {
@@ -902,23 +902,23 @@
       "sha256": "5ffd87a3c4f1950631deee5a8c72146b30e226528a7f4fe23e09e14867900ef0"
     },
     {
-      "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "👀change-edge-visible/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "👀change-edge-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "👀change-edge-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "👀change-edge-visible/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "👀change-edge-visible/🚫️rejects-hiding-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "👀change-edge-visible/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "8145f5183653c7781dd7e2c97dff899fcff4c022c01be42675283b5e84890e02"
     },
     {
@@ -962,103 +962,103 @@
       "sha256": "4ccdd6ff1f57e1159558e39f2a3c0f54469c634cd9ce7d9d4a7bad6948b63408"
     },
     {
-      "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "👁️change-node-visible/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "👁️change-node-visible/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "👁️change-node-visible/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "👁️change-node-visible/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "👁️change-node-visible/🚫️rejects-hiding-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "👁️change-node-visible/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "98050b8ea0553f1b2d8280f0408b9c89084c5993b1c66ea2476ca005e1895ba9"
     },
     {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/🎯️outcome/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/💔️withdraws/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/📸️snapshot/➡️after/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/➡️after/🔣️.json",
       "sha256": "1f845874ce5f0c4bb1628d7152ff0fc6efeebfb44967146f3312156a3f718fbb"
     },
     {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/📸️snapshot/⬅️before/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/💔️withdraws/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/🔺️diff/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/💔️withdraws/🔺️diff/🔣️.json",
       "sha256": "94ce888947e1b0bdbc3c8f0e199fd535866f7acf7eb6d91df78750dd3071e408"
     },
     {
-      "path": "💔disconnect-kind-compatibility/💔️withdraws-the-tambour-rectangular-pair/🦠️mutation/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/💔️withdraws/🦠️mutation/🔣️.json",
       "sha256": "6fab1cad1f6e42da3b6e2b568801dc6a06ccee1dca9d1672747f971ad477b821"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never/🎯️outcome/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "d8edf89df7819a39e4aad1fd6b081567e1b89651b108a2926d058f8237e39ef3"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never/📸️snapshot/➡️after/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never/📸️snapshot/⬅️before/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never/🔺️diff/🚫️.absent",
+      "path": "💔disconnect-kind-compatibility/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️rejects-withdrawing-pair-relation-never/🦠️mutation/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "7ed634aaab629daa8c0769b97139a22ed8c02f235034b983f9f9697b1b7451f5"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/🎯️outcome/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️removes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/📸️snapshot/➡️after/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "817270cb4e30e53a63bdaf6a5e8bea24c41487e64f6906627ac08b43219e9335"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/📸️snapshot/⬅️before/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/🔺️diff/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️removes/🔺️diff/🔣️.json",
       "sha256": "0029a0c7f53be0caa26cdf7751576974d283065de41dea2335ee813d137b3b08"
     },
     {
-      "path": "💔disconnect-kind-compatibility/🚫️removes-handle-kind-pair/🦠️mutation/🔣️.json",
+      "path": "💔disconnect-kind-compatibility/🚫️removes/🦠️mutation/🔣️.json",
       "sha256": "779efce4226b9341d7b4d760d86f9d6ebfd13ec7736ca424ecb4daccb6921bc0"
     },
     {
-      "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/🎯️outcome/🔣️.json",
+      "path": "📍move-node/📍️moves/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/📸️snapshot/➡️after/🔣️.json",
+      "path": "📍move-node/📍️moves/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d99510ffc0713132a7d10391fd71503481ab5db5ba0548539dd4b3c3f891ffd5"
     },
     {
-      "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📍move-node/📍️moves/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/🔺️diff/🔣️.json",
+      "path": "📍move-node/📍️moves/🔺️diff/🔣️.json",
       "sha256": "cda1b2c157c8f7b2ed1c482ac77556d2d95372eea2d2b7f4917a557d7a993828"
     },
     {
-      "path": "📍move-node/📍️moves-a-capsule-across-the-shaft/🦠️mutation/🔣️.json",
+      "path": "📍move-node/📍️moves/🦠️mutation/🔣️.json",
       "sha256": "42787aafd8a48e050022dfe2da49ca59a64db59f6ffb3b0b052ec17e5f59f837"
     },
     {
@@ -1082,23 +1082,23 @@
       "sha256": "91272b6484557b84f651fe0d845bb5ed253f9df572b5ef1f66b1dd705b3aa85d"
     },
     {
-      "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "📍move-node/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "📍move-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📍move-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "📍move-node/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "📍move-node/🚫️rejects-moving-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "📍move-node/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "1e5ff7527cb283ac0a935f758d7d3cc2b8849c3d8f6dc19c6e047ec50ca99358"
     },
     {
@@ -1122,43 +1122,43 @@
       "sha256": "1492da06181f92cb0070e8c3b93afe1898c09b6d79054b7268512192f8b896ab"
     },
     {
-      "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🎯️outcome/🔣️.json",
+      "path": "📏scale-node/📏️scales/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/📸️snapshot/➡️after/🔣️.json",
+      "path": "📏scale-node/📏️scales/📸️snapshot/➡️after/🔣️.json",
       "sha256": "363e9afc5b9798c62fb8a1d28636c97e369f998026b8b622ea93c6338af4bccd"
     },
     {
-      "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📏scale-node/📏️scales/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🔺️diff/🔣️.json",
+      "path": "📏scale-node/📏️scales/🔺️diff/🔣️.json",
       "sha256": "6b9ebdcbcff0ca84a34f6332b1391df6ae63e4f5852b618ce81f3ac2f52120a7"
     },
     {
-      "path": "📏scale-node/📏️scales-a-capsule-by-three-halves/🦠️mutation/🔣️.json",
+      "path": "📏scale-node/📏️scales/🦠️mutation/🔣️.json",
       "sha256": "65b766f9b48d5fd6dc9378f1ae9d4019cce552f1206be96ca86785259b165761"
     },
     {
-      "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "📏scale-node/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "📏scale-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📏scale-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "📏scale-node/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "📏scale-node/🚫️rejects-scaling-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "📏scale-node/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "d954c9eb2db83cd7b6f2bbd37996f42d17342fd5637715c6dcf340c9b776a9de"
     },
     {
@@ -1202,83 +1202,83 @@
       "sha256": "086638f0b940f2d368eabd30cafb248c71345d63dc1df2353e9296f51229cc19"
     },
     {
-      "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "📐resize-target-region/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "📐resize-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📐resize-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "📐resize-target-region/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "📐resize-target-region/🚫️rejects-resizing-a-region-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "📐resize-target-region/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "909ac97c93a8597512e950e171f0852797ba595631ca53075aa3c8b44734a6c3"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/🎯️outcome/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/📸️snapshot/➡️after/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs/📸️snapshot/➡️after/🔣️.json",
       "sha256": "b76090fe54428d6295bd00c63759f5501e6be6fc187805af021259bd59686cdd"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/🔺️diff/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs/🔺️diff/🔣️.json",
       "sha256": "2d2343ab0bc0e60294cb6a77e4edc87b2a34797e5b56c5113216c17dbe88dd7a"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-handle-kind-catalog/🦠️mutation/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs/🦠️mutation/🔣️.json",
       "sha256": "3bdfdaef9a35145d0907e2ced62403978a0d246f3adfa490189c48225d6d6949"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/🎯️outcome/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs2/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/📸️snapshot/➡️after/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs2/📸️snapshot/➡️after/🔣️.json",
       "sha256": "8d2ba6d186a78d336b2bd823258e2d008dcf505931d88936000eca95b1658415"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs2/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/🔺️diff/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs2/🔺️diff/🔣️.json",
       "sha256": "3689176366ffbaff37f955f76f68fa6d27b5e6bf9b87e4542b7d88e19fcd37f2"
     },
     {
-      "path": "📚replace-kind-catalogs/📇️installs-the-tower-handle-catalog/🦠️mutation/🔣️.json",
+      "path": "📚replace-kind-catalogs/📇️installs2/🦠️mutation/🔣️.json",
       "sha256": "2c4bfd734ec7c0f67e118aded2dbd4f15dda2cbb4719f8446503332636886ad4"
     },
     {
-      "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/🎯️outcome/🔣️.json",
+      "path": "📚replace-kind-catalogs/🗑️clears/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/📸️snapshot/➡️after/🔣️.json",
+      "path": "📚replace-kind-catalogs/🗑️clears/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/📸️snapshot/⬅️before/🔣️.json",
+      "path": "📚replace-kind-catalogs/🗑️clears/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "8d2ba6d186a78d336b2bd823258e2d008dcf505931d88936000eca95b1658415"
     },
     {
-      "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/🔺️diff/🔣️.json",
+      "path": "📚replace-kind-catalogs/🗑️clears/🔺️diff/🔣️.json",
       "sha256": "22cc16f0febb67c131a8cd142d4cc190dc136c5605435f1be95d67c80f652cd7"
     },
     {
-      "path": "📚replace-kind-catalogs/🗑️clears-the-installed-handle-catalog/🦠️mutation/🔣️.json",
+      "path": "📚replace-kind-catalogs/🗑️clears/🦠️mutation/🔣️.json",
       "sha256": "91b35121853bdde7d415b515b37acf84acc53d1f212de174d96816f4da18d5a1"
     },
     {
@@ -1422,43 +1422,43 @@
       "sha256": "0aade4ef9f033ec0faae7842ca53ec8a3c2f24f74f168eaa6649648e6e74555a"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/🎯️outcome/🔣️.json",
+      "path": "🔌replace-node-handle/🔌️rekinds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔌replace-node-handle/🔌️rekinds/📸️snapshot/➡️after/🔣️.json",
       "sha256": "05a95bdfbc16f91bf63604d124a105acf3756eaac8fe31ccfbb3d0cc63837dce"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔌replace-node-handle/🔌️rekinds/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/🔺️diff/🔣️.json",
+      "path": "🔌replace-node-handle/🔌️rekinds/🔺️diff/🔣️.json",
       "sha256": "7dbcc4e1fda28527fe6873d5d7415d61ef525fbd1c6d5a0cc58480335b15b850"
     },
     {
-      "path": "🔌replace-node-handle/🔌️rekinds-an-unconnected-tambour-door/🦠️mutation/🔣️.json",
+      "path": "🔌replace-node-handle/🔌️rekinds/🦠️mutation/🔣️.json",
       "sha256": "8eeeb9b6388e67a416fc83bb234772fdf44b5c84c72c5765bbbb2ce3064c4dfb"
     },
     {
-      "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🎯️outcome/🔣️.json",
+      "path": "🔌replace-node-handle/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "8961c82e18927fbdb5cb0d5d55a8f4d9f9b7bc0fcf49e40b35d9773eaaf15d93"
     },
     {
-      "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔌replace-node-handle/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔌replace-node-handle/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🔺️diff/🚫️.absent",
+      "path": "🔌replace-node-handle/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔌replace-node-handle/🚫️rejects-replacing-a-door-the-tambour-never-had/🦠️mutation/🔣️.json",
+      "path": "🔌replace-node-handle/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "ac473fc3a9b892d581e0467c3bdfe10b985a4e3b6a81b86dc5e94d5db6da1193"
     },
     {
@@ -1622,43 +1622,43 @@
       "sha256": "de06909fd06fcde840e9ff8607454aeaf05e353b14e4e48441243aa324a773c7"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks-region-1/🎯️outcome/🔣️.json",
+      "path": "🔏change-target-region-locked/🔏️locks/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks-region-1/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔏change-target-region-locked/🔏️locks/📸️snapshot/➡️after/🔣️.json",
       "sha256": "1884d34622c95a7bd878fd447496c0fcafacf4c5f907b4f1db7575ec64a0a6a9"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔏change-target-region-locked/🔏️locks/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks-region-1/🔺️diff/🔣️.json",
+      "path": "🔏change-target-region-locked/🔏️locks/🔺️diff/🔣️.json",
       "sha256": "22cfae6004b8f2dc35cd0ed4a2b83ffb42c9b9a54a027009b3dedd03212a970a"
     },
     {
-      "path": "🔏change-target-region-locked/🔏️locks-region-1/🦠️mutation/🔣️.json",
+      "path": "🔏change-target-region-locked/🔏️locks/🦠️mutation/🔣️.json",
       "sha256": "ffa5e188a59752be2114107cd34f85342153118c0b64bb890f184ce8cbd3f2e3"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🔏change-target-region-locked/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔏change-target-region-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔏change-target-region-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🔏change-target-region-locked/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔏change-target-region-locked/🚫️rejects-locking-region-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🔏change-target-region-locked/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "2d9bdcdf87d56a167cef5ad4096388a0c7c68e1a5d0099a192849072bec55ad5"
     },
     {
@@ -1682,43 +1682,43 @@
       "sha256": "637c2c4f33632428388fc9c10f0bda79a847b00f08c86cd6523d2cf25aecc23c"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/🎯️outcome/🔣️.json",
+      "path": "🔐change-edge-locked/🔒️locks/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔐change-edge-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
       "sha256": "c52e583defabf0f27e723086d2521e6f5ad068cc81555065db8ca456cec5be0b"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔐change-edge-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/🔺️diff/🔣️.json",
+      "path": "🔐change-edge-locked/🔒️locks/🔺️diff/🔣️.json",
       "sha256": "80da5a4c8fffb172020768bc3cb1362bd918bb5c9d03149004e126c88d4f66a6"
     },
     {
-      "path": "🔐change-edge-locked/🔒️locks-the-base-to-tambour-edge/🦠️mutation/🔣️.json",
+      "path": "🔐change-edge-locked/🔒️locks/🦠️mutation/🔣️.json",
       "sha256": "0a3cf11287a051dbf7b2e22803d26b024813a68e5cc8f8fd0bce3d84ec2872a9"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🔐change-edge-locked/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔐change-edge-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔐change-edge-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🔐change-edge-locked/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔐change-edge-locked/🚫️rejects-locking-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🔐change-edge-locked/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "4a1f1f68995f6eac96327738f7a34d060935d46e785cf51653ac84154a22a8cd"
     },
     {
@@ -1742,43 +1742,43 @@
       "sha256": "8c484e2b62a4e618b2a06539342965b06218aebbdd3085a6a6b471895cd6272f"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/🎯️outcome/🔣️.json",
+      "path": "🔒change-node-locked/🔒️locks/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔒change-node-locked/🔒️locks/📸️snapshot/➡️after/🔣️.json",
       "sha256": "95aa2b94af01c8403252d877b93bfefd86e9715a97209f558b3d60ebb0338709"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔒change-node-locked/🔒️locks/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/🔺️diff/🔣️.json",
+      "path": "🔒change-node-locked/🔒️locks/🔺️diff/🔣️.json",
       "sha256": "2f1d6ff784e05de1490a5b15ec17a776e0f344b31f56ee642332d167eccda7ef"
     },
     {
-      "path": "🔒change-node-locked/🔒️locks-the-first-storey-tambour/🦠️mutation/🔣️.json",
+      "path": "🔒change-node-locked/🔒️locks/🦠️mutation/🔣️.json",
       "sha256": "4ff9f24470234c358f6e0a18614bbd5a452ff4712309f77b1501a0ed46c897fb"
     },
     {
-      "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🔒change-node-locked/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🔒change-node-locked/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🔒change-node-locked/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🔒change-node-locked/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🔒change-node-locked/🚫️rejects-locking-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🔒change-node-locked/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "5343596e0beeaf8973df91c1d65e6720123ea31f1a2a1596f9c84a982cc6083b"
     },
     {
@@ -1802,183 +1802,183 @@
       "sha256": "8ec0a598484831f28538864b7a986bac2d43495733c0c6c0cc90e751a1a3f60d"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/🎯️outcome/🔣️.json",
+      "path": "🖇️change-edge-tips/🖇️tips/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "🖇️change-edge-tips/🖇️tips/📸️snapshot/➡️after/🔣️.json",
       "sha256": "b9e2c1b9ce239b8eb2eb8cabfa37f39cf2bf8aa0c944a05e4a00033415139778"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🖇️change-edge-tips/🖇️tips/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/🔺️diff/🔣️.json",
+      "path": "🖇️change-edge-tips/🖇️tips/🔺️diff/🔣️.json",
       "sha256": "7008e497a8315f29e74c113ab45ad88c8e768ea5bd44667e6e9431545e894ed5"
     },
     {
-      "path": "🖇️change-edge-tips/🖇️tips-a-capsule-door-edge/🦠️mutation/🔣️.json",
+      "path": "🖇️change-edge-tips/🖇️tips/🦠️mutation/🔣️.json",
       "sha256": "466b418fe05f7f0f44608913978d4db2183f00762606e1e356d3d425c1c804c5"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🖇️change-edge-tips/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🖇️change-edge-tips/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🖇️change-edge-tips/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🖇️change-edge-tips/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🖇️change-edge-tips/🚫️rejects-tipping-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🖇️change-edge-tips/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "a9fcfa4e14c0ea554082e9bc7304245aad1920457edb0b28b2b501e51c15db17"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames-region-1/🎯️outcome/🔣️.json",
+      "path": "🖋️edit-target-region-label/🖋️renames/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames-region-1/📸️snapshot/➡️after/🔣️.json",
+      "path": "🖋️edit-target-region-label/🖋️renames/📸️snapshot/➡️after/🔣️.json",
       "sha256": "34e7e92fa5ef388a1d2c851382e964baf4a372239556c3b8366e90aea9eb902d"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🖋️edit-target-region-label/🖋️renames/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames-region-1/🔺️diff/🔣️.json",
+      "path": "🖋️edit-target-region-label/🖋️renames/🔺️diff/🔣️.json",
       "sha256": "9d8e4dff273c6bdd0fd629f80787dd06e61c95a39c008f53db1d556ee6ef58cc"
     },
     {
-      "path": "🖋️edit-target-region-label/🖋️renames-region-1/🦠️mutation/🔣️.json",
+      "path": "🖋️edit-target-region-label/🖋️renames/🦠️mutation/🔣️.json",
       "sha256": "2a260c64ea2f1cfd3cb20a21eb9b0ddecf54b80febccbc1a9ade804192692b60"
     },
     {
-      "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🖋️edit-target-region-label/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🖋️edit-target-region-label/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🖋️edit-target-region-label/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🖋️edit-target-region-label/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🖋️edit-target-region-label/🚫️rejects-renaming-a-region-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🖋️edit-target-region-label/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "53fec4e9f363009b0035fb446f57980355e5dc77606591aab6cf4c1eaf680a2b"
     },
     {
-      "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/🎯️outcome/🔣️.json",
+      "path": "🗑️delete-node/🚫️deletes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/📸️snapshot/➡️after/🔣️.json",
+      "path": "🗑️delete-node/🚫️deletes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "e81610de6e01125a6dd74c6af023c5d271c5d975e0ad3cbe0f6fe5bba476a8ab"
     },
     {
-      "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🗑️delete-node/🚫️deletes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/🔺️diff/🔣️.json",
+      "path": "🗑️delete-node/🚫️deletes/🔺️diff/🔣️.json",
       "sha256": "93caaf8ae75ff27786c0911018d0df147e6f7188810da452a86d8568aae62770"
     },
     {
-      "path": "🗑️delete-node/🚫️deletes-the-tambour-and-severs-its-ten-edges/🦠️mutation/🔣️.json",
+      "path": "🗑️delete-node/🚫️deletes/🦠️mutation/🔣️.json",
       "sha256": "7b4cf5de149d6323804afb0daafd581574cb78da9daa271c67c23bf1ee6c4fca"
     },
     {
-      "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🗑️delete-node/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🗑️delete-node/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🗑️delete-node/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🗑️delete-node/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🗑️delete-node/🚫️rejects-deleting-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🗑️delete-node/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "394b0551c5a83df73c0dea04e3afb181e218741f8ef7a4c9325dff0018cc67ff"
     },
     {
-      "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/🎯️outcome/🔣️.json",
+      "path": "🗑️delete-node/🚫️removes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "🗑️delete-node/🚫️removes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "1d842e5858f5b2b4ea0ef400b7e8dce41f612c5e629e67cdd5730501a436a594"
     },
     {
-      "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🗑️delete-node/🚫️removes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/🔺️diff/🔣️.json",
+      "path": "🗑️delete-node/🚫️removes/🔺️diff/🔣️.json",
       "sha256": "56bfee1fd8e33e1902af235fcd58d2c99f8fb049b1d52d74b79a1f565ed31b37"
     },
     {
-      "path": "🗑️delete-node/🚫️removes-node-a-and-severs-edge/🦠️mutation/🔣️.json",
+      "path": "🗑️delete-node/🚫️removes/🦠️mutation/🔣️.json",
       "sha256": "651a24d0919ac81938e7673b8fa62122de67d006ab9e7f0cb5756da20c6e6b39"
     },
     {
-      "path": "🙈change-target-region-hidden/🙈️hides-region-1/🎯️outcome/🔣️.json",
+      "path": "🙈change-target-region-hidden/🙈️hides/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🙈change-target-region-hidden/🙈️hides-region-1/📸️snapshot/➡️after/🔣️.json",
+      "path": "🙈change-target-region-hidden/🙈️hides/📸️snapshot/➡️after/🔣️.json",
       "sha256": "4096106637d112b0a4d04ed472ada87a6abd5bf2f04d39e639292599920e6f60"
     },
     {
-      "path": "🙈change-target-region-hidden/🙈️hides-region-1/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🙈change-target-region-hidden/🙈️hides/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🙈change-target-region-hidden/🙈️hides-region-1/🔺️diff/🔣️.json",
+      "path": "🙈change-target-region-hidden/🙈️hides/🔺️diff/🔣️.json",
       "sha256": "8842c0723570ce29a012eb7996564f3765e3280580dac5baaf14b47831d3b531"
     },
     {
-      "path": "🙈change-target-region-hidden/🙈️hides-region-1/🦠️mutation/🔣️.json",
+      "path": "🙈change-target-region-hidden/🙈️hides/🦠️mutation/🔣️.json",
       "sha256": "681d117174f79640e620c79000e08d2a319de6a86fdd241ef1c34bf02d543cf4"
     },
     {
-      "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🙈change-target-region-hidden/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🙈change-target-region-hidden/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🙈change-target-region-hidden/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🙈change-target-region-hidden/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🙈change-target-region-hidden/🚫️rejects-hiding-a-region-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🙈change-target-region-hidden/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "4c6f34af3137e51b1610d4cbb5ca4e07e560854b892e0bdddfed0f04915414f5"
     },
     {
@@ -2002,123 +2002,123 @@
       "sha256": "4aaadba78e8e875810e2f480e4bdf3d2dfd48c1af1c8ce5973e5b22d14625b2a"
     },
     {
-      "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🚀move-target-region/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🚀move-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🚀move-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🚀move-target-region/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🚀move-target-region/🚫️rejects-moving-a-region-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🚀move-target-region/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "a19a33ac9ab754cd6bff337115a5309aa65ccd79a144b669a52d0be6d78d889d"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/🎯️outcome/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️adds/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/📸️snapshot/➡️after/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️adds/📸️snapshot/➡️after/🔣️.json",
       "sha256": "3b5cec67b94a17d76a60fb52435ab952cbbde587731a7b4b9d23e4981adaa743"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️adds/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/🔺️diff/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️adds/🔺️diff/🔣️.json",
       "sha256": "aa596ba769520bfcd18d72cd0384da6aeb473af01ec86f5b2e45d234e1bcbe8e"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️adds-handle-kind-pair/🦠️mutation/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️adds/🦠️mutation/🔣️.json",
       "sha256": "5b1aeb83fb2d39cc761ac4e8660e9ec7094db2f66c91f41eed7978fbb97b64f7"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/🎯️outcome/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️admits/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/📸️snapshot/➡️after/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️admits/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d2a6cb2e280fd1e2bff24601cb49ae53ae51aa1c0cc7ca95ab5793c1477591a9"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️admits/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/🔺️diff/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️admits/🔺️diff/🔣️.json",
       "sha256": "61ce6f419d88a7197847f7e69218efeed39e6f298b65bee68758cafdfaa7745d"
     },
     {
-      "path": "🤝connect-kind-compatibility/🤝️admits-the-reverse-tambour-circular-pair/🦠️mutation/🔣️.json",
+      "path": "🤝connect-kind-compatibility/🤝️admits/🦠️mutation/🔣️.json",
       "sha256": "abcd1a789acafdd9795867b36135ba1ffe9d234d581d5e9c10400563227ad60b"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/🎯️outcome/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️circle/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/📸️snapshot/➡️after/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️circle/📸️snapshot/➡️after/🔣️.json",
       "sha256": "4038717b36d334ee3574b0f69db5e604ea57092b2def7c26af547e0b4925dc45"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️circle/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "e648204938ca6c7d7ef7670fb1fbfc644e46eb916252ff01f8a9038bcc068650"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/🔺️diff/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️circle/🔺️diff/🔣️.json",
       "sha256": "9ea4978e2bbcb51849846d6af0452983c8d43660c5ece9e7cd7f6a59e8d4073f"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️circle-to-rectangle/🦠️mutation/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️circle/🦠️mutation/🔣️.json",
       "sha256": "44ba2bc5d6eba703e119a34f759e8f1c91b6743da24a524bc319e2b953c88f16"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🎯️outcome/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️squares/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/📸️snapshot/➡️after/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️squares/📸️snapshot/➡️after/🔣️.json",
       "sha256": "25b78012e38b660656e607ca57e7b8ba69cd4943325f9e5fa7756b1c4811e28d"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️squares/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d41ebc60c45a4140ad996e901cbf03b7798ca6090b3a56bfbced932acea38b3c"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🔺️diff/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️squares/🔺️diff/🔣️.json",
       "sha256": "4eb8431c23ef818ebc4f3b54345f8ca8192990fb8ad45ebad217ee27feb34ea3"
     },
     {
-      "path": "🧊replace-node-geometry/🔳️squares-the-concrete-forest-seed/🦠️mutation/🔣️.json",
+      "path": "🧊replace-node-geometry/🔳️squares/🦠️mutation/🔣️.json",
       "sha256": "e2a98b666e8837ac9dba7ee0557bb071a270ceeaea45fdbc101b2284b85f7d99"
     },
     {
-      "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🧊replace-node-geometry/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "6c3b8e65cb1439fef0337f09bf75d325cbd82771a5646e3ac9298db0302526a8"
     },
     {
-      "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🧊replace-node-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🧊replace-node-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🧊replace-node-geometry/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🧊replace-node-geometry/🚫️rejects-reshaping-a-capsule-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🧊replace-node-geometry/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "acd48d78bfb3eedd7e0abfaf12782ccdccf811f5160779e6c157c2700d0bdfc5"
     },
     {
@@ -2162,63 +2162,63 @@
       "sha256": "56a21b3821582f6a53f2dd8df8553d22ebd8404b50bb88408a9e31fb07f492c1"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🧮replace-edge-geometry/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "1054143274146cddbaa20af91c822255c45179c1a25593a99eea4d3d0d24144a"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🧮replace-edge-geometry/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🧮replace-edge-geometry/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🧮replace-edge-geometry/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🧮replace-edge-geometry/🚫️rejects-reposing-an-edge-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🧮replace-edge-geometry/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "787b948960756968aceba4f2d9b2910d3167ddb5ce3e7abf66b274ee0c507138"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🎯️outcome/🔣️.json",
+      "path": "🧮replace-edge-geometry/🧮️reposes/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/📸️snapshot/➡️after/🔣️.json",
+      "path": "🧮replace-edge-geometry/🧮️reposes/📸️snapshot/➡️after/🔣️.json",
       "sha256": "09f0fa2c51d4b7bdc8505b00615545766cd4bed984bed170da010c3ae3248904"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🧮replace-edge-geometry/🧮️reposes/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🔺️diff/🔣️.json",
+      "path": "🧮replace-edge-geometry/🧮️reposes/🔺️diff/🔣️.json",
       "sha256": "fc451c8d58da3b078e64d600a441b3b4402b7505057a45021a16e26d266c247d"
     },
     {
-      "path": "🧮replace-edge-geometry/🧮️reposes-a-capsule-door-edge/🦠️mutation/🔣️.json",
+      "path": "🧮replace-edge-geometry/🧮️reposes/🦠️mutation/🔣️.json",
       "sha256": "5e3ebc4f0818b7a605d8f56a47a4dd1e266f7182920179f9c011bbacb2b7e2e1"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🎯️outcome/🔣️.json",
+      "path": "🪢️connect-handles/⏸️keeps/🎯️outcome/🔣️.json",
       "sha256": "7754ba960a0b0e987bb44d1361b65cb32a6ff6215d540b7bbe442d2f1d7782c0"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/📸️snapshot/➡️after/🔣️.json",
+      "path": "🪢️connect-handles/⏸️keeps/📸️snapshot/➡️after/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🪢️connect-handles/⏸️keeps/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🔺️diff/🔣️.json",
+      "path": "🪢️connect-handles/⏸️keeps/🔺️diff/🔣️.json",
       "sha256": "84d09e16fa3aed8fd217cb38958ec7f4d19893104ac96b1860a5bf112133690b"
     },
     {
-      "path": "🪢️connect-handles/⏸️keeps-an-edge-the-tower-already-holds/🦠️mutation/🔣️.json",
+      "path": "🪢️connect-handles/⏸️keeps/🦠️mutation/🔣️.json",
       "sha256": "a036bac19b62a793e6b33ee20a183c7fbf08295189b6dc0392d751c287d1de67"
     },
     {
@@ -2242,43 +2242,43 @@
       "sha256": "1c06fb31e1f687cd07e1c2e339b014ec1f3d15960584f5fbcea8c3ed7b31bdaa"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🎯️outcome/🔣️.json",
+      "path": "🪢️connect-handles/🪢️rewires/🎯️outcome/🔣️.json",
       "sha256": "ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/📸️snapshot/➡️after/🔣️.json",
+      "path": "🪢️connect-handles/🪢️rewires/📸️snapshot/➡️after/🔣️.json",
       "sha256": "eb03e81da96d3e6eb620953e0b4c10570adf506c7bf030c0644ee740123fd412"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🪢️connect-handles/🪢️rewires/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "2f49080455fc4e1cc9228f6b77455638361e7e389e53f8c377608d3b706b971b"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🔺️diff/🔣️.json",
+      "path": "🪢️connect-handles/🪢️rewires/🔺️diff/🔣️.json",
       "sha256": "5ffa4650feb6a983f15fa5fdc70e723d76a482dce7d51f353b20f1a897e7c55f"
     },
     {
-      "path": "🪢️connect-handles/🪢️rewires-the-capsule-the-subgraph-left-loose/🦠️mutation/🔣️.json",
+      "path": "🪢️connect-handles/🪢️rewires/🦠️mutation/🔣️.json",
       "sha256": "fb41cdb2018dca15b31a1055f055646f0360e5ba8581afc2783a4e59e36f85ad"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/🎯️outcome/🔣️.json",
+      "path": "🪦delete-target-region/🚫️rejects/🎯️outcome/🔣️.json",
       "sha256": "78cc555c53cacae38ce8d4f0d13ef0d918c1c9ec7162127442dee70b974035c9"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/📸️snapshot/➡️after/🔣️.json",
+      "path": "🪦delete-target-region/🚫️rejects/📸️snapshot/➡️after/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/📸️snapshot/⬅️before/🔣️.json",
+      "path": "🪦delete-target-region/🚫️rejects/📸️snapshot/⬅️before/🔣️.json",
       "sha256": "d47571607f58ba4a69dd555318ba9c9c3cb2fc99add42fe877e9e1025828f184"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/🔺️diff/🚫️.absent",
+      "path": "🪦delete-target-region/🚫️rejects/🔺️diff/🚫️.absent",
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "path": "🪦delete-target-region/🚫️rejects-deleting-a-region-the-board-never-held/🦠️mutation/🔣️.json",
+      "path": "🪦delete-target-region/🚫️rejects/🦠️mutation/🔣️.json",
       "sha256": "e973ade03ff628c26fb678b9986be196c5a0c539028e65294a5ca6ff09e44e2a"
     },
     {

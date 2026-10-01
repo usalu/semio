@@ -43,7 +43,7 @@
           "scenarios": [
             {
               "id": "renames-the-alpha-row-and-switches-to-crlf",
-              "directoryName": "✏️renames-the-alpha-row-and-switches-to-crlf"
+              "directoryName": "✏️renames"
             }
           ]
         }

@@ -58,11 +58,11 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id              | vector                                                                |
-      | rename-writer   | 🏷️rename-writer/🏷️renames-the-document-to-mission-brief          |
-      | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
-      | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
-      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
-      | splice-text     | ✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged |
+      | rename-writer   | 🏷️rename-writer/🏷️renames          |
+      | change-uri      | 🔗change-uri/🔗️republishes            |
+      | change-language | 🌐change-language/🔤️switches |
+      | edit-text       | ✏️edit-text/⚠️warns             |
+      | splice-text     | ✂️splice-text/⚠️warns |
 
   @id-inverse
   @level-exhaustive
@@ -77,11 +77,11 @@ Feature: Apply every typed writer document mutation twice — once in Rust, once
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id              | vector                                                                |
-      | rename-writer   | 🏷️rename-writer/🏷️renames-the-document-to-mission-brief          |
-      | change-uri      | 🔗change-uri/🔗️republishes-the-brief-under-a-new-uri            |
-      | change-language | 🌐change-language/🔤️switches-the-brief-from-plaintext-to-markdown |
-      | edit-text       | ✏️edit-text/⚠️warns-that-the-brief-body-is-unchanged             |
-      | splice-text     | ✂️splice-text/⚠️warns-already-removed-run-leaves-brief-unchanged |
+      | rename-writer   | 🏷️rename-writer/🏷️renames          |
+      | change-uri      | 🔗change-uri/🔗️republishes            |
+      | change-language | 🌐change-language/🔤️switches |
+      | edit-text       | ✏️edit-text/⚠️warns             |
+      | splice-text     | ✂️splice-text/⚠️warns |
 
   @id-identity-round-trip
   @level-long

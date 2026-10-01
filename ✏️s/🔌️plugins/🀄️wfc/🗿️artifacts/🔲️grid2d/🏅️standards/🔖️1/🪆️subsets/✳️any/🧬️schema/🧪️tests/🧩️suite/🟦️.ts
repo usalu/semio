@@ -11,7 +11,9 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
+import { binary64Value } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import { fixtureSnapshot, fixtureDiff } from "./🧫️fixtures/🟦️.ts";
 import { applyGrid2dDiff, cellId, type Grid2dDiff } from "../../🔺️diff/🟦️.ts";
 import { GRID2D_MUTATION_KINDS, type Grid2dMutation } from "../../🧬️mutations/🟦️.ts";
 import { WFC_GRID2D_DOCUMENT_SCHEMA, directionOffset, oppositeDirection, type Grid2dSnapshot, type WfcDirection2d } from "../../📸️snapshot/🟦️.ts";
@@ -47,10 +49,10 @@ function discoverVectors(): Vector[] {
       vectors.push({
         slug,
         caseName,
-        before: readJson<Grid2dSnapshot>(join(root, "📸️snapshot/⬅️before/🔣️.json")),
-        after: readJson<Grid2dSnapshot>(join(root, "📸️snapshot/➡️after/🔣️.json")),
+        before: fixtureSnapshot(readJson<unknown>(join(root, "📸️snapshot/⬅️before/🔣️.json"))),
+        after: fixtureSnapshot(readJson<unknown>(join(root, "📸️snapshot/➡️after/🔣️.json"))),
         mutation: readJson<Grid2dMutation>(join(root, "🦠️mutation/🔣️.json")),
-        diff: readJson<Grid2dDiff>(join(root, "🔺️diff/🔣️.json")),
+        diff: fixtureDiff(readJson<unknown>(join(root, "🔺️diff/🔣️.json"))),
         outcome: readJson<Outcome>(join(root, "🎯️outcome/🔣️.json")),
       });
     }
@@ -64,6 +66,14 @@ const tagOf = (kind: string): string => kind.split("-").map((word) => word[0]!.t
 const vectors = discoverVectors();
 
 describe("s.wfc.grid2d cross-language fixture oracle", () => {
+  it("native fixture boundaries construct the owned unsigned64 seed and binary64 words", () => {
+    for (const vector of vectors) {
+      expect(typeof vector.before.seed).toBe("bigint");
+      expect(typeof vector.before.cellWidth.bits).toBe("bigint");
+      for (const tile of vector.before.tiles) expect(typeof tile.weight.bits).toBe("bigint");
+    }
+  });
+
   it("discovers one committed vector per declared mutation kind", () => {
     expect(vectors.length).toBeGreaterThanOrEqual(GRID2D_MUTATION_KINDS.length);
     const slugs = new Set(vectors.map((vector) => vector.slug));
@@ -139,7 +149,7 @@ describe("s.wfc.grid2d cross-language fixture oracle", () => {
     for (const vector of vectors) {
       for (const tile of vector.after.tiles) {
         const label = `${vector.slug}/${vector.caseName}: ${tile.id}`;
-        expect(tile.weight, label).toBeGreaterThan(0);
+        expect(binary64Value(tile.weight), label).toBeGreaterThan(0);
         if (tile.media.kind === "bitmap") {
           expect(tile.media.palette.length, label).toBeGreaterThan(0);
           expect(typeof tile.media.pixels, label).toBe("string");

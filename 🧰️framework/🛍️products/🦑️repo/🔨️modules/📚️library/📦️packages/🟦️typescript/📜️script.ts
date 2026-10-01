@@ -7,7 +7,10 @@ import { dependencyDirectionEdges, dependencyDirectionSourceInventory, dependenc
 import { verifyRustSourceDirection } from "../../🕸️dependencies/🧭️direction/🦀️source/🏃️execution/🟦️.ts";
 import { verifyCargoDependencyDirection } from "../../🕸️dependencies/🧭️direction/🦀️cargo/🏃️execution/🟦️.ts";
 import { runOwnedCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
-import { BundleScript, ScriptRouter, TEST_LEVEL_BUDGET_MS, runBundleScriptMain, runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
+import { TEST_LEVEL_BUDGET_MS } from "../../../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { runBunx, resolveTestLevel, runTestBudgeted } from "./🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { runTransactionV2 } from "../../🔄️transactions/🧪️verification/📋️orchestration/🟦️.ts";
 import { GoTestScript } from "../../🧪️execution/🐹️go/🟦️.ts";
@@ -28,9 +31,9 @@ class TypecheckScript extends BundleScript {
 
 
 /** 🧱️ Enforces the complete current framework graph without baselines or source-form exemptions. */
-async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv): Promise<void> {
+async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEnv, sourceRole?: "framework-modules"): Promise<void> {
   const policy = createRequire(import.meta.url)(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧹️lint/🕸️dependency-boundaries/🟨️.cjs")) as { forbidden: DependencyDirectionRule[]; options: { exclude: { path: string[] }; doNotFollow: { path: string } } };
-  const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { areaLayers: Record<string, string>; dependencyDirections: { rules: Record<string, unknown> } };
+  const taxonomy = JSON.parse(readFileSync(join(repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")) as { areaLayers: Record<string, string>; dependencyDirections: { rules: Record<string, unknown>; roles: Record<string, { ownerPaths: readonly string[] }> } };
   const names = ["framework-no-implementation", "repo-no-implementation", "s-modules-no-plugins", ...Object.keys(taxonomy.dependencyDirections.rules)];
   const patterns = (value: string | readonly string[]): readonly string[] => typeof value === "string" ? [value] : value;
   const rules = policy.forbidden.filter((rule) => names.includes(rule.name) || rule.name.startsWith("plugin-no-extension-or-artifact-")).map((rule) => ({ ...rule, from: { path: patterns(rule.from.path), ...(rule.from.pathNot ? { pathNot: patterns(rule.from.pathNot) } : {}) }, to: { path: patterns(rule.to.path), ...(rule.to.pathNot ? { pathNot: patterns(rule.to.pathNot) } : {}) } }));
@@ -41,18 +44,19 @@ async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEn
   try {
     const configPath = join(output, "🔣️config.json"), reportPath = join(output, "🔣️graph.json");
     writeFileSync(configPath, JSON.stringify({ forbidden: rules, options: policy.options }));
-    const areas = Object.keys(taxonomy.areaLayers).filter((area) => existsSync(join(repoRoot, area)));
-    const rootSources = readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => (entry.isFile() || entry.isSymbolicLink()) && /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(entry.name)).map((entry) => entry.name);
-    if (!areas.some((area) => taxonomy.areaLayers[area] === "framework")) throw new Error("Canonical architecture requires a taxonomy framework area");
+    const areas = (sourceRole ? taxonomy.dependencyDirections.roles[sourceRole]!.ownerPaths : Object.keys(taxonomy.areaLayers)).filter((area) => existsSync(join(repoRoot, area)));
+    const rootSources = sourceRole ? [] : readdirSync(repoRoot, { withFileTypes: true }).filter((entry) => (entry.isFile() || entry.isSymbolicLink()) && /\.(?:[cm]?[jt]s|[jt]sx)$/u.test(entry.name)).map((entry) => entry.name);
+    if (!areas.some((area) => Object.entries(taxonomy.areaLayers).some(([root, layer]) => layer === "framework" && (area === root || area.startsWith(`${root}/`))))) throw new Error("Canonical architecture requires a taxonomy framework area");
     const workspacePackages = dependencyDirectionWorkspacePackages(repoRoot, policy.options.exclude.path);
     const scope: DependencyDirectionGraphScope = { workspaceRoots: Object.keys(taxonomy.areaLayers), workspacePackages, excludedPaths: policy.options.exclude.path, nonFollowedPaths: [policy.options.doNotFollow.path], expectedSources: [] };
     const expectedSources = dependencyDirectionSourceInventory(repoRoot, [...areas, ...rootSources], scope);
     if (!expectedSources.length) throw new Error("Canonical architecture has no followed TypeScript/JavaScript source inventory");
-    console.log(`[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; inventoriedSources=${expectedSources.length}`);
-    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 240_000, { env });
+    const patternCount = rules.reduce((count, rule) => count + rule.from.path.length + (rule.from.pathNot?.length ?? 0) + rule.to.path.length + (rule.to.pathNot?.length ?? 0), 0);
+    console.log(`[canonical-architecture] resolving present-owner TypeScript/JavaScript dependencies; scope=${sourceRole ?? "all"}; inventoriedSources=${expectedSources.length}; strictRules=${rules.length}; ownershipPatterns=${patternCount}`);
+    await runOwnedCommand(process.execPath, [join(repoRoot, "node_modules/dependency-cruiser/bin/dependency-cruise.mjs"), ...areas, ...rootSources, "--config", configPath, "--progress", "performance-log", "--output-type", "json", "--output-to", reportPath], repoRoot, "canonical-architecture", 240_000, { env });
     const edges = dependencyDirectionEdges(JSON.parse(readFileSync(reportPath, "utf8")), rules, { ...scope, expectedSources });
-    if (edges.length) throw new Error(`Canonical TypeScript/JavaScript architecture found ${edges.length} forbidden semantic dependencies:\n${edges.map((edge) => `${edge.rule}: ${edge.from} → ${edge.to}`).join("\n")}`);
-    console.log("[canonical-architecture] present-owner TypeScript/JavaScript dependency direction passed");
+    if (edges.length) throw new Error(`Canonical ${sourceRole ?? "all"} TypeScript/JavaScript architecture found ${edges.length} forbidden semantic dependencies:\n${edges.map((edge) => `${edge.rule}: ${edge.from} → ${edge.to}`).join("\n")}`);
+    console.log(`[canonical-architecture] scope=${sourceRole ?? "all"} present-owner TypeScript/JavaScript dependency direction passed`);
   } catch (error) {
     const reportPath = join(output, "🔣️graph.json");
     if (existsSync(reportPath)) writeFileSync(join(artifactRoot, "canonical-direction-failure.json"), readFileSync(reportPath));
@@ -62,6 +66,7 @@ async function verifyDependencyDirection(repoRoot: string, env: NodeJS.ProcessEn
 
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "framework-module-product-direction") { await verifyDependencyDirection(this.repoRoot, repoTestArtifactEnvironment(this.repoRoot, "framework-module-product-direction"), "framework-modules"); return; }
     if (segments.length === 1 && segments[0] === "rust-source-direction") { await verifyRustSourceDirection(this.repoRoot); return; }
     if (segments.length === 1 && segments[0] === "cargo-dependency-direction") { await verifyCargoDependencyDirection(this.repoRoot); return; }
     if (segments.length !== 1 || segments[0] !== "dependency-direction") throw new Error("Expected lint dependency-direction");
@@ -641,4 +646,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("go-test", GoTestScript)
   .register("workspaces", WorkspacePublicationScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

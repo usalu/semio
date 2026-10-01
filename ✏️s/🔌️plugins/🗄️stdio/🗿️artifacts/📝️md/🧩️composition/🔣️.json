@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_md::editor::md::MdEditor",
       "factory": "semio_s_artifact_stdio_md::editor::md::create_md_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "md_editor",
+        "sqliteSnapshot": "sqlite_snapshot_md_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_md::viewer::md::MdViewer",
       "factory": "semio_s_artifact_stdio_md::viewer::md::create_md_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "md",
-      "factory_id": "stdio.native.md.v1",
-      "descriptor_codec_id": "s.stdio.md.standard.commonmark.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.md.standard.commonmark.codec.codec-stdio-md-extension-md.v1",
-      "artifact_kind": "s.stdio.md",
-      "artifact_schema": "stdio.md",
-      "extension": "md",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
-      "protocol_source_sha256": "c6a6e37e788b111c9ac17746093db293d9d9d5372a628a17821bc698ae8afbfa",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6110,
         "wgpu": 6210
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "MdMutation",
+      "snapshot": "semio_s_artifact_stdio_md::standards::v_commonmark::subsets::any::schema::snapshot::MdSnapshot",
+      "mutation": "semio_s_artifact_stdio_md::standards::v_commonmark::subsets::any::schema::mutations::MdMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.md",
+      "standard": "commonmark",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.md.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🏅️standards/🔖️commonmark/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

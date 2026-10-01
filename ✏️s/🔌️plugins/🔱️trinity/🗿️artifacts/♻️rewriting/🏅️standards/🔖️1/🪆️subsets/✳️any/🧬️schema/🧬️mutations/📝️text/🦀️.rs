@@ -4,7 +4,7 @@ use crate::RewritingSnapshot;
 
 pub use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 pub use crate::standards::v1::subsets::any::schema::operations::{
-    apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, rewriting_snapshot_mutations, RewriteRuleEnvelope, RewriteRuleStore,
+    apply_rewrite_rule_mutation, create_rewrite_rule_envelope, dispatch_rewrite_rule_mutations, inverse_rewrite_rule_mutation, RewriteRuleEnvelope, RewriteRuleStore,
 };
 
 //#region 🧾️DerivedRegistry
@@ -17,6 +17,10 @@ pub const TEXT_OPCODE_REGISTRY: &[(&str, &str)] = &[
     ("RemoveParameterBinding", super::remove_parameter_binding::text::TEXT_OPCODE),
     ("ChangeRuleLayoutPoint", super::change_rule_layout_point::text::TEXT_OPCODE),
     ("RemoveRuleLayoutPoint", super::remove_rule_layout_point::text::TEXT_OPCODE),
+    ("DragWorkingNodes", super::drag_working_nodes::text::TEXT_OPCODE),
+    ("PatchWorkingNodes", super::patch_working_nodes::text::TEXT_OPCODE),
+    ("DragRuleNodes", super::drag_rule_nodes::text::TEXT_OPCODE),
+    ("SetRuleLayoutPoints", super::set_rule_layout_points::text::TEXT_OPCODE),
 ];
 //#endregion 🧾️DerivedRegistry
 

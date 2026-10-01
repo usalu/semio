@@ -99,7 +99,7 @@ export function testGeneration3dGenerateModeInteractionContract(): void {
   }
   assert.deepEqual([...operations.get("connect")!.required].sort(), ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"], "a connect names both endpoints by node AND port");
   assert.deepEqual([...operations.get("disconnect")!.required], ["synapseId"], "a disconnect names the wire it cuts");
-  assert.deepEqual([...operations.get("move")!.required].sort(), ["nodeId", "x", "y"], "a move names the node and where it landed");
+  assert.deepEqual([...operations.get("move")!.required].sort(), ["dx", "dy", "gestureId", "nodeIds"], "a move is the node-graph gesture record: the press, the moved nodes and their ONE relative offset");
   assert.equal(operations.get("move")!.dispatchedBy, "nodeDrag");
 
   // 🚫️ No dead commands: every listed command has at least one trigger, and a removed one has none.

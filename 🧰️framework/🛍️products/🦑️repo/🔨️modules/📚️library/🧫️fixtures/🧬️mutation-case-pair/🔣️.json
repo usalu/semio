@@ -19,8 +19,8 @@
     {
       "id": "domain-owner-under-subset-directory-override",
       "subset": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any",
-      "implementationRoot": "🧬️schema/🧬️mutations/📣️used-extension/➕️add/🧪️tests/🔬️t056",
-      "fixtureRoot": "🧫️fixtures/🧬️mutations/📣️used-extension/➕️add/🔬️t056",
+      "implementationRoot": "🧬️schema/🧬️mutations/📣️used/➕️add/🧪️tests/🔬️t056",
+      "fixtureRoot": "🧫️fixtures/🧬️mutations/📣️used/➕️add/🔬️t056",
       "implementationNodes": 2,
       "fixtureNodes": 12,
       "fixtureLeaves": [

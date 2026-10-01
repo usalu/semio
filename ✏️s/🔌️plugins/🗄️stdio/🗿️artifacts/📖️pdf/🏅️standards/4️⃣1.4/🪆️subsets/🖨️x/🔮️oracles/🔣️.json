@@ -79,7 +79,7 @@
           "scenarios": [
             {
               "id": "round-trips-the-concrete-inverse",
-              "directoryName": "🔄️round-trips-the-concrete-inverse"
+              "directoryName": "🔄️round"
             }
           ]
         },
@@ -90,7 +90,7 @@
           "scenarios": [
             {
               "id": "round-trips-the-concrete-inverse",
-              "directoryName": "🔄️round-trips-the-concrete-inverse"
+              "directoryName": "🔄️round"
             }
           ]
         }

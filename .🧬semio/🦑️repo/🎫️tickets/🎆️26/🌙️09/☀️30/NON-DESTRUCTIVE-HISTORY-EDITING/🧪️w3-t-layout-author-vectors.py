@@ -96,7 +96,7 @@ def outcome(kind, payload, before):
     movable = [frame for frame in page["frames"] if frame["id"] in targets and not locked(frame)]
     if not movable:
         return before, None, {"code": "mutation.target-missing", "path": targets, "status": "rejected"}
-    messages = [{"code": "mutation.partial", "level": "warn", "target": ids} for ids in (missing, held) if ids]
+    messages = [{"code": "mutation.partial", "level": "warning", "target": ids} for ids in (missing, held) if ids]
     after = copy.deepcopy(before)
     after_page = next(page for page in after["pages"] if page["id"] == payload["pageId"])
     patched = []
@@ -112,7 +112,7 @@ def outcome(kind, payload, before):
             patch[field] = bounds[{"width": "w", "height": "h"}.get(field, field)]
         patched.append({"frame_id": frame["id"], "patch": patch})
     if not patched:
-        return before, {key: None for key in DIFF_KEYS}, {"messages": messages + [{"code": "mutation.no-op", "level": "warn", "target": targets}], "status": "no-op"}
+        return before, {key: None for key in DIFF_KEYS}, {"messages": messages + [{"code": "mutation.no-op", "level": "warning", "target": targets}], "status": "no-op"}
     page_patch = {key: None for key in PAGE_PATCH_KEYS}
     page_patch["frames_patched"] = patched
     diff = {key: None for key in DIFF_KEYS}
@@ -233,7 +233,7 @@ fn produced_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
 fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
     let level = |text: &str| match text {{
         "info" => protocol::Severity::Info,
-        "warn" => protocol::Severity::Warning,
+        "warning" => protocol::Severity::Warning,
         "error" => protocol::Severity::Error,
         "fatal" => protocol::Severity::Fatal,
         other => panic!("{kind}/{slug}: unknown message level {{other:?}}"),
@@ -241,8 +241,8 @@ fn declared_messages() -> Vec<(protocol::Severity, String, Vec<String>)> {{
     let strings = |value: &serde_json::Value| value.as_array().expect("an array of strings").iter().map(|entry| entry.as_str().expect("a string").to_string()).collect::<Vec<_>>();
     let outcome = outcome();
     if outcome["status"].as_str() == Some("rejected") {{
-        let fatal = outcome["code"].as_str() == Some("mutation.invariant");
-        return vec![(if fatal {{ protocol::Severity::Fatal }} else {{ protocol::Severity::Error }}, outcome["code"].as_str().expect("a code").to_string(), strings(&outcome["path"]))];
+        let code = outcome["code"].as_str().expect("a code");
+        return vec![(protocol::outcome_code_level(code).expect("a vocabulary code"), code.to_string(), strings(&outcome["path"]))];
     }}
     outcome.get("messages").and_then(serde_json::Value::as_array).map_or_else(Vec::new, |messages| {{
         messages.iter().map(|message| (level(message["level"].as_str().expect("a level")), message["code"].as_str().expect("a code").to_string(), strings(&message["target"]))).collect()

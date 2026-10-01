@@ -172,7 +172,7 @@
           "scenarios": [
             {
               "id": "adds-a-diagonal-edge-across-the-square",
-              "directoryName": "📐️adds-a-diagonal-edge-across-the-square"
+              "directoryName": "📐️adds"
             }
           ]
         },
@@ -183,7 +183,7 @@
           "scenarios": [
             {
               "id": "adds-an-opposing-face-over-the-same-loop",
-              "directoryName": "🔷️adds-an-opposing-face-over-the-same-loop"
+              "directoryName": "🔷️adds"
             }
           ]
         },
@@ -194,7 +194,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-shell-that-reuses-the-face-with-flipped-sense",
-              "directoryName": "🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense"
+              "directoryName": "🐚️adds"
             }
           ]
         },
@@ -205,7 +205,7 @@
           "scenarios": [
             {
               "id": "adds-a-second-solid-that-treats-the-shell-as-a-void",
-              "directoryName": "🧊️adds-a-second-solid-that-treats-the-shell-as-a-void"
+              "directoryName": "🧊️adds"
             }
           ]
         },
@@ -216,7 +216,7 @@
           "scenarios": [
             {
               "id": "adds-an-apex-vertex-above-the-square",
-              "directoryName": "🏔️adds-an-apex-vertex-above-the-square"
+              "directoryName": "🏔️adds"
             }
           ]
         },
@@ -227,7 +227,7 @@
           "scenarios": [
             {
               "id": "removes-the-closing-edge-and-keeps-its-two-vertices",
-              "directoryName": "🚫️removes-the-closing-edge-and-keeps-its-two-vertices"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -238,7 +238,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-face-and-leaves-its-loop-behind",
-              "directoryName": "🚫️removes-the-only-face-and-leaves-its-loop-behind"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -249,7 +249,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-shell-and-leaves-its-faces-behind",
-              "directoryName": "🚫️removes-the-only-shell-and-leaves-its-faces-behind"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -260,7 +260,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-solid-and-leaves-its-shell-behind",
-              "directoryName": "🚫️removes-the-only-solid-and-leaves-its-shell-behind"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -271,7 +271,7 @@
           "scenarios": [
             {
               "id": "removes-a-corner-vertex-and-cascades-into-its-two-incident-edges",
-              "directoryName": "🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -282,7 +282,7 @@
           "scenarios": [
             {
               "id": "lifts-the-third-corner-off-the-base-plane",
-              "directoryName": "📍️lifts-the-third-corner-off-the-base-plane"
+              "directoryName": "📍️lifts"
             }
           ]
         },
@@ -293,7 +293,7 @@
           "scenarios": [
             {
               "id": "swaps-the-first-edges-line-for-a-circular-arc",
-              "directoryName": "➰️swaps-the-first-edges-line-for-a-circular-arc"
+              "directoryName": "➰️swaps"
             }
           ]
         },
@@ -304,7 +304,7 @@
           "scenarios": [
             {
               "id": "swaps-the-faces-plane-for-a-cylinder",
-              "directoryName": "🛢️swaps-the-faces-plane-for-a-cylinder"
+              "directoryName": "🛢️swaps"
             }
           ]
         }

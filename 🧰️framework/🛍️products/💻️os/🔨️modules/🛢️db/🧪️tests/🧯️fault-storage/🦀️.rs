@@ -146,7 +146,7 @@ impl WorkloadGen {
                 diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
                 inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
                 timestamp: protocol::HybridLogicalTimestamp::new(0, index as u64),
-                transaction: None, verb: None,
+                transaction: None, verb: None, line: None,
             });
         }
         out
@@ -868,7 +868,7 @@ async fn schema_erased_envelope(document: &protocol::ArtifactId, mutation_id: &s
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(payload)).await.unwrap_or_default() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId(db_artifact::DB_PATHMAP_SCHEMA.to_string()), payload: db_artifact::encode_pathmap_json(&serde_json::Value::Object(inverse_payload)).await.unwrap_or_default() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

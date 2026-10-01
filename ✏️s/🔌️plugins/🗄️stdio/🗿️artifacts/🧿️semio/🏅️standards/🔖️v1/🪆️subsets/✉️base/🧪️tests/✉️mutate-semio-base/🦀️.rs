@@ -54,19 +54,19 @@ fn catalog_vector(leaf: &str, scenario: &str) -> Vector {
 }
 
 fn replaces() -> Vector {
-    catalog_vector("📸️set-snapshot", "✉️replaces-the-envelope-wrapping-a-value-subset")
+    catalog_vector("📸️set-snapshot", "✉️replaces")
 }
 
 fn reasserts() -> Vector {
-    catalog_vector("📸️set-snapshot", "🪞️reasserts-the-value-envelope-unchanged")
+    catalog_vector("📸️set-snapshot", "🪞️reasserts")
 }
 
 fn retypes() -> Vector {
-    catalog_vector("📸️set-snapshot", "🔁️retypes-a-value-envelope-to-an-empty-image")
+    catalog_vector("📸️set-snapshot", "🔁️retypes")
 }
 
 fn refuses() -> Vector {
-    catalog_vector("🖼️apply-image", "🚫️refuses-a-value-envelope")
+    catalog_vector("🖼️apply-image", "🚫️refuses")
 }
 
 /// 🧫️ The vector a `mutate-<kind>`/`inverse-<kind>` scenario is measured on: the committed

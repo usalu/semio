@@ -1,6 +1,141 @@
 {
   "version": "0.2.0",
   "configurations": [
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🧪️all","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.387}},
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🦀️native","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-native","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.388}},
+    {"name":"⚖️gate📕️norm🏋️en1991🪶️sqlite🟦️source","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/norm-en1991-rs:test-snapshot-sqlite-source","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":408.389}},
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🧪️all",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.381
+      }
+    },
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🦀️native",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.382
+      }
+    },
+    {
+      "name": "⚖️gate📕️norm⚖️en1990🪶️sqlite🟦️source",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.383
+      }
+    },
+    {
+      "name": "⚖️build📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.384
+      }
+    },
+    {
+      "name": "⚖️check📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.385
+      }
+    },
+    {
+      "name": "⚖️test📕️norm⚖️en1990🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/norm-en1990:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.386
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite✒️writer🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.06
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native✒️writer🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0600099999999
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source✒️writer🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0600199999999
+      }
+    },
+    {
+      "name": "🏗️build✒️writer🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer:build",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.06003
+      }
+    },
+    {
+      "name": "✅️check✒️writer🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.06004
+      }
+    },
+    {
+      "name": "⚖️test✒️writer🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/writer-writer:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0600499999999
+      }
+    },
     {
       "name": "⚖️test-snapshot-sqlite💾️binary🦀️",
       "type": "node-terminal",
@@ -164,6 +299,39 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.0554199999999
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite🧊️gltf🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-gltf-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05544
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🧊️gltf🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-gltf-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05545
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🧊️gltf🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-gltf-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05546
       }
     },
     {
@@ -2067,6 +2235,17 @@
       "presentation": {
         "group": "4_gate",
         "order": -11.4
+      }
+    },
+    {
+      "name": "⚖️gate🦀️cargo🕰️queued-preparation",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/cargo-workspaces:queued-contract-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": -11.39
       }
     },
     {
@@ -7328,6 +7507,28 @@
       "presentation": {
         "group": "4_gate",
         "order": 407.98
+      }
+    },
+    {
+      "name": "⚖️gate🌱️value🧬️bytes",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/value-bytes:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.31
+      }
+    },
+    {
+      "name": "⚖️gate🏪️store🪶️native-admission",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-snapshot-native-admission",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 408.315
       }
     },
     {
@@ -19922,7 +20123,7 @@
       "name": "⚖️test-document-contract🔌️plugins🗒️note🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/note-js:test-document-contract",
+      "command": "bun nx run @semio-tech/note-note-js:test-document-contract",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -19933,7 +20134,7 @@
       "name": "⚖️test-snapshot-sqlite🔌️plugins🗒️note🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/note-js:test-snapshot-sqlite",
+      "command": "bun nx run @semio-tech/note-note-js:test-snapshot-sqlite",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -19944,7 +20145,7 @@
       "name": "⚖️check🔌️plugins🗒️note🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/note-js:check",
+      "command": "bun nx run @semio-tech/note-note-js:check",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -21635,6 +21836,61 @@
       }
     },
     {
+      "name": "⚖️test-schema-mutation-labels🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-labels",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05591
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-labels-census🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-labels-census",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05592
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-editability🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-editability",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05593
+      }
+    },
+    {
+      "name": "⚖️test-schema-mutation-editability-census🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-schema-mutation-editability-census",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05594
+      }
+    },
+    {
+      "name": "⚖️test-mutation-history-gates🧪️test",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/repo-test-domain:test-mutation-history-gates",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05595
+      }
+    },
+    {
       "name": "⚖️test-subject🧪️test",
       "type": "node-terminal",
       "request": "launch",
@@ -21866,6 +22122,296 @@
       }
     },
     {
+      "name": "⚖️test-snapshot-sqlite🌀️procedural-generation2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🌀️procedural-generation2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🌀️procedural-generation2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite🧊️procedural-generation3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🧊️procedural-generation3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🧊️procedural-generation3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "🏗️build🌀️procedural-generation2d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d:build",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "✅️check🌀️procedural-generation2d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d:check",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🏗️build🧊️procedural-generation3d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d:build",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "✅️check🧊️procedural-generation3d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d:check",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "🏗️build🌊️flow-flow🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow:build",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "✅️check🌊️flow-flow🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow:check",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite🌊️flow-flow🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🌊️flow-flow🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🌊️flow-flow🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚖️test🌊️flow-flow🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/flow-flow:test",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "⚖️test🌀️procedural-generation2d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation2d:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test🧊️procedural-generation3d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/procedural-generation3d:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite🧊️wfc3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-3d-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🧊️wfc3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-3d-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🧊️wfc3d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-3d-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test🧊️wfc3d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-3d:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite🔲️wfc-grid2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-grid2d-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native🔲️wfc-grid2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source🔲️wfc-grid2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-grid2d-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test🔲️wfc-grid2d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-grid2d:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite◻️wfc2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-2d-rs:test-snapshot-sqlite",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-native◻️wfc2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-2d-rs:test-snapshot-sqlite-native",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test-snapshot-sqlite-source◻️wfc2d🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-2d-rs:test-snapshot-sqlite-source",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
+      "name": "⚖️test◻️wfc2d🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/wfc-2d:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "🪶️sqlite",
+        "order": 1
+      }
+    },
+    {
       "name": "⚖️test🧱️wfc-grid3d🟦️",
       "type": "node-terminal",
       "request": "launch",
@@ -21907,6 +22453,17 @@
       "presentation": {
         "group": "4_gate",
         "order": 900.05863
+      }
+    },
+    {
+      "name": "⚖️test-full🧿️semio🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/stdio-semio-rs:test-full",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.05869
       }
     },
     {

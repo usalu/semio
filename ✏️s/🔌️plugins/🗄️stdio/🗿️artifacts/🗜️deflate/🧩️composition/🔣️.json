@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_deflate::editor::deflate::DeflateEditor",
       "factory": "semio_s_artifact_stdio_deflate::editor::deflate::create_deflate_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "deflate_editor",
+        "sqliteSnapshot": "sqlite_snapshot_deflate_editor"
+      }
     },
     {
       "owner": "stdio-binary",
@@ -24,22 +28,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_deflate::viewer::deflate::DeflateViewer",
       "factory": "semio_s_artifact_stdio_deflate::viewer::deflate::create_deflate_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "deflate",
-      "factory_id": "stdio.native.deflate.v1",
-      "descriptor_codec_id": "s.stdio.deflate.standard.rfc1950.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.deflate.standard.rfc1950.codec.codec-stdio-deflate-extension-zz.v1",
-      "artifact_kind": "s.stdio.deflate",
-      "artifact_schema": "stdio.deflate",
-      "extension": "zz",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
-      "protocol_source_sha256": "09606efdb4dcf74613fd853e260c354fd04eddabb956079c6aabecc3c01559ea",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -56,6 +46,30 @@
         "react": 6297,
         "wgpu": 6397
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "DeflateMutation",
+      "snapshot": "semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::snapshot::DeflateSnapshot",
+      "mutation": "semio_s_artifact_stdio_deflate::standards::v_rfc1950::subsets::any::schema::mutations::DeflateMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.deflate",
+      "standard": "rfc1950",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.deflate.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

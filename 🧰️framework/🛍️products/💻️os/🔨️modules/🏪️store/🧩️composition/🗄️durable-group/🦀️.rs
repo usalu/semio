@@ -446,8 +446,8 @@ pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
     pub(super) current: Option<Arc<P>>,
     pub(super) generation: u64,
     pub(super) content_revision: [u8; 32],
-    pub(super) applied_edit_ids: Vec<String>,
-    pub(super) redo_edit_ids: Vec<String>,
+    pub(super) applied_edit_ids: crate::os_vcs::HistoryPageStack<String>,
+    pub(super) redo_edit_ids: crate::os_vcs::HistoryPageStack<String>,
     pub(super) last_projection_cause: Option<super::ArtifactProjectionCause>,
     edit_sequence: i32,
     clock: HybridLogicalTimestamp,
@@ -459,20 +459,22 @@ pub(super) struct ArtifactStoreDurableGroupRootV1<P> {
     pub(super) adopted: bool,
 }
 
-fn retained_string_stack(source: &[String], appended: Option<&str>) -> Result<Vec<String>, DurableOwnedGroupDecisionError> {
-    let mut values = Vec::new();
-    values.try_reserve_exact(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    values.extend(source.iter().cloned());
+fn retained_string_stack(source: impl IntoIterator<Item = String>, appended: Option<&str>) -> Result<crate::os_vcs::HistoryPageStack<String>, DurableOwnedGroupDecisionError> {
+    let mut values = crate::os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
+    for value in source {
+        values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
+    }
     if let Some(value) = appended {
-        values.push(value.into());
+        values.try_push(value.to_string()).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
     }
     Ok(values)
 }
 
-fn retained_revision_stack(source: &[super::CursorRevisionRecord]) -> Result<Vec<super::CursorRevisionRecord>, DurableOwnedGroupDecisionError> {
-    let mut values = Vec::new();
-    values.try_reserve_exact(crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
-    values.extend(source.iter().cloned());
+fn retained_revision_stack(source: impl IntoIterator<Item = super::CursorRevisionRecord>) -> Result<crate::os_vcs::HistoryPageStack<super::CursorRevisionRecord>, DurableOwnedGroupDecisionError> {
+    let mut values = crate::os_vcs::HistoryPageStack::try_new().map_err(|error| DurableOwnedGroupDecisionError::Codec(error.into()))?;
+    for value in source {
+        values.try_push(value).map_err(|_| DurableOwnedGroupDecisionError::Codec("history catalog address space exhausted".into()))?;
+    }
     Ok(values)
 }
 
@@ -507,7 +509,7 @@ where
         || outcome.prepared.edit.id != outcome.prepared.tail_edit_id
         || outcome.prepared.edit.sequence_number != outcome.prepared.seal.authority.next_sequence_number
         || outcome.prepared.next_clock != outcome.prepared.seal.authority.next_clock
-        || store.applied_edit_ids.len() >= crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY
+        || !store.applied_edit_ids.admits_one()
     {
         return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome);
     }
@@ -515,20 +517,20 @@ where
     if !valid_hash(group_id) || outcome.prepared.edit.mutation_meta.first().and_then(|meta| meta.group_id.as_deref()) != Some(group_id) {
         return reject(DurableOwnedGroupDecisionError::InvalidHash, outcome);
     }
-    let applied_edit_ids = match retained_string_stack(&store.applied_edit_ids, Some(&outcome.prepared.edit.id)) {
+    let applied_edit_ids = match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit.id)) {
         Ok(values) => values,
         Err(error) => return reject(error, outcome),
     };
-    let redo_edit_ids = match retained_string_stack(&[], None) {
+    let redo_edit_ids = match retained_string_stack(std::iter::empty(), None) {
         Ok(values) => values,
         Err(error) => return reject(error, outcome),
     };
     let cursor_owners = super::ArtifactCursorOwners {
-        applied_edit_ids: match retained_string_stack(&store.applied_edit_ids, Some(&outcome.prepared.edit.id)) {
+        applied_edit_ids: match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit.id)) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
-        redo_edit_ids: match retained_string_stack(&[], None) {
+        redo_edit_ids: match retained_string_stack(std::iter::empty(), None) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
@@ -536,11 +538,11 @@ where
     };
     let mut revision_accumulator = CursorRevisionAccumulator {
         identity_digest: store.revision_accumulator.identity_digest,
-        applied: match retained_revision_stack(&store.revision_accumulator.applied) {
+        applied: match retained_revision_stack(store.revision_accumulator.applied.iter().cloned()) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
-        redo: match retained_revision_stack(&[]) {
+        redo: match retained_revision_stack(std::iter::empty()) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
@@ -2355,6 +2357,7 @@ impl DurableStorePreparedOutcomeV1 {
             next_sequence_number: outcome.next_sequence_number,
             next_clock,
             actor: outcome.actor,
+            line: edit.line.clone(),
             group_id: None,
             stamped_edit_id: None,
         });
@@ -2479,6 +2482,7 @@ where
         next_sequence_number: outcome.next_sequence_number,
         next_clock,
         actor: outcome.actor,
+        line: edit.line.clone(),
         group_id: Some(decision_sha256.into()),
         stamped_edit_id: None,
     };
@@ -2561,6 +2565,7 @@ where
             next_sequence_number: base_authority.next_sequence_number,
             next_clock: base_authority.next_clock,
             actor: base_authority.actor.clone(),
+            line: base_authority.line.clone(),
             group_id: Some(group_id.into()),
             stamped_edit_id: base_authority.stamped_edit_id.clone(),
         });
@@ -2733,6 +2738,7 @@ where
             next_sequence_number: outcome.next_sequence_number,
             next_clock,
             actor: outcome.actor,
+            line: edit.line.clone(),
             group_id: Some(group_id.into()),
             stamped_edit_id: None,
         });
@@ -3365,6 +3371,7 @@ where
         next_sequence_number: edit.sequence_number,
         next_clock: meta.timestamp,
         actor,
+        line: edit.line.clone(),
         group_id: meta.group_id.clone(),
         stamped_edit_id: None,
     });

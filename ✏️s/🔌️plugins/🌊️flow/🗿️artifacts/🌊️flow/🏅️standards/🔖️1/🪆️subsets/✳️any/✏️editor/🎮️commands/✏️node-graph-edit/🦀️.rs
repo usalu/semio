@@ -1,7 +1,8 @@
 //! 🕸️ 🎯️ Flow play app commands command — `node-graph-edit`.
 
 use crate::editor::flow::modes::edit::tools::drag::flow_drag_tool_emit;
-use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION};
+use crate::editor::flow::commands::patch_flow_widgets::widget_field_leaf;
+use semio_framework_tool_machine::{NodeDragRecord, NODE_DRAG_OPERATION, SCRUB_ABORT_ARG, SCRUB_COMMIT_ARG, SCRUB_GESTURE_ARG};
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
@@ -28,6 +29,8 @@ pub enum FlowNodeGraphEditOp {
     Disconnect { synapse_id: String },
     #[dsl(key = "move")]
     Move { gesture_id: String, node_ids: Vec<String>, dx: f64, dy: f64 },
+    #[dsl(key = "set-slider")]
+    SetSlider { widget_id: String, value: f64 },
 }
 
 fn action_row_fields<'a>(row: &'a dsl::DslValue, operation: &str, expected: &[&str]) -> Result<&'a [(String, dsl::DslValue)], Fault> {
@@ -54,14 +57,18 @@ fn action_host_snapshot_json(row: &dsl::DslValue, operation: &str) -> Result<Str
     Ok(encoded)
 }
 
+/// 🧾 The root fields a `nodeGraphEdit` dispatch may carry: its rows, and the continuous-control press the framework scrub
+/// machine reads off a dragged inline slider (design §13.1).
+const NODE_GRAPH_EDIT_ROOT_FIELDS: [&str; 4] = ["operations", SCRUB_GESTURE_ARG, SCRUB_COMMIT_ARG, SCRUB_ABORT_ARG];
+
 /// 🧾 Decodes the renderer's current externally-tagged row schema. Every row must decode or the
 /// entire batch is refused before a retained operation is admitted.
 pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphEditOp>, Fault> {
     let root = args.as_object().ok_or_else(|| Fault::from("nodeGraphEdit arguments must be an object"))?;
-    if root.len() != 1 || root[0].0 != "operations" {
+    if root.iter().any(|(field, _)| !NODE_GRAPH_EDIT_ROOT_FIELDS.contains(&field.as_str())) || root.iter().filter(|(field, _)| field == "operations").count() != 1 {
         return Err(Fault::from("nodeGraphEdit arguments have fields outside their closed schema"));
     }
-    let rows = root[0].1.as_array().ok_or_else(|| Fault::from("nodeGraphEdit operations must be an array"))?;
+    let rows = args.get("operations").and_then(dsl::DslValue::as_array).ok_or_else(|| Fault::from("nodeGraphEdit operations must be an array"))?;
     if rows.len() > FLOW_STORE_MAX_MUTATION_ITEMS {
         return Err(Fault::from(format!("nodeGraphEdit operations exceed the {FLOW_STORE_MAX_MUTATION_ITEMS}-row authority")));
     }
@@ -94,6 +101,11 @@ pub fn operations_from_action(args: &dsl::DslValue) -> Result<Vec<FlowNodeGraphE
                     action_row_fields(row, operation, &["operation", "synapseId"])?;
                     Ok(FlowNodeGraphEditOp::Disconnect { synapse_id: action_id(row, operation, "synapseId")? })
                 }
+                "setSlider" => {
+                    action_row_fields(row, operation, &["operation", "widgetId", "value"])?;
+                    let value = row.get("value").and_then(dsl::DslValue::as_f64).filter(|value| value.is_finite()).ok_or_else(|| Fault::from("nodeGraphEdit setSlider.value must be a finite number"))?;
+                    Ok(FlowNodeGraphEditOp::SetSlider { widget_id: action_id(row, operation, "widgetId")?, value })
+                }
                 NODE_DRAG_OPERATION => {
                     let record = NodeDragRecord::from_row(row).map_err(|reason| Fault::from(format!("nodeGraphEdit move refusal: {reason}")))?;
                     Ok(FlowNodeGraphEditOp::Move { gesture_id: record.gesture_id, node_ids: record.node_ids, dx: record.dx, dy: record.dy })
@@ -120,6 +132,20 @@ pub fn node_graph_edit_drags(operations: &[FlowNodeGraphEditOp]) -> Vec<NodeDrag
         .collect()
 }
 
+/// 🎚️ The ABSOLUTE `set-node-param` leaves of a batch's `setSlider` rows on `content` (design §13.1: for a slider the intent
+/// is the value), in row order: one per row naming a slider whose value it changes. A dragged knob carries its press as the
+/// dispatch's own `gesture`/`commit`, so the framework scrub machine keeps every tick provisional and commits the release as
+/// ONE child edit (design §12); this never reads a gesture.
+pub fn node_graph_edit_slider_leaves(content: &SemioFlowSnapshot, operations: &[FlowNodeGraphEditOp]) -> Vec<SemioFlowMutation> {
+    operations
+        .iter()
+        .filter_map(|operation| match operation {
+            FlowNodeGraphEditOp::SetSlider { widget_id, value } => content.nodes.iter().find(|node| node.id == *widget_id).and_then(|node| widget_field_leaf(node, "value", &value.to_string())),
+            _ => None,
+        })
+        .collect()
+}
+
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: `selected_nodes` is the "graph"
 /// domain's live node selection (read by the caller via `InteractionView`) — no `SetSelection` config
 /// mutation afterwards, the framework auto-prunes deleted ids out of `graph`'s selection via
@@ -127,7 +153,8 @@ pub fn node_graph_edit_drags(operations: &[FlowNodeGraphEditOp]) -> Vec<NodeDrag
 ///
 /// ✋️ `move` rows never touch the working host: they are a drag's release (the node-graph gesture record, design §13.3),
 /// committed through the node-drag machine as relative `drag-nodes` leaves, in ONE tool transaction after whatever the
-/// rest of the batch lands (a wire the same gesture drew) — never folded into a whole-content `set-snapshot`.
+/// rest of the batch lands (a wire the same gesture drew) — never folded into a whole-content `set-snapshot`. `setSlider`
+/// rows never touch it either: they land as absolute `set-node-param` leaves ([`node_graph_edit_slider_leaves`]).
 pub fn node_graph_edit_result(
     doc: &ArtifactView<'_, FlowSnapshot>,
     config: &FlowMainWindowConfig,
@@ -144,10 +171,11 @@ pub fn node_graph_edit_result(
     seed_host_catalogue(&mut host, &config.catalogue_sections_json);
     apply_canvas_options(&mut host, config);
     let drags = node_graph_edit_drags(operations);
+    let sliders = node_graph_edit_slider_leaves(&content, operations);
     let changed = (|| {
         let mut changed = false;
         for sub_operation in operations {
-            changed |= !matches!(sub_operation, FlowNodeGraphEditOp::Move { .. });
+            changed |= !matches!(sub_operation, FlowNodeGraphEditOp::Move { .. } | FlowNodeGraphEditOp::SetSlider { .. });
             match sub_operation {
                 FlowNodeGraphEditOp::SetHostSnapshot { host_snapshot_json } => {
                     let json: serde_json::Value = serde_json::from_str(host_snapshot_json).map_err(|error| Fault::from(format!("nodeGraphEdit setHostSnapshot JSON refusal: {error}")))?;
@@ -166,7 +194,7 @@ pub fn node_graph_edit_result(
                 FlowNodeGraphEditOp::Disconnect { synapse_id } => {
                     host.disconnect(synapse_id).map_err(|error| Fault::from(format!("nodeGraphEdit disconnect refusal: {error}")))?;
                 }
-                FlowNodeGraphEditOp::Move { .. } => {}
+                FlowNodeGraphEditOp::Move { .. } | FlowNodeGraphEditOp::SetSlider { .. } => {}
             }
         }
         Ok::<bool, Fault>(changed)
@@ -183,13 +211,14 @@ pub fn node_graph_edit_result(
         }
     };
     host.retire_cold();
+    let leaves: Vec<SemioFlowMutation> = mutation.into_iter().chain(sliders).collect();
     if !drags.is_empty() {
         let authoring_seed = doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str());
-        return Ok(flow_drag_tool_emit(child_id, NODE_GRAPH_EDIT_VERB, authoring_seed, &content, mutation.into_iter().collect(), &drags));
+        return Ok(flow_drag_tool_emit(child_id, NODE_GRAPH_EDIT_VERB, authoring_seed, &content, leaves, &drags));
     }
-    Ok(match mutation {
-        Some(mutation) => Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &[mutation])], ui_scope: UiDirtyScope::Full, ..Default::default() },
-        None => Emit::default(),
+    Ok(match leaves.is_empty() {
+        true => Emit::default(),
+        false => Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, &leaves)], ui_scope: UiDirtyScope::Full, ..Default::default() },
     })
 }
 //#endregion 🔖️SharedDispatch

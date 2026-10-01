@@ -1,0 +1,10 @@
+{
+  "title": "Per-Viewer Alternative Head",
+  "emoji": "👁️",
+  "status": "open",
+  "description": "Make the alternative head per-viewer. HistoryTransition::Branch and ::Checkout currently fold on every replica in fold_history, so one user's createAlternative/switchAlternative/checkoutCheckpoint moves the head for all collaborators and deactivates their uncommitted edits older than the event (checkout_governs_concurrent_edits_by_hlc). The active alternative and checkpoint become persisted local-only state per replica. Branch registration, Commit, and the new Supersede transition stay shared facts. Define the canonical trunk used by hub Check In. Update reproject and hydration in the os store, HistoryView in the plugin, and the createAlternative manifest text so it is true for every collaborator (\"edited without disturbing the current one\"). Coordinate with ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING which adds Supersede. Evidence: explore-alternatives-vcs.md §2.2 and §6.4.",
+  "goal": "🎯runningframework",
+  "sessions": [
+    "⚪bfafbe85a2b54d84b15224b7623e5b66"
+  ]
+}

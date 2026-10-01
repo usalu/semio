@@ -1,6 +1,6 @@
 /** 🧪️ Strict language-neutral Flow byte-frontier fixtures and independent JSON oracle. */
 import Ajv from "ajv";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { strict as assert } from "node:assert";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
@@ -388,7 +388,7 @@ assert(retainedIdentitySource.includes("derived.child_id"));
 assert.equal((retainedIdentitySource.match(/take_local_owner::<FlowWorkingScene>/g) ?? []).length >= 2, true);
 const duplicateRoot = new URL("../../../🧬️schema/🧬️mutations/👯️duplicate-widget", import.meta.url);
 const duplicateSource = await Bun.file(new URL("🦀️.rs", duplicateRoot)).text();
-const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects-duplicating-onto-a-taken-id/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
+const duplicateFixture = await Bun.file(new URL("👯️duplicate-widget/🚫️rejects/🦠️mutation/🔣️.json", mutationFixtureRoot)).json();
 const duplicateModule = await Bun.file(new URL("🧬️schema/🔣️.json", duplicateRoot)).json();
 const validateDuplicate = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(duplicateModule).compile({ $ref: `${duplicateModule.$id}#` });
 assert(duplicateSource.includes('#[value(rename_all = "camelCase")]'));

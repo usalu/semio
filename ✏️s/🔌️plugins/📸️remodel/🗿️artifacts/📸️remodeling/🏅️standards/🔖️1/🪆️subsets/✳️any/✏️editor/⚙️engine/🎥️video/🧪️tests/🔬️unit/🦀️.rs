@@ -1,5 +1,86 @@
 use super::*;
 
+/// 🔌️Exercises extension callbacks and refusals without adding a concrete container branch.
+#[test]
+fn video_container_provider_callbacks_v1() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    static CALLS: AtomicUsize = AtomicUsize::new(0);
+    fn recognizes(bytes: &[u8]) -> bool { bytes == b"future" }
+    fn unmatched(_: &[u8]) -> bool { false }
+    fn forbidden(_: &[u8]) -> bool { panic!("invalid inventory must not invoke recognition") }
+    fn project(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
+        assert_eq!(bytes, b"future");
+        CALLS.fetch_add(1, Ordering::SeqCst);
+        let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+        Ok(serde_json::from_value(corpus["probes"][0]["probe"].clone()).expect("owned record"))
+    }
+    fn refuse(_: &[u8]) -> Result<VideoProbe, VideoError> { Err(VideoError::Container("owned callback failure".into())) }
+    let selected = VideoContainerProviderV1 { id: "future", matches: recognizes, probe: project };
+    let unrelated = VideoContainerProviderV1 { id: "unrelated", matches: unmatched, probe: project };
+    let info = probe_with_providers_v1(&[unrelated, selected], b"future").expect("future provider");
+    assert_eq!(info.container, "future");
+    assert_eq!(CALLS.load(Ordering::SeqCst), 1);
+    assert_eq!(probe_with_providers_v1(&[], b"future"), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::MissingProvider)));
+    assert_eq!(probe_with_providers_v1(&[selected, VideoContainerProviderV1 { id: "other", ..selected }], b"future"), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::AmbiguousProvider)));
+    assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { id: "../invalid", matches: forbidden, ..selected }], b"future"), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::InvalidInventory)));
+    assert_eq!(CALLS.load(Ordering::SeqCst), 1);
+    assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { probe: refuse, ..selected }], b"future"), Err(VideoError::Container("owned callback failure".into())));
+    assert_eq!(probe_with_providers_v1(&[VideoContainerProviderV1 { id: "other", ..selected }], b"future"), Err(VideoError::InvalidProbe));
+    eprintln!("[DEBUG] actual future provider callbacks={}, missing/ambiguous/invalid paths invoked none", CALLS.load(Ordering::SeqCst));
+}
+
+/// 📼️Refuses AVI bytes when its source capability is not linked.
+#[cfg(not(feature = "video-avi"))]
+#[test]
+fn video_container_provider_absent_avi_v1() {
+    assert_eq!(probe(b"RIFF\0\0\0\0AVI "), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::MissingProvider)));
+}
+
+/// 🎥️Refuses ISO-BMFF bytes when its source capability is not linked.
+#[cfg(not(feature = "video-mp4"))]
+#[test]
+fn video_container_provider_absent_mp4_v1() {
+    assert_eq!(probe(b"\0\0\0\x18ftypisom\0\0\0\0"), Err(VideoError::ContainerAdmission(VideoContainerAdmissionErrorV1::MissingProvider)));
+}
+
+#[cfg(feature = "video-mp4")]
+use semio_s_artifact_stdio_mp4::{standards::isobmff::subsets::any::{io as mp4_engine, schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track}}, STDIO_MP4_DOCUMENT_SCHEMA};
+#[cfg(feature = "video-avi")]
+use semio_s_artifact_stdio_avi::{standards::v1_0::subsets::any::{io as avi_engine, schema::snapshot::{AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader}}, STDIO_AVI_DOCUMENT_SCHEMA};
+
+/// 🔌️Checks every provider record vector before accepting extension-owned samples.
+#[test]
+fn video_container_provider_probe_corpus_v1() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+    for row in corpus["probes"].as_array().expect("probes") {
+        let actual = serde_json::from_value::<VideoProbe>(row["probe"].clone()).map(|probe| admit_video_probe_v1(row["provider"].as_str().expect("provider"), &probe)).unwrap_or(false);
+        assert_eq!(actual, row["expected"].as_bool().expect("expected"), "{}", row["id"]);
+    }
+}
+
+/// 🔌️Proves explicit provider selection against every closed portable inventory vector.
+#[test]
+fn video_container_provider_corpus_v1() {
+    fn selected(_: &[u8]) -> bool { true }
+    fn unselected(_: &[u8]) -> bool { false }
+    fn unused(_: &[u8]) -> Result<VideoProbe, VideoError> { panic!("selection must not invoke probes") }
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔌️container-providers/🔣️.json")).expect("portable corpus");
+    for row in corpus["cases"].as_array().expect("cases") {
+        let providers: Vec<_> = row["providers"].as_array().expect("providers").iter().map(|provider| VideoContainerProviderV1 {
+            id: provider["id"].as_str().expect("id"),
+            matches: if provider["matches"].as_bool().expect("matches") { selected } else { unselected },
+            probe: unused,
+        }).collect();
+        let actual = match select_video_container_provider_v1(&providers, &[]) {
+            Ok(index) => serde_json::json!({"status":"selected","id":providers[index].id}),
+            Err(VideoContainerAdmissionErrorV1::MissingProvider) => serde_json::json!({"status":"missing"}),
+            Err(VideoContainerAdmissionErrorV1::AmbiguousProvider) => serde_json::json!({"status":"ambiguous"}),
+            Err(VideoContainerAdmissionErrorV1::InvalidInventory) => serde_json::json!({"status":"invalid"}),
+        };
+        assert_eq!(actual, row["expected"], "{}", row["id"]);
+    }
+}
+
 fn lcg(state: &mut u64) -> u8 {
     *state = state.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
     (*state >> 56) as u8
@@ -56,15 +137,14 @@ fn h264_error_display_messages() {
 // #endregion 🔖️CoreTests
 
 // #region 🔖️ContainerTests
-/// 🔬 The real integration point with stdio: mux via `write_mp4_mjpeg` (→ stdio's real
-/// `encode_mp4`), probe via `probe_mp4` (→ stdio's real `decode_mp4`), and check every sample's
-/// recovered timestamp — proves the adapter's DTS-accumulation formula matches stdio's own
-/// `duration`/`cts_offset` semantics, not just that types line up.
+/// 🔬Checks owned MP4 timing against the linked provider's real demux/mux implementation.
 #[test]
+#[cfg(feature = "video-mp4")]
 fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..5).map(|i| remodeling_image::encode_jpeg(&synth_rgba(16, 16, 100 + i), 90)).collect();
-    let mp4 = write_mp4_mjpeg(&frames, 10.0);
-    let info = probe_mp4(&mp4).expect("probes");
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
+    let info = container_providers::mp4::probe(&mp4).expect("probes");
+    eprintln!("[DEBUG] actual MP4 provider: {}x{}, {} frames, {}ms", info.width, info.height, info.frame_count, info.duration_ms);
     assert_eq!(info.frame_count, 5);
     assert_eq!(info.codec, VideoCodec::Mjpeg);
     assert_eq!(info.width, 16);
@@ -75,36 +155,40 @@ fn write_mp4_mjpeg_probe_round_trip_reports_exact_frames() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn mp4_probe_detects_avc1_codec_from_avcc_sample_entry() {
     let (sps_nal, pps_nal) = h264_enc_sps_pps_nals(1, 1);
-    let mp4 = write_mp4_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_nal, &pps_nal, 5.0);
-    let info = probe_mp4(&mp4).expect("probes");
+    let mp4 = container_providers::mp4::write_avc(&[h264_enc_i_pcm_sample(1, 1, 0, &[0; 256], &[0; 64], &[0; 64])], &sps_nal, &pps_nal, 5.0);
+    let info = container_providers::mp4::probe(&mp4).expect("probes");
     assert_eq!(info.codec, VideoCodec::Avc);
     assert_eq!(info.width, 16);
     assert_eq!(info.height, 16);
     assert!(info.avc_config.is_some());
 }
 
-/// 🔬 `probe_mp4` surfaces stdio's own decode error verbatim through `VideoError::Container`,
-/// rather than swallowing or misclassifying it.
+/// 🧯Preserves the linked container implementation's actual decode refusal.
 #[test]
+#[cfg(feature = "video-mp4")]
 fn mp4_probe_wraps_stdio_decode_errors_as_container() {
-    assert!(matches!(probe_mp4(&[]), Err(VideoError::Container(_))));
-    assert!(matches!(probe_mp4(b"not an mp4 at all"), Err(VideoError::Container(_))));
+    assert!(matches!(container_providers::mp4::probe(&[]), Err(VideoError::Container(_))));
+    assert!(matches!(container_providers::mp4::probe(b"not an mp4 at all"), Err(VideoError::Container(_))));
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn mp4_probe_reports_no_video_track_when_none_present() {
     let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![] };
     let bytes = mp4_engine::encode_mp4(&snapshot);
-    assert!(matches!(probe_mp4(&bytes), Err(VideoError::NoVideoTrack)));
+    assert!(matches!(container_providers::mp4::probe(&bytes), Err(VideoError::NoVideoTrack)));
 }
 
 #[test]
+#[cfg(feature = "video-avi")]
 fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
     let frames: Vec<Vec<u8>> = (0..4).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 300 + i), 85)).collect();
-    let avi = write_avi_mjpg(&frames, 8.0);
-    let info = probe_avi(&avi).expect("probes");
+    let avi = container_providers::avi::write_mjpeg(&frames, 8.0);
+    let info = container_providers::avi::probe(&avi).expect("probes");
+    eprintln!("[DEBUG] actual AVI provider: {}x{}, {} frames, {}fps", info.width, info.height, info.frame_count, info.fps);
     assert_eq!(info.frame_count, 4);
     assert_eq!(info.codec, VideoCodec::Mjpeg);
     assert_eq!(info.width, 8);
@@ -116,11 +200,13 @@ fn write_avi_mjpg_probe_round_trip_reports_exact_frames() {
 }
 
 #[test]
+#[cfg(feature = "video-avi")]
 fn avi_probe_rejects_non_riff_bytes() {
-    assert!(matches!(probe_avi(b"not an avi at all!!"), Err(VideoError::Container(_))));
+    assert!(matches!(container_providers::avi::probe(b"not an avi at all!!"), Err(VideoError::Container(_))));
 }
 
 #[test]
+#[cfg(feature = "video-avi")]
 fn avi_probe_reports_no_video_track_when_only_audio_present() {
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
@@ -156,16 +242,17 @@ fn avi_probe_reports_no_video_track_when_only_audio_present() {
         hdrl_extra: Vec::new(),
     };
     let bytes = avi_engine::encode_avi(&snapshot);
-    assert!(matches!(probe_avi(&bytes), Err(VideoError::NoVideoTrack)));
+    assert!(matches!(container_providers::avi::probe(&bytes), Err(VideoError::NoVideoTrack)));
 }
 
 #[test]
-fn probe_dispatches_by_riff_magic() {
+#[cfg(all(feature = "video-mp4", feature = "video-avi"))]
+fn probe_selects_present_container_providers() {
     let frames: Vec<Vec<u8>> = (0..2).map(|i| remodeling_image::encode_jpeg(&synth_rgba(4, 4, 900 + i), 80)).collect();
-    let avi = write_avi_mjpg(&frames, 5.0);
-    assert!(matches!(probe(&avi), Ok(VideoProbe::Avi(_))));
-    let mp4 = write_mp4_mjpeg(&frames, 5.0);
-    assert!(matches!(probe(&mp4), Ok(VideoProbe::Mp4(_))));
+    let avi = container_providers::avi::write_mjpeg(&frames, 5.0);
+    assert_eq!(probe(&avi).expect("selected AVI provider").container, "avi");
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 5.0);
+    assert_eq!(probe(&mp4).expect("selected MP4 provider").container, "mp4");
 }
 
 #[test]
@@ -181,9 +268,10 @@ fn codec_fourcc_hint_maps_each_codec_variant() {
 
 // #region 🔖️ExtractTests
 #[test]
+#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
     let frames: Vec<Vec<u8>> = (0..10).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 500 + i), 85)).collect();
-    let mp4 = write_mp4_mjpeg(&frames, 10.0);
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
     let opts = VideoIngestOptions { stride: 3, max_frames: 2, max_long_edge_px: 0 };
     let extracted: Vec<ExtractedFrame> = extract_frames(&mp4, &opts).expect("extracts").map(|f| f.expect("frame decodes")).collect();
     assert_eq!(extracted.len(), 2);
@@ -192,12 +280,13 @@ fn extract_frames_mjpeg_applies_stride_and_max_frames_exactly() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
     let mut frames: Vec<Vec<u8>> = (0..6).map(|i| remodeling_image::encode_jpeg(&synth_rgba(8, 8, 600 + i), 85)).collect();
     for i in [1usize, 2, 4, 5] {
         frames[i] = vec![0xDE, 0xAD, 0xBE, 0xEF];
     }
-    let mp4 = write_mp4_mjpeg(&frames, 10.0);
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 10.0);
     let opts = VideoIngestOptions { stride: 3, max_frames: 0, max_long_edge_px: 0 };
     let extracted: Result<Vec<ExtractedFrame>, VideoError> = extract_frames(&mp4, &opts).expect("extracts").collect();
     let extracted = extracted.expect("only sync-selected frames (0, 3) are ever decoded, both real jpegs");
@@ -207,9 +296,10 @@ fn extract_frames_mjpeg_lazily_skips_undecoded_frames() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn extract_frames_applies_max_long_edge_downscale() {
     let frames = vec![remodeling_image::encode_jpeg(&synth_rgba(32, 16, 700), 90)];
-    let mp4 = write_mp4_mjpeg(&frames, 5.0);
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 5.0);
     let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 16 };
     let extracted: Vec<ExtractedFrame> = extract_frames(&mp4, &opts).expect("extracts").map(|f| f.expect("decodes")).collect();
     assert_eq!(extracted.len(), 1);
@@ -218,27 +308,30 @@ fn extract_frames_applies_max_long_edge_downscale() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn extract_frames_rejects_unsupported_codec_with_provenance() {
     let track =
         Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::hevc(Mp4CodecFormat::Hvc1, Default::default(), 4), width: 4, height: 4, metadata: Default::default(), chunk_sample_counts: vec![1], samples: vec![Mp4Sample { data: vec![0; 10], duration: 100, cts_offset: 0, sync: true }] };
     let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 0, compatible_brands: vec!["isom".into()] }, movie: Default::default(), tracks: vec![track] };
     let bytes = mp4_engine::encode_mp4(&snapshot);
-    let info = probe_mp4(&bytes).expect("hvc1 still probes for provenance");
+    let info = container_providers::mp4::probe(&bytes).expect("hvc1 still probes for provenance");
     assert_eq!(info.codec, VideoCodec::Hevc);
     let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
     assert!(matches!(extract_frames(&bytes, &opts), Err(VideoError::UnsupportedCodec(_))));
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn extract_frames_mjpeg_propagates_jpeg_decode_error() {
     let frames = vec![vec![0xDE, 0xAD, 0xBE, 0xEF]];
-    let mp4 = write_mp4_mjpeg(&frames, 5.0);
+    let mp4 = container_providers::mp4::write_mjpeg(&frames, 5.0);
     let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
     let mut iter = extract_frames(&mp4, &opts).expect("extracts");
     assert!(matches!(iter.next(), Some(Err(VideoError::Jpeg(_)))));
 }
 
 #[test]
+#[cfg(feature = "video-avi")]
 fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
     let snapshot = AviSnapshot {
         schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
@@ -274,7 +367,7 @@ fn extract_frames_avi_rejects_unsupported_codec_with_provenance() {
         hdrl_extra: Vec::new(),
     };
     let bytes = avi_engine::encode_avi(&snapshot);
-    let info = probe_avi(&bytes).expect("XVID still probes for provenance");
+    let info = container_providers::avi::probe(&bytes).expect("XVID still probes for provenance");
     assert_eq!(info.codec, VideoCodec::Unknown(FourCc(*b"XVID")));
     let opts = VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
     assert!(matches!(extract_frames(&bytes, &opts), Err(VideoError::UnsupportedCodec(_))));
@@ -894,6 +987,7 @@ mod long {
     use super::*;
 
     #[test]
+    #[cfg(feature = "video-mp4")]
     fn video_in_contract_i_pcm_then_p_skip_chain_via_full_mp4_pipeline() {
         let (mb_w, mb_h) = (3, 2);
         let (width, height) = (mb_w * 16, mb_h * 16);
@@ -903,9 +997,9 @@ mod long {
         for frame_num in 1..8u32 {
             samples.push(h264_enc_p_skip_sample(mb_w, mb_h, frame_num));
         }
-        let mp4 = write_mp4_avc(&samples, &sps_nal, &pps_nal, 12.0);
+        let mp4 = container_providers::mp4::write_avc(&samples, &sps_nal, &pps_nal, 12.0);
 
-        let probed = probe_mp4(&mp4).expect("probes the muxed avc stream");
+        let probed = container_providers::mp4::probe(&mp4).expect("probes the muxed avc stream");
         assert_eq!(probed.codec, VideoCodec::Avc);
         assert_eq!(probed.frame_count, 8);
         assert_eq!(probed.width, width);

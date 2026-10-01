@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
-import { BundleScript, runExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runExactCargoLaws } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { compileGisScopeExport } from "../../🧬️schema/🟦️.ts";
 
 const GIS_MAP_ARTIFACT_SCHEMA_MODULE = "✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🗺️gismap/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";

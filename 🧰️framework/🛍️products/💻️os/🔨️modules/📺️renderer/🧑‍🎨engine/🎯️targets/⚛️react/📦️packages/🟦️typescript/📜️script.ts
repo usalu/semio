@@ -5,10 +5,12 @@ import assert from "node:assert/strict";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import type { ValidateFunction } from "ajv";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runBunx, runVitest } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { SceneShadingPixelCheckScript } from "../../../../🔮️oracles/🎨️world3d-scene-shading/📜️script.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const MODULE_SCHEMAS = {
   renderer: "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧬️schema/🔣️.json",
@@ -1005,4 +1007,4 @@ const router = new ScriptRouter(fileURLToPath(new URL(".", import.meta.url)))
   .register("document-opening-scope-check", DocumentOpeningScopeCheckScript)
   .register("view-state-carriage-check", ViewStateCarriageCheckScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

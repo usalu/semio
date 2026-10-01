@@ -32,7 +32,7 @@
     },
     {
       "variant": "AddCounterThenNotifyForeign",
-      "folder": "🌐️add-counter-then-notify-foreign",
+      "folder": "🌐️add-counter-then-notify",
       "kind": "add-counter-then-notify-foreign",
       "emoji": "🌐️",
       "fields": {

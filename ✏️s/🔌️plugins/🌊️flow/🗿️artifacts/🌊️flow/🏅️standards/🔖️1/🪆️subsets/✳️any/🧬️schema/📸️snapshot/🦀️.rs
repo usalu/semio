@@ -103,6 +103,7 @@ impl store::ArtifactDsl for FlowSnapshot {
 
 /// 📦️ ArtifactPack — JSON body under envelope id `flow.flow` (see ArtifactDsl note).
 impl store::ArtifactPack for FlowSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let value = dsl::ToValue::to_value(self);
         let json: serde_json::Value = value.into();
@@ -131,3 +132,10 @@ impl store::ArtifactPack for FlowSnapshot {
     }
 }
 //#endregion 🔹HandcraftedArtifactCodecs
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_snapshot_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

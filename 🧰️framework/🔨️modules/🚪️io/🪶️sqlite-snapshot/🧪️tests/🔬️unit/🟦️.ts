@@ -10,6 +10,14 @@ import corpus from "../../🧫️fixtures/🏛️relational/🔣️.json";
 import projectionFixture from "../../🧫️fixtures/🏗️projection/🔣️.json";
 import { ArtifactSqliteProjection } from "../../🧩️artifact/🟦️.ts";
 
+test("borrowed semantic traversal can cancel before allocating its first entity", async () => {
+  const controller = new AbortController();
+  let armed = false;
+  const projection = await ArtifactSqliteProjection.create(projectionFixture.schemaSql, { signal: controller.signal, onProgress: progress => { if (armed) { expect(progress).toEqual({ phase: "projectSnapshot", completed: 0, total: 0 }); controller.abort(); } } });
+  armed = true;
+  await expect(projection.checkpoint()).rejects.toHaveProperty("name", "AbortError");
+});
+
 test("explicit owned row projection bounds copies and yields to cancellation", async () => {
   const out = await ArtifactSqliteProjection.create(projectionFixture.schemaSql, { maxValueBytes: projectionFixture.maxValueBytes });
   await expect(out.insert(projectionFixture.table, [projectionFixture.tooLong])).rejects.toThrow("value limit");

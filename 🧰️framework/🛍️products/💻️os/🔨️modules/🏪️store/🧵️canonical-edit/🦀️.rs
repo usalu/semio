@@ -91,7 +91,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
         let mut fields = [("", false); 12];
         match self {
             Self::Edit(edit) => {
-                fields[..11].copy_from_slice(&[
+                fields[..12].copy_from_slice(&[
                     ("id", true),
                     ("actor", edit.actor.is_some()),
                     ("forwards", true),
@@ -103,6 +103,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                     ("sequenceNumber", true),
                     ("startedAt", true),
                     ("finishedAt", edit.finished_at.is_some()),
+                    ("line", true),
                 ]);
             }
             Self::Meta(meta) => {
@@ -148,6 +149,7 @@ impl<'a, M: ArtifactCanonicalJson> CanonicalEditNode<'a, M> {
                 8 => Self::Scalar(N::I64(i64::from(edit.sequence_number))),
                 9 => Self::Scalar(N::String(&edit.started_at)),
                 10 => Self::Scalar(N::String(edit.finished_at.as_deref().ok_or_else(invalid_path)?)),
+                11 => Self::Scalar(edit.line.as_deref().map_or(N::Null, N::String)),
                 _ => return Err(invalid_path()),
             },
             Self::Mutations(values) => Self::Mutation(values.get(index).ok_or_else(invalid_path)?),
@@ -557,7 +559,7 @@ impl ArtifactCanonicalJsonCursor {
 //#region 🔏️Sealing
 pub(super) struct ArtifactStoreOneItemAuthorityRetirement {
     authority: Option<Arc<ArtifactStoreOneItemLiveAuthority>>,
-    strings: [Option<String>; 3],
+    strings: [Option<String>; 4],
     active: Option<ArtifactStoreStringRetirement>,
 }
 
@@ -588,7 +590,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreOneItemAuthorityRetirement {
         }
         if let Some(authority) = self.authority.take() {
             if let Some(authority) = Arc::into_inner(authority) {
-                self.strings = [Some(authority.actor), authority.group_id, authority.stamped_edit_id];
+                self.strings = [Some(authority.actor), authority.group_id, authority.stamped_edit_id, authority.line];
             }
             return Ok(SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 0 });
         }
@@ -788,6 +790,8 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
                 &authority.next_clock.physical_ms.to_be_bytes(),
                 &authority.next_clock.logical.to_be_bytes(),
                 authority.actor.as_bytes(),
+                &[u8::from(authority.line.is_some())],
+                authority.line.as_deref().unwrap_or("").as_bytes(),
                 &[u8::from(authority.group_id.is_some())],
                 authority.group_id.as_deref().unwrap_or("").as_bytes(),
             ],

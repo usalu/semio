@@ -362,7 +362,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-part-kind/🧪️tests/🧪️renames-part-kind-to-pod/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-part-kind/🧪️tests/🧪️renames/🦀️.rs"]
                                     mod tests_renames_part_kind_to_pod;
                                 }
                                 #[path = "."]
@@ -375,7 +375,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-part-kind-label/🧪️tests/🧪️relabels-part-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-part-kind-label/🧪️tests/🧪️relabels/🦀️.rs"]
                                     mod tests_relabels_part_kind;
                                 }
                                 #[path = "."]
@@ -388,7 +388,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-part-kind-variant/🧪️tests/🧪️switches-variant-to-b/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️change-part-kind-variant/🧪️tests/🧪️switches/🦀️.rs"]
                                     mod tests_switches_variant_to_b;
                                 }
                                 #[path = "."]
@@ -401,7 +401,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-part-kind-description/🧪️tests/🧪️rewrites-part-kind-description/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-part-kind-description/🧪️tests/🧪️rewrites/🦀️.rs"]
                                     mod tests_rewrites_part_kind_description;
                                 }
                                 #[path = "."]
@@ -414,7 +414,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-part-kind-icon/🧪️tests/🧪️repoints-part-kind-icon/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-part-kind-icon/🧪️tests/🧪️repoints/🦀️.rs"]
                                     mod tests_repoints_part_kind_icon;
                                 }
                                 #[path = "."]
@@ -427,7 +427,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-part-kind-unit/🧪️tests/🧪️switches-unit-to-centimeter/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐change-part-kind-unit/🧪️tests/🧪️switches/🦀️.rs"]
                                     mod tests_switches_unit_to_centimeter;
                                 }
                                 #[path = "."]
@@ -440,7 +440,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️update-part2d/🧪️tests/🧪️circle-to-rectangle/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖌️update-part2d/🧪️tests/🧪️circle/🦀️.rs"]
                                     mod tests_circle_to_rectangle;
                                 }
                                 #[path = "."]
@@ -453,7 +453,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-part3d/🧪️tests/🧪️reorients-and-rescales-part/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊update-part3d/🧪️tests/🧪️reorients/🦀️.rs"]
                                     mod tests_reorients_and_rescales_part;
                                 }
                                 #[path = "."]
@@ -466,7 +466,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🧪️appends-frame-representation/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱create-representation/🧪️tests/🧪️appends/🦀️.rs"]
                                     mod tests_appends_frame_representation;
                                 }
                                 #[path = "."]
@@ -479,7 +479,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🧪️removes-shell-representation/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-representation/🧪️tests/🧪️removes/🦀️.rs"]
                                     mod tests_removes_shell_representation;
                                 }
                                 #[path = "."]
@@ -492,7 +492,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️rename-representation/🧪️tests/🧪️renames-shell-to-hull/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✒️rename-representation/🧪️tests/🧪️renames/🦀️.rs"]
                                     mod tests_renames_shell_to_hull;
                                 }
                                 #[path = "."]
@@ -505,7 +505,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🧪️repoints-shell-mesh-url/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-representation-mesh-url/🧪️tests/🧪️repoints/🦀️.rs"]
                                     mod tests_repoints_shell_mesh_url;
                                 }
                                 #[path = "."]
@@ -518,20 +518,20 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🧪️promotes-shell-to-lod2/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏔️change-representation-lod/🧪️tests/🧪️promotes/🦀️.rs"]
                                     mod tests_promotes_shell_to_lod2;
                                 }
                                 #[path = "."]
                                 pub mod change_representation_description {
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🔺️diff/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/🔺️diff/🦀️.rs"]
                                     pub mod diff;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/↩️inverse/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/↩️inverse/🦀️.rs"]
                                     pub mod inverse;
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/🦀️.rs"]
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧪️tests/🧪️rewrites-shell-description/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/🧪️tests/🧪️rewrites/🦀️.rs"]
                                     mod tests_rewrites_shell_description;
                                 }
                                 #[path = "."]
@@ -544,7 +544,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🧪️tags-shell-as-structural/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔖add-representation-tag/🧪️tests/🧪️tags/🦀️.rs"]
                                     mod tests_tags_shell_as_structural;
                                 }
                                 #[path = "."]
@@ -557,7 +557,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🧪️untags-shell-printable/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫remove-representation-tag/🧪️tests/🧪️untags/🦀️.rs"]
                                     mod tests_untags_shell_printable;
                                 }
                                 #[path = "."]
@@ -570,7 +570,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🧪️adds-color-attribute-to-shell/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩add-representation-attribute/🧪️tests/🧪️adds/🦀️.rs"]
                                     mod tests_adds_color_attribute_to_shell;
                                 }
                                 #[path = "."]
@@ -583,7 +583,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🧪️drops-finish-attribute-from-shell/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-representation-attribute/🧪️tests/🧪️drops/🦀️.rs"]
                                     mod tests_drops_finish_attribute_from_shell;
                                 }
                                 #[path = "."]
@@ -622,7 +622,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️rename-grip-kind/🧪️tests/🧪️renames-plug-to-coupler/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖋️rename-grip-kind/🧪️tests/🧪️renames/🦀️.rs"]
                                     mod tests_renames_plug_to_coupler;
                                 }
                                 #[path = "."]
@@ -635,7 +635,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-grip-kind-label/🧪️tests/🧪️relabels-plug-grip-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎫change-grip-kind-label/🧪️tests/🧪️relabels/🦀️.rs"]
                                     mod tests_relabels_plug_grip_kind;
                                 }
                                 #[path = "."]
@@ -648,7 +648,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-grip-kind-color/🧪️tests/🧪️recolors-plug-grip-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-grip-kind-color/🧪️tests/🧪️recolors/🦀️.rs"]
                                     mod tests_recolors_plug_grip_kind;
                                 }
                                 #[path = "."]
@@ -661,7 +661,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-grip-kind-default-rope-kind/🧪️tests/🧪️swaps-plug-default-rope-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢change-grip-kind-default-rope-kind/🧪️tests/🧪️swaps/🦀️.rs"]
                                     mod tests_swaps_plug_default_rope_kind;
                                 }
                                 #[path = "."]
@@ -700,7 +700,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-grip2d/🧪️tests/🧪️swings-north-grip-along-the-rim/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍move-grip2d/🧪️tests/🧪️swings/🦀️.rs"]
                                     mod tests_swings_north_grip_along_the_rim;
                                 }
                                 #[path = "."]
@@ -713,7 +713,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-grip3d/🧪️tests/🧪️repositions-north-grip-in-world/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭move-grip3d/🧪️tests/🧪️repositions/🦀️.rs"]
                                     mod tests_repositions_north_grip_in_world;
                                 }
                                 #[path = "."]
@@ -739,7 +739,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-grip-grip-kind/🧪️tests/🧪️rekinds-north-grip-as-socket/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷change-grip-grip-kind/🧪️tests/🧪️rekinds/🦀️.rs"]
                                     mod tests_rekinds_north_grip_as_socket;
                                 }
                                 #[path = "."]
@@ -752,7 +752,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-compatibility-rule/🧪️tests/🧪️allows-plug-to-socket/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-compatibility-rule/🧪️tests/🧪️allows/🦀️.rs"]
                                     mod tests_allows_plug_to_socket;
                                 }
                                 #[path = "."]
@@ -765,7 +765,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-compatibility-rule/🧪️tests/🧪️revokes-plug-to-plug/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️remove-compatibility-rule/🧪️tests/🧪️revokes/🦀️.rs"]
                                     mod tests_revokes_plug_to_plug;
                                 }
                                 #[path = "."]
@@ -791,7 +791,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-attribute/🧪️tests/🧪️drops-material-attribute/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚷remove-attribute/🧪️tests/🧪️drops/🦀️.rs"]
                                     mod tests_drops_material_attribute;
                                 }
                                 #[path = "."]
@@ -882,7 +882,7 @@ pub fn pilot_languages() -> &'static [dsl::LanguageSpec] {
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/🧪️rewrites-session-notes/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💬change-meta-description/🧪️tests/🧪️rewrites/🦀️.rs"]
                                     mod tests_rewrites_session_notes;
                                 }
                             }

@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "adds-lighthouse-position-after-harbor",
-              "directoryName": "💡️adds-lighthouse-position-after-harbor"
+              "directoryName": "💡️adds"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "adds-old-town-region-after-harbor-district",
-              "directoryName": "🏘️adds-old-town-region-after-harbor-district"
+              "directoryName": "🏘️adds"
             }
           ]
         },
@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "adds-tram-route-after-ferry",
-              "directoryName": "🚋️adds-tram-route-after-ferry"
+              "directoryName": "🚋️adds"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "removes-lighthouse-position",
-              "directoryName": "🚫️removes-lighthouse-position"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "moves-harbor-position-to-end",
-              "directoryName": "⚓️moves-harbor-position-to-end"
+              "directoryName": "⚓️moves"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "moves-park-region-between-2-districts",
-              "directoryName": "🌳️moves-park-region-between-2-districts"
+              "directoryName": "🌳️moves"
             }
           ]
         },
@@ -152,7 +152,7 @@
           "scenarios": [
             {
               "id": "moves-bus-route-to-front",
-              "directoryName": "🚌️moves-bus-route-to-front"
+              "directoryName": "🚌️moves"
             }
           ]
         },
@@ -163,7 +163,7 @@
           "scenarios": [
             {
               "id": "rewrites-harbor-position-payload",
-              "directoryName": "⚓️rewrites-harbor-position-payload"
+              "directoryName": "⚓️rewrites"
             }
           ]
         },
@@ -174,7 +174,7 @@
           "scenarios": [
             {
               "id": "rewrites-harbor-district-region-payload",
-              "directoryName": "🏘️rewrites-harbor-district-region-payload"
+              "directoryName": "🏘️rewrites"
             }
           ]
         },
@@ -185,7 +185,7 @@
           "scenarios": [
             {
               "id": "rewrites-ferry-route-payload",
-              "directoryName": "⛴️rewrites-ferry-route-payload"
+              "directoryName": "⛴️rewrites"
             }
           ]
         }

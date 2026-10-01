@@ -28,5 +28,5 @@
       ]
     }
   ],
-  "chunkOrder": [{ "kind": "format" }, { "kind": "samples" }, { "kind": "other", "value": 0 }]
+  "chunkOrder": [{ "kind": "format" }, { "kind": "samples" }, { "kind": "other", "value": "0" }]
 }

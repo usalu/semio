@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_html::editor::html::HtmlEditor",
       "factory": "semio_s_artifact_stdio_html::editor::html::create_html_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "html_editor",
+        "sqliteSnapshot": "sqlite_snapshot_html_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_html::viewer::html::HtmlViewer",
       "factory": "semio_s_artifact_stdio_html::viewer::html::create_html_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "html",
-      "factory_id": "stdio.native.html.v1",
-      "descriptor_codec_id": "s.stdio.html.standard.5.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.html.standard.5.codec.codec-stdio-html-extension-html.v1",
-      "artifact_kind": "s.stdio.html",
-      "artifact_schema": "stdio.html",
-      "extension": "html",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
-      "protocol_source_sha256": "563a275178326c5e528ca2c6a9c5c4b4da8b7e0c83af5d6d49b0ea5b8b0b3e0d",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6218,
         "wgpu": 6318
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "HtmlMutation",
+      "snapshot": "semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::snapshot::HtmlSnapshot",
+      "mutation": "semio_s_artifact_stdio_html::standards::v5::subsets::any::schema::mutations::HtmlMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.html",
+      "standard": "5",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.html.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🏅️standards/🔖️5/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

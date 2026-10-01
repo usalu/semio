@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
-import { ScriptRouter, runBundleScriptMain } from "@semio-tech/repo-lib";
+import { ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { TestScript } from "./🧪️tests/🧪️resident-oracle/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

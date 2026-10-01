@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import fixture from "../🧫️fixtures/🔣️.json";
 import responseSchema from "../../🔣️.json";
 import { exportResponses, exportResponseChunks, responseRows } from "../🟦️.ts";

@@ -1,5 +1,25 @@
 use super::*;
 #[test]
+fn sqlite_snapshot_wav_canonical_json_preserves_raw_sample_words_and_full_chunk_indices() {
+    let words: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️float32.json")).unwrap();
+    let bits: Vec<u32> = words["ieee754Binary32Bits"].as_array().unwrap().iter().map(|word| word.as_u64().unwrap() as u32).collect();
+    let snapshot = WavSnapshot { data: WavData::Float32(bits.iter().copied().map(f32::from_bits).collect()), chunk_order: vec![WavChunkRef::Other(u64::MAX)], ..fixture() };
+    let text = dsl::json::to_json_string(&snapshot);
+    let independent: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(independent["data"]["value"], serde_json::Value::Array(bits.iter().map(|word| serde_json::json!({"bits":word})).collect()));
+    assert_eq!(independent["chunkOrder"][0]["value"], u64::MAX.to_string());
+    let restored: WavSnapshot = dsl::json::from_json_str(&text).unwrap();
+    let WavData::Float32(samples) = restored.data else { panic!("float32 kind"); };
+    assert_eq!(samples.iter().map(|sample| sample.to_bits()).collect::<Vec<_>>(), bits);
+    for invalid in [r#"{"kind":"other","value":0}"#, r#"{"kind":"other","value":"00"}"#, r#"{"kind":"other","value":"+1"}"#, r#"{"kind":"other","value":"18446744073709551616"}"#, r#"{"kind":"format","value":"0"}"#] {
+        assert!(dsl::json::from_json_str::<WavChunkRef>(invalid).is_err());
+    }
+    for invalid in [r#"{"kind":"float32","value":[0.0]}"#, r#"{"kind":"float32","value":[{"bits":4294967296}]}"#, r#"{"kind":"float32","value":[{"bits":0,"extra":0}]}"#] {
+        assert!(dsl::json::from_json_str::<WavData>(invalid).is_err());
+    }
+}
+
+#[test]
 fn sqlite_snapshot_wav_authored_grammar_and_protocol_admit_complete_logical_records() {
     let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
     let recognizer = dsl::Recognizer::compile(&grammar);
@@ -26,7 +46,7 @@ use semio_framework_os_kernel::{
 };
 
 fn fixture() -> WavSnapshot {
-    let mut value:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();for reference in value["chunkOrder"].as_array_mut().unwrap(){if reference["kind"]=="other"{reference["value"]=serde_json::Value::from(reference["value"].as_str().unwrap().parse::<u64>().unwrap());}}pack::json::from_json_str(&value.to_string()).unwrap()
+    pack::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()
 }
 #[test]
 fn sqlite_snapshot_wav_complete_unsigned64_chunk_indices_survive_owned_relationships() {
@@ -124,7 +144,7 @@ fn roundtrip(value: &WavSnapshot) -> WavSnapshot {
 fn sqlite_snapshot_wav_semantic_fields_and_all_sample_kinds() {
     let snapshot = fixture();
     assert_eq!(roundtrip(&snapshot), snapshot);
-    let mut oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&snapshot))).unwrap();for reference in oracle["chunkOrder"].as_array_mut().unwrap(){if reference["kind"]=="other"{reference["value"]=serde_json::Value::String(reference["value"].as_u64().unwrap().to_string());}}
+    let oracle: serde_json::Value = serde_json::from_str(&pack::json::to_json_string(&protocol::ToValue::to_value(&snapshot))).unwrap();
     assert_eq!(oracle, serde_json::from_str::<serde_json::Value>(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap());
     for data in [WavData::Pcm16(vec![i16::MIN, i16::MAX]), WavData::Pcm8(vec![0, 255]), WavData::Raw(vec![0, 255, 17])] {
         let value = WavSnapshot {

@@ -120,35 +120,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:5d540219e7cfe2d9d1865c431ccd96fea7564526e321f36b18c50be80ebda1e2",
           "bytes": 47
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:eac86a3094af264fcddc4ba0f8c28ba98738343b84816e0d6986247a7349e01f",
           "bytes": 94
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a9b573f96a15f737dc1725de2405bf1133d614e04f88618e6ae8f4feed70c88a",
           "bytes": 96
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a9b573f96a15f737dc1725de2405bf1133d614e04f88618e6ae8f4feed70c88a",
           "bytes": 96
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎥️set-camera/✅️set-camera-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎥️set-camera/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

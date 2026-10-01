@@ -1,7 +1,8 @@
 #!/usr/bin/env bun
 /** 📦️ architect program Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
@@ -12,7 +13,7 @@ class OwnedVerifyScript extends BundleScript {
 if (segments[0] === "architect-window-ownership") {
       const windowsRoot = join(this.repoRoot, "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows");
       const configRoots = ["📋️register", "↔️adjacency", "🕸️graph", "📓️report"].map((window) => join(windowsRoot, window, "🎚️config"));
-      const oracle = join(configRoots[0]!, "🧪️tests/🔬️window-ownership/🟦️.ts");
+      const oracle = join(configRoots[0]!, "🧪️tests/🔬️window/🟦️.ts");
       const { testArchitectWindowOwnershipOracle } = await import(oracle);
       testArchitectWindowOwnershipOracle();
       runCmd(

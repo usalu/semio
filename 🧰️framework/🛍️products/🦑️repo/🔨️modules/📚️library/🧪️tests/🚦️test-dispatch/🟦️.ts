@@ -4,10 +4,11 @@ import { spawn, spawnSync } from "node:child_process";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import Ajv from "ajv";
-import { findRepoRoot, runCanonicalGoTests } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { runCanonicalGoTests } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 const cli = join(import.meta.dir, "../../../💻️client/⌨️cli");
-const repo = findRepoRoot(import.meta.dir);
+const repo = findWorkspaceRoot(import.meta.dir);
 const fixture = JSON.parse(readFileSync(join(cli, "🧫️fixtures/🚦️test-dispatch/🔣️.json"), "utf8"));
 const schema = JSON.parse(readFileSync(join(cli, "🧬️schema/🚦️test-dispatch/🔣️.json"), "utf8"));
 const script = join(import.meta.dir, "../../📦️packages/🟦️typescript/📜️script.ts");

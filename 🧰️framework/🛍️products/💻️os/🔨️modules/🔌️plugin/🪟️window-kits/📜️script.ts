@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🪟️ `@semio-tech/plugin-window-kits` task router: `bun ./📜️script.ts test|typecheck`. */
 
-import { BundleScript, ScriptRouter, resolveTestLevel, runBunx, runBundleScriptMain, runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runBunx, runVitest } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   run(segments: string[]): void {
@@ -18,4 +20,4 @@ class TypecheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

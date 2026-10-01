@@ -47,7 +47,7 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["kind", "checkpointId", "parentId", "changeId", "mutationIds", "description", "savedAt", "authors", "message", "timestamp"],
+          "required": ["kind", "checkpointId", "parentId", "changeId", "mutationIds", "description", "savedAt", "authors", "message", "timestamp", "lineId"],
           "properties": {
             "kind": { "const": "commit" },
             "checkpointId": { "$ref": "#/definitions/Id" },
@@ -58,7 +58,8 @@
             "savedAt": { "type": "string" },
             "authors": { "type": "array", "items": { "$ref": "#/definitions/Author" } },
             "message": { "$ref": "#/definitions/OptionalString" },
-            "timestamp": { "type": "string" }
+            "timestamp": { "type": "string" },
+            "lineId": { "$ref": "#/definitions/OptionalString" }
           }
         },
         {

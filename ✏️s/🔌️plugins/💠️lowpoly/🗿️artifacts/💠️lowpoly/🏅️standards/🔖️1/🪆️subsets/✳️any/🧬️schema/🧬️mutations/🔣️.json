@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutations.json",
   "title": "LowpolyMutation",
-  "description": "Eighteen-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️schema/🔣️.json` leaf rather than duplicating it.",
+  "description": "Twenty-one-variant mutation dispatch envelope — real facet mirror of the Rust `LowpolyMutation` enum (`dsl::Mutations`-derived). serde's default externally-tagged representation: exactly one key, the PascalCase Rust variant name, whose value is that variant's payload — confirmed against every mutation family's committed `🧪️tests/…/🦠️mutation/🔣️.json` fixture. Each branch references its sibling `<mutation>/🧬️schema/🔣️.json` leaf rather than duplicating it.",
   "oneOf": [
     {
       "type": "object",
@@ -217,6 +217,42 @@
       "properties": {
         "ApplyPaintStroke": {
           "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/apply-paint-stroke/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "MoveSelection"
+      ],
+      "properties": {
+        "MoveSelection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/move-selection/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "RotateSelection"
+      ],
+      "properties": {
+        "RotateSelection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/rotate-selection/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ScaleSelection"
+      ],
+      "properties": {
+        "ScaleSelection": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/scale-selection/schema.json"
         }
       }
     }

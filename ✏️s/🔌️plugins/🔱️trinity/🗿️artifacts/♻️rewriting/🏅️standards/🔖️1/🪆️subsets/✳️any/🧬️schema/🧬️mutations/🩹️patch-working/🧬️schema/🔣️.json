@@ -1,0 +1,96 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/trinity/rewriting/mutation/patch-working-nodes/schema.json",
+  "title": "PatchWorkingNodes",
+  "description": "One field (`name` or `kind`) of nodes of the working (before) graph set to one value. Nodes the graph lacks are skipped (`mutation.partial`); none present is `mutation.target-missing`; a kind the graph's manifest does not declare is `mutation.target-mismatch`; nodes that already hold the value are a `mutation.no-op`.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "targets",
+    "field",
+    "value"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "patchWorkingNodes"
+    },
+    "targets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "Working-graph nodes to patch; ones the graph lacks are skipped.",
+          "de": "Zu ändernde Knoten des Arbeitsgraphen; im Graphen fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "field": {
+      "enum": [
+        "name",
+        "kind"
+      ],
+      "x-semio-ui": {
+        "widget": "segmented",
+        "role": "discriminator",
+        "label": {
+          "en": "Field",
+          "de": "Feld"
+        },
+        "description": {
+          "en": "The node field the value is written to.",
+          "de": "Das Knotenfeld, in das der Wert geschrieben wird."
+        },
+        "options": {
+          "name": {
+            "en": "Name",
+            "de": "Name"
+          },
+          "kind": {
+            "en": "Kind",
+            "de": "Art"
+          }
+        },
+        "group": "value",
+        "order": 20
+      }
+    },
+    "value": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S",
+      "x-semio-ui": {
+        "widget": "text",
+        "role": "value",
+        "label": {
+          "en": "Value",
+          "de": "Wert"
+        },
+        "description": {
+          "en": "The name or the declared node kind every target receives.",
+          "de": "Der Name oder die deklarierte Knotenart, die jedes Ziel erhält."
+        },
+        "group": "value",
+        "order": 30
+      }
+    }
+  }
+}

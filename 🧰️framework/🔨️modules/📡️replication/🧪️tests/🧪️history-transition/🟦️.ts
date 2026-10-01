@@ -60,6 +60,7 @@ export async function registerTests3(vitest: NonNullable<ImportMeta["vitest"]>, 
           ...transition.authors.flatMap((author: Transition) => [...text(author.id), ...text(author.name), ...optional(author.avatar)]),
           ...optional(transition.message),
           ...text(transition.timestamp),
+          ...optional(transition.lineId),
         ];
       case "branch":
         return [...varint(3), ...text(transition.alternativeId), ...text(transition.name), ...text(transition.checkpointId)];

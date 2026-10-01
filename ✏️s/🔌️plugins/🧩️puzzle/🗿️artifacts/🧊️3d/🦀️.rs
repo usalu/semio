@@ -991,7 +991,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes-object-a-and-severs-attraction/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-object/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_object_a_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1039,7 +1039,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🧪️tests/🕸️repoints-object-a-mesh/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧱change-object-mesh/🧪️tests/🕸️repoints/🦀️.rs"]
                                     mod tests_repoints_object_a_mesh;
                                 }
                                 #[path = "."]
@@ -1063,7 +1063,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🧪️tests/🏷️reassigns-object-a-kind/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️change-object-kind/🧪️tests/🏷️reassigns/🦀️.rs"]
                                     mod tests_reassigns_object_a_kind;
                                 }
                                 #[path = "."]
@@ -1111,7 +1111,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends-vortex-3-to-object-b/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕add-object-vortex/🧪️tests/🌀️appends/🦀️.rs"]
                                     mod tests_appends_vortex_3_to_object_b;
                                 }
                                 #[path = "."]
@@ -1123,7 +1123,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes-vortex-2-and-severs-attraction/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-object-vortex/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_2_and_severs_attraction;
                                 }
                                 #[path = "."]
@@ -1135,7 +1135,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🧪️tests/⏸️rekind-vortex-1-is-noop/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌replace-object-vortex/🧪️tests/⏸️rekind/🦀️.rs"]
                                     mod tests_rekind_vortex_1_is_noop;
                                 }
                                 #[path = "."]
@@ -1147,7 +1147,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🧪️tests/🧲️adds-second-attraction/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-vortices/🧪️tests/🧲️adds/🦀️.rs"]
                                     mod tests_adds_second_attraction;
                                 }
                                 #[path = "."]
@@ -1159,7 +1159,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/🚫️removes-attraction-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-vortices/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_attraction_1;
                                 }
                                 #[path = "."]
@@ -1171,7 +1171,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions-attraction-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-attraction-geometry/🧪️tests/📍️repositions/🦀️.rs"]
                                     mod tests_repositions_attraction_1;
                                 }
                                 #[path = "."]
@@ -1243,7 +1243,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                                     mod tests_hides_volume_1;
                                 }
                                 #[path = "."]
@@ -1255,7 +1255,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks/🦀️.rs"]
                                     mod tests_locks_volume_1;
                                 }
                                 #[path = "."]
@@ -1315,7 +1315,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints-reference-1-source/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️replace-reference-source/🧪️tests/🖇️repoints/🦀️.rs"]
                                     mod tests_repoints_reference_1_source;
                                 }
                                 #[path = "."]
@@ -1327,7 +1327,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🧪️tests/🙈️hides-reference-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👀change-reference-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                                     mod tests_hides_reference_1;
                                 }
                                 #[path = "."]
@@ -1339,7 +1339,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🧪️tests/🔒️locks-reference-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗝️change-reference-locked/🧪️tests/🔒️locks/🦀️.rs"]
                                     mod tests_locks_reference_1;
                                 }
                                 #[path = "."]
@@ -1351,7 +1351,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/⚙️architecture-to-engineering/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/⚙️architecture/🦀️.rs"]
                                     mod tests_architecture_to_engineering;
                                 }
                                 #[path = "."]
@@ -1363,7 +1363,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-vortex-kind-pair/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
                                     mod tests_adds_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1375,7 +1375,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-vortex-kind-pair/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_vortex_kind_pair;
                                 }
                                 #[path = "."]
@@ -1387,7 +1387,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🦀️.rs"]
                                     pub mod mutation;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs-vortex-kind-catalog/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️installs/🦀️.rs"]
                                     mod tests_installs_vortex_kind_catalog;
                                 }
                                 #[path = "."]
@@ -1402,7 +1402,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/✋️drags-two-objects/🦀️.rs"]
                                     mod tests_drags_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🎯️drags-object-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🎯️drags/🦀️.rs"]
                                     mod tests_drags_object_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
@@ -1416,6 +1416,12 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🧱️no-targets/🦀️.rs"]
                                     mod tests_no_targets;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/⛓️follow/🦀️.rs"]
+                                    mod tests_follow;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection/🧪️tests/🪢️cross/🦀️.rs"]
+                                    mod tests_cross;
                                 }
                                 #[path = "."]
                                 pub mod rotate_selection {
@@ -1429,7 +1435,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🔄️turns-two-objects/🦀️.rs"]
                                     mod tests_turns_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🎯️turns-object-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🎯️turns/🦀️.rs"]
                                     mod tests_turns_object_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
@@ -1443,6 +1449,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/🧱️repeated-targets/🦀️.rs"]
                                     mod tests_repeated_targets;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection/🧪️tests/⛓️orbits/🦀️.rs"]
+                                    mod tests_orbits;
                                 }
                                 #[path = "."]
                                 pub mod scale_selection {
@@ -1456,7 +1465,7 @@ mod design_parity_schema_tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🔍️scales-two-objects/🦀️.rs"]
                                     mod tests_scales_two_objects;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🎯️scales-object-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/🎯️scales/🦀️.rs"]
                                     mod tests_scales_object_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
@@ -1473,6 +1482,9 @@ mod design_parity_schema_tests;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛔️negative-factor/🦀️.rs"]
                                     mod tests_negative_factor;
+                                    #[cfg(test)]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection/🧪️tests/⛓️stays/🦀️.rs"]
+                                    mod tests_stays;
                                 }
                             }
                         }

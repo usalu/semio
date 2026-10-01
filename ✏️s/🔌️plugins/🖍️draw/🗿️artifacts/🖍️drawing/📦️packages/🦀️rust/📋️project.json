@@ -88,7 +88,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "draw-drawing-graph"
           ]
         }
       }
@@ -107,7 +108,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "draw-drawing-graph-wire"
           ]
         }
       }

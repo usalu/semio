@@ -114,6 +114,18 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-verification-contract"
       }
+    },
+    "test-color-primitives": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-color-primitives"
+      }
     }
   },
   "namedInputs": {

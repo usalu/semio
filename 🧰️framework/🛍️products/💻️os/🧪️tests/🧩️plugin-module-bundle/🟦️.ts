@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { decodeTrustedPluginModuleBundleV1, trustedPluginModuleBundleSha256V1, validateTrustedPluginModuleBundleV1, validateTrustedPluginModuleIndexV1, verifyTrustedPluginModuleFileV1, type TrustedPluginModuleSourceV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const root = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment";
 const read = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(`${root}/${path}`, import.meta.url)), "utf8"));

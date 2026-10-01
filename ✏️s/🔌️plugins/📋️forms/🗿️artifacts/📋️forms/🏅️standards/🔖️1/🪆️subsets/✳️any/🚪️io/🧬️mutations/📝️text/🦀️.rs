@@ -9,6 +9,7 @@ pub use crate::mutations::FormMutation;
 use crate::mutations::{
     change_form_title::mutation::ChangeFormTitle, change_step_description::mutation::ChangeStepDescription, create_block::mutation::CreateBlock, create_step::mutation::CreateStep, delete_block::mutation::DeleteBlock,
     delete_step::mutation::DeleteStep, move_block_to_step::mutation::MoveBlockToStep, rename_step::mutation::RenameStep, reorder_step::mutation::ReorderStep, replace_block::mutation::ReplaceBlock,
+    change_block_field::mutation::{BlockField, ChangeBlockField},
 };
 use crate::{FormQuestion, FormStep};
 use crate::mutations::{commit_response::mutation::CommitResponse, discard_response::mutation::DiscardResponse};
@@ -130,6 +131,9 @@ fn enc_block(block: &FormQuestion) -> String {
 fn dec_block(s: &str) -> Result<FormQuestion, String> {
     dsl::os_pack::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
 }
+fn dec_change(s: &str) -> Result<BlockField, String> {
+    dsl::json::from_json_str(&dec_str(s)?).map_err(|e| e.to_string())
+}
 //#endregion 🔖️StructCodec
 
 //#region 🔖️OpText
@@ -144,6 +148,7 @@ fn print_forms_mutation(mutation: &FormMutation) -> String {
         FormMutation::DeleteBlock(p) => format!("delete-block step-id={} id={}", enc_str(&p.step_id), enc_str(&p.id)),
         FormMutation::MoveBlockToStep(p) => format!("move-block-to-step step-id={} block-id={} to-step-id={} index={}", enc_str(&p.step_id), enc_str(&p.block_id), enc_str(&p.to_step_id), enc_usize(p.index)),
         FormMutation::ReplaceBlock(p) => format!("replace-block step-id={} block={}", enc_str(&p.step_id), enc_block(&p.block)),
+        FormMutation::ChangeBlockField(p) => format!("change-block-field block-id={} change={}", enc_str(&p.block_id), enc_str(&dsl::json::to_json_string(&p.change))),
         FormMutation::CommitResponse(p) => format!("commit-response response={} index={}", enc_str(&dsl::json::to_json_string(&p.response)), enc_opt_usize(&p.index)),
         FormMutation::DiscardResponse(p) => format!("discard-response id={}", enc_str(&p.id)),
         FormMutation::ChangeFormTitle(p) => format!("change-form-title new-title={}", enc_opt_str(&p.new_title)),
@@ -164,6 +169,7 @@ fn parse_forms_mutation(line: &str) -> Result<FormMutation, String> {
         "delete-block" => Ok(FormMutation::DeleteBlock(DeleteBlock { step_id: dec_str(&arg("step-id")?)?, id: dec_str(&arg("id")?)? })),
         "move-block-to-step" => Ok(FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: dec_str(&arg("step-id")?)?, block_id: dec_str(&arg("block-id")?)?, to_step_id: dec_str(&arg("to-step-id")?)?, index: dec_usize(&arg("index")?)? })),
         "replace-block" => Ok(FormMutation::ReplaceBlock(ReplaceBlock { step_id: dec_str(&arg("step-id")?)?, block: dec_block(&arg("block")?)? })),
+        "change-block-field" => Ok(FormMutation::ChangeBlockField(ChangeBlockField { block_id: dec_str(&arg("block-id")?)?, change: dec_change(&arg("change")?)? })),
         "change-form-title" => Ok(FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: dec_opt_str(&arg("new-title")?)? })),
         "commit-response" => Ok(FormMutation::CommitResponse(CommitResponse { response: dsl::json::from_json_str(&dec_str(&arg("response")?)?).map_err(|error| error.to_string())?, index: dec_opt_usize(&arg("index")?)? })),
         "discard-response" => Ok(FormMutation::DiscardResponse(DiscardResponse { id: dec_str(&arg("id")?)? })),
@@ -239,6 +245,7 @@ impl protocol::OpBinary for FormMutation {
             FormMutation::ChangeFormTitle(_) => 9,
             FormMutation::CommitResponse(_) => 10,
             FormMutation::DiscardResponse(_) => 11,
+            FormMutation::ChangeBlockField(_) => 12,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -284,6 +291,10 @@ impl protocol::OpBinary for FormMutation {
             }
             FormMutation::DiscardResponse(p) => write_str_bin(&mut out, &p.id),
             FormMutation::ChangeFormTitle(p) => write_opt_str_bin(&mut out, &p.new_title),
+            FormMutation::ChangeBlockField(p) => {
+                write_str_bin(&mut out, &p.block_id);
+                write_str_bin(&mut out, &dsl::json::to_json_string(&p.change));
+            }
         }
         Ok(out)
     }
@@ -349,6 +360,12 @@ impl protocol::OpBinary for FormMutation {
                 Ok(FormMutation::CommitResponse(CommitResponse { response, index }))
             }
             11 => Ok(FormMutation::DiscardResponse(DiscardResponse { id: read_str_bin(&mut reader).map_err(|e| malformed("id", reader.position(), e))? })),
+            12 => {
+                let block_id = read_str_bin(&mut reader).map_err(|e| malformed("block_id", reader.position(), e))?;
+                let text = read_str_bin(&mut reader).map_err(|e| malformed("change", reader.position(), e))?;
+                let change = dsl::json::from_json_str(&text).map_err(|e| malformed("change", reader.position(), e.to_string()))?;
+                Ok(FormMutation::ChangeBlockField(ChangeBlockField { block_id, change }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
         }
     }
@@ -392,6 +409,9 @@ pub(crate) fn demo_mutation_cases() -> Vec<FormMutation> {
         FormMutation::DeleteBlock(DeleteBlock { step_id: "s1".into(), id: "b1".into() }),
         FormMutation::MoveBlockToStep(MoveBlockToStep { step_id: "s1".into(), block_id: "b1".into(), to_step_id: "s2".into(), index: 0 }),
         FormMutation::ReplaceBlock(ReplaceBlock { step_id: "s1".into(), block }),
+        FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: BlockField::Min(Some(2.5)) }),
+        FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: BlockField::Description(None) }),
+        FormMutation::ChangeBlockField(ChangeBlockField { block_id: "b1".into(), change: BlockField::Options(Some(vec![crate::FormQuestionOption { value: "a".into(), label: "A \"quoted\" option".into() }])) }),
         FormMutation::ChangeFormTitle(ChangeFormTitle { new_title: None }),
     ]
 }

@@ -314,6 +314,7 @@ pub enum DirectoryEventPageErrorV1 {
 fn directory_event_page_has_control(value: &crate::DslValue) -> bool {
     match value {
         crate::DslValue::String(value) => value.chars().any(char::is_control),
+        crate::DslValue::Bytes(_) => true,
         crate::DslValue::Array(values) => values.iter().any(directory_event_page_has_control),
         crate::DslValue::Object(fields) => fields.iter().any(|(key, value)| key.chars().any(char::is_control) || directory_event_page_has_control(value)),
         crate::DslValue::Null | crate::DslValue::Bool(_) | crate::DslValue::Number(_) => false,

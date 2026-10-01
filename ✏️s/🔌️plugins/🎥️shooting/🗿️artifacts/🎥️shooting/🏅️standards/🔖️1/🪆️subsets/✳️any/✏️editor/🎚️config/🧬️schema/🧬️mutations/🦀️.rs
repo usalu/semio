@@ -1,19 +1,19 @@
 //! 🧬️ Shooting configuration mutation collection.
 
 use super::*;
-#[path = "📸️replace-config/🦀️.rs"]
+#[path = "📸️replace/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "☑️set-shot-selection/🦀️.rs"]
+#[path = "☑️set-shot/🦀️.rs"]
 mod set_shot_selection;
 pub use set_shot_selection::SetShotSelection;
-#[path = "🎯️set-center-model/🦀️.rs"]
+#[path = "🎯️set-center/🦀️.rs"]
 mod set_center_model;
 pub use set_center_model::SetCenterModel;
-#[path = "🔢️set-fit-revision/🦀️.rs"]
+#[path = "🔢️set-fit/🦀️.rs"]
 mod set_fit_revision;
 pub use set_fit_revision::SetFitRevision;
-#[path = "🏷️set-camera-draft-label/🦀️.rs"]
+#[path = "🏷️set-camera/🦀️.rs"]
 mod set_camera_draft_label;
 pub use set_camera_draft_label::SetCameraDraftLabel;
 #[path = "🎥️set-camera/🦀️.rs"]

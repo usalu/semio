@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import fg from "fast-glob";
 import { applyPatch } from "fast-json-patch";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as artifact from "../../🟦️.ts";
 import * as snapshot from "../../📸️snapshot/🟦️.ts";
 import * as diff from "../../🔺️diff/🟦️.ts";
@@ -18,7 +18,7 @@ export function testSemioObjectDocumentContract(): void {
   testSchemaRecordOracle();
   const ajv = semioSchemaAjvV1({ allErrors: true });
   for (const path of ["../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🔣️.json","../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🧬️schema/🔣️.json","../../../../✉️base/🧬️schema/🪆️child/🔣️.json","../../../../✉️base/🧬️schema/🧮️geometry/🔣️.json"]) ajv.addSchema(read(path));
-  const fixtures = read("../../🧫️fixtures/🪪️document-contract/🔣️.json");
+  const fixtures = read("../../🧫️fixtures/🪪️document/🔣️.json");
   const childIdentity = (value: any): boolean => ["brep", "mesh", "properties"].every((field) => !value[field] || ajv.compile({ const: value[field].target.artifactId })(value[field].childId));
   const a = ajv.compile(read("../../🔣️.json"));
   const s = ajv.compile(read("../../📸️snapshot/🔣️.json"));

@@ -18,10 +18,10 @@
 use crate::mutations::{apply_dag_mutation, inverse_dag_mutation, DagMutation};
 use crate::{DagDiff, DagSnapshot, DagWorkingScene};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🦠️mutation/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects-a-duplicate-node-id/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌱create-node/🧪️rejects/🎯️outcome/🔣️.json");
 
 fn mutation() -> DagMutation {
     dsl::json::from_json_str(MUTATION).expect("mutation decodes")

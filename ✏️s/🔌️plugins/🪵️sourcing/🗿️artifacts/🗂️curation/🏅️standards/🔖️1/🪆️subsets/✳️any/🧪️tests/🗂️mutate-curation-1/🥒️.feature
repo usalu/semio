@@ -116,9 +116,9 @@ Feature: Apply every typed curation mutation twice — once in Rust, once in Pyt
     Then each implementation lands on the committed after-snapshot in role, the curation shows the <effect> claim, and the two agree
     Examples:
       | id                        | effect | dir                       | fixture                                    |
-      | create-curated-item       | append | 🌱create-curated-item      | 🧲️appends-a-steel-plate-to-the-curation      |
-      | delete-curated-item       | detach | 🗑️delete-curated-item      | 🚫️removes-the-clt-panel-from-the-curation    |
-      | change-curated-item-count | retune | 🔢change-curated-item-count | 🔢️raises-the-glulam-beam-count-to-20         |
+      | create-curated-item       | append | 🌱create-curated-item      | 🧲️appends      |
+      | delete-curated-item       | detach | 🗑️delete-curated-item      | 🚫️removes    |
+      | change-curated-item-count | retune | 🔢change-curated-item | 🔢️raises         |
 
   @id-identity-round-trip
   @level-long

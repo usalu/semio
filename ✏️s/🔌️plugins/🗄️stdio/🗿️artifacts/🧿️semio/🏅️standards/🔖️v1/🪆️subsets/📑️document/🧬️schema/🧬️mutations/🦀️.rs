@@ -778,6 +778,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/📋️bolds-the-body-paragraph-and-finalizes-its-copy/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/📋️bolds/🦀️.rs"]
 mod set_snapshot_bolds_the_body_paragraph_and_finalizes_its_copy;
 //#endregion 🧪️FixtureCases

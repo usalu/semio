@@ -316,7 +316,7 @@ impl app_store::ArtifactStoreOneItemPreparation<DocxSnapshot, DocxMutation> for 
                 let post = self.post.take().ok_or_else(|| format!("{PREFIX}.post-owner"))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{PREFIX}.authority-owner"))?;
                 let id = authority.edit_id();
-                let edit = protocol::Edit {
+                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
                     id: id.clone(),
                     actor: Some(authority.actor().to_string()),
                     forwards: vec![mutation],

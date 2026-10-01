@@ -1,4 +1,14 @@
 /** 🧩 dag 🧬️mutations WASM facade — mirrors `DagMutation` (see `🦀️.rs`). */
+import type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
+import type { SetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
+import type { SetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
+
+export type { MoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
+export type { DagNodePosition, SetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
+export type { DagSliderField, SetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
+export { parseMoveNodes } from "./🚚️move-nodes/🦠️mutation/🟦️.ts";
+export { parseSetNodePositions } from "./📍️set-node-positions/🦠️mutation/🟦️.ts";
+export { parseSetSlider } from "./🎚️set-slider/🦠️mutation/🟦️.ts";
 
 /** 📸️ Structural mirror of the Rust `DagNodeSpec` — only the address/scalar fields this facade
  * needs; `kind`/`properties` cross the WASM boundary as opaque JSON (see `ReplaceNodeKind`/
@@ -33,4 +43,7 @@ export type DagMutation =
   | { mutation: "replaceNodeProperties"; id: string; newPropertiesJson: string }
   | { mutation: "reorderNodes"; order: string[] }
   | { mutation: "connectNodes"; id: string; source: string; target: string; routeStyle: "bezier" | "sharpSz"; propertiesJson: string; index?: number }
-  | { mutation: "disconnectNodes"; id: string };
+  | { mutation: "disconnectNodes"; id: string }
+  | MoveNodes
+  | SetNodePositions
+  | SetSlider;

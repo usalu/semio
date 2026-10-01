@@ -314,6 +314,7 @@ fn preview_tree_collapsed_summary(value: &DslValue) -> String {
         DslValue::Object(entries) => format!("{{{} keys}}", entries.len()),
         DslValue::Array(arr) => format!("[{} items]", arr.len()),
         DslValue::String(s) => format!("\"{s}\""),
+        DslValue::Bytes(bytes) => format!("<{} bytes>", bytes.len()),
         DslValue::Number(n) => match n {
             dsl::Number::UInt(v) => v.to_string(),
             dsl::Number::Int(v) => v.to_string(),
@@ -2233,6 +2234,7 @@ impl DagPayloadRetirement {
             DagRetirementOwner::Dsl(value) => {
                 match value {
                     DslValue::String(value) => self.text(value),
+                    DslValue::Bytes(value) => self.bytes(value),
                     DslValue::Array(values) => self.dsl_values(values),
                     DslValue::Object(values) => self.dsl_entries(values),
                     DslValue::Null | DslValue::Bool(_) | DslValue::Number(_) => {}

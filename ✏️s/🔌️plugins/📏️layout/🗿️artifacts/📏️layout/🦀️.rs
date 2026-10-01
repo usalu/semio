@@ -1365,7 +1365,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames-the-document/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-layout/🧪️tests/🏷️renames/🦀️.rs"]
                             mod tests_renames_the_document;
                         }
                         #[path = "."]
@@ -1374,7 +1374,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets-a-cmyk-print-target/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖨️change-print-target/🧪️tests/🖨️sets/🦀️.rs"]
                             mod tests_sets_a_cmyk_print_target;
                         }
                         #[path = "."]
@@ -1383,7 +1383,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches-a-data-fields-payload/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾change-data-fields/🧪️tests/🧾️attaches/🦀️.rs"]
                             mod tests_attaches_a_data_fields_payload;
                         }
                         #[path = "."]
@@ -1392,7 +1392,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-grid/🧪️tests/📐️sets-an-18-point-baseline/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-grid/🧪️tests/📐️sets/🦀️.rs"]
                             mod tests_sets_an_18_point_baseline;
                         }
                         #[path = "."]
@@ -1515,16 +1515,16 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/✋️drags-both-frames/🦀️.rs"]
                             mod tests_drags_both_frames;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⚠️skips/🦀️.rs"]
                             mod tests_skips_a_locked_and_a_missing_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🚫️rejects-missing-frames/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_missing_frames;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/⏸️keeps-a-zero-offset/🦀️.rs"]
                             mod tests_keeps_a_zero_offset;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🔁️refuses-a-repeated-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-frames/🧪️tests/🔁️refuses/🦀️.rs"]
                             mod tests_refuses_a_repeated_frame;
                         }
                         #[path = "."]
@@ -1533,22 +1533,22 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔃️orbits-both-frames-a-quarter-turn/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔃️orbits/🦀️.rs"]
                             mod tests_orbits_both_frames_a_quarter_turn;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🌀️turns-the-rect-about-its-centre/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🌀️turns/🦀️.rs"]
                             mod tests_turns_the_rect_about_its_centre;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⚠️skips/🦀️.rs"]
                             mod tests_skips_a_locked_and_a_missing_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🚫️rejects-a-missing-page/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_missing_page;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/⏸️keeps-a-zero-angle/🦀️.rs"]
                             mod tests_keeps_a_zero_angle;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔁️refuses-a-repeated-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️rotate-frames/🧪️tests/🔁️refuses/🦀️.rs"]
                             mod tests_refuses_a_repeated_frame;
                         }
                         #[path = "."]
@@ -1557,22 +1557,22 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🗜️doubles-both-frames-about-their-centroid/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🗜️doubles/🦀️.rs"]
                             mod tests_doubles_both_frames_about_their_centroid;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/↔️stretches-the-rect-sideways/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/↔️stretches/🦀️.rs"]
                             mod tests_stretches_the_rect_sideways;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/⚠️skips-a-locked-and-a-missing-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/⚠️skips/🦀️.rs"]
                             mod tests_skips_a_locked_and_a_missing_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🚫️rejects-missing-frames/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_missing_frames;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/⏸️keeps-unit-factors/🦀️.rs"]
                             mod tests_keeps_unit_factors;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🫓️refuses-a-zero-factor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️scale-frames/🧪️tests/🫓️refuses/🦀️.rs"]
                             mod tests_refuses_a_zero_factor;
                         }
                         #[path = "."]
@@ -1617,7 +1617,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens-page-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↕️change-page-height/🧪️tests/↕️lengthens/🦀️.rs"]
                             mod tests_lengthens_page_1;
                         }
                         #[path = "."]
@@ -1626,7 +1626,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets-asymmetric-margins-on-page-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐update-page-margins/🧪️tests/📐️sets/🦀️.rs"]
                             mod tests_sets_asymmetric_margins_on_page_1;
                         }
                         #[path = "."]
@@ -1635,7 +1635,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits-page-1-into-three-columns/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️update-page-columns/🧪️tests/🏛️splits/🦀️.rs"]
                             mod tests_splits_page_1_into_three_columns;
                         }
                         #[path = "."]
@@ -1644,7 +1644,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves-page-1-behind-page-2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-pages/🧪️tests/🔀️moves/🦀️.rs"]
                             mod tests_moves_page_1_behind_page_2;
                         }
                         #[path = "."]
@@ -1698,7 +1698,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks-link-1-to-a-new-file/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛤️change-link-path/🧪️tests/🔗️relinks/🦀️.rs"]
                             mod tests_relinks_link_1_to_a_new_file;
                         }
                         #[path = "."]
@@ -1707,7 +1707,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts-a-rect-frame-at-index-1/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-frame/🧪️tests/🔲️inserts/🦀️.rs"]
                             mod tests_inserts_a_rect_frame_at_index_1;
                         }
                         #[path = "."]
@@ -1716,7 +1716,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes-the-text-frame-and-its-layer-membership/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-frame/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_text_frame_and_its_layer_membership;
                         }
                         #[path = "."]
@@ -1743,7 +1743,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-frame/🧪️tests/🌀️rotates-the-rect-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-frame/🧪️tests/🌀️rotates/🦀️.rs"]
                             mod tests_rotates_the_rect_frame;
                         }
                         #[path = "."]
@@ -1752,7 +1752,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints-the-rect-frame-fill/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨change-frame-fill/🧪️tests/🎨️repaints/🦀️.rs"]
                             mod tests_repaints_the_rect_frame_fill;
                         }
                         #[path = "."]
@@ -1761,7 +1761,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds-a-stroke-to-the-rect-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️change-frame-stroke/🧪️tests/🖊️adds/🦀️.rs"]
                             mod tests_adds_a_stroke_to_the_rect_frame;
                         }
                         #[path = "."]
@@ -1770,7 +1770,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches-the-text-frame-to-column-wrap/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤change-frame-wrap-mode/🧪️tests/🔤️switches/🦀️.rs"]
                             mod tests_switches_the_text_frame_to_column_wrap;
                         }
                         #[path = "."]
@@ -1779,7 +1779,7 @@ pub mod standards {
                             mod component;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits-the-text-frame-into-two-columns/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-frame-columns/🧪️tests/🔤️splits/🦀️.rs"]
                             mod tests_splits_the_text_frame_into_two_columns;
                         }
                     }

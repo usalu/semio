@@ -6,7 +6,7 @@ import { runInNewContext } from "node:vm";
 import Ajv from "ajv";
 import { enableMapSet, produce } from "immer";
 import ts from "typescript";
-import { BundleScript } from "@semio-tech/repo-lib";
+import { BundleScript } from "../../../../../🏃️process/🧭️routing/🟦️.ts";
 import { NumericIndex, type NumericIndexEdit, type NumericIndexRetirement } from "../../🟦️.ts";
 import fixture from "../../🧫️fixtures/🔢️numeric-index.json";
 import schema from "../../🧬️schema/🔣️.json";

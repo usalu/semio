@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🛠️ `@semio-tech/framework-tool-machine-rs` router: `bun ./📜️script.ts <test|check>` — TS conformance (ajv/xstate/fast-check) plus Rust fixture tests, and native plus `wasm32-wasip2` type checks. */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runTestBudgeted } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargoTestBudgeted, runCmd, runTestBudgeted } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const PACKAGE = "semio-framework-tool-machine";
 
@@ -22,4 +24,4 @@ class CheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

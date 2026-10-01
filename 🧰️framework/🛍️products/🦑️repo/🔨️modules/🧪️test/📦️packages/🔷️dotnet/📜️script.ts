@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { repoCacheDirectory } from "../../../📚️library/⚡️caching/🟦️.ts";
 import { stageArtifacts } from "../../../📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
@@ -26,4 +28,4 @@ class BuildScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("deps", DepsScript).register("build", BuildScript);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+if (import.meta.main) await runScriptMain(router);

@@ -8,6 +8,23 @@
     "family:stdio"
   ],
   "targets": {
+    "canonical-architecture": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🧪️tests/📜️definition/**/*",
+        "{projectRoot}/../../🧬️schema/**/*",
+        "{projectRoot}/../../🧫️fixtures/**/*",
+        "{projectRoot}/../../📜️artifact-definition.json"
+      ],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts canonical-architecture"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -39,6 +56,57 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
+    },
+    "test-snapshot-sqlite": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
+    },
+    "test-snapshot-sqlite-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite native"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
+    },
+    "test-snapshot-sqlite-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-snapshot-sqlite source"
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{projectRoot}/../../📜️artifact-definition.json",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ]
     }
   }
 }

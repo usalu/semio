@@ -47,8 +47,8 @@ pub fn contribute(base: &PngSnapshot, gama: Option<u32>) -> PngDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌗️change-gamma/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-gamma payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌗️change-gamma/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-gamma payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

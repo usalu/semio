@@ -32,19 +32,19 @@ Feature: Apply every typed note document block mutation twice — once in Rust, 
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                      | vector                                                                 |
-      | create-block            | ➕️create-block/📷️inserts-a-photo-block-at-root-index-2           |
+      | create-block            | ➕️create-block/📷️inserts           |
       | delete-block            | ❌️delete-block/➖️removes-the-math-block                          |
-      | delete-blocks           | 🧹️delete-blocks/🗑️removes-the-ink-and-image-blocks               |
-      | duplicate-block         | 📋️duplicate-block/📋️copies-the-math-block-right-after-its-source |
-      | duplicate-blocks        | 👥️duplicate-blocks/👥️copies-ink-and-table-with-shifting-indices  |
-      | move-block-to-container | 🚚️move-block-to-container/📥️reparents-ink-into-the-callout-group |
-      | drag-blocks             | 🤏️drag-blocks/🤏️nudges-ink-and-the-whole-group-subtree           |
-      | rename-block            | 🔖️rename-block/🏷️renames-the-table-block                         |
-      | change-block-visible    | 👀️change-block-visible/🙈️hides-the-image-block                   |
-      | change-block-locked     | 🔒️change-block-locked/🔒️locks-the-callout-group                  |
-      | move-block              | 📍️move-block/📍️repositions-the-math-block                        |
-      | resize-block            | ↔️resize-block/📐️enlarges-the-image-block                        |
-      | change-block-font-size  | 🔤️change-block-font-size/🔤️enlarges-the-intro-font               |
+      | delete-blocks           | 🧹️delete-blocks/🗑️removes               |
+      | duplicate-block         | 📋️duplicate-block/📋️copies |
+      | duplicate-blocks        | 👥️duplicate-blocks/👥️copies  |
+      | move-block-to-container | 🚚️move-block-to-container/📥️reparents |
+      | drag-blocks             | 🤏️drag-blocks/🤏️nudges           |
+      | rename-block            | 🔖️rename-block/🏷️renames                         |
+      | change-block-visible    | 👀️change-block-visible/🙈️hides                   |
+      | change-block-locked     | 🔒️change-block-locked/🔒️locks                  |
+      | move-block              | 📍️move-block/📍️repositions                        |
+      | resize-block            | ↔️resize-block/📐️enlarges                        |
+      | change-block-font-size  | 🔤️change-block-font-size/🔤️enlarges               |
 
   @id-inverse
   @level-exhaustive
@@ -59,16 +59,16 @@ Feature: Apply every typed note document block mutation twice — once in Rust, 
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                      | vector                                                                 |
-      | create-block            | ➕️create-block/📷️inserts-a-photo-block-at-root-index-2           |
+      | create-block            | ➕️create-block/📷️inserts           |
       | delete-block            | ❌️delete-block/➖️removes-the-math-block                          |
-      | delete-blocks           | 🧹️delete-blocks/🗑️removes-the-ink-and-image-blocks               |
-      | duplicate-block         | 📋️duplicate-block/📋️copies-the-math-block-right-after-its-source |
-      | duplicate-blocks        | 👥️duplicate-blocks/👥️copies-ink-and-table-with-shifting-indices  |
-      | move-block-to-container | 🚚️move-block-to-container/📥️reparents-ink-into-the-callout-group |
-      | drag-blocks             | 🤏️drag-blocks/🤏️nudges-ink-and-the-whole-group-subtree           |
-      | rename-block            | 🔖️rename-block/🏷️renames-the-table-block                         |
-      | change-block-visible    | 👀️change-block-visible/🙈️hides-the-image-block                   |
-      | change-block-locked     | 🔒️change-block-locked/🔒️locks-the-callout-group                  |
-      | move-block              | 📍️move-block/📍️repositions-the-math-block                        |
-      | resize-block            | ↔️resize-block/📐️enlarges-the-image-block                        |
-      | change-block-font-size  | 🔤️change-block-font-size/🔤️enlarges-the-intro-font               |
+      | delete-blocks           | 🧹️delete-blocks/🗑️removes               |
+      | duplicate-block         | 📋️duplicate-block/📋️copies |
+      | duplicate-blocks        | 👥️duplicate-blocks/👥️copies  |
+      | move-block-to-container | 🚚️move-block-to-container/📥️reparents |
+      | drag-blocks             | 🤏️drag-blocks/🤏️nudges           |
+      | rename-block            | 🔖️rename-block/🏷️renames                         |
+      | change-block-visible    | 👀️change-block-visible/🙈️hides                   |
+      | change-block-locked     | 🔒️change-block-locked/🔒️locks                  |
+      | move-block              | 📍️move-block/📍️repositions                        |
+      | resize-block            | ↔️resize-block/📐️enlarges                        |
+      | change-block-font-size  | 🔤️change-block-font-size/🔤️enlarges               |

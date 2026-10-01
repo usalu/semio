@@ -81,10 +81,6 @@ impl ArtifactApp for LabelReloadApp {
     type TransientMutation = NoTransientMutation;
     type Command = LabelReloadCommand;
 
-    fn mutation_label(op: &TestMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::label(op))
-    }
-
     async fn command_id(command: &LabelReloadCommand) -> &'static str {
         match command {
             LabelReloadCommand::Rename { .. } => "renameDescribed",

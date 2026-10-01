@@ -1,4 +1,4 @@
-import { BundleScript } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 export class DoctorScript extends BundleScript {
   run(): void {

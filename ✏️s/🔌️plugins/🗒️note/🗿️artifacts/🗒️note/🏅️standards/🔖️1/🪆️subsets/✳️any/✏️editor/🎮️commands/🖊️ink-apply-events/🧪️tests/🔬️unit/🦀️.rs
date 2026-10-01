@@ -158,8 +158,8 @@ async fn a_block_drag_commits_one_relative_drag_blocks_leaf() {
     let drag = &rows[1];
     assert_eq!(drag.op_lines.len(), 1, "one relative leaf: {:?}", drag.op_lines);
     assert!(drag.op_lines[0].starts_with("drag-blocks"), "{:?}", drag.op_lines);
-    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 blocks");
-    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Blöcke ziehen");
+    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Drag 2 blocks by (30, 15)");
+    assert_eq!(drag.label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Blöcke um (30; 15) ziehen");
 }
 
 /// ⌨️ LAW (design §5): a keyboard nudge is ONE transaction of ONE `drag-blocks` over every unlocked selected block —

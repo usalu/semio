@@ -184,12 +184,12 @@
       "vectors": [
         {
           "mutationId": "change-stroke-color",
-          "sourceMutationDirectoryName": "🖌️change-stroke-color",
-          "mutationDirectoryName": "🖌️change-stroke-color",
+          "sourceMutationDirectoryName": "🖌️change-stroke",
+          "mutationDirectoryName": "🖌️change-stroke",
           "scenarios": [
             {
               "id": "recolours-the-primary-styles-stroke-to-translucent-white",
-              "directoryName": "🎨️recolours-the-primary-styles-stroke-to-translucent-white"
+              "directoryName": "🎨️recolours"
             }
           ]
         },
@@ -200,7 +200,7 @@
           "scenarios": [
             {
               "id": "thickens-the-primary-styles-stroke",
-              "directoryName": "📐️thickens-the-primary-styles-stroke"
+              "directoryName": "📐️thickens"
             }
           ]
         },
@@ -211,7 +211,7 @@
           "scenarios": [
             {
               "id": "inserts-a-second-layer-above-the-base-layer",
-              "directoryName": "🪜️inserts-a-second-layer-above-the-base-layer"
+              "directoryName": "🪜️inserts"
             }
           ]
         },
@@ -222,7 +222,7 @@
           "scenarios": [
             {
               "id": "appends-a-caption-text-node-to-the-layer-root",
-              "directoryName": "🔤️appends-a-caption-text-node-to-the-layer-root"
+              "directoryName": "🔤️appends"
             }
           ]
         },
@@ -233,7 +233,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-layer-and-keeps-the-overlay",
-              "directoryName": "🚫️removes-the-leading-layer-and-keeps-the-overlay"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -244,7 +244,7 @@
           "scenarios": [
             {
               "id": "removes-the-text-node-from-the-layer-root",
-              "directoryName": "🚫️removes-the-text-node-from-the-layer-root"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -255,7 +255,7 @@
           "scenarios": [
             {
               "id": "drags-the-text-node-and-the-nested-group-by-the-same-offset",
-              "directoryName": "🖐️drags-the-text-node-and-the-nested-group-by-the-same-offset"
+              "directoryName": "🖐️drags"
             }
           ]
         },
@@ -266,7 +266,7 @@
           "scenarios": [
             {
               "id": "flattens-an-identity-nested-group-into-its-leaves",
-              "directoryName": "🫓️flattens-an-identity-nested-group-into-its-leaves"
+              "directoryName": "🫓️flattens"
             }
           ]
         },
@@ -277,7 +277,7 @@
           "scenarios": [
             {
               "id": "groups-the-two-leading-children-into-a-new-group",
-              "directoryName": "🧷️groups-the-two-leading-children-into-a-new-group"
+              "directoryName": "🧷️groups"
             }
           ]
         },
@@ -288,7 +288,7 @@
           "scenarios": [
             {
               "id": "moves-the-text-node-to-a-new-origin",
-              "directoryName": "📍️moves-the-text-node-to-a-new-origin"
+              "directoryName": "📍️moves"
             }
           ]
         },
@@ -299,7 +299,7 @@
           "scenarios": [
             {
               "id": "moves-the-leading-path-node-to-the-end-of-the-layer-root",
-              "directoryName": "🔀️moves-the-leading-path-node-to-the-end-of-the-layer-root"
+              "directoryName": "🔀️moves"
             }
           ]
         },
@@ -310,7 +310,7 @@
           "scenarios": [
             {
               "id": "repaints-the-primary-styles-fill-from-red-to-blue",
-              "directoryName": "🎨️repaints-the-primary-styles-fill-from-red-to-blue"
+              "directoryName": "🎨️repaints"
             }
           ]
         },
@@ -321,7 +321,7 @@
           "scenarios": [
             {
               "id": "swaps-the-open-path-for-a-closed-triangle",
-              "directoryName": "🔺️swaps-the-open-path-for-a-closed-triangle"
+              "directoryName": "🔺️swaps"
             }
           ]
         },
@@ -332,7 +332,7 @@
           "scenarios": [
             {
               "id": "rotates-the-nested-group-a-half-turn-about-z",
-              "directoryName": "🔄️rotates-the-nested-group-a-half-turn-about-z"
+              "directoryName": "🔄️rotates"
             }
           ]
         },
@@ -343,7 +343,7 @@
           "scenarios": [
             {
               "id": "scales-the-nested-group-non-uniformly",
-              "directoryName": "📏️scales-the-nested-group-non-uniformly"
+              "directoryName": "📏️scales"
             }
           ]
         },
@@ -354,7 +354,7 @@
           "scenarios": [
             {
               "id": "restores-the-captured-hierarchy-over-the-flat-group",
-              "directoryName": "🎈️restores-the-captured-hierarchy-over-the-flat-group"
+              "directoryName": "🎈️restores"
             }
           ]
         },
@@ -365,7 +365,7 @@
           "scenarios": [
             {
               "id": "dissolves-the-nested-group-into-its-parent",
-              "directoryName": "💫️dissolves-the-nested-group-into-its-parent"
+              "directoryName": "💫️dissolves"
             }
           ]
         }
@@ -1613,14 +1613,14 @@
       "files": [
         {
           "role": "input-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke-color/⬅️before.svg",
+          "path": "../🧫️fixtures/🖌️change-stroke/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
           "bytes": 440
         },
         {
           "role": "expected-svg",
-          "path": "../🧫️fixtures/🖌️change-stroke-color/➡️after.svg",
+          "path": "../🧫️fixtures/🖌️change-stroke/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:a7a0f32ddaf424f2caedd1a8ef4c36d945931d68027bbb1c1a895ca91f0ac07b",
           "bytes": 440

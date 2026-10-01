@@ -1,4 +1,4 @@
-//! 🧪️ `rename-stakeholder` fixture — `🏷️renames-a`.
+//! 🧪️ `rename-stakeholder` fixture — `🏷️renames`.
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames-a/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames-a/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames-a/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames-a/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames-a/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/👥️stakeholder/🏷️rename/🏷️renames/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("rename-stakeholder/renames-stakeholder-a: before snapshot decodes")

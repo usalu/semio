@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-solve" => Vector {
-            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/🏁️set-solve/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

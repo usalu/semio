@@ -23,34 +23,34 @@
       "vectors": [
         {
           "mutationId": "set-layer-boolean-operation",
-          "sourceMutationDirectoryName": "🔀set-layer-boolean-operation",
-          "mutationDirectoryName": "🔀set-layer-boolean-operation",
+          "sourceMutationDirectoryName": "🔀set-layer-boolean",
+          "mutationDirectoryName": "🔀set-layer-boolean",
           "scenarios": [
             {
               "id": "union-to-subtract",
-              "directoryName": "➖️union-to-subtract"
+              "directoryName": "➖️union"
             }
           ]
         },
         {
           "mutationId": "update-layer-trace-params",
-          "sourceMutationDirectoryName": "🔍️update-layer-trace-params",
-          "mutationDirectoryName": "🔍️update-layer-trace-params",
+          "sourceMutationDirectoryName": "🔍️update-layer",
+          "mutationDirectoryName": "🔍️update-layer",
           "scenarios": [
             {
               "id": "sharpens-the-trace",
-              "directoryName": "🔍️sharpens-the-trace"
+              "directoryName": "🔍️sharpens"
             }
           ]
         },
         {
           "mutationId": "update-layer-transform",
-          "sourceMutationDirectoryName": "🔄️update-layer-transform",
-          "mutationDirectoryName": "🔄️update-layer-transform",
+          "sourceMutationDirectoryName": "🔄️update-layer",
+          "mutationDirectoryName": "🔄️update-layer",
           "scenarios": [
             {
               "id": "translates-and-scales-shape-a",
-              "directoryName": "📐️translates-and-scales-shape-a"
+              "directoryName": "📐️translates"
             }
           ]
         },
@@ -61,7 +61,7 @@
           "scenarios": [
             {
               "id": "reshape-curve",
-              "directoryName": "✏️reshape-curve"
+              "directoryName": "✏️reshape"
             }
           ]
         },
@@ -94,7 +94,7 @@
           "scenarios": [
             {
               "id": "doubles-a-rect",
-              "directoryName": "📐️doubles-a-rect"
+              "directoryName": "📐️doubles"
             }
           ]
         },
@@ -105,7 +105,7 @@
           "scenarios": [
             {
               "id": "drags-two-anchors",
-              "directoryName": "📍️drags-two-anchors"
+              "directoryName": "📍️drags"
             }
           ]
         }

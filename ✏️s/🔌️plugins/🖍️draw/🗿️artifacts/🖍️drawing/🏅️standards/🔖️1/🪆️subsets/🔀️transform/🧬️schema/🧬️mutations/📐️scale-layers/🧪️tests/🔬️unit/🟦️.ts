@@ -1,8 +1,8 @@
 /** 🧪️ Ajv (third-party oracle) and the hand-written `scaleLayers` parser agree on the committed fixture and on every hostile variant. */
 import { expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import mutation from "../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles-a-rect/🦠️mutation/🔣️.json";
+import mutation from "../../../../../🧫️fixtures/🧬️mutations/📐️scale-layers/📐️doubles/🦠️mutation/🔣️.json";
 import { parseScaleLayers } from "../../🦠️mutation/🟦️.ts";
 
 test("the schema and the parser admit exactly the same scaleLayers records", () => {

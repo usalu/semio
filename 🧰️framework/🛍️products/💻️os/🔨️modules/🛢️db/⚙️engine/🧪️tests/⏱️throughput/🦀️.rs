@@ -77,7 +77,7 @@ fn opaque_edit(document: &protocol::ArtifactId, mutation_id: String, previous: O
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("throughput.v1".to_string()), payload: vec![0x5a; payload_bytes] },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("throughput.v1".to_string()), payload: Vec::new() },
         timestamp: protocol::HybridLogicalTimestamp::new(0, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

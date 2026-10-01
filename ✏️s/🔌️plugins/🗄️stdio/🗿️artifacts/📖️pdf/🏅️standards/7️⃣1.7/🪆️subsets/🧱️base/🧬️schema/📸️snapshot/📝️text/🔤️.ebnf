@@ -2,10 +2,11 @@
 document = 'stdio.pdf.1.7', { field } ;
 field = key, '=', value ;
 key = ? exact PDF snapshot root field name from the sibling RecordSpec ? ;
-value = string | number | 'true' | 'false' | 'null' | array | object ;
+value = string | number | 'true' | 'false' | 'null' | bytes | array | object ;
 array = '[', { value }, ']' ;
 object = '{', { member }, '}' ;
 member = ( identifier | string ), '=', value ;
 number = ? semio.dsl exact integer or binary64 scalar, including IEEE bit words ? ;
 string = ? semio.dsl quoted UTF-8 string with escapes ? ;
 identifier = ? semio.dsl unquoted object key ? ;
+bytes = 'bytes64', '(', string, ')' ;

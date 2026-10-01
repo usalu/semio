@@ -1,0 +1,6 @@
+{
+  "dialect": "s.flow.flow@1/*",
+  "snapshot": {"schema": "retained flow schema 日本\u0000", "content": {"childId": "owned child 日本", "target": {"artifactId": "separate target", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "flow"}}}},
+  "independentEdit": "independent child 日本",
+  "expectedTables": 2
+}

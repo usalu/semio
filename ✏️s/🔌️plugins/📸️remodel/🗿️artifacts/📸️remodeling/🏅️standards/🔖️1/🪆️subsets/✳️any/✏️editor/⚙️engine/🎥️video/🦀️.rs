@@ -1,45 +1,9 @@
-//! 🎞️ Video container demuxing and baseline decode: ISO-BMFF/MP4 and RIFF/AVI demux via stdio's
-//! real `mp4`/`avi` engines (in-process, same-crate-family call — no wasm/IPC), a hand-rolled H.264
-//! baseline-profile PIXEL decoder (the one piece stdio's own mp4 engine deliberately does NOT do —
-//! see `semio_s_artifact_stdio_mp4::standards::isobmff::engine::h264`'s own doc comment,
-//! "the full pixel decoder remains at its original remodeling location... for a future wave to lift" —
-//! this file, W5a, is that wave), minimal fixture-synthesis muxers built on stdio's real
-//! `encode_mp4`/`encode_avi`, and a lazy frame-extraction API sitting on top of [`remodeling_image`].
-//! DAG position: `remodeling_image` → `remodeling_video` → `remodeling_engine`.
-//!
-//! 🧭️ Extraction ticket `26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT`,
-//! W5a: the box-level ISO-BMFF/RIFF demux/mux this file used to hand-roll (`🔖️Bmff`/`🔖️Avi`/`🔖️Mux`
-//! regions, ~1000 LOC) was a real duplicate of stdio's now-complete `mp4`/`avi` artifacts (moved
-//! wholesale from this very file in W3) — deleted here and replaced by real in-process calls to
-//! `semio_s_artifact_stdio_mp4` and `semio_s_artifact_stdio_avi` standards engines (`decode_mp4,
-//! encode_mp4,decode_avi,encode_avi}`. The H.264 macroblock reconstruction pipeline (`🔖️Bits`
-//! through `🔖️Decoder`, plus its `🔖️H264Enc` test-fixture synthesizer) has no stdio equivalent —
-//! stdio's mp4 `h264` accessor is container-metadata-only by design — so it stays exactly as it was.
-
-// 🔗️ Sibling engine topic files, aliased to their pre-merge crate names so every path in
-// this file is byte-identical to the crate it was moved from (see 🦀️.rs for the wiring).
-/// 🎞️ AVC sequence parameters, picture parameters and NAL length width.
-type AvcDecoderConfiguration = (Vec<Vec<u8>>, Vec<Vec<u8>>, u8);
-
+//! 🎞️ Owned video provider admission, frame sampling and baseline AVC pixel decoding.
 use crate::editor::remodeling::engine::images as remodeling_image;
-use semio_s_artifact_stdio_avi::{
-    standards::v1_0::{
-        subsets::any::io as avi_engine,
-        subsets::any::schema::snapshot::{AviChunk, AviMainHeader, AviSnapshot, AviStream, AviStreamFormat, AviStreamHeader},
-    },
-    STDIO_AVI_DOCUMENT_SCHEMA,
-};
-use semio_s_artifact_stdio_mp4::{
-    standards::isobmff::{
-        subsets::any::io as mp4_engine,
-        subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Snapshot, Mp4Track},
-    },
-    STDIO_MP4_DOCUMENT_SCHEMA,
-};
 
 // #region 🔖️Bytes
 /// 🧭️ Four-character box/chunk code (ISO-BMFF box types, RIFF FourCCs); compared and hashed by raw bytes.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct FourCc(pub [u8; 4]);
 
 impl FourCc {
@@ -80,6 +44,8 @@ pub enum VideoError {
     /// every container-level parse error genuinely originates from stdio (a dynamic message, not a
     /// fixed set of named box-parsing failures this file no longer implements).
     Container(String),
+    ContainerAdmission(VideoContainerAdmissionErrorV1),
+    InvalidProbe,
     NoVideoTrack,
     UnsupportedCodec(FourCc),
     Jpeg(remodeling_image::ImageError),
@@ -91,6 +57,8 @@ impl std::fmt::Display for VideoError {
         match self {
             Self::Truncated => write!(f, "video container truncated"),
             Self::Container(msg) => write!(f, "video container error: {msg}"),
+            Self::ContainerAdmission(error) => write!(f, "video container admission: {error}"),
+            Self::InvalidProbe => f.write_str("invalid video container provider record"),
             Self::NoVideoTrack => write!(f, "container has no video track"),
             Self::UnsupportedCodec(fourcc) => write!(f, "unsupported video codec: {fourcc}"),
             Self::Jpeg(e) => write!(f, "jpeg error: {e}"),
@@ -115,7 +83,8 @@ impl From<H264Error> for VideoError {
 
 /// 🎞️ Video codec identified from a container's sample description; `Unknown` carries the raw fourcc for
 /// diagnostics even when this crate cannot decode it (routing the caller to a host decoder).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(tag = "kind", content = "fourcc", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum VideoCodec {
     Avc,
     Hevc,
@@ -148,86 +117,129 @@ fn codec_from_fourcc_str(fourcc: &str) -> VideoCodec {
 // #endregion 🔖️Bytes
 
 // #region 🔖️Container
-/// 🎞️ One decodable/probeable sample: its already-extracted access-unit bytes (stdio's
-/// `Mp4Sample.data`/`AviChunk.data` — real per-sample byte payload, not an offset into the source
-/// buffer, unlike this file's pre-extraction `SampleInfo`) and its presentation timestamp.
-#[derive(Clone, Debug, PartialEq)]
+/// 🎞️ Owned sample payload and presentation timestamp.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct SampleInfo {
-    data: Vec<u8>,
+    pub data: Vec<u8>,
     pub timestamp_ms: f64,
 }
 
-/// 🎞️ Probed MP4/ISO-BMFF video track metadata: dimensions, timing, codec. Produced by
-/// [`probe_mp4`] from stdio's real `decode_mp4` — succeeds for any real mp4, even when
-/// `codec` is undecodable by this crate's own H.264 pixel decoder.
-#[derive(Clone, Debug, PartialEq)]
-pub struct Mp4Info {
+/// ⏱️ Seconds per source clock tick.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VideoTimeBaseV1 {
+    pub numerator: u32,
+    pub denominator: u32,
+}
+
+/// 🎞️ Owned AVC sequence parameters, picture parameters and NAL length width.
+#[derive(Clone, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AvcDecoderConfigurationV1 {
+    pub sps: Vec<Vec<u8>>,
+    pub pps: Vec<Vec<u8>>,
+    pub nal_length_size: u8,
+}
+
+/// 🔍️ Container-independent video metadata and access units from an admitted provider.
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct VideoProbe {
+    pub container: String,
     pub width: u32,
     pub height: u32,
-    pub timescale: u32,
+    #[serde(deserialize_with = "deserialize_required_video_option_v1")]
+    pub time_base: Option<VideoTimeBaseV1>,
+    pub fps: f64,
     pub duration_ms: f64,
     pub frame_count: u32,
     pub codec: VideoCodec,
-    samples: Vec<SampleInfo>,
-    avc_config: Option<AvcDecoderConfiguration>,
+    pub samples: Vec<SampleInfo>,
+    #[serde(deserialize_with = "deserialize_required_video_option_v1")]
+    pub avc_config: Option<AvcDecoderConfigurationV1>,
 }
 
-/// 🎞️ Probed RIFF/AVI video stream metadata, mirroring [`Mp4Info`] for the AVI container family.
-#[derive(Clone, Debug, PartialEq)]
-pub struct AviInfo {
-    pub width: u32,
-    pub height: u32,
-    pub fps: f64,
-    pub frame_count: u32,
-    pub codec: VideoCodec,
-    samples: Vec<SampleInfo>,
+fn deserialize_required_video_option_v1<'de, D, T>(deserializer: D) -> Result<Option<T>, D::Error>
+where D: serde::Deserializer<'de>, T: serde::Deserialize<'de> {
+    serde::Deserialize::deserialize(deserializer)
 }
 
-/// 📥️ Probes an ISO-BMFF/MP4 byte stream via stdio's real `mp4::engine::decode_mp4`, then adapts
-/// its first (stdio only surfaces video-handler, `vide`, tracks) track into this crate's own
-/// `Mp4Info` shape: per-sample presentation timestamps recovered from `duration`/`cts_offset`
-/// (same DTS-accumulate-then-add-CTS-offset formula this file's pre-extraction `probe_mp4` used),
-/// the codec classified from the track's sample entry, and the real `avcC` SPS/PPS lists when the
-/// track is AVC.
-fn probe_mp4(bytes: &[u8]) -> Result<Mp4Info, VideoError> {
-    let snapshot = mp4_engine::decode_mp4(bytes).map_err(VideoError::Container)?;
-    let track = snapshot.tracks.first().ok_or(VideoError::NoVideoTrack)?;
-    let codec = codec_from_fourcc_str(track.codec.format.fourcc());
-    let avc_config = track.codec.format.is_avc().then(|| (track.codec.sps.clone(), track.codec.pps.clone(), track.codec.nal_length_size));
-    let timescale = track.timescale.max(1);
-    let mut dts_accum: u64 = 0;
-    let mut samples = Vec::with_capacity(track.samples.len());
-    for sample in &track.samples {
-        let pts_ticks = dts_accum as i64 + i64::from(sample.cts_offset);
-        let timestamp_ms = pts_ticks as f64 * 1000.0 / f64::from(timescale);
-        samples.push(SampleInfo { data: sample.data.clone(), timestamp_ms });
-        dts_accum += u64::from(sample.duration);
+/// 🔌️ Owned container recognition and sample projection callbacks.
+#[derive(Clone, Copy)]
+pub struct VideoContainerProviderV1<'a> {
+    pub id: &'a str,
+    pub matches: fn(&[u8]) -> bool,
+    pub probe: fn(&[u8]) -> Result<VideoProbe, VideoError>,
+}
+
+/// 🚦️ Refusal of absent, ambiguous or malformed capability inventories.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum VideoContainerAdmissionErrorV1 {
+    MissingProvider,
+    AmbiguousProvider,
+    InvalidInventory,
+}
+
+impl std::fmt::Display for VideoContainerAdmissionErrorV1 {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::MissingProvider => "no video container provider matches",
+            Self::AmbiguousProvider => "multiple video container providers match",
+            Self::InvalidInventory => "invalid video container provider inventory",
+        })
     }
-    let duration_ms = dts_accum as f64 * 1000.0 / f64::from(timescale);
-    Ok(Mp4Info { width: track.width, height: track.height, timescale, duration_ms, frame_count: samples.len() as u32, codec, samples, avc_config })
 }
 
-/// 📥️ Probes a RIFF/AVI byte stream via stdio's real `avi::engine::decode_avi`, then adapts its
-/// first `vids` stream into this crate's own `AviInfo` shape (fps from `strh.rate/scale`, falling
-/// back to `avih.micro_sec_per_frame` — same formula this file's pre-extraction `probe_avi` used).
-fn probe_avi(bytes: &[u8]) -> Result<AviInfo, VideoError> {
-    let snapshot = avi_engine::decode_avi(bytes).map_err(VideoError::Container)?;
-    let stream = snapshot.streams.iter().find(|s| s.strh.fcc_type == "vids").ok_or(VideoError::NoVideoTrack)?;
-    let compression = match &stream.strf {
-        AviStreamFormat::BitmapInfo { compression, .. } => compression.clone(),
-        _ => String::new(),
-    };
-    let codec = codec_from_fourcc_str(&compression);
-    let fps = if stream.strh.scale > 0 {
-        f64::from(stream.strh.rate) / f64::from(stream.strh.scale)
-    } else if snapshot.main_header.micro_sec_per_frame > 0 {
-        1_000_000.0 / f64::from(snapshot.main_header.micro_sec_per_frame)
-    } else {
-        0.0
-    };
-    let samples: Vec<SampleInfo> = stream.chunks.iter().enumerate().map(|(i, chunk)| SampleInfo { data: chunk.data.clone(), timestamp_ms: if fps > 0.0 { i as f64 * 1000.0 / fps } else { 0.0 } }).collect();
-    Ok(AviInfo { width: snapshot.main_header.width, height: snapshot.main_header.height, fps, frame_count: samples.len() as u32, codec, samples })
+impl std::error::Error for VideoContainerAdmissionErrorV1 {}
+
+fn valid_video_provider_id_v1(id: &str) -> bool {
+    !id.is_empty() && id.len() <= 64 && id.as_bytes()[0].is_ascii_lowercase()
+        && id.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'.' | b'-'))
 }
+
+/// 🚦️ Selects exactly one provider after validating the entire bounded inventory.
+pub fn select_video_container_provider_v1(providers: &[VideoContainerProviderV1<'_>], bytes: &[u8]) -> Result<usize, VideoContainerAdmissionErrorV1> {
+    if providers.len() > 64 || providers.iter().enumerate().any(|(index, provider)| !valid_video_provider_id_v1(provider.id) || providers[..index].iter().any(|prior| prior.id == provider.id)) {
+        return Err(VideoContainerAdmissionErrorV1::InvalidInventory);
+    }
+    let mut selected = None;
+    for (index, provider) in providers.iter().enumerate() {
+        if (provider.matches)(bytes) {
+            if selected.is_some() {
+                return Err(VideoContainerAdmissionErrorV1::AmbiguousProvider);
+            }
+            selected = Some(index);
+        }
+    }
+    selected.ok_or(VideoContainerAdmissionErrorV1::MissingProvider)
+}
+
+/// 🛂️ Admits an owned provider record without allocating a second sample buffer.
+pub fn admit_video_probe_v1(provider_id: &str, probe: &VideoProbe) -> bool {
+    valid_video_provider_id_v1(provider_id) && probe.container == provider_id
+        && probe.samples.len() <= 1_048_576 && probe.frame_count as usize == probe.samples.len()
+        && probe.fps.is_finite() && probe.fps >= 0.0 && probe.duration_ms.is_finite() && probe.duration_ms >= 0.0
+        && probe.time_base.is_none_or(|base| base.numerator > 0 && base.denominator > 0)
+        && probe.samples.iter().all(|sample| sample.timestamp_ms.is_finite() && sample.data.len() <= 16_777_216)
+        && probe.avc_config.as_ref().is_none_or(|configuration| (1..=4).contains(&configuration.nal_length_size)
+            && configuration.sps.len() <= 65_535 && configuration.pps.len() <= 65_535
+            && configuration.sps.iter().chain(&configuration.pps).all(|nal| nal.len() <= 65_535))
+}
+
+/// 🔍️ Invokes the uniquely selected callback and admits its first-party record.
+pub fn probe_with_providers_v1(providers: &[VideoContainerProviderV1<'_>], bytes: &[u8]) -> Result<VideoProbe, VideoError> {
+    let provider = &providers[select_video_container_provider_v1(providers, bytes).map_err(VideoError::ContainerAdmission)?];
+    let probe = (provider.probe)(bytes)?;
+    if !admit_video_probe_v1(provider.id, &probe) {
+        return Err(VideoError::InvalidProbe);
+    }
+    Ok(probe)
+}
+
+/// 🔌️ Capabilities selected by this artifact's authored composition.
+#[path = "🔌️providers/🦀️.rs"]
+pub mod container_providers;
 // #endregion 🔖️Container
 
 // #region 🔖️H264
@@ -2590,7 +2602,7 @@ pub struct H264Decoder {
 
 impl H264Decoder {
     /// 🏗️ Parses SPS/PPS from `sps_pps_nals` — a flat sequence of `(u16 big-endian length, NAL bytes)`
-    /// entries (exactly [`probe_mp4`]'s `avcC` extraction format; classified by NAL type, order-
+    /// entries (the provider's owned AVC configuration; classified by NAL type, order-
     /// independent). Rejects any non-baseline SPS/PPS feature immediately (see crate docs) rather than
     /// deferring the failure to the first `decode_sample` call.
     pub fn new(sps_pps_nals: &[u8]) -> Result<Self, H264Error> {
@@ -2902,105 +2914,11 @@ pub fn h264_enc_p_skip_sample(mb_w: u32, mb_h: u32, frame_num: u32) -> Vec<u8> {
 }
 // #endregion 🔖️H264Enc
 
-// #region 🔖️Mux
-/// ✍️ Muxes pre-encoded JPEG frames into a minimal Motion-JPEG (`jpeg` sample entry) MP4 via stdio's
-/// real `mp4::engine::encode_mp4`, fixture-synthesis only (no configuration record, timescale fixed
-/// at milliseconds).
-/// Dimensions come from decoding `frames[0]`.
-pub fn write_mp4_mjpeg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
-    let (width, height) = frames.first().and_then(|f| remodeling_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
-    let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
-    let samples: Vec<_> = frames.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track { track_id: 1, timescale: 1000, codec: Mp4Codec::jpeg(Mp4CodecFormat::Jpeg), width, height, metadata: Default::default(), chunk_sample_counts: vec![samples.len() as u32], samples };
-    let snapshot = Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "mp41".into()] }, movie: Default::default(), tracks: vec![track] };
-    mp4_engine::encode_mp4(&snapshot)
-}
-
 /// 📐️ Recovers `(width, height)` from a raw SPS NAL (header byte + RBSP — [`h264_enc_sps_pps_nals`]'s
 /// own output shape) via this crate's own [`parse_nal`]/[`parse_sps`] — `(0, 0)` if not a valid SPS.
 fn sps_nal_dimensions(sps_nal: &[u8]) -> (u32, u32) {
     parse_nal(sps_nal).ok().filter(|nal| nal.nal_unit_type == 7).and_then(|nal| parse_sps(&nal.rbsp).ok()).map_or((0, 0), |sps| (sps.width_px, sps.height_px))
 }
-
-/// ✍️ Muxes AVCC-length-prefixed H.264 access units (as produced by [`h264_enc_i_pcm_sample`] /
-/// [`h264_enc_p_skip_sample`]) into a minimal `avc1`-codec MP4 via stdio's real
-/// `mp4::engine::encode_mp4`, fixture-synthesis only. Dimensions are recovered from `sps_nal` itself
-/// (as [`h264_enc_sps_pps_nals`] produces).
-pub fn write_mp4_avc(nal_samples: &[Vec<u8>], sps_nal: &[u8], pps_nal: &[u8], fps: f64) -> Vec<u8> {
-    let (width, height) = sps_nal_dimensions(sps_nal);
-    let delta = if fps > 0.0 { (1000.0 / fps).round() as u32 } else { 1000 }.max(1);
-    let samples: Vec<_> = nal_samples.iter().map(|data| Mp4Sample { data: data.clone(), duration: delta, cts_offset: 0, sync: true }).collect();
-    let track = Mp4Track {
-        track_id: 1,
-        timescale: 1000,
-        codec: Mp4Codec::avc(vec![sps_nal.to_vec()], vec![pps_nal.to_vec()], 4, None),
-        width,
-        height,
-        metadata: Default::default(),
-        chunk_sample_counts: vec![samples.len() as u32],
-        samples,
-    };
-    let snapshot =
-        Mp4Snapshot { schema: STDIO_MP4_DOCUMENT_SCHEMA.into(), ftyp: Mp4Ftyp { major_brand: "isom".into(), minor_version: 512, compatible_brands: vec!["isom".into(), "avc1".into(), "mp41".into()] }, movie: Default::default(), tracks: vec![track] };
-    mp4_engine::encode_mp4(&snapshot)
-}
-
-/// ✍️ Muxes pre-encoded JPEG frames into a minimal MJPG-codec AVI via stdio's real
-/// `avi::engine::encode_avi`, fixture-synthesis only. Dimensions come from decoding `frames[0]`.
-pub fn write_avi_mjpg(frames: &[Vec<u8>], fps: f64) -> Vec<u8> {
-    let (width, height) = frames.first().and_then(|f| remodeling_image::decode_jpeg(f).ok()).map_or((0, 0), |img| (img.width, img.height));
-    let micro_sec_per_frame = if fps > 0.0 { (1_000_000.0 / fps).round() as u32 } else { 1_000_000 };
-    let rate = if fps > 0.0 { (fps * 1000.0).round() as u32 } else { 1000 };
-    let chunks: Vec<AviChunk> = frames.iter().map(|data| AviChunk { fourcc: "00dc".into(), data: data.clone(), keyframe: true }).collect();
-    let stream = AviStream {
-        strh: AviStreamHeader {
-            fcc_type: "vids".into(),
-            fcc_handler: "MJPG".into(),
-            flags: 0,
-            priority: 0,
-            language: 0,
-            initial_frames: 0,
-            scale: 1000,
-            rate,
-            start: 0,
-            length: frames.len() as u32,
-            suggested_buffer_size: 0,
-            quality: 0,
-            sample_size: 0,
-            rc_frame_left: 0,
-            rc_frame_top: 0,
-            rc_frame_right: width as i32,
-            rc_frame_bottom: height as i32,
-            rc_frame_width: 16,
-            strh_extra: Vec::new(),
-        },
-        strf: AviStreamFormat::BitmapInfo { size: 40, width: width as i32, height: height as i32, planes: 1, bit_count: 24, compression: "MJPG".into(), size_image: 0, x_pels_per_meter: 0, y_pels_per_meter: 0, colors_used: 0, colors_important: 0 },
-        chunks,
-        strl_extra: Vec::new(),
-    };
-    let snapshot = AviSnapshot {
-        schema: STDIO_AVI_DOCUMENT_SCHEMA.into(),
-        main_header: AviMainHeader {
-            micro_sec_per_frame,
-            max_bytes_per_sec: 0,
-            padding_granularity: 0,
-            flags: 0x10,
-            total_frames: frames.len() as u32,
-            initial_frames: 0,
-            streams: 1,
-            suggested_buffer_size: 0,
-            width,
-            height,
-            reserved: vec![0, 0, 0, 0],
-        },
-        streams: vec![stream],
-        idx1_present: true,
-        unknown_chunks: Vec::new(),
-        hdrl_extra: Vec::new(),
-    };
-    avi_engine::encode_avi(&snapshot)
-}
-// #endregion 🔖️Mux
 
 // #region 🔖️Extract
 /// 🎚️ Frame-sampling knobs for [`extract_frames`]: `stride` keeps every `stride`-th sample (`0` treated as
@@ -3013,22 +2931,9 @@ pub struct VideoIngestOptions {
     pub max_long_edge_px: u32,
 }
 
-/// 🔍️ A probed container's video-track metadata, still tagged by container family.
-#[derive(Clone, Debug, PartialEq)]
-pub enum VideoProbe {
-    Mp4(Mp4Info),
-    Avi(AviInfo),
-}
-
-/// 🔍️ Sniffs `bytes` as RIFF/AVI (`RIFF` magic) or ISO-BMFF/MP4 otherwise, and probes accordingly via
-/// stdio's real `decode_mp4`/`decode_avi`. Succeeds for any well-formed container regardless of
-/// codec — [`extract_frames`] is what may reject an undecodable codec.
+/// 🔍️ Probes with the artifact owner's currently linked capabilities.
 pub fn probe(bytes: &[u8]) -> Result<VideoProbe, VideoError> {
-    if bytes.len() >= 4 && &bytes[0..4] == b"RIFF" {
-        Ok(VideoProbe::Avi(probe_avi(bytes)?))
-    } else {
-        Ok(VideoProbe::Mp4(probe_mp4(bytes)?))
-    }
+    probe_with_providers_v1(&container_providers::inventory_v1(), bytes)
 }
 
 /// 🏷️ A human/log-facing fourcc for a codec, for [`VideoError::UnsupportedCodec`] diagnostics.
@@ -3170,24 +3075,22 @@ impl Iterator for FrameIter {
     }
 }
 
-/// 📥️ Probes `bytes`, then returns a lazy [`FrameIter`] applying `opts`. Succeeds for MJPEG (either
-/// container) and baseline AVC (MP4 only); any other codec is [`VideoError::UnsupportedCodec`], routing the
-/// caller to a host decoder.
+/// 📥️ Extracts sampled frames using the artifact owner's linked capabilities.
 pub fn extract_frames(bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIter, VideoError> {
-    match probe(bytes)? {
-        VideoProbe::Mp4(info) => match info.codec {
-            VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
-            VideoCodec::Avc => {
-                let (sps_list, pps_list, nal_length_size) = info.avc_config.ok_or(VideoError::UnsupportedCodec(FourCc(*b"avc1")))?;
-                let decoder = H264Decoder::new(&flatten_sps_pps(&sps_list, &pps_list))?.with_nal_length_size(nal_length_size);
-                Ok(FrameIter::new(info.samples, Some(decoder), *opts))
-            }
-            other => Err(VideoError::UnsupportedCodec(codec_fourcc_hint(other))),
-        },
-        VideoProbe::Avi(info) => match info.codec {
-            VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
-            other => Err(VideoError::UnsupportedCodec(codec_fourcc_hint(other))),
-        },
+    extract_frames_with_providers_v1(&container_providers::inventory_v1(), bytes, opts)
+}
+
+/// 📥️ Decodes admitted provider samples with owned MJPEG and baseline AVC decoders.
+pub fn extract_frames_with_providers_v1(providers: &[VideoContainerProviderV1<'_>], bytes: &[u8], opts: &VideoIngestOptions) -> Result<FrameIter, VideoError> {
+    let info = probe_with_providers_v1(providers, bytes)?;
+    match info.codec {
+        VideoCodec::Mjpeg => Ok(FrameIter::new(info.samples, None, *opts)),
+        VideoCodec::Avc => {
+            let configuration = info.avc_config.ok_or(VideoError::UnsupportedCodec(FourCc(*b"avc1")))?;
+            let decoder = H264Decoder::new(&flatten_sps_pps(&configuration.sps, &configuration.pps))?.with_nal_length_size(configuration.nal_length_size);
+            Ok(FrameIter::new(info.samples, Some(decoder), *opts))
+        }
+        other => Err(VideoError::UnsupportedCodec(codec_fourcc_hint(other))),
     }
 }
 // #endregion 🔖️Extract

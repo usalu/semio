@@ -28,7 +28,7 @@
             },
             {
               "id": "lays-an-area-pressure-over-769710",
-              "directoryName": "🏠️lays-an-area-pressure-over-769710"
+              "directoryName": "🏠️lays"
             }
           ]
         },
@@ -39,15 +39,15 @@
           "scenarios": [
             {
               "id": "sw-no-such-case-bfe5bc",
-              "directoryName": "🚨️sw-no-such-case-bfe5bc"
+              "directoryName": "🚨️sw"
             },
             {
               "id": "hall-crane-sw-978370",
-              "directoryName": "🏗️hall-crane-sw-978370"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "switches-self-7e0cda",
-              "directoryName": "⏸️switches-self-7e0cda"
+              "directoryName": "⏸️switches"
             }
           ]
         },
@@ -58,11 +58,11 @@
           "scenarios": [
             {
               "id": "dangling-term-b9d144",
-              "directoryName": "🚨️dangling-term-b9d144"
+              "directoryName": "🚨️dangling"
             },
             {
               "id": "hall-new-acc-4099b2",
-              "directoryName": "🏗️hall-new-acc-4099b2"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "appends-a-8ede20",
@@ -77,15 +77,15 @@
           "scenarios": [
             {
               "id": "dangling-solid-5e04d9",
-              "directoryName": "🚨️dangling-solid-5e04d9"
+              "directoryName": "🚨️dangling"
             },
             {
               "id": "hall-snow-drift-068d9b",
-              "directoryName": "🏗️hall-snow-drift-068d9b"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "appends-a-wind-case-a6c267",
-              "directoryName": "🌬️appends-a-wind-case-a6c267"
+              "directoryName": "🌬️appends"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "no-such-combo-f42cd6",
-              "directoryName": "🚨️no-such-combo-f42cd6"
+              "directoryName": "🚨️no"
             },
             {
               "id": "hall-cut-qp-ebd806",
@@ -123,11 +123,11 @@
             },
             {
               "id": "hall-cut-crane-52270d",
-              "directoryName": "🏗️hall-cut-crane-52270d"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "removes-the-wind-caeb06",
-              "directoryName": "🚫️removes-the-wind-caeb06"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -146,7 +146,7 @@
             },
             {
               "id": "drops-the-trailing-member-b73b25",
-              "directoryName": "➖️drops-the-trailing-member-b73b25"
+              "directoryName": "➖️drops"
             }
           ]
         },
@@ -165,7 +165,7 @@
             },
             {
               "id": "retunes-the-rafter-udl-241993",
-              "directoryName": "🔁️retunes-the-rafter-udl-241993"
+              "directoryName": "🔁️retunes"
             },
             {
               "id": "dangling-node-092d4a",
@@ -196,15 +196,15 @@
             },
             {
               "id": "hall-renames-crane-9f2be8",
-              "directoryName": "🏗️hall-renames-crane-9f2be8"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "renames-the-wind-case-1ac4f5",
-              "directoryName": "🏷️renames-the-wind-case-1ac4f5"
+              "directoryName": "🏷️renames"
             },
             {
               "id": "no-such-case-15cca1",
-              "directoryName": "🚨️no-such-case-15cca1"
+              "directoryName": "🚨️no"
             }
           ]
         },
@@ -215,27 +215,27 @@
           "scenarios": [
             {
               "id": "same-combination-4f8781",
-              "directoryName": "⏸️same-combination-4f8781"
+              "directoryName": "⏸️same"
             },
             {
               "id": "hall-retunes-sls-280f78",
-              "directoryName": "🏗️hall-retunes-sls-280f78"
+              "directoryName": "🏗️hall"
             },
             {
               "id": "reweights-the-terms-828cb2",
-              "directoryName": "🔁️reweights-the-terms-828cb2"
+              "directoryName": "🔁️reweights"
             },
             {
               "id": "dangling-term-17506c",
-              "directoryName": "🚨️dangling-term-17506c"
+              "directoryName": "🚨️dangling"
             },
             {
               "id": "no-such-combo-0c9c39",
-              "directoryName": "🚨️no-such-combo-0c9c39"
+              "directoryName": "🚨️no"
             },
             {
               "id": "renames-combo-e8f4f2",
-              "directoryName": "🪪️renames-combo-e8f4f2"
+              "directoryName": "🪪️renames"
             }
           ]
         }

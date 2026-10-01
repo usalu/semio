@@ -1,0 +1,15 @@
+{
+  "convention": "EnergyPlus Schedule:Week:Daily",
+  "slotOrder": ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"],
+  "hour": 9,
+  "dailyValueBySlot": [10.0, 21.0, 32.0, 43.0, 54.0, 65.0, 76.0],
+  "cases": [
+    {"date": {"year": 2026, "month": 1, "day": 4}, "weekday": "sunday", "dayOfWeek": 1, "slot": 0, "value": 10.0},
+    {"date": {"year": 2026, "month": 1, "day": 5}, "weekday": "monday", "dayOfWeek": 2, "slot": 1, "value": 21.0},
+    {"date": {"year": 2026, "month": 1, "day": 6}, "weekday": "tuesday", "dayOfWeek": 3, "slot": 2, "value": 32.0},
+    {"date": {"year": 2026, "month": 1, "day": 7}, "weekday": "wednesday", "dayOfWeek": 4, "slot": 3, "value": 43.0},
+    {"date": {"year": 2026, "month": 1, "day": 1}, "weekday": "thursday", "dayOfWeek": 5, "slot": 4, "value": 54.0},
+    {"date": {"year": 2026, "month": 1, "day": 2}, "weekday": "friday", "dayOfWeek": 6, "slot": 5, "value": 65.0},
+    {"date": {"year": 2026, "month": 1, "day": 3}, "weekday": "saturday", "dayOfWeek": 7, "slot": 6, "value": 76.0}
+  ]
+}

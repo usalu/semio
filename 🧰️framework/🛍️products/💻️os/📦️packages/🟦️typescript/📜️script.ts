@@ -2,7 +2,9 @@
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, resolveTestLevel, runBunx, runVitest } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runWgpuPackageGenerator } from "../../🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️publication/🟦️.ts";
 
 /** ⚖️ Verifies bounded installed service dispatch, transport and contribution removal. */
@@ -48,7 +50,7 @@ const OWNED_SCHEMA_MODULES = {
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
-  const { semioSchemaAjvV1 } = await import("../../🧪️tests/🧬️schema-oracle/🟦️.ts");
+  const { semioSchemaAjvV1 } = await import("../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
   const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
@@ -174,4 +176,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("document-opening-attempt-check", DocumentOpeningAttemptCheckScript)
 ;
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

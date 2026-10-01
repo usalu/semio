@@ -4,9 +4,9 @@ import { type GltfAccessorType, type GltfComponentType, gltfWireIndex, gltfWireO
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateAccessorPayload {
-  position: number;
+  position: bigint;
   componentType: GltfComponentType;
-  count: number;
+  count: bigint;
   kind: GltfAccessorType;
 }
 

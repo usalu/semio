@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "replace-presence" => Vector {
-            before: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace/✅️replace/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/👥️presence/🧫️fixtures/📸️replace/✅️replace/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

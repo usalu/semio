@@ -1,4 +1,4 @@
-import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "../../../../../../🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { jsonSchemaSubsetValueEquals, validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";

@@ -1,10 +1,10 @@
 //! 🌀️ Canonical fill-rule changes preserve geometry, history, and operation codecs.
 use crate::{DrawingSnapshot,DrawingMutation,DrawingDiff,FillRule};
 use protocol::{Mutation,MutationDiff};
-const BEFORE:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/⬅️before/🔣️.json");
-const AFTER:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/📸️snapshot/➡️after/🔣️.json");
-const DIFF:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/🔺️diff/🔣️.json");
-const MUTATION:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd-to-nonzero/🦠️mutation/🔣️.json");
+const BEFORE:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/⬅️before/🔣️.json");
+const AFTER:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/📸️snapshot/➡️after/🔣️.json");
+const DIFF:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/🔺️diff/🔣️.json");
+const MUTATION:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🌀️set-layer-fill-rule/🌀️evenodd/🦠️mutation/🔣️.json");
 #[test]
 fn fill_rule_fixture_applies_and_inverts_through_all_owned_codecs() {
     let before:DrawingSnapshot=serde_json::from_str(BEFORE).unwrap();

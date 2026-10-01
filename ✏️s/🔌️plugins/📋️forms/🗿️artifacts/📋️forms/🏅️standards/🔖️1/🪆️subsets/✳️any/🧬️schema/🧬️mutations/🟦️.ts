@@ -16,6 +16,7 @@ import type { MoveBlockToStep } from "./📦move-block-to-step/🦠️mutation/�
 import type { RenameStep } from "./✏️rename-step/🦠️mutation/🟦️.ts";
 import type { ReorderStep } from "./🔀reorder-step/🦠️mutation/🟦️.ts";
 import type { ReplaceBlock } from "./🔁replace-block/🦠️mutation/🟦️.ts";
+import type { ChangeBlockField } from "./🎛️change-block-field/🦠️mutation/🟦️.ts";
 
 
 export type DslValue = null | boolean | number | string | DslValue[] | { [key: string]: DslValue };
@@ -86,5 +87,6 @@ export type FormsMutation =
   | ({ mutation: 'deleteBlock' } & DeleteBlock)
   | ({ mutation: 'moveBlockToStep' } & MoveBlockToStep)
   | ({ mutation: 'replaceBlock' } & ReplaceBlock)
+  | ({ mutation: 'changeBlockField' } & ChangeBlockField)
   | ({ mutation: 'changeFormTitle' } & ChangeFormTitle)
   | import('../📨️response/🟦️.ts').FormsResponseEvent;

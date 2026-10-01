@@ -113,7 +113,7 @@ fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("diff.v1".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(1, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -440,7 +440,7 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
                 transaction: Some(crate::mutation::TransactionRef { id: "tx-0011223344556677".into(), tool: "app#select".into() }),
             },
         ],
-        description: None, verb: None,
+        description: None, verb: None, line: None,
         coalesce_key: None,
         sequence_number: 1,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -476,7 +476,7 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
         forwards: vec![CausalAddOp { delta: 5 }],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None, verb: None,
+        description: None, verb: None, line: None,
         coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -502,7 +502,7 @@ fn mutation_envelope_from_edit_propagates_an_encode_failure() {
         forwards: vec![CausalAddOp { delta: 1 }],
         inverse: vec![],
         mutation_meta: vec![],
-        description: None, verb: None,
+        description: None, verb: None, line: None,
         coalesce_key: None,
         sequence_number: 0,
         started_at: "2026-07-27T00:00:00Z".into(),
@@ -529,15 +529,16 @@ fn envelope_binary_round_trips() {
     assert_eq!(pos, out.len(), "decode must consume exactly the encoded bytes");
 }
 
-/// 🧾️ A tool transaction and an authoring verb ride the binary envelope (trailing flags bit 0 and bit 1) and its value
-/// shape, alone and together; an unknown trailing flag is refused.
+/// 🧾️ A tool transaction, an authoring verb and an alternative line ride the binary envelope (trailing flags
+/// bit 0, bit 1 and bit 2) and its value shape; an unknown trailing flag is refused.
 #[test]
 fn envelope_transaction_and_verb_round_trip_through_binary_and_value() {
     let transaction = Some(crate::mutation::TransactionRef { id: "tx-0123456789abcdef".into(), tool: "app#select".into() });
-    for (transaction, verb) in [(transaction.clone(), None), (None, Some("typeText".to_string())), (transaction, Some("typeText".to_string()))] {
+    for (transaction, verb, line) in [(transaction.clone(), None, None), (None, Some("typeText".to_string()), None), (transaction, Some("typeText".to_string()), Some("alt-1".to_string()))] {
         let mut envelope = sample_envelope("operation-1", vec!["operation-0"]);
         envelope.transaction = transaction;
         envelope.verb = verb;
+        envelope.line = line;
         let mut out = Vec::new();
         encode_envelope(&envelope, &mut out);
         let mut pos = 0;
@@ -548,8 +549,8 @@ fn envelope_transaction_and_verb_round_trip_through_binary_and_value() {
     }
     let mut plain = Vec::new();
     encode_envelope(&sample_envelope("operation-1", vec!["operation-0"]), &mut plain);
-    *plain.last_mut().expect("trailing flags") = 4;
-    assert!(format!("{:?}", decode_envelope(&plain, &mut 0).expect_err("flag 4")).contains("trailing flags 4"));
+    *plain.last_mut().expect("trailing flags") = 8;
+    assert!(format!("{:?}", decode_envelope(&plain, &mut 0).expect_err("flag 8")).contains("trailing flags 8"));
 }
 
 #[test]
@@ -574,7 +575,7 @@ fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         diff: ArtifactDiff { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         inverse: InverseMutation { schema: crate::ids::SchemaId("s".into()), payload: Vec::new() },
         timestamp: crate::ids::HybridLogicalTimestamp::new(0, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     };
     let mut out = Vec::new();
     encode_envelope(&envelope, &mut out);

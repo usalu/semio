@@ -879,7 +879,7 @@ fn text_editor_phase_four_binding_retires_the_closed_host_and_preserves_its_sibl
 }
 
 #[test]
-fn paint2d_mask_stroke_publishes_the_shared_target_and_exact_revision(){
+fn paint2d_mask_stroke_publishes_one_paint_stroke_at_the_shared_target(){
     let _serialized=engine_surface_law_guard();
     let fixture:Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🎭️mask-stroke/🔣️.json")).unwrap();
     for case in fixture["cases"].as_array().unwrap().iter().filter(|case|case["assets"].as_object().unwrap().is_empty()){
@@ -888,8 +888,9 @@ fn paint2d_mask_stroke_publishes_the_shared_target_and_exact_revision(){
         let bounds=Rect{x:0.0,y:0.0,w:640.0,h:480.0};assert!(sync_engine_scene(&scene,"law-window",bounds,&Theme::default()));
         let (x,y)=with_raster_host_mut(&surface_id,|host|host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap())).unwrap();
         let mut input=InputState::<ActionDescriptor>::default();assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,true,0,false,false,&mut input).unwrap());assert!(paint2d_pointer_button_into(&scene,bounds,x as f32,y as f32,false,0,false,false,&mut input).unwrap());
-        let actions=drain(&mut input);assert_eq!(actions.len(),1);assert_eq!(actions[0].action,"editMask");let fields=action_fields(&actions[0]);let get=|key:&str|fields.iter().find(|(field,_)|field==key).unwrap().1.as_str();assert_eq!(get("layerId"),"p");
-        let revision:Value=serde_json::from_str(get("expectedMask")).unwrap();assert!(revision["imageKey"].is_null());assert_eq!(revision["linked"],true);assert_eq!(revision["invert"],true);assert_eq!(revision["enabled"],false);
-        let operation:Value=serde_json::from_str(get("operation")).unwrap();assert_eq!(operation["kind"],"alphaStroke");assert_eq!(operation["alpha"],96);for index in 0..2{assert_eq!(operation["points"][0][index].as_f64(),case["pixelPoint"][index].as_f64());}assert!(with_raster_host_mut(&surface_id,|host|host.paint_edit().is_none()).unwrap());drop_engine_surface(&surface_id);
+        let actions=drain(&mut input);assert_eq!(actions.len(),1);assert_eq!(actions[0].action,"paintStroke");
+        let args:Value=serde_json::from_str(&dsl::json::to_json_string(actions[0].args.as_ref().expect("the stroke carries arguments"))).unwrap();
+        assert_eq!(args["layerId"],"p");assert_eq!(args["tool"],"brush");assert!(args.get("operation").is_none()&&args.get("expectedMask").is_none());
+        for (index,axis) in ["xs","ys"].into_iter().enumerate(){assert_eq!(args[axis][0].as_f64(),case["pixelPoint"][index].as_f64());}assert!(with_raster_host_mut(&surface_id,|host|host.paint_edit().is_none()).unwrap());drop_engine_surface(&surface_id);
     }
 }

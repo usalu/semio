@@ -265,7 +265,7 @@ fn pointer_lookup<'a>(value: &'a serde_json::Value, path: &str) -> Option<&'a st
 
 /// 🔁️ What one completed `tools/call` changed, per the declared table above. An `isError` result and
 /// a tool with no row change nothing — the empty vec is the common case and costs one table scan.
-pub fn changes_from_tool_result(tool: &str, is_error: bool, structured: Option<&serde_json::Value>) -> Vec<ResourceChange> {
+pub(crate) fn changes_from_tool_result(tool: &str, is_error: bool, structured: Option<&serde_json::Value>) -> Vec<ResourceChange> {
     if is_error {
         return Vec::new();
     }
@@ -290,7 +290,7 @@ pub fn changes_from_tool_result(tool: &str, is_error: bool, structured: Option<&
 /// 📢️ Applies [`changes_from_tool_result`] to the process-wide broker — the single call
 /// `McpServer::handle_tools_call` makes after every tool call, returning how many notifications
 /// actually reached a subscribed client.
-pub fn broadcast_tool_result_changes(tool: &str, is_error: bool, structured: Option<&serde_json::Value>) -> usize {
+pub(crate) fn broadcast_tool_result_changes(tool: &str, is_error: bool, structured: Option<&serde_json::Value>) -> usize {
     changes_from_tool_result(tool, is_error, structured).iter().map(|change| resource_update_broker().broadcast(change)).sum()
 }
 //#endregion 🔖️ToolResultChanges
@@ -302,9 +302,9 @@ pub const NOTIFICATION_PROGRESS: &str = "notifications/progress";
 /// `_meta.progressToken` and the connection to push it down. Both are needed — a token with no sink
 /// has nowhere to go, and a sink with no token has nothing the client could correlate.
 #[derive(Clone)]
-pub struct ProgressBinding {
-    pub token: serde_json::Value,
-    pub slot: NotificationSlot,
+pub(crate) struct ProgressBinding {
+    pub(crate) token: serde_json::Value,
+    pub(crate) slot: NotificationSlot,
 }
 
 thread_local! {
@@ -315,7 +315,7 @@ thread_local! {
 /// 🧷️ RAII guard naming the JSON-RPC request whose `tools/call` runs on this thread — with or
 /// without a progress token — so every job it mints is cancellable by `notifications/cancelled`.
 /// Dropping it forgets a cancel that named this request.
-pub struct RequestScope {
+pub(crate) struct RequestScope {
     previous: Option<String>,
     key: Option<String>,
 }
@@ -331,7 +331,7 @@ impl Drop for RequestScope {
 }
 
 /// 🆔️ Enters the request scope for one `tools/call`; `None` (a notification) binds nothing.
-pub fn enter_request_scope(request_id: Option<&serde_json::Value>) -> RequestScope {
+pub(crate) fn enter_request_scope(request_id: Option<&serde_json::Value>) -> RequestScope {
     let key = request_id.map(request_key);
     let previous = ACTIVE_REQUEST.with(|active| std::mem::replace(&mut *active.borrow_mut(), key.clone()));
     RequestScope { previous, key }
@@ -339,7 +339,7 @@ pub fn enter_request_scope(request_id: Option<&serde_json::Value>) -> RequestSco
 
 /// 🧷️ RAII guard for the thread-local binding — restoring the previous value on drop rather than
 /// clearing it, so a nested call can never silence its caller's progress.
-pub struct ProgressScope {
+pub(crate) struct ProgressScope {
     previous: Option<ProgressBinding>,
 }
 
@@ -352,12 +352,12 @@ impl Drop for ProgressScope {
 
 /// 📈️ Enters the progress scope for one `tools/call`. `binding` is `None` for the ordinary call that
 /// carried no `_meta.progressToken`, and the guard still restores correctly.
-pub fn enter_progress_scope(binding: Option<ProgressBinding>) -> ProgressScope {
+pub(crate) fn enter_progress_scope(binding: Option<ProgressBinding>) -> ProgressScope {
     let previous = ACTIVE_PROGRESS.with(|active| std::mem::replace(&mut *active.borrow_mut(), binding));
     ProgressScope { previous }
 }
 
-pub fn active_progress_binding() -> Option<ProgressBinding> {
+pub(crate) fn active_progress_binding() -> Option<ProgressBinding> {
     ACTIVE_PROGRESS.with(|active| active.borrow().clone())
 }
 
@@ -410,7 +410,7 @@ pub fn bind_job_to_active_scope(job_id: &str) {
 /// 🛑️ `notifications/cancelled`'s effect: every job minted under `request_id` is asked to stop
 /// through the job registry (which fires each producer's bound interrupt), and a request that has
 /// not minted its job yet is remembered so the job is cancelled the moment it is minted.
-pub fn cancel_request(request_id: &serde_json::Value) {
+pub(crate) fn cancel_request(request_id: &serde_json::Value) {
     let key = request_key(request_id);
     let jobs = {
         let mut bindings = progress_bindings().lock().expect("progress binding lock poisoned");
@@ -466,7 +466,7 @@ pub fn release_job_binding(job_id: &str) {
 }
 
 /// 🛑️ Every job id minted under `request_id` — what `notifications/cancelled` maps onto.
-pub fn jobs_for_request(request_id: &serde_json::Value) -> Vec<String> {
+pub(crate) fn jobs_for_request(request_id: &serde_json::Value) -> Vec<String> {
     let bindings = progress_bindings().lock().expect("progress binding lock poisoned");
     bindings.jobs_by_request.get(&request_key(request_id)).cloned().unwrap_or_default()
 }

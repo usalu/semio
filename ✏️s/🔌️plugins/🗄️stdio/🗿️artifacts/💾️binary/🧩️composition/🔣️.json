@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_binary::editor::binary::BinaryEditor",
       "factory": "semio_s_artifact_stdio_binary::editor::binary::create_binary_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "binary_editor",
+        "sqliteSnapshot": "sqlite_snapshot_binary_editor"
+      }
     },
     {
       "owner": "stdio-binary",
@@ -24,10 +28,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_binary::viewer::binary::BinaryViewer",
       "factory": "semio_s_artifact_stdio_binary::viewer::binary::create_binary_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -43,5 +47,23 @@
         "wgpu": 6396
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "BinaryMutation",
+      "snapshot": "semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot",
+      "mutation": "semio_s_artifact_stdio_binary::standards::v_raw::subsets::any::schema::mutations::BinaryMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.binary",
+      "standard": "raw",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🏅️standards/🔖️raw/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

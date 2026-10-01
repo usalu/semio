@@ -815,7 +815,19 @@
         "readyToFinalize",
         "replayCancelled",
         "actionRerun",
-        "replayProgressValueText"
+        "replayProgressValueText",
+        "refusalBusy",
+        "refusalUnknownMutation",
+        "refusalNotEditable",
+        "refusalUnknownInput",
+        "refusalInvalidInput",
+        "refusalNoSelection",
+        "refusalNameRequired",
+        "refusalNameInvalid",
+        "refusalSchemaUnavailable",
+        "replayFaulted",
+        "commitFailed",
+        "outcomeIntroduced"
       ]
     },
     "LifecycleLawFixture": {
@@ -840,7 +852,8 @@
         "cases",
         "scenarios",
         "invariants",
-        "labels"
+        "labels",
+        "codeLabels"
       ],
       "properties": {
         "schema": {
@@ -1227,8 +1240,8 @@
         },
         "labels": {
           "type": "array",
-          "minItems": 23,
-          "maxItems": 23,
+          "minItems": 35,
+          "maxItems": 35,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -1248,6 +1261,29 @@
               "de": {
                 "type": "string",
                 "minLength": 1
+              }
+            }
+          }
+        },
+        "codeLabels": {
+          "type": "array",
+          "minItems": 17,
+          "maxItems": 17,
+          "uniqueItems": true,
+          "description": "Every timeTravel.* code a history-edit verb or driver answers (session refusals, frozen, cancelled, the hosting runtime's refusals and driver faults) with the label key a host shows for it.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "key"
+            ],
+            "properties": {
+              "code": {
+                "$ref": "#/$defs/FaultCode"
+              },
+              "key": {
+                "$ref": "#/$defs/TimeTravelLabelKey"
               }
             }
           }

@@ -49,20 +49,20 @@
       "vectors": [
         {
           "mutationId": "apply-directory-page",
-          "sourceMutationDirectoryName": "📬️apply-directory-page",
-          "mutationDirectoryName": "📬️apply-directory-page",
+          "sourceMutationDirectoryName": "📬️apply-directory",
+          "mutationDirectoryName": "📬️apply-directory",
           "scenarios": [
             {
               "id": "apply-directory-page-applied",
-              "directoryName": "✅️apply-directory-page-applied"
+              "directoryName": "✅️apply"
             },
             {
               "id": "apply-directory-page-no-op",
-              "directoryName": "🟰️apply-directory-page-no-op"
+              "directoryName": "🟰️apply"
             },
             {
               "id": "apply-directory-page-rejected",
-              "directoryName": "🚫️apply-directory-page-rejected"
+              "directoryName": "🚫️apply"
             }
           ]
         }
@@ -121,35 +121,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4854f12d82cceeb19e8f69eca215d0426ad9e998b2645e64943394b48c44f2f8",
           "bytes": 161
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/✅️apply/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:c6693ad818998bde348894e25e7ab27d160bc5b417abc9e60587eec16170419c",
           "bytes": 1237
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/✅️apply/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/✅️apply/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📬️apply-directory-page/✅️apply-directory-page-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/✅️apply/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -186,35 +186,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🟰️apply/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:c6693ad818998bde348894e25e7ab27d160bc5b417abc9e60587eec16170419c",
           "bytes": 1237
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🟰️apply/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🟰️apply/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🟰️apply-directory-page-no-op/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🟰️apply/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:d2a81b51136af5be8326cbd98957610a34e7017ac480f0a877898fbdc0b356a6",
           "bytes": 114
@@ -251,35 +251,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🚫️apply/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:278c0895d15af3dc45c947dd5c7e4faf92f814789bbabb2991712a0a15fe4935",
           "bytes": 641
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🚫️apply/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🚫️apply/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:0438a5368b8508250f6caa0003673a98ed4a2c557bd93452a8acabfd03a0c87c",
           "bytes": 1026
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📬️apply-directory-page/🚫️apply-directory-page-rejected/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📬️apply-directory/🚫️apply/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4e9caafdbb057e8a7feafa8ca64d2cbad4c8b5b0ac355bc491f35437cc5c20f3",
           "bytes": 142

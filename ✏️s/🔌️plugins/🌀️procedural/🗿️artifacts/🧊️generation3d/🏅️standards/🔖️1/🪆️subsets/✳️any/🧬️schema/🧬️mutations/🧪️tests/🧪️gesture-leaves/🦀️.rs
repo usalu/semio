@@ -214,3 +214,86 @@ fn every_wire_witness_decodes_and_round_trips_the_binary_codec() {
         assert_eq!(<Generation3dMutation as protocol::OpText>::parse_op(&text).expect("witness parses back"), mutation, "{kind} round-trips the text codec: {text}");
     }
 }
+
+//#region ⏪️TimeTravel
+/// ⏪️ Folds `log` onto `base` the way a fresh history would — the oracle an edited history's Report replay must equal.
+fn fresh_fold(base: &Generation3dSnapshot, log: &[Generation3dMutation]) -> Generation3dSnapshot {
+    let mut state = base.clone();
+    for mutation in log {
+        apply_generation3d_mutation(&mut state, mutation).expect("the edited log folds");
+    }
+    state
+}
+
+/// ⏪️ Time travel edits ONE gesture leaf of a committed history: the preview base is the state right before it, the
+/// Report replay re-applies every downstream gesture onto the edited one and equals a fresh fold of the edited log, and
+/// overwrite commits exactly that head — for the relative drag (downstream drag composes onto the edited offset), the
+/// absolute slider value and the relative node drag.
+#[semio_framework_async_macros::async_test]
+async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
+    use protocol::OpBinary;
+    let log = vec![
+        drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0]),
+        change_slider_value("height", 7.5),
+        drag_transforms(vec![TRANSLATE.into()], [0.0, 2.0, 0.0]),
+        move_nodes(vec!["height".into(), "note".into()], 5.0, 5.0),
+        move_nodes(vec!["height".into()], -1.0, 0.0),
+    ];
+    for (edited_at, edited) in [(0, drag_transforms(vec![TRANSLATE.into()], [3.0, 0.0, -1.0])), (1, change_slider_value("height", 2.5)), (3, move_nodes(vec!["note".into()], 40.0, -12.5))] {
+        {
+            let base = base([1.0, 1.0, 1.0]);
+            let mut store = crate::store_fixture::document_store(base.clone()).await;
+            for mutation in &log {
+                store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the gesture applies");
+            }
+            let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+            let target = ids[edited_at].clone();
+            let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(target.clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+            let preview = store.state_before(&target, &drafts).expect("the preview base folds").as_ref().clone();
+            let before = fresh_fold(&base, &log[..edited_at]);
+            assert_eq!(preview, before, "the preview base is the state right before the edited leaf");
+            let mut edited_log = log.clone();
+            edited_log[edited_at] = edited.clone();
+            let fresh = fresh_fold(&base, &edited_log);
+            let mut replay = store.begin_report_replay(&drafts, Some(&target)).expect("the replay begins at the edited leaf");
+            assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+            let result = replay.finish().expect("a finished replay yields its result");
+            assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "an edited gesture never blocks finalizing");
+            assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+            store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+            assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+            for state in [preview, before, fresh, base] {
+                state.retire_cold();
+            }
+            crate::store_fixture::close(store);
+        }
+    }
+}
+
+/// 🧯️ A gesture whose target an upstream edit removed reports its vocabulary code downstream instead of aborting the
+/// replay: editing the slider leaf to a stranger id makes the replayed slider value Error `mutation.target-missing`,
+/// which blocks finalizing until it is edited again or withdrawn.
+#[semio_framework_async_macros::async_test]
+async fn a_gesture_edited_onto_a_missing_target_blocks_finalizing() {
+    use protocol::OpBinary;
+    {
+        let base = base([0.0; 3]);
+        let mut store = crate::store_fixture::document_store(base.clone()).await;
+        for mutation in [change_slider_value("height", 7.5), drag_transforms(vec![TRANSLATE.into()], [1.0, 0.0, 0.0])] {
+            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], description: None, transaction: None }).await.expect("the gesture applies");
+        }
+        let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+        let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::GENERATION_3D_SCHEMA.into(), payload: change_slider_value("ghost", 7.5).encode_op().expect("encodes") })].into_iter().collect();
+        let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins");
+        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+        let result = replay.finish().expect("finished");
+        let report = store.replay_report(&result).expect("report");
+        assert!(report.blocks_finalize(), "a missing slider blocks finalizing: {report:?}");
+        let edited = report.outcomes.iter().find(|outcome| outcome.mutation_id == ids[0]).expect("the edited leaf reports");
+        assert!(edited.messages.iter().any(|message| message.code.0 == "mutation.target-missing" && message.level == protocol::Severity::Error), "{edited:?}");
+        drop(result);
+        base.retire_cold();
+        crate::store_fixture::close(store);
+    }
+}
+//#endregion ⏪️TimeTravel

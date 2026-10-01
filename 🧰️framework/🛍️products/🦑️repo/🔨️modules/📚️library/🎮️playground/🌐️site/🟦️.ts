@@ -1,7 +1,7 @@
 /** 🌐️ Builds CDN-ready standalone playground sites from plugin `📜️script.ts build`. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, type ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, type ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runBun } from "../../🟦️.ts";
 
 const DISTRIBUTION_BUILD_SCRIPT = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🚚️distribution/📜️script.ts";

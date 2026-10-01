@@ -121,13 +121,13 @@ Feature: Apply every typed graph-rewrite-rule mutation twice — once in Rust, o
     Then each implementation lands on the committed after-rule in role, only the member this verb writes moved, and the two agree
     Examples:
       | id                        | dir                         | fixture                                       |
-      | edit-before-fixture       | 🖼️edit-before-fixture        | 🕸️swaps-in-a-two-node-before-graph              |
-      | edit-lhs                  | 👈️edit-lhs                  | 👈️narrows-the-lhs-pattern-to-a-shaft-neighbour  |
-      | edit-rhs                  | 👉️edit-rhs                  | 👉️rewrites-the-rhs-to-set-a-second-property     |
-      | change-parameter-binding  | 🔧️change-parameter-binding  | 🏷️retitles-the-caption-binding                  |
-      | remove-parameter-binding  | 🧹️remove-parameter-binding  | ✂️drops-the-repeat-binding                      |
-      | change-rule-layout-point  | 📐️change-rule-layout-point  | 📍️nudges-the-capsule-var-off-the-shaft          |
-      | remove-rule-layout-point  | 🗑️remove-rule-layout-point  | 📐️clears-the-shaft-layout-point                 |
+      | edit-before-fixture       | 🖼️edit-before-fixture        | 🕸️swaps              |
+      | edit-lhs                  | 👈️edit-lhs                  | 👈️narrows  |
+      | edit-rhs                  | 👉️edit-rhs                  | 👉️rewrites     |
+      | change-parameter-binding  | 🔧️change-parameter  | 🏷️retitles                  |
+      | remove-parameter-binding  | 🧹️remove-parameter-binding  | ✂️drops                      |
+      | change-rule-layout-point  | 📐️change-rule-layout  | 📍️nudges          |
+      | remove-rule-layout-point  | 🗑️remove-rule-layout  | 📐️clears                 |
 
   @id-identity-round-trip
   @level-long

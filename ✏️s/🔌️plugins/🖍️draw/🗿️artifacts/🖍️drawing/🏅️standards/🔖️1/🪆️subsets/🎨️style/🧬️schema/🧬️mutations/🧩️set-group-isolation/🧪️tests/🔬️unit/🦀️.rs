@@ -1,10 +1,10 @@
 //! 🧩️ Canonical group-isolation changes preserve geometry, history, and operation codecs.
 use crate::{DrawingSnapshot,DrawingMutation,DrawingDiff};
 use protocol::{Mutation,MutationDiff};
-const BEFORE:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/⬅️before/🔣️.json");
-const AFTER:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/➡️after/🔣️.json");
-const DIFF:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/🔺️diff/🔣️.json");
-const MUTATION:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/🦠️mutation/🔣️.json");
+const BEFORE:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json");
+const AFTER:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json");
+const DIFF:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/🔺️diff/🔣️.json");
+const MUTATION:&str=include_str!("../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/🦠️mutation/🔣️.json");
 #[test]
 fn group_isolation_fixture_applies_and_inverts_through_all_owned_codecs() {
     let before:DrawingSnapshot=serde_json::from_str(BEFORE).unwrap();

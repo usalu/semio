@@ -763,14 +763,8 @@ pub enum AgentCredentialSource {
 
 impl AgentCredentialSource {
     /// 📥️ Loads and bounds-checks the credential this source names.
-    pub fn load(&self) -> Result<crate::agent_credential::AgentCredentialV1, GatewayError> {
-        match self {
-            Self::File(path) => crate::agent_credential::AgentCredentialV1::read_file(std::path::Path::new(path)),
-            #[cfg(unix)]
-            Self::Descriptor(descriptor) => crate::agent_credential::AgentCredentialV1::read_fd(*descriptor),
-            #[cfg(not(unix))]
-            Self::Descriptor(_) => Err(GatewayError::new(GatewayErrorCode::InputInvalid, "--credential-fd is unavailable on this platform; use --credential-file")),
-        }
+    pub fn load(&self) -> Result<(crate::agent_credential::CredentialExchangeProtocolV1, crate::agent_credential::DelegatedCredentialV1), GatewayError> {
+        crate::agent_credential::load_delegated_credential_v1(self)
     }
 }
 
@@ -841,7 +835,7 @@ pub fn hub_open_retry_backoff_ms(error: &GatewayError, attempts_made: u32) -> Op
 /// `agent:<delegation id>`).
 ///
 /// 🤖️ Agent mode: a delegation a human minted for this agent, read from a 0600 file (or
-/// an inherited descriptor), exchanged once at `POST /auth/agent-sessions`. The session
+/// an inherited descriptor), exchanged once through the explicitly installed owner protocol. The session
 /// it returns is an ordinary hub session whose *kind* is `agent`, so everything below
 /// this line is identical to a human's — and everything above the hub's presence
 /// normalization now knows this peer is an agent principal, not the delegating human.
@@ -866,11 +860,11 @@ fn server_for_workspace_options(mut principal: AgentPrincipal, audit: std::sync:
         let mut adopted: Option<(String, String)> = None;
         let credential = match &hub.credential {
             Some(source) => {
-                let delegation = source.load()?;
-                if delegation.space_id() != hub.space_id {
-                    return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("this agent credential is scoped to space `{}`, not `{}`", delegation.space_id(), hub.space_id)));
+                let (protocol, delegation) = source.load()?;
+                if delegation.scope_id() != hub.space_id {
+                    return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, format!("this agent credential is scoped to space `{}`, not `{}`", delegation.scope_id(), hub.space_id)));
                 }
-                let grant = crate::workspace::remote::exchange_agent_session(&hub.base_url, &delegation)?;
+                let grant = crate::workspace::remote::exchange_delegated_session_v1(&hub.base_url, &delegation, protocol)?;
                 eprintln!("[semio-os-mcp] acting as agent principal {} (\"{}\") in space {}", grant.agent_principal_id, grant.agent_label, grant.space_id);
                 adopted = Some((grant.agent_principal_id.clone(), grant.agent_label.clone()));
                 std::sync::Arc::new(

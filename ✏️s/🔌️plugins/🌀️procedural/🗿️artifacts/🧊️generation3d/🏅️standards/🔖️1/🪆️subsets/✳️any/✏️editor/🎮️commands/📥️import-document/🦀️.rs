@@ -7,7 +7,7 @@
 //! round-trip tested and unreachable from any command, menu or button
 //! (`📓️audit-user-journey-gaps-2026-09-13.md` §6, P0 #1).
 //!
-//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set-active-example` does: as
+//! 🧬️ Importing REPLACES the whole document, and it does so the way `🎨️set` does: as
 //! an ordered batch of real `Generation3dMutation`s built by `generation3d_host_snapshot_operations`, never
 //! an `Effect::LoadDocument`. That keeps the import event-sourced and point-invertible — one `mod+z`
 //! puts the previous graph back — where a whole-document replace effect would be a CRUD write with
@@ -22,7 +22,7 @@
 //! cancelled pick's unfinished run gives its framework staging slot to the next pick.
 //!
 //! @see ../../../🚪️io/🦀️.rs — `document_io::import_document_bytes`, the composition point this calls.
-//! @see ../🎨️set-active-example/🦀️.rs — the same whole-document replacement, from a bundled example.
+//! @see ../🎨️set/🦀️.rs — the same whole-document replacement, from a bundled example.
 
 use crate::editor::generation3d::commands::set_active_example::config_after_document_load;
 use crate::editor::generation3d::config::{Generation3dConfig, Generation3dConfigMutation};

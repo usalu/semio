@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/👁️set-solve/✅️set-solve-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-solve/✅️set/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:e26340dc08b20fefe18161137c1d69b7f24c9eb688e62ab39602d886e05647cb",
           "bytes": 94
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/👁️set-solve/✅️set-solve-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-solve/✅️set/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:41c1131b9c282df7a24f6f91e2bb556a26ce4cc880460e6feb1bf5eb897a3a2c",
           "bytes": 128
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/👁️set-solve/✅️set-solve-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-solve/✅️set/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:18ee226df5bb2f6f1a6c633d79d00c343ccf11f6ebe175c33f38630448180632",
           "bytes": 100
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/👁️set-solve/✅️set-solve-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-solve/✅️set/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:18ee226df5bb2f6f1a6c633d79d00c343ccf11f6ebe175c33f38630448180632",
           "bytes": 100
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/👁️set-solve/✅️set-solve-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/👁️set-solve/✅️set/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

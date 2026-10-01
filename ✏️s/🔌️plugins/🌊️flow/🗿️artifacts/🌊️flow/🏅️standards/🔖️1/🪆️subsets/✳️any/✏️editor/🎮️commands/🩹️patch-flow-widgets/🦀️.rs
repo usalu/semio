@@ -1,13 +1,18 @@
-//! 🪟️ 🧩️ Flow play app commands command — `patch-flow-widgets`.
+//! 🪟️ 🧩️ Flow play app commands command — `patch-flow-widgets`: a widget value (a slider's `value`, a note's `text`) set as
+//! the ABSOLUTE `set-node-param` leaf of the composed content child (design §13.1: for a value the intent is the value). A
+//! dragged control carries its press as the dispatch's own `gesture`/`commit`, so the framework scrub machine keeps every tick
+//! provisional and commits the release as ONE child edit stamped with its `TransactionRef` (design §12); this never reads a
+//! gesture and never coalesces.
 
 use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
-use crate::schema::widget_id;
 use crate::{op::FlowMutation, FlowSnapshot};
 use flow::FlowEvalSession;
-use semio_framework_artifact_flow_flow::Widget;
-use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin::{app::ChildEmit, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_node_param::SetNodeParam, SemioFlowMutation};
+use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::DslRecord)]
 pub struct PatchFlowWidgets {
@@ -16,37 +21,34 @@ pub struct PatchFlowWidgets {
     pub value: String,
 }
 
-/// ✏️ Patches the slider value / note text on the selected widgets in the fixture, returning the
-/// clone. `value` is the typed command field verbatim (a plain `&str`, not a `serde_json::Value` —
-/// mirrors `dag_engine::node_patch_for_field`'s "typed command carries the raw UI input string
-/// directly" convention) — numeric fields parse it themselves.
-fn patched_widgets_fixture(snapshot: &FlowSnapshot, widget_ids: &[String], field: &str, raw_value: &str) -> FlowSnapshot {
-    let mut fixture = snapshot.to_host_snapshot();
-    for widget in fixture.widgets.iter_mut() {
-        if !widget_ids.iter().any(|id| id == widget_id(widget)) {
-            continue;
-        }
-        match (field, widget) {
-            ("value", Widget::InputSlider { value, .. }) => {
-                if let Ok(parsed) = raw_value.parse::<f64>() {
-                    *value = parsed;
-                }
-            }
-            ("text", Widget::InputNote { text, .. }) => *text = raw_value.into(),
-            _ => {}
-        }
+/// 🎚️ The ABSOLUTE `set-node-param` leaf that sets `field` of `node` to the raw UI input `raw`: a slider's `value` (parsed,
+/// finite, written in the node's own number form), a note's `text` verbatim. `None` for a field the widget does not carry,
+/// an unparsable number, or the value the widget already holds — a control back at its start yields nothing.
+pub fn widget_field_leaf(node: &FlowNode, field: &str, raw: &str) -> Option<SemioFlowMutation> {
+    let current = node.params.iter().find(|param| param.key == field).map(|param| param.value.as_str());
+    let value = match (field, node.kind.as_str()) {
+        ("value", "inputSlider") => raw.parse::<f64>().ok().filter(|value| value.is_finite() && current.and_then(|current| current.parse::<f64>().ok()) != Some(*value))?.to_string(),
+        ("text", "inputNote") => (current != Some(raw)).then(|| raw.to_string())?,
+        _ => return None,
+    };
+    Some(SemioFlowMutation::SetNodeParam(SetNodeParam { id: node.id.clone(), key: field.into(), value }))
+}
+
+/// 🧮️ The leaves `payload` means on `content`: one per addressed node, in content order, whose field it changes.
+pub fn patch_flow_widgets_leaves(content: &SemioFlowSnapshot, payload: &PatchFlowWidgets) -> Vec<SemioFlowMutation> {
+    content.nodes.iter().filter(|node| payload.widget_ids.contains(&node.id)).filter_map(|node| widget_field_leaf(node, &payload.field, &payload.value)).collect()
+}
+
+/// 📮️ ONE plain edit of `leaves` on the content child `child_id`; nothing changed is the empty emit (zero trace).
+pub fn widget_leaves_emit(child_id: &str, leaves: &[SemioFlowMutation]) -> Emit<FlowMutation, NoConfigMutation> {
+    if leaves.is_empty() {
+        return Emit::default();
     }
-    FlowSnapshot::from_host_snapshot(fixture)
+    Emit { child_emits: vec![ChildEmit::of::<SemioFlowSnapshot, _>("content", child_id, leaves)], ui_scope: UiDirtyScope::Full, ..Default::default() }
 }
 
 pub fn handle(payload: &PatchFlowWidgets, doc: &ArtifactView<'_, FlowSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _session: &mut FlowEvalSession) -> Result<Emit<FlowMutation, NoConfigMutation>, Fault> {
-    let composed = crate::flow_composed_snapshot(doc.snapshot, &doc.children)?;
-    let next = patched_widgets_fixture(&composed, &payload.widget_ids, &payload.field, &payload.value);
-    let scene = crate::flow_working_scene(&next);
-    let mut emit = crate::editor::flow::flow_scene_publication(&composed, &scene.widgets, &scene.synapses, &scene.layout);
-    if emit.child_emits.is_empty() {
-        return Err(Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.patch-widgets-unchanged"), format!("patchFlowWidgets changed no widget among [{}] with {} = {:?}", payload.widget_ids.join(","), payload.field, payload.value)));
-    }
-    emit.coalesce_key = Some(format!("patch-{}-{}", payload.field, payload.widget_ids.join(",")));
-    Ok(emit)
+    let child_id = &doc.snapshot.content.child_id;
+    let content = doc.children.typed_read::<SemioFlowSnapshot>("content", child_id)?;
+    Ok(widget_leaves_emit(child_id, &patch_flow_widgets_leaves(&content, payload)))
 }

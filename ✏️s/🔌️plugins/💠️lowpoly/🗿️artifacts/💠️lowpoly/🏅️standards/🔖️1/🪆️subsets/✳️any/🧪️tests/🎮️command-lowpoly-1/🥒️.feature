@@ -2,11 +2,9 @@
 @no-oracle-lowpoly-command-catalog-shape
 @comparison-ordered-json-v1
 Feature: One representative command per group constructs and reports its manifest id, and patchObject dispatches
-  This case exercises the lowpoly editor's declared command CATALOG — 47 commands across 13 groups
+  This case exercises the lowpoly editor's declared command CATALOG — 48 commands across 13 groups
   (`✏️patch-object`, `➕️add-primitive`, `🌞️sun`, `🎥️camera`, `👁️chrome`, `💬️engagement`, `📄️document`,
-  `🔷️mesh-edit`, `🖌️paint`, `🗂️selection`, `🧰️utility`, `🧲️transform`, `🧵️uv`; this ticket's own
-  research report's headline count of 48 is off by one against the macro's own row count and the
-  crate's own `command_ids_are_unique` test, which asserts 47 — corrected here) — one representative
+  `🔷️mesh-edit`, `🖌️paint`, `🗂️selection`, `🧰️utility`, `🧲️transform`, `🧵️uv`) — one representative
   command per group, constructed with the same example payload the crate's own `every_command()` test
   helper uses (`🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs`'s `#[cfg(test)] mod tests`).
 
@@ -44,7 +42,7 @@ Feature: One representative command per group constructs and reports its manifes
       | paint         | paint         | addPaintLayer    |
       | selection     | selection     | setActiveObject  |
       | utility       | utility       | setUtilityParam  |
-      | transform     | transform     | transformEnd     |
+      | transform     | transform     | translateSelection |
       | uv            | uv            | unwrapActive     |
 
   @id-patch-object-dispatch
@@ -60,7 +58,7 @@ Feature: One representative command per group constructs and reports its manifes
   @id-catalog-size
   @level-long
   @mode-conformance
-  Scenario: The declared command catalog holds exactly the 47 commands the macro's own rows declare
+  Scenario: The declared command catalog holds exactly the 48 commands the macro's own rows declare
     Given nothing beyond the linked `semio-s-plugin-lowpoly` crate
-    Then LowpolyCommand::TOOL_JOB_IDS has exactly 47 entries
+    Then LowpolyCommand::TOOL_JOB_IDS has exactly 48 entries
     And every entry is unique

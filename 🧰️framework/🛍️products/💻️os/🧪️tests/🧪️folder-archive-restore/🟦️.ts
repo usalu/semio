@@ -41,6 +41,7 @@ class FolderProgram {
         timestamp: { actor: 1n, physical_ms: BigInt(1_000 + this.#edits), logical: 0n },
         transaction: null,
         verb: null,
+        line: null,
       }]),
     });
   }
@@ -196,6 +197,34 @@ export async function registerFolderArchiveRestoreTests(
       expect(readLocalFolderEventsV1(device).map((event) => event.mutation)).toEqual(["attachLocalFolder", "detachLocalFolder"]);
       new OsShellConfig(device).setPreference(LOCAL_FOLDERS_CONFIG_SCHEMA, JSON.stringify({ version: 1, events: [{ mutation: "attachLocalFolder", ...identity, folder: { kind: "handle", handleId: "h" } }] }));
       expect(readLocalFolderBindingsV1(device), "a log that is not the facet's reattaches nothing").toEqual({ bindings: [] });
+    });
+
+    it("a folder-bound document admits the edits its program stamps with its own identity, and refuses a batch addressed by a runtime counter (e2e R2-4)", async () => {
+      const folder: Folder = new Map();
+      const reads = { count: 0 };
+      const posted: BackboneWorkerResponse[] = [];
+      const originalFetch = globalThis.fetch;
+      (globalThis as unknown as { fetch: unknown }).fetch = folderFetch(folder, reads);
+      worker.installStreamMuxEndpoint(null);
+      worker.testSeams.workerPostTestSink = (message) => posted.push(message);
+      const client = crypto.randomUUID();
+      try {
+        worker.handleTsRequest(config(client));
+        await settle(() => reads.count === 1);
+        const own = new FolderProgram(documentId, "actor-1");
+        for (const [id, to] of [["A", [206, 81]], ["B", [140, 30]], ["A", [210, 90]]] as const) worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "documentBackbone", message: own.drag(id, to) } });
+        await settle(() => (worker.artifactState(documentId)?.pendingMutations.length ?? 0) === 3);
+        expect(events(posted, "commandOutcome"), "every edit stamped with the document's own identity is admitted").toEqual([]);
+        const counter = new FolderProgram("puzzle2d-1", "actor-2");
+        worker.handleTsRequest({ kind: "send", documentId, clientInstanceId: client, message: { kind: "documentBackbone", message: counter.drag("A", [1, 1]) } });
+        await settle(() => events(posted, "commandOutcome").length === 1);
+        const refused = events(posted, "commandOutcome")[0] as { readonly outcome: { readonly kind: string; readonly code?: string } };
+        expect([refused.outcome.kind, refused.outcome.code, worker.artifactState(documentId)?.pendingMutations.length]).toEqual(["rejected", "local.backbone-scope-mismatch", 3]);
+      } finally {
+        worker.closeArtifact(documentId, undefined, client);
+        worker.testSeams.workerPostTestSink = null;
+        (globalThis as unknown as { fetch: unknown }).fetch = originalFetch;
+      }
     });
 
     it("a superseded or stale restore neither re-reads history nor refreshes a surface", async () => {

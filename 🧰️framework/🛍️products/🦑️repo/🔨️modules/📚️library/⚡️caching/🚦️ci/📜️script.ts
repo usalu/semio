@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { appendFileSync, readFileSync, statSync } from "node:fs";
-import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
 import { runTool } from "../🚀️bootstrap/📦️dependencies/📜️script.ts";
 import { githubJsonTransport } from "./🐙️github/🟦️.ts";

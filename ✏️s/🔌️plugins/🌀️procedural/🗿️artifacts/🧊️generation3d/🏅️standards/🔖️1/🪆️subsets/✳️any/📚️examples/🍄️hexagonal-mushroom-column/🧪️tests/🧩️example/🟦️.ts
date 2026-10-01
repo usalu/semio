@@ -4,7 +4,7 @@ import { describe, expect, it } from "bun:test";
 import { assertExpectedBoundingBox, assertExpectedPerimeter, assertExpectedVolume, assertFixtureContract, assertOpChainDeclared, loadExample, simpson, sliders } from "../../../🧪️tests/🧩️geometry/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const { dsl, fixture } = loadExample(here, "🍄️hexagonal-mushroom-column", "hexagonal-mushroom-column");
+const { dsl, fixture } = loadExample(here, "🍄️hexagonal-mushroom", "hexagonal-mushroom-column");
 const knob = sliders(dsl);
 
 describe("hexagonal-mushroom-column", () => {

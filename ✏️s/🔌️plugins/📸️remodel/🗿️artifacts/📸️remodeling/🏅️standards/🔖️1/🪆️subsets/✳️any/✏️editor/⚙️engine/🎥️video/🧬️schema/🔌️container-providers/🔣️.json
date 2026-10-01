@@ -1,0 +1,337 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:semio:remodel:video-container-providers:v1",
+  "$defs": {
+    "IdV1": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9.-]*$(?![\\s\\S])"
+    },
+    "ProviderMetadataV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "matches"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/IdV1"
+        },
+        "matches": {
+          "type": "boolean"
+        }
+      }
+    },
+    "InventoryV1": {
+      "type": "array",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/ProviderMetadataV1"
+      }
+    },
+    "ResultV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "id"
+          ],
+          "properties": {
+            "status": {
+              "const": "selected"
+            },
+            "id": {
+              "$ref": "#/$defs/IdV1"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status"
+          ],
+          "properties": {
+            "status": {
+              "enum": [
+                "missing",
+                "ambiguous",
+                "invalid"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "CasesV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "probes"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "providers",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "providers": {
+                "type": "array",
+                "items": {}
+              },
+              "expected": {
+                "$ref": "#/$defs/ResultV1"
+              }
+            }
+          }
+        },
+        "probes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "provider",
+              "probe",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "provider": {
+                "$ref": "#/$defs/IdV1"
+              },
+              "probe": {},
+              "expected": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CodecV1": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "enum": [
+                "avc",
+                "hevc",
+                "vp9",
+                "av1",
+                "mjpeg"
+              ]
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "fourcc"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unknown"
+            },
+            "fourcc": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 255
+              }
+            }
+          }
+        }
+      ]
+    },
+    "TimeBaseV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "numerator",
+        "denominator"
+      ],
+      "properties": {
+        "numerator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "denominator": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        }
+      }
+    },
+    "SampleV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "data",
+        "timestamp_ms"
+      ],
+      "properties": {
+        "data": {
+          "type": "array",
+          "maxItems": 16777216,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "timestamp_ms": {
+          "type": "number"
+        }
+      }
+    },
+    "AvcConfigurationV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sps",
+        "pps",
+        "nal_length_size"
+      ],
+      "properties": {
+        "sps": {
+          "type": "array",
+          "maxItems": 65535,
+          "items": {
+            "type": "array",
+            "maxItems": 65535,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "pps": {
+          "type": "array",
+          "maxItems": 65535,
+          "items": {
+            "type": "array",
+            "maxItems": 65535,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "nal_length_size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        }
+      }
+    },
+    "ProbeV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "container",
+        "width",
+        "height",
+        "time_base",
+        "fps",
+        "duration_ms",
+        "frame_count",
+        "codec",
+        "samples",
+        "avc_config"
+      ],
+      "properties": {
+        "container": {
+          "$ref": "#/$defs/IdV1"
+        },
+        "width": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4294967295
+        },
+        "time_base": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/TimeBaseV1"
+            }
+          ]
+        },
+        "fps": {
+          "type": "number",
+          "minimum": 0
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "frame_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "codec": {
+          "$ref": "#/$defs/CodecV1"
+        },
+        "samples": {
+          "type": "array",
+          "maxItems": 1048576,
+          "items": {
+            "$ref": "#/$defs/SampleV1"
+          }
+        },
+        "avc_config": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/AvcConfigurationV1"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,85 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/move-nodes/schema.json",
+  "title": "MoveNodes",
+  "description": "The `move-nodes` mutation record — one node-graph drag as intent: the canvas offset every addressed node moves by from its BASE position, so an edited drag replays on any base.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "ids",
+    "dx",
+    "dy"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "moveNodes"
+    },
+    "ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Nodes",
+          "de": "Knoten"
+        },
+        "description": {
+          "en": "The graph nodes this drag moves; missing ones are skipped.",
+          "de": "Die Graphknoten, die dieser Zug verschiebt; fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "node",
+          "domain": "graph",
+          "granularity": "node"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "dx": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset X",
+          "de": "Versatz X"
+        },
+        "description": {
+          "en": "Horizontal canvas offset every node moves by.",
+          "de": "Horizontaler Zeichenflächenversatz, um den jeder Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 20
+      }
+    },
+    "dy": {
+      "type": "number",
+      "x-semio-ui": {
+        "widget": "stepper",
+        "role": "value",
+        "label": {
+          "en": "Offset Y",
+          "de": "Versatz Y"
+        },
+        "description": {
+          "en": "Vertical canvas offset every node moves by.",
+          "de": "Vertikaler Zeichenflächenversatz, um den jeder Knoten verschoben wird."
+        },
+        "step": 1,
+        "precision": 1,
+        "group": "offset",
+        "order": 30
+      }
+    }
+  }
+}

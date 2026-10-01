@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing",
+  "semanticKind": "clear-fenestration-glazing-construction",
+  "displayName": "Clear Fenestration Glazing Construction",
+  "emoji": "🫗️",
+  "aggregateVariant": "ClearFenestrationGlazingConstruction",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "clear-fenestration-glazing-construction",
+  "binaryTag": 53,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

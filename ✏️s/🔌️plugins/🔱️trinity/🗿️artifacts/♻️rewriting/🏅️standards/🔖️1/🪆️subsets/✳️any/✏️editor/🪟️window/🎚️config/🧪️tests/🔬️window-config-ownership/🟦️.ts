@@ -1,11 +1,11 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
-import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { addSemioMutationLeafSchemasV1, semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
 
 /** 🧪️ Independent JSON Patch reference for exact-window configuration ownership. */
 export function testRewritingWindowConfigOracle(): void {
-  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json", import.meta.url), "utf8"));
+  const fixture = JSON.parse(readFileSync(new URL("../../🧫️fixtures/🔬️window/🔣️.json", import.meta.url), "utf8"));
   const schema = JSON.parse(readFileSync(new URL("../../🧬️schema/🔣️.json", import.meta.url), "utf8"));
   assert(!existsSync(new URL("../../../../🎚️config/🧬️schema/🔣️.json", import.meta.url)), "Rewriting must not declare an app configuration owner");
   const ajv = semioSchemaAjvV1({ allErrors: true });

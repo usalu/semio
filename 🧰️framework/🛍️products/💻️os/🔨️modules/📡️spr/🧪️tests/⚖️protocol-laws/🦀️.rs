@@ -176,7 +176,7 @@ impl HistoryLogGen {
             for _ in 0..op_count {
                 ops.push(crate::os_spr::OpPayload { text: Some(next_text(&mut rng, profile.adversarial).await), binary: None });
             }
-            edits.push(crate::os_spr::HistoryEdit { id, actor, started_at, finished_at, coalesce_key, description, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
+            edits.push(crate::os_spr::HistoryEdit { line: None, id, actor, started_at, finished_at, coalesce_key, description, verb: None, ops, inverse: Vec::new(), meta: None, lane: None });
         }
 
         let mut transitions: Vec<crate::os_spr::HistoryTransitionRecord> = Vec::new();
@@ -203,6 +203,7 @@ impl HistoryLogGen {
                     authors,
                     message: if rng.next_bool().await { Some(next_text(&mut rng, profile.adversarial).await) } else { None },
                     timestamp: next_timestamp(&mut rng, profile.adversarial).await,
+                    line_id: None,
                 };
                 checkpoint_ids.push(checkpoint.checkpoint_id.clone());
                 push_transition(&mut rng, &mut clock, profile.adversarial, index, crate::os_spr::HistoryTransition::Commit(checkpoint), &mut transitions).await;
@@ -219,7 +220,7 @@ impl HistoryLogGen {
         }
 
         self.state = rng.0;
-        crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition: None, conflicts: Vec::new() }
+        crate::os_spr::HistoryLog { doc_id, schema, edits, transitions, composition: None, conflicts: Vec::new(), viewer_line: None, viewer_checkpoint: None }
     }
 }
 
@@ -262,7 +263,7 @@ impl OpDagGen {
                 diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
                 inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("testkit.op".to_string()), payload: Vec::new() },
                 timestamp: crate::os_spr::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
-                transaction: None, verb: None,
+                transaction: None, verb: None, line: None,
             });
         }
         self.state = rng.0;

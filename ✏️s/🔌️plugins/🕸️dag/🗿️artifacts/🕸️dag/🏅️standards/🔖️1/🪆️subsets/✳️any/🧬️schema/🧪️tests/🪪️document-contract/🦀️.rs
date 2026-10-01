@@ -4,7 +4,7 @@ use protocol::MutationDiff;
 use store::{ArtifactDsl, ArtifactPack};
 
 fn vectors() -> serde_json::Value {
-    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).expect("neutral vectors")
+    serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).expect("neutral vectors")
 }
 
 #[test]

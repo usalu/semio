@@ -55,11 +55,11 @@ struct Vector {
 fn vector(kind: &str) -> Vector {
     match kind {
         "update-analysis-settings" => Vector {
-            before: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-modal-3fbb1a/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-modal-3fbb1a/🦠️mutation/🔣️.json"),
-            after: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-modal-3fbb1a/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-modal-3fbb1a/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles-the-modal-3fbb1a/🎯️outcome/🔣️.json"),
+            before: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🦠️mutation/🔣️.json"),
+            after: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../../📈️analysis/🧫️fixtures/🧬️mutations/🎛️update-analysis-settings/🔢️doubles/🎯️outcome/🔣️.json"),
         },
         other => panic!("mutate-fem2d-1-analysis: no committed specification vector is registered for kind {other:?}"),
     }

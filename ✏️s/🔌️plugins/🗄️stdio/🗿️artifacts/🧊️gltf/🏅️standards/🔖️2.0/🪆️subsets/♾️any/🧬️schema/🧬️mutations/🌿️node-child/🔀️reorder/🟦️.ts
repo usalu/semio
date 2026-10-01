@@ -4,8 +4,8 @@ import { gltfWireArray, gltfWireIndex, gltfWireObject, gltfWireRequired } from "
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfReorderNodeChildrenPayload {
-  parent: number;
-  order: number[];
+  parent: bigint;
+  order: bigint[];
 }
 
 export type ReorderNodeChildrenMutation = GltfPhase<GltfReorderNodeChildrenPayload, GltfDiff>;

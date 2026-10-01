@@ -2625,3 +2625,242 @@ Selected Nextest configuration and manifest execution now reach actual Hub compi
 The subsequent real9-law provider run returned3passed/6failed/0skipped in0.406s after3m27sroute. OBJlivebinding and independentDXFsourceSHA refused stale authority. Framework executor refreshed7definition/receipt/source rows; lower composition inputs were refreshed from those exact current rows. No opaque identity was inferred from sourceSHA or overridden.
 
 Live29diagnostic compilation then exposed currentDXFanalyzer namespace and Semio realSQLite module privacy problems. TheDXFparser call now uses its actual `crate::schema::snapshot` owner. Concurrent Semio authority exposed its realbaseSQLite module through its closer. Next fresh build remainsREDatWAVDslFieldrequirements for newly typedWavData/WavChunkRef; parent has the exact compiler lines for domain-author coordination. No successful29livecensus, LASDEBUGlaw, full203suite, or fresh69descriptor sweep is claimed.
+
+
+## Current Owner Membership and Capability Preparation
+
+The lower closed composition schema now authors36 contributions,176 typed app registrations,30 native factory receipts (including both PDF standards),88 playground rows and87 actual mutation aggregates/88 coordinates. The actual Hub composition producer passed921ms with those current inputs. Main and nine family Cargo/source rosters are produced from present lower contributions; the main native projection/publication is derived from the same authored receipts and open targets. A whole-owner omission is admitted; partial present owners, schema/source/definition mismatches remain refused.
+
+Semio capability selection was physically extracted into the neutral repository Cargo `🧩️capabilities` owner; the old Semio schema/implementation/test modules were removed. Its remaining13-group links document owns the concrete conversion selections. Neutral contract checks actually passed12 laws in1.0s (independent Ajv plus regular physical two-present/one-removed/all-removed, partial-owner and escape refusals); temporary DEBUG evidence was captured and removed. Actual Semio preparation passed2.9s with44 target links. Actual Remodeling preparation passed2.5s with two owned optional `video-avi`/`video-mp4` links in the stable `video-containers` group. Root owns the actual video-provider callback extraction. The unused direct AVI Cargo edge was removed from Hub Remodel; all surviving consumers remain in scope.
+
+The concrete mutation bridge was physically moved from S Stdio into Hub Stdio's existing native Cargo package as an explicitly registered binary. Its concrete aggregates/coordinates were moved to lower artifact-owned contribution assets; the producer derives the bridge's typed runtime source from present owners. Neutral repository mutation-inventory provider admission uses explicit native-owner metadata instead of requiring an S ancestor facade. Schema/oracle and actual binary verification remain pending at this checkpoint.
+
+## Current Native Provider and WAV Evidence
+
+Actual live native codec census passed1 law in2m8s and instantiated30 real factories. Temporary diagnostic source was removed afterward. The earlier9-law provider suite actually returned4 passed/5 failed: independent LAS canonical931-byte graph plus BLAKE3 binding passed; stale29-row projection and a changed DXF raw source caused strict failures. Framework refreshed the actual30-row receipt/publication distinction and reports its current independent four publication laws passed; no source-SHA substitution for opaque structural pack identities was applied.
+
+The subsequent complete provider retry returned RED before laws in2m57s: OS VCS generic stack used `Result::expect` requiring an unintended `T:Debug` bound. Framework confirms the current source has been repaired without adding that bound. No full provider/native202 suite pass is claimed.
+
+WAV's typed chunk corpus passed9 independent Ajv/JSON checks and two actual native DSL/pack/serde_json laws. Native DEBUG proved all four data representations preserve unknown bytes and authored chunk order; logs were removed. The broader WAV run remained RED37 passed/6 failed (fail-fast43/49) on SQLite chunkOrder String-versus-number reconstruction; root owns its current retry. GLTF's rich typed SQLite TS aggregator appeared from concurrent domain work before our guarded write; we preserved it and made no GLTF source change.
+
+The existing110,184 regular-file parent removal copy has only AVI removed and retains Stdio,35 formats and all consumers. Its original real Cargo check was RED due retained dangling AVI paths. The earlier SDK proof with all concrete Stdio/Hub absent proves SDK neutrality only. Parent artifact deletion is not yet proven; current capability/bridge extraction is required before refreshing and retrying the full surviving composition.
+
+
+## Source-Owned Native Export Selection Verified
+
+The lower composition contract now stores only exact native factory selection `{factoryId,definitionPath,protocolPath}` and exact open-target selection `{factoryId,role,surfaceId}`. Copied receipt identities, extensions and source hashes were removed from all36 lower contribution documents. Preparation admits the artifact's actual implemented executable factory export, preserves its opaque pack identity, derives its current extension/runtime identity, and calculates an independent raw protocol SHA. Partial present owners and stale copied facts remain refused; empty selection is admitted. Compiled real-factory parity remains a separate strict runtime gate.
+
+Actual `stdio-artifact-contract-rs:canonical-architecture` passed2.7s:15 hierarchy,25 removal and17 selection/export laws. The independent Ajv corpus and actual source implementation cover changed extension, distinct opaque pack identity/source SHA, copied-fact refusal and empty selection. Actual `stdio-plugin:composition-prepare` passed3.4s with36 contributors/176 app registrations/30 receipts. Temporary DEBUG evidence was observed and removed.
+
+## Compiling Invocation and Machine Output Verified
+
+The neutral Cargo preparation command schema/corpus now includes actual `run`, `bench`, `doc` and `rustdoc`. Owner hook/preparation diagnostics are forwarded to stderr; the compiled binary retains its stdout. Registered `@semio-tech/cargo-workspaces:contract-check` passed10 laws/164 assertions in7.9s, including a real generated first-party Cargo-run owner and independent Ajv inverse cases. The meaningful TDD failures preceded the fix; temporary DEBUG proved one exact JSON document on machine stdout, then was removed.
+
+## Latest Native Compile Frontier
+
+The latest complete native provider retry did not dispatch its laws: OS history/store integration returned39 compile errors, including missing TransitionCheckpoint.line_id, HistoryPageStack-versus-slice/Vec mismatches and missing FoldEdit.line. This is not a provider pass. Root has the exact current log and owns the upstream coherent repair. The retained all-consumer AVI-absent copy is being refreshed; the new registered `stdio-plugin:parent-removal-check` uses real canonical preparation and default-feature parent compilation with private caches, cancellation and a deadline. No retained parent deletion GREEN is claimed yet.
+
+
+## Current Membership, Export and Invocation Path Attribution
+
+This incremental flat list supplements the older consolidated inventory. It excludes concurrent Root/Framework publication/video/store implementation files. The newer parent-removal admission files are present but their proof is still pending. The36 lower contribution files were created during this owner-membership increment and subsequently updated to exact export selections.
+
+### Created
+
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🧩️composition/🔗️capabilities/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧬️schema/📤️native-export/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧬️schema/🗑️parent-removal/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌐️html/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎒️zip/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💾️binary/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📝️md/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔤️txt/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔺️stl/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖼️tiff/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗜️deflate/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/🧩️composition/🔣️.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/🏭️bridge/📜️script.ts`
+- `🌎️hub/🧩️compositions/🗄️stdio/🏭️bridge/🦀️.rs`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧫️fixtures/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧬️schema/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧫️fixtures/🏃️invocation/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🏃️invocation/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧫️fixtures/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/🔌️providers/🧬️schema/🔣️.json`
+
+### Updated
+
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📋️project.json`
+- `✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧪️tests/🟦️.ts`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧫️fixtures/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🧬️schema/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🔣️.json`
+- `🌎️hub/🧩️compositions/📸️remodel/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🗄️stdio/📇️catalog/🧬️schema/🔣️.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml`
+- `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📋️project.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/📜️script.ts`
+- `🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🤖️generated/🧩️mutations/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧩️composition/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📋️project.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📜️script.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧪️tests/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🏭️inventory/📋️orchestration/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📋️project.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts`
+
+### Removed
+
+- `✏️s/🔌️plugins/🗄️stdio/🏭️bridge/Cargo.toml`
+- `✏️s/🔌️plugins/🗄️stdio/🏭️bridge/📜️script.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🏭️bridge/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🟦️.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🧪️tests/🟦️.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🧫️fixtures/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/🔗️conversions/🧬️schema/🔣️.json`
+
+
+## Exact Owner Retention Admission Verified
+
+The original count-only guard was insufficient because an owner substitution preserved the count. A new closed neutral parent-removal schema and nine language-neutral cases now prove exact retained owner identities and refuse substituted, missing, partial, symlink, duplicate and still-present absent owners. The independent Ajv/equality oracle matches the first-party admission. Actual TDD returned RED for the missing admission export; the complete registered contract then passed3.9s with15 hierarchy/25 removal/26 composition laws,66 total. Physical admission checks authored manifest/contribution/definition authorities and refuses symlink ancestry.
+
+The first real registered `stdio-plugin:parent-removal-check` observed DEBUG with all35 exact retained names, prepared35 contributions/174 apps/29 real factory receipts, and reached actual default-feature Cargo compilation without a dangling AVI or old bridge manifest. Its private target/build directories were verified by actual command arguments. Root then reported the newer history frontier ready; only our script13982 and private Cargo14130 were interrupted and drained so the proof can compile that latest source. This cancellation is not native GREEN. The useful private dependency cache was retained. Temporary DEBUG source was removed after observation.
+
+The current source producer refresh passed2.5s with36 contributions/176 apps/30 receipts; current neutral capability retry passed12 laws1.2s after one preexecution Python plugin-worker failure. Root publication/launch regeneration may consume those current derived bytes.
+
+The native catalog commitment test retained its exact serialized definition/codec cardinality assertions but now derives the current counts from authored compiled contributions rather than fixed36; its previously undefined out-of-scope expected variable was repaired. Compilation of this final test source is pending the actual provider route.
+
+A remaining broader verification boundary is explicit: the parent proof currently checks the default-feature library. The retained editor-law test roster still directly names typed artifact editors, including AVI, and its fixture has a fixed editor inventory. Parent test-suite compilation after removal is not proven by the library check. That roster must become present-owner authored test contributions before claiming whole test-fleet deletability.
+
+
+## Parent Editor Test Roster Ownership Cut
+
+Every existing lower editor app now authors its exact existing editing/SQLite law function names; viewers author null. Its existing editor type/factory remains the single source authority. All88 current pairs were preserved. The producer emits the typed present test roster, editor/apps fixture inventory and full/Home codec counts from present admitted contributions. The parent test module includes that output and retains both actual editor and SQLite capability laws for every present editor. Its source gate runs the actual owner preparation before reading the generated roster; no stale-count fallback is added.
+
+Schema-first missing authority, viewer-owned law, invalid function and duplicate-name cases returned actual RED before implementation. The independent schema/uniqueness and retained output oracle then passed: registered contract70 laws4.1s, composition producer36 contributors/176 apps/30 receipts3.3s. Runtime native compilation remains pending. The new registered `stdio-plugin:parent-removal-test-check` compiles default-feature tests with cfg(test), then runs the exact complete factory-bijection and retained editor-action inventory laws; it records each observed runtime law separately. It does not disable features or omit surviving typed tests.
+
+The second default parent proof returned RED7m44s at the copied infinite-DAG retained DSL match lacking Bytes; current live source already forwards it into the bounded byte retirement owner. A current-source refresh also includes Root's real JPG baseline declaration correction, preserving the separate document owner's existing Huffman mutation. Native GREEN is not claimed at this checkpoint.
+
+Created:
+
+- `🌎️hub/🧩️compositions/🗄️stdio/🤖️generated/🧪️editor-laws/🦀️.rs`
+
+Updated additionally:
+
+- `🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/✏️editor-catalog/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧪️tests/📇️native-openable-provider/🦀️.rs`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/✏️editor-catalog/🔣️.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧬️schema/🔣️.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/✏️editor-catalog/🔣️.json`
+- `🌎️hub/🧩️compositions/🗄️stdio/🧫️fixtures/🏠️home-io-surface/🔣️.json`
+
+The lower36 contribution files and their shared contract/producer/script/project changes are already expanded in the preceding incremental inventory.
+
+
+## Refreshed Native Proof Checkpoint
+
+After Root/Framework reported current canonical history ready, the regular-copy refresh visited86,258 files and updated1,155, retaining its private compiler cache. The default parent check reached actual generic UI/graph compilation and refused one stale copied infinite-DAG Bytes arm. A subsequent bounded source refresh visited34,267 files and updated636 across current OS/replication/Cargo preparation/Stdio/Remodeling/Hub Stdio sources; AVI remained physically absent. It includes the explicit bounded DAG byte owner and Root's exact JPG baseline mutation module declaration. The third real default-parent proof is registered and running; no dependency omission or shadow workspace was introduced.
+
+The final editor roster source gate is also queued through its genuine registered prerequisites. Source/export preparations, actual native provider parity, default library compilation, test-target compilation, selected runtime and full69 descriptor freshness are distinct claims; pending checks are not treated as passing.
+
+## Current Editor Roster and Third Parent Compile Frontier
+
+The genuine registered `stdio-plugin:test -- editor-catalog-contract` passed with all four generated prerequisites in17.6s. It admitted88 exact current editors across10packages and six edit operations through the owner-produced roster. This source check does not claim native editor-law execution.
+
+The third default-feature retained AVI-absent parent library compile failed after2m57s with two errors in the copied neutral IO source: line2400 referenced nonexistent `store::SnapshotSubsetValidation` and nonexistent `ArtifactSqliteSnapshotCodec.subset_validation`. The live IO source had already replaced that obsolete branch with the owned SQLite subset validation path. The copied source is being refreshed before retry, preserving the private compiler cache and all35 surviving Stdio owners. The cfg(test) and selected runtime proof remain pending; no parent native pass or fresh69-descriptor convergence is claimed.
+
+The next complete regular-source refresh visited40,779files, copied8,168 current files and removed346 paths absent in the live source within the selected framework/OS/Stdio refresh roots. AVI remained physically absent and the private compiler cache remained. The source receipt is `goal-stdio/parent-avi-removal-io-frontier-refresh.json`. A fourth genuine registered default-feature parent proof started against this refreshed source; its outcome is not yet known.
+
+## Exact JPG Mutation Owner Refusal and Correction
+
+The fourth default retained-parent compile cleared the previous neutral IO errors and reached the actual surviving Stdio artifact crates. It refused the JPG baseline RemoveHuffmanTable derive because the actual mutation descriptor's owner ended in `🪓️remove-huffman`, while the physical source was in `🪓️remove-huffman-table`. Ten missing MutationLeaf trait cascades followed the initial authority refusal. The live descriptor contained the same defect. Only its owner field was corrected to the exact physical source directory; the descriptor semantic kind, payload schema and Rust mutation behavior were preserved. No derive/authority/trait check was relaxed. The corrected descriptor was copied after the registered compiler process ended.
+
+Additional updated path:
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🔣️.json`
+
+## Current GLTF Source Authority and DSL Byte Frontier
+
+The fifth retained parent default compile cleared the JPG descriptor error, then refused17 GLTF operation sources absent from the exact registered domain-operation owner map. Both current live taxonomy and its generated mutation-source-authority projection retained short operation basenames while the physical GLTF owners used the detailed names. Only those17 taxonomy keys were rebound to actual existing owners; their semantic identities were preserved. The genuine registered `dsl-derive-rs:generate` passed2.4s and wrote the actual projection. No generated authority was hand-edited and no general source/descriptor admission was weakened.
+
+The same native run exposed the missing `DslValue::Bytes` arm in GLTF's canonical inference JSON writer. Existing first-party `pack::json_from_dsl_value` maps bytes to ordered unsigned integer arrays. The GLTF writer now uses that bridge for bytes, preserving all byte values and ordering. A closed language-neutral fixture schema and four vectors cover empty data, zero, unsigned boundaries and ordered sequences. The native law compares the actual writer against portable expected JSON and independent serde_json; the existing artifact Bun twin validates the same fixture with Ajv and independent JSON.stringify. Native runtime has not yet passed. A first portable command failed before assertions because its Nx target was not yet registered; the current explicit target is registered and rerunning.
+
+A sixth default parent retry uses the exact regenerated authority and current GLTF files. The parent cfg(test)/two selected native laws and69 current compiled descriptors remain pending.
+
+Additional created paths:
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧬️schema/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧫️fixtures/🔣️.json`
+
+Additional updated paths:
+
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json`
+- `🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/🔣️mutation-authority.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧪️tests/🔬️unit/🦀️.rs`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🧪️tests/📜️definition/🟦️.ts`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust/📋️project.json`
+
+The sixth parent and portable GLTF routes stopped before execution because the shared Nx generator target normalization spread a non-iterable target.inputs value. Root reported this as the genuine explicit-false-cache policy defect owned by the strict executor, rather than the new target's defect. The GLTF target now independently declares bounded owner fixture/schema production inputs, appropriate for its actual reads; no shared generator policy was weakened in this lane. Both current routes are retrying against repaired shared policy.
+
+The current registered `stdio-gltf-rs:canonical-architecture` passed1.5s/12checks against repaired shared Nx policy. The four portable byte-array cases passed actual Ajv admission and independent Bun JSON.stringify parity alongside existing definition identity vectors. The native serde_json byte law has not yet run.
+
+The next native parent retry cleared GLTF domain registration and byte exhaustiveness, then found17 descriptor owner fields still naming old short folders. Those exact authored fields now match their physical operation directories; semanticIDs/payloads remain. No authority or derive was loosened. A copy-command UTF8 input failure prevented the first refresh; its prematurely launched owned retry was interrupted and drained before correcting the copy, and is not a passing run.
+
+Additional updated descriptor paths:
+
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/📝️change-description/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/📝️change-extras/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change-alpha/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change-extras/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change-weights/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change-topology/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🔣️.json`
+- `✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🔣️.json`

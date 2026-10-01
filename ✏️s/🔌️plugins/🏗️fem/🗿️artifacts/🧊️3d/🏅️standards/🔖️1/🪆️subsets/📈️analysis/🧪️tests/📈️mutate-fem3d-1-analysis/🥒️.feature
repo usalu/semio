@@ -83,7 +83,7 @@ Feature: Apply every typed fem3d analysis mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                       | dir                        | fixture              |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles-the-7b5381 |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🔢️doubles |
 
   @id-hall-vector
   @level-exhaustive
@@ -96,7 +96,7 @@ Feature: Apply every typed fem3d analysis mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                       | dir                        | fixture                  |
-    | update-analysis-settings | 🎛️update-analysis-settings | 🏗️hall-more-modes-ecbb5c |
+    | update-analysis-settings | 🎛️update-analysis-settings | 🏗️hall |
 
   @id-reject
   @level-exhaustive
@@ -109,5 +109,5 @@ Feature: Apply every typed fem3d analysis mutation twice — once in Rust, once 
     Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
     Examples:
     | id                   | dir                        | fixture                |
-    | same-settings-fdb832 | 🎛️update-analysis-settings | ⏸️same-settings-fdb832 |
-    | zero-modes-a27c74    | 🎛️update-analysis-settings | 🧨️zero-modes-a27c74    |
+    | same-settings-fdb832 | 🎛️update-analysis-settings | ⏸️same |
+    | zero-modes-a27c74    | 🎛️update-analysis-settings | 🧨️zero    |

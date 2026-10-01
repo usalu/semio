@@ -6,13 +6,13 @@
 
 use super::{CameraJson, Generation3dConfig, Generation3dPreviewCamera};
 
-#[path = "⚙️set-snapshot/🦀️.rs"]
+#[path = "⚙️set/🦀️.rs"]
 mod set_snapshot;
-#[path = "🔬️set-lod-mode/🦀️.rs"]
+#[path = "🔬️set-lod/🦀️.rs"]
 mod set_lod_mode;
 #[path = "👁️set-show-mode/🦀️.rs"]
 mod set_show_mode;
-#[path = "🕸️set-camera/🦀️.rs"]
+#[path = "🕸️set/🦀️.rs"]
 mod set_camera;
 #[path = "📷️set-preview-camera/🦀️.rs"]
 mod set_preview_camera;

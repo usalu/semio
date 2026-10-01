@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargoTestBudgeted } from "../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { assertConcreteCompositionOwnership } from "./🧪️tests/📇️ownership/🟦️.ts";
 
 class OwnershipScript extends BundleScript {
@@ -17,4 +19,4 @@ class NativeScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("ownership", OwnershipScript).register("native", NativeScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "ownership" });
+await runScriptMain(router, { defaultCommand: "ownership" });

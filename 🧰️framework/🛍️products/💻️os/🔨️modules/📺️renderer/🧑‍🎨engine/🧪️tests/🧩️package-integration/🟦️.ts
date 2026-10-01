@@ -18,7 +18,7 @@ import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../../../🔌️plugin/📇️registry/🟦️.ts";
 import bootSelectionFixture from "../../🧫️fixtures/🔬️wgpu-shell-boot-selection/🔣️.json";
 import { coerceTurnResult } from "../../../../../../../🔨️modules/🎭️actor/🖼️wire-turn/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const browserBuildModule = new URL("../../🎯️targets/🧊️wgpu/⚙️browser-build/🟦️.ts", import.meta.url).href;
 const frameWorkerModule = new URL("../../🎯️targets/🧊️wgpu/🎞️frame-worker/🏗️builder/🟦️.ts", import.meta.url).href;

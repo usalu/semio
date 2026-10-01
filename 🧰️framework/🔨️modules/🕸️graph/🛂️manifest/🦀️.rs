@@ -123,6 +123,7 @@ fn dsl_value_to_property_value(value: &dsl_core::DslValue) -> PropertyValue {
         dsl_core::DslValue::Bool(b) => PropertyValue::Bool(*b),
         dsl_core::DslValue::Number(n) => PropertyValue::Number(n.as_f64()),
         dsl_core::DslValue::String(s) => PropertyValue::String(s.clone()),
+        dsl_core::DslValue::Bytes(bytes) => PropertyValue::Array(bytes.iter().map(|byte| PropertyValue::Number(f64::from(*byte))).collect()),
         dsl_core::DslValue::Array(items) => {
             // 🔀️ Same rewrite as `property_value_to_dsl_value` above, mirrored.
             let mut out = Vec::with_capacity(items.len());

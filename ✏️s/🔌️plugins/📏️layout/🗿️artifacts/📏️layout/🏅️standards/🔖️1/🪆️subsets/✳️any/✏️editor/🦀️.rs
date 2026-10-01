@@ -1075,6 +1075,26 @@ fn layout_window_engagement(config: &LayoutWindowConfig, transient: &LayoutWindo
 }
 //#endregion 🔖️WindowEngagement
 
+//#region 🧺️ArtifactPreparation
+/// 🧺️ The Artifact lane's one-item publication authority: the bounded framework preparation, with every leaf's fold
+/// footprint declared from its inverse-row bound ([`crate::mutations::layout_mutation_inverse_rows`]). `work_items` counts
+/// staged ROWS (the forward plus every inverse row), and a frame-selection leaf restores rows per target — the
+/// point-invertible default refused every turn, scaling and multi-frame drag with `batched item candidate failed its
+/// exact fixed fold contract`.
+struct LayoutArtifactStorePreparationFactory(std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<LayoutSnapshot, LayoutMutation>>);
+
+impl store::ArtifactStoreOneItemPreparationFactory<LayoutSnapshot, LayoutMutation> for LayoutArtifactStorePreparationFactory {
+    fn preflight(&self, mutation: &LayoutMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+        let admitted = self.0.preflight(mutation, description, lane)?;
+        Ok(store::ArtifactStoreOneItemFootprint::for_one_item(crate::mutations::layout_mutation_inverse_rows(mutation), admitted.retained_bytes))
+    }
+
+    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LayoutSnapshot, LayoutMutation>) -> Result<Box<dyn store::ArtifactStoreOneItemPreparation<LayoutSnapshot, LayoutMutation>>, store::ArtifactStoreOneItemPreparationRequest<LayoutSnapshot, LayoutMutation>> {
+        self.0.begin(request)
+    }
+}
+//#endregion 🧺️ArtifactPreparation
+
 //#region 🔖️LayoutPlayApp
 /// 🧪️ Stateless app shell; exact window owners hold persisted view preferences and ephemeral input.
 #[derive(Default)]
@@ -1156,12 +1176,6 @@ impl ArtifactEditor for LayoutPlayApp {
         args_bridge::command_from_action(action, args)
     }
 
-    /// 🏷️ A history row (and the time-travel editor) is labelled from its leaf's own `SemanticMutation::label`, in every
-    /// locale — "Drag 2 frames by (16, -8)" / "2 Rahmen um (16; -8) ziehen" — never the raw op text.
-    fn mutation_label(op: &LayoutMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::<LayoutSnapshot>::label(op))
-    }
-
     /// 📨️ Every host event ends the window's open transform-tool gesture with zero trace under the reason the tool
     /// records: a blur `blur`, a lost pointer capture `captureLost`, a utility switch or a closing window `retired`, an
     /// opened history edit `frozen` and a remote edit `baseMoved` — the window's typed `translateSelection{phase: "abort"}`.
@@ -1225,9 +1239,10 @@ impl ArtifactEditor for LayoutPlayApp {
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every
     /// document verb at dispatch (`declares the unsupported artifact publication lane`). One retained
     /// mutation is bounded by `LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES` (`CreatePage` carries a whole
-    /// page with its layers; `ChangeDataFields` a `fields:in` dictionary).
+    /// page with its layers; `ChangeDataFields` a `fields:in` dictionary); its fold footprint is the leaf's own
+    /// inverse-row bound ([`LayoutArtifactStorePreparationFactory`]).
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))
+        Some(std::sync::Arc::new(LayoutArtifactStorePreparationFactory(semio_framework_plugin::bounded_config_store_one_item_preparation_factory::<Self::Snapshot, Self::Mutation>("layout-artifact-retained", LAYOUT_ARTIFACT_MUTATION_MAXIMUM_BYTES))))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

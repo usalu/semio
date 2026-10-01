@@ -17,7 +17,7 @@ async fn sample_envelope(id: &str) -> crate::os_spr::causal::MutationEnvelope {
         diff: crate::os_spr::causal::ArtifactDiff { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
         inverse: crate::os_spr::causal::InverseMutation { schema: crate::os_spr::ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
         timestamp: crate::os_spr::ids::HybridLogicalTimestamp::new(1, 0),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

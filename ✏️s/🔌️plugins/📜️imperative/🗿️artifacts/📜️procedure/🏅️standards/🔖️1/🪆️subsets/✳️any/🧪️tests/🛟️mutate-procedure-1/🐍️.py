@@ -64,10 +64,10 @@ PROGRAMS = {
 # region 🔖️Fixtures
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "create-step": (f"{_ROOT}/🌱create-step/🧪️rejects-a-duplicate-step-id-at-the-root-path", "createStep", True),
-    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️rejects-root-step-id-addressed-inside-branch", "deleteStep", True),
-    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️warns-over-clamped-index-leaves-tail-step", "reorderSteps", False),
-    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️warns-step-1-already-carries-requested", "editStepParams", False),
+    "create-step": (f"{_ROOT}/🌱create-step/🧪️rejects", "createStep", True),
+    "delete-step": (f"{_ROOT}/🗑️delete-step/🧪️rejects", "deleteStep", True),
+    "reorder-steps": (f"{_ROOT}/🔀reorder-steps/🧪️warns", "reorderSteps", False),
+    "edit-step-params": (f"{_ROOT}/🔧edit-step-params/🧪️warns", "editStepParams", False),
 }
 
 

@@ -80,7 +80,7 @@
           "scenarios": [
             {
               "id": "attaches-a-data-fields-payload",
-              "directoryName": "🧾️attaches-a-data-fields-payload"
+              "directoryName": "🧾️attaches"
             }
           ]
         },
@@ -91,7 +91,7 @@
           "scenarios": [
             {
               "id": "splits-the-text-frame-into-two-columns",
-              "directoryName": "🔤️splits-the-text-frame-into-two-columns"
+              "directoryName": "🔤️splits"
             }
           ]
         },
@@ -102,7 +102,7 @@
           "scenarios": [
             {
               "id": "repaints-the-rect-frame-fill",
-              "directoryName": "🎨️repaints-the-rect-frame-fill"
+              "directoryName": "🎨️repaints"
             }
           ]
         },
@@ -113,7 +113,7 @@
           "scenarios": [
             {
               "id": "adds-a-stroke-to-the-rect-frame",
-              "directoryName": "🖊️adds-a-stroke-to-the-rect-frame"
+              "directoryName": "🖊️adds"
             }
           ]
         },
@@ -124,7 +124,7 @@
           "scenarios": [
             {
               "id": "switches-the-text-frame-to-column-wrap",
-              "directoryName": "🔤️switches-the-text-frame-to-column-wrap"
+              "directoryName": "🔤️switches"
             }
           ]
         },
@@ -135,7 +135,7 @@
           "scenarios": [
             {
               "id": "relinks-link-1-to-a-new-file",
-              "directoryName": "🔗️relinks-link-1-to-a-new-file"
+              "directoryName": "🔗️relinks"
             }
           ]
         },
@@ -146,7 +146,7 @@
           "scenarios": [
             {
               "id": "lengthens-page-1",
-              "directoryName": "↕️lengthens-page-1"
+              "directoryName": "↕️lengthens"
             }
           ]
         },
@@ -168,7 +168,7 @@
           "scenarios": [
             {
               "id": "sets-a-cmyk-print-target",
-              "directoryName": "🖨️sets-a-cmyk-print-target"
+              "directoryName": "🖨️sets"
             }
           ]
         },
@@ -179,7 +179,7 @@
           "scenarios": [
             {
               "id": "inserts-a-rect-frame-at-index-1",
-              "directoryName": "🔲️inserts-a-rect-frame-at-index-1"
+              "directoryName": "🔲️inserts"
             }
           ]
         },
@@ -223,7 +223,7 @@
           "scenarios": [
             {
               "id": "removes-the-text-frame-and-its-layer-membership",
-              "directoryName": "🚫️removes-the-text-frame-and-its-layer-membership"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -289,7 +289,7 @@
           "scenarios": [
             {
               "id": "renames-the-document",
-              "directoryName": "🏷️renames-the-document"
+              "directoryName": "🏷️renames"
             }
           ]
         },
@@ -311,7 +311,7 @@
           "scenarios": [
             {
               "id": "moves-page-1-behind-page-2",
-              "directoryName": "🔀️moves-page-1-behind-page-2"
+              "directoryName": "🔀️moves"
             }
           ]
         },
@@ -333,7 +333,7 @@
           "scenarios": [
             {
               "id": "splits-page-1-into-three-columns",
-              "directoryName": "🏛️splits-page-1-into-three-columns"
+              "directoryName": "🏛️splits"
             }
           ]
         },
@@ -344,7 +344,7 @@
           "scenarios": [
             {
               "id": "sets-asymmetric-margins-on-page-1",
-              "directoryName": "📐️sets-asymmetric-margins-on-page-1"
+              "directoryName": "📐️sets"
             }
           ]
         },
@@ -355,7 +355,7 @@
           "scenarios": [
             {
               "id": "rotates-the-rect-frame",
-              "directoryName": "🌀️rotates-the-rect-frame"
+              "directoryName": "🌀️rotates"
             }
           ]
         },
@@ -377,7 +377,7 @@
           "scenarios": [
             {
               "id": "orbits-both-frames-a-quarter-turn",
-              "directoryName": "🔃️orbits-both-frames-a-quarter-turn"
+              "directoryName": "🔃️orbits"
             }
           ]
         },
@@ -388,7 +388,7 @@
           "scenarios": [
             {
               "id": "doubles-both-frames-about-their-centroid",
-              "directoryName": "🗜️doubles-both-frames-about-their-centroid"
+              "directoryName": "🗜️doubles"
             }
           ]
         }

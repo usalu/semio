@@ -1,5 +1,19 @@
 use super::*;
 
+#[test]
+fn canonical_json_bytes_matches_the_portable_byte_array_contract() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let bytes: Vec<u8> = serde_json::from_value(row["bytes"].clone()).unwrap();
+        let expected = row["canonical"].as_str().unwrap();
+        let mut actual = String::new();
+        write_canonical_json(&dsl::DslValue::Bytes(bytes.clone()), &mut actual).unwrap();
+        assert_eq!(actual, expected, "{}", row["id"]);
+        assert_eq!(actual, serde_json::to_string(&bytes).unwrap());
+    }
+    eprintln!("[DEBUG] GLTF canonical byte arrays matched four portable and serde_json cases");
+}
+
 #[semio_framework_async_macros::async_test]
 async fn canonical_leaf_roundtrip_is_id_bound() {
     let value = GltfInferenceLeafEnvelope {

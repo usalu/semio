@@ -635,6 +635,8 @@ fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
     source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
         && source.contains(r#""patchPart" if puzzle5d_inspector_nudge(request.command.args()).is_some() => Box::new(Puzzle5dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
         && source.contains("Puzzle5dTransformStage::Read")
+        && source.contains("Puzzle5dTransformStage::Scan")
+        && source.contains("Puzzle5dRelocateScan::begin(document")
         && source.contains("Puzzle5dTransformStage::Commit")
         && source.contains("puzzle5d_transform_tool_commit(self.tool_id")
         && !source.contains(r#""translateSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
@@ -653,7 +655,7 @@ fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypasse
         r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle5d_retained_reduce, puzzle5d_retained_extent))"#,
     );
     assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(request.command.args()).is_some()"] {
+    for marker in ["Puzzle5dTransformStage::Read", "Puzzle5dTransformStage::Scan", "Puzzle5dRelocateScan::begin(document", "Puzzle5dTransformStage::Commit", "puzzle5d_transform_tool_commit(self.tool_id", "if puzzle5d_inspector_nudge(request.command.args()).is_some()"] {
         assert!(!selection_transforms_run_the_transform_tool(&source.replace(marker, "stage-removed")), "missing transform stage was falsely accepted: {marker}");
     }
 }

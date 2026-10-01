@@ -1,8 +1,11 @@
-"""🧪️ Writes the seven W1-E conformance corpus cases (snapshot + expectation) and registers them in the catalog.
+"""🧪️ Writes the W1-E conformance corpus cases (snapshot + expectation) and registers them in the catalog: the seven of session 1
+(slider detents, stepper precision, vector/colour/reference recipes, tree-row recipes, dialog choices) and the five of session 2
+(G6: dial with snaps in degrees, log-scale slider, display factor, stepper detents, hard-bound refusal).
 
 Run from the repo root: `python3 .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/w1e-conformance-cases.py`.
 """
 import json
+import math
 import os
 
 ROOT = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧫️fixtures/🧪️conformance"
@@ -31,7 +34,30 @@ def node(id, key, component, layout=LEAF, style=None, accessibility=None, bindin
     return record
 
 
+DEG = 180 / math.pi
+RIGHT = math.pi / 2
+
 CASES = {
+    ("🧩️component", "dial-with-snaps", "🧭️dial-with-snaps"): (
+        "A rotary Slider (dial) over -π..π stored in radians and shown in degrees: detents at -180°, -90°, 0°, 90° and 180° painted as ticks, one-degree arrow steps, open hard limits.",
+        [node(0, "#0", {"type": "slider", "value": RIGHT, "min": -math.pi, "max": math.pi, "step": math.pi / 180, "unit": "rad", "snaps": [-math.pi, -RIGHT, 0.0, RIGHT, math.pi], "appearance": "dial", "displayUnit": "°", "displayFactor": DEG, "limits": {}}, accessibility={"label": "Angle"}, bindings=[action("setAngle", "change")])],
+    ),
+    ("🧩️component", "log-slider", "📈️log-slider"): (
+        "A log-scale Slider over the soft travel 0.1..10 with ticks at 0.25, 0.5, 1, 2 and 4, two fraction digits, and a hard lower limit excluding 0 whose refusal names it.",
+        [node(0, "#0", {"type": "slider", "value": 1.0, "min": 0.1, "max": 10.0, "step": 0.01, "snaps": [0.25, 0.5, 1.0, 2.0, 4.0], "scale": "log", "precision": 2, "limits": {"min": {"value": 0.0, "exclusive": True, "refusal": "Must be greater than 0"}}}, accessibility={"label": "Factor"}, bindings=[action("setFactor", "change")])],
+    ),
+    ("🧩️component", "display-factor", "🔁️display-factor"): (
+        "A NumberStepper storing radians and showing degrees (display factor 180/π): the value π/4 reads 45 °, a typed 90 commits π/2 exactly.",
+        [node(0, "#0", {"type": "numberStepper", "value": math.pi / 4, "step": math.pi / 180, "uniform": True, "unit": "rad", "displayUnit": "°", "displayFactor": DEG, "snaps": [0.0, RIGHT]}, accessibility={"label": "Heading"}, bindings=[action("setHeading", "change")])],
+    ),
+    ("🧩️component", "stepper-detents", "📍️stepper-detents"): (
+        "A NumberStepper in millimetres with detents at 0, 5 and 10 its page keys stop on, one fraction digit, and an upper hard limit whose refusal names it.",
+        [node(0, "#0", {"type": "numberStepper", "value": 2.0, "step": 1.0, "uniform": True, "precision": 1, "unit": "mm", "snaps": [0.0, 5.0, 10.0], "limits": {"max": {"value": 10.0, "refusal": "Must be at most 10 mm"}}}, accessibility={"label": "Gap"}, bindings=[action("setGap", "change")])],
+    ),
+    ("🧩️component", "hard-bound-refusal", "⛔️hard-bound-refusal"): (
+        "A number field whose hard range excludes 0 and stops at 100: a typed value beyond either bound is refused with the producer's localized message and never dispatched, the draft kept.",
+        [node(0, "#0", {"type": "input", "kind": "number", "value": "4", "commit": "blur", "step": 0.5, "limits": {"min": {"value": 0.0, "exclusive": True, "refusal": "Must be greater than 0"}, "max": {"value": 100.0, "refusal": "Must be at most 100"}}}, accessibility={"label": "Width"}, bindings=[action("setWidth", "commit")])],
+    ),
     ("🧩️component", "slider-with-snaps", "🧲️slider-with-snaps"): (
         "A Slider with three detents (snaps) and a millimetre unit — every renderer paints one tick per snap.",
         [node(0, "#0", {"type": "slider", "value": 5.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "mm", "snaps": [2.5, 5.0, 7.5]}, accessibility={"label": "Offset"}, bindings=[action("setOffset", "change")])],

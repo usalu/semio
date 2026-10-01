@@ -290,3 +290,16 @@ pattern; the same pattern also changed `"../../../../../../../"` to `"…/.."` i
   Until the peer fixes it, every engine run throws. I did not touch these entries.
 - **Inventory-level before/after diff:** WRITTEN BUT NOT RUN, blocked by the bullet above. The directory-kind census
   covers the kind layer.
+
+## Session 2 — 2026-10-01
+
+Successor (S2-TAX), started 11:53. Scratch: `🗑️generated/s2-tax/`. Section in progress — the taxonomy report sweep (d)
+is running; this section is rewritten in place at the end of the session.
+
+### S2.1 Repair status (rule 21)
+
+- Structural leaf identity (follow-up 1, §8) landed intact in auto-commit `4e36b2b5012`: `provenMutationLeafOwners` +
+  `canonicalDirectory(…, mutationLeaves)` in `🧹️normalization/🟦️.ts`; `members-of-schema` 44 names, `members-of-fixtures`
+  240, `plugin-test-mutations` / `store-fixture-mutations` gone, `mutation-wire-witness.parentKindIds = [fixtures,
+  members-of-schema]`. No peer re-added leaf names. `validateTaxonomy(loadTaxonomy())` = `[]`.
+- `test-mutation-leaf-identity` 8/0, `test-mutation-wire-witness` 11/0 (both run 12:00, `bun test`).

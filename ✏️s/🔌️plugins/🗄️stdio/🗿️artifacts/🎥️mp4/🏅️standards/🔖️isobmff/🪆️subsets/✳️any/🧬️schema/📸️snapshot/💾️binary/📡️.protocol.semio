@@ -1,7 +1,150 @@
-dialect protocol stdio.mp4.snapshot
-; Shared `.semio` envelope around the logical typed RecordSpec payload. Native container syntax
-; is created only by the ISO-BMFF serializer and never enters snapshot persistence.
-envelope-magic = %x89.53.45.4D.0D.0A.1A.0A
-token-len = U32LE
-token = UTF8(18)                            ; "stdio.mp4.pack v1"
-record-payload = BYTES(*)                   ; store::pack_rt::encode_document
+dialect protocol
+protocol stdio.mp4.snapshot
+version 1
+schema stdio.mp4
+start snapshot
+framing record
+use semio.pack
+
+# RecordSpec declares optional presence, full scalar widths and ordered collections.
+record snapshot {
+  schema utf8
+  ftyp Ref(Mp4Ftyp)
+  movie Ref(Mp4Movie)
+  tracks array Ref(Mp4Track)
+}
+record Mp4Ftyp {
+  majorBrand utf8
+  minorVersion u32
+  compatibleBrands array utf8
+}
+record Mp4Movie {
+  creationTime u64
+  modificationTime u64
+  timescale u32
+  duration u64
+  rate i32
+  volume i16
+  matrix Array(i32,9)
+  nextTrackId u32
+  title utf8
+  encoder utf8
+}
+record Mp4Track {
+  trackId u32
+  timescale u32
+  codec Ref(Mp4Codec)
+  width u32
+  height u32
+  metadata Ref(Mp4TrackMetadata)
+  chunkSampleCounts array u32
+  samples array Ref(Mp4Sample)
+}
+record Mp4Codec {
+  format Ref(Mp4CodecFormat)
+  sps array array u8
+  pps array array u8
+  nalLengthSize u8
+  extension Ref(Mp4AvcExtension)
+  hevc Ref(Mp4HevcConfig)
+}
+enum Mp4CodecFormat {
+  avc1=0
+  avc3=1
+  hvc1=2
+  hev1=3
+  jpeg=4
+  mjpa=5
+}
+record Mp4AvcExtension {
+  chromaFormat u8
+  bitDepthLumaMinus8 u8
+  bitDepthChromaMinus8 u8
+  spsExt array array u8
+}
+record Mp4HevcConfig {
+  generalProfileSpace u8
+  generalTierFlag u8
+  generalProfileIdc u8
+  generalProfileCompatibilityFlags u32
+  generalConstraintIndicatorFlags u64
+  generalLevelIdc u8
+  minSpatialSegmentationIdc u16
+  parallelismType u8
+  chromaFormatIdc u8
+  bitDepthLumaMinus8 u8
+  bitDepthChromaMinus8 u8
+  avgFrameRate u16
+  constantFrameRate u8
+  numTemporalLayers u8
+  temporalIdNested u8
+  arrays array Ref(Mp4HevcNalArray)
+}
+record Mp4HevcNalArray {
+  arrayCompleteness u8
+  nalUnitType u8
+  nalUnits array array u8
+}
+record Mp4TrackMetadata {
+  creationTime u64
+  modificationTime u64
+  flags u32
+  duration u64
+  layer i16
+  alternateGroup i16
+  volume i16
+  matrix Array(i32,9)
+  mediaDuration u64
+  mediaCreationTime u64
+  mediaModificationTime u64
+  language utf8
+  quality u16
+  handlerName utf8
+  edits array Ref(Mp4Edit)
+  visual Ref(Mp4VisualSampleEntry)
+  color Ref(Mp4Color)
+  pixelAspectRatio Ref(Mp4PixelAspectRatio)
+  bitrate Ref(Mp4Bitrate)
+}
+record Mp4Edit {
+  segmentDuration u64
+  mediaTime i64
+  mediaRateInteger i16
+  mediaRateFraction i16
+}
+record Mp4VisualSampleEntry {
+  dataReferenceIndex u16
+  version u16
+  revisionLevel u16
+  vendor u32
+  temporalQuality u32
+  spatialQuality u32
+  horizontalResolution u32
+  verticalResolution u32
+  frameCount u16
+  compressorName utf8
+  depth u16
+  colorTableId i16
+}
+record Mp4Color {
+  colorType utf8
+  primaries u16
+  transfer u16
+  matrix u16
+  fullRange u8
+}
+record Mp4PixelAspectRatio {
+  horizontalSpacing u32
+  verticalSpacing u32
+}
+record Mp4Bitrate {
+  bufferSize u32
+  maximum u32
+  average u32
+}
+record Mp4Sample {
+  data bytes
+  duration u32
+  ctsOffset i32
+  sync u8
+}

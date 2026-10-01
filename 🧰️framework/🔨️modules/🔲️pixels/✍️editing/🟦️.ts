@@ -390,6 +390,26 @@ function validateBrush(points:readonly PixelPoint[],brush:PixelBrush|PixelAlphaB
   if (!bounded(brush.size,0.1,4096) || !bounded(brush.opacity,0,1) || !bounded(brush.hardness,0,1) || !points.length || points.length > 2048 || points.some(p => p.length !== 2 || !p.every(Number.isFinite))) invalid("Invalid brush stroke");
 }
 
+/** 🔲️ A pixel-aligned rectangle of an image. */
+export type PixelRect = { x: number; y: number; width: number; height: number };
+
+/** 🔲️ Every pixel a brush of `size` along `points` can reach on a `width × height` image: the union of each segment's box
+ * widened by the radius and clipped to the image — exactly the rectangles `paintStroke` walks; `null` when the stroke lies
+ * wholly outside. Twin of the Rust `stroke_bounds` the replayed raster stroke leaf paints over. */
+export function strokeBounds(points: readonly PixelPoint[], size: number, width: number, height: number): PixelRect | null {
+  if (width <= 0 || height <= 0) return null;
+  const radius = size/2;
+  let bounds: [number, number, number, number] | null = null;
+  for (let segment = 0; segment < points.length; segment++) {
+    const from = points[Math.max(0,segment-1)]!, to = points[segment]!;
+    const left = Math.max(0,Math.floor(Math.min(from[0],to[0])-radius)), right = Math.min(width-1,Math.ceil(Math.max(from[0],to[0])+radius));
+    const top = Math.max(0,Math.floor(Math.min(from[1],to[1])-radius)), bottom = Math.min(height-1,Math.ceil(Math.max(from[1],to[1])+radius));
+    if (left > right || top > bottom) continue;
+    bounds = bounds === null ? [left,top,right,bottom] : [Math.min(bounds[0],left),Math.min(bounds[1],top),Math.max(bounds[2],right),Math.max(bounds[3],bottom)];
+  }
+  return bounds === null ? null : {x:bounds[0],y:bounds[1],width:bounds[2]-bounds[0]+1,height:bounds[3]-bounds[1]+1};
+}
+
 export async function paintStroke(image: PixelImage, points: readonly PixelPoint[], brush: PixelBrush, options: PixelEditOptions = {}): Promise<PixelImage> {
   return paintBrush(image,points,brush,options);
 }

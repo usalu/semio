@@ -11,18 +11,31 @@ async fn locate_question_finds_a_question_anywhere_in_the_document() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn update_block_operation_returns_none_for_a_missing_question() {
+async fn update_block_operations_returns_none_for_a_missing_question() {
     let spec = empty_forms_snapshot();
-    assert!(update_block_operation(&spec, "missing", |question| question.label = "x".into()).is_none());
+    assert!(update_block_operations(&spec, "missing", |question| question.label = "x".into()).is_none());
 }
 
 #[semio_framework_async_macros::async_test]
-async fn update_block_operation_patches_the_located_question() {
+async fn update_block_operations_patch_the_located_question_field_by_field() {
     let mut spec = building_component_spec();
     let question_id = forms_steps(&spec)[0].blocks[0].id.clone();
-    let operation = update_block_operation(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operation");
-    spec = apply_form_edit_mutation(&spec, &operation);
+    let operations = update_block_operations(&spec, &question_id, |question| question.label = "Renamed".into()).expect("operations");
+    assert!(matches!(operations.as_slice(), [FormMutation::ChangeBlockField(change)] if change.block_id == question_id), "one field edit is one change-block-field leaf: {operations:?}");
+    for operation in &operations {
+        spec = apply_form_edit_mutation(&spec, operation);
+    }
     assert_eq!(forms_steps(&spec)[0].blocks[0].label, "Renamed");
+    assert_eq!(update_block_operations(&spec, &question_id, |_| {}), Some(Vec::new()), "an edit that changes nothing records nothing");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn a_re_seeded_question_is_one_whole_replace_block() {
+    let spec = building_component_spec();
+    let step = forms_steps(&spec)[0].clone();
+    let before = step.blocks[0].clone();
+    let after = FormQuestion { kind: format!("{}-other", before.kind), ..before.clone() };
+    assert!(matches!(question_edit_mutations(&step.id, &before, &after).as_slice(), [FormMutation::ReplaceBlock(replace)] if replace.block == after));
 }
 
 fn apply_form_edit_mutation(spec: &FormsSnapshot, operation: &FormMutation) -> FormsSnapshot {

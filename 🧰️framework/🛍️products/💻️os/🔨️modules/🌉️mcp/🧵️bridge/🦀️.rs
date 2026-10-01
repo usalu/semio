@@ -2899,7 +2899,7 @@ impl AgentConversation {
     /// `semio://job/{id}` all act on the same record, and a handler that polls
     /// `is_cancel_requested` sees the human's stop. `report_progress` moves it off `Pending`
     /// (a `Pending` job finishes as `Cancelled` immediately; this one is genuinely running).
-    pub fn begin_tool_call(&self, tool_name: &str, arguments: &serde_json::Value) -> String {
+    pub(crate) fn begin_tool_call(&self, tool_name: &str, arguments: &serde_json::Value) -> String {
         let invocation_id = format!("inv_{}", self.next_invocation.fetch_add(1, Ordering::Relaxed));
         crate::ui::job_registry().begin_with_id(invocation_id.clone(), "toolCall");
         crate::ui::job_registry().report_progress(&invocation_id, 0.0, Some(tool_name.to_string()));

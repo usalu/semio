@@ -105,7 +105,7 @@ pub fn addressed(view: &semio_framework_plugin::ViewModel, mutation: RewritingWi
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-config-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod tests;
 
 #[path = "🧵️job/🦀️.rs"]

@@ -4,7 +4,7 @@ use super::*;
 fn typed_wire_neutral_component_defaults_match_serde() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧵️retained/📦️wire/🧫️fixtures/🧾️typed/🔣️.json")).expect("typed fixture");
     let rows = fixture["components"].as_array().expect("component vectors");
-    assert_eq!(rows.len(), 25);
+    assert_eq!(rows.len(), 27);
     for row in rows {
         let sparse: Component = serde_json::from_value(row["wire"].clone()).expect("native sparse component");
         let normalized: Component = serde_json::from_value(row["expected"].clone()).expect("native normalized component");
@@ -48,13 +48,27 @@ fn every_component_variant_round_trips() {
     component_round_trips(Component::Text(TextProps { value: label("hi"), emphasize: Some(true), data_attributes: None }));
     component_round_trips(Component::Button(ButtonProps { icon: ui_text("plus"), label: label("Add") }));
     component_round_trips(Component::Separator(SeparatorProps {}));
-    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default() }));
+    component_round_trips(Component::Input(InputProps { kind: InputKind::Number, value: ui_text("3"), placeholder: None, commit: Some(ui_text("blur")), min: Some(0.0), max: Some(10.0), step: Some(1.0), accept: None, precision: Some(2), snaps: Default::default(), display_factor: None, limits: None }));
     component_round_trips(Component::Select(SelectProps { value: ui_text("a"), items: crate::UiFixedList::default(), placeholder: None }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Button, on: true, icon: ui_text("toggle-left"), text: Some(label("Enabled")) }));
     component_round_trips(Component::Toggle(ToggleProps { appearance: ToggleAppearance::Checkbox, on: true, icon: ui_text("check"), text: Some(label("Enabled")) }));
     component_round_trips(Component::KeyValueList(KeyValueListProps { entries: crate::UiFixedList::default() }));
-    component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")), snaps: snaps(&[0.25, 0.5, 0.75]) }));
-    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(1) }));
+    component_round_trips(Component::Slider(SliderProps { value: 0.5, min: 0.0, max: 1.0, step: 0.1, unit: Some(ui_text("m")), snaps: snaps(&[0.25, 0.5, 0.75]), appearance: SliderAppearance::Track, scale: UiNumberScale::Linear, precision: None, display_unit: None, display_factor: None, limits: None }));
+    component_round_trips(Component::Slider(SliderProps {
+        value: 1.0,
+        min: 0.1,
+        max: 10.0,
+        step: 0.01,
+        unit: None,
+        snaps: snaps(&[0.25, 0.5, 1.0, 2.0, 4.0]),
+        appearance: SliderAppearance::Dial,
+        scale: UiNumberScale::Log,
+        precision: Some(2),
+        display_unit: Some(ui_text("x")),
+        display_factor: Some(2.0),
+        limits: Some(UiNumberLimits { min: Some(UiNumberBound { value: 0.0, exclusive: true, refusal: Some(Label(ui_text("Must be greater than 0"))) }), max: None }),
+    }));
+    component_round_trips(Component::NumberStepper(NumberStepperProps { value: 2.0, step: 1.0, uniform: false, min: Some(0.0), max: Some(10.0), precision: Some(1), snaps: snaps(&[0.0, 5.0]), unit: Some(ui_text("rad")), display_unit: Some(ui_text("°")), display_factor: Some(57.29577951308232), limits: None }));
     component_round_trips(Component::Ring(RingProps { orb_id: ui_text("orb-1"), t: 0.25 }));
     component_round_trips(Component::IconSelect(IconSelectProps { value: ui_text("circle"), uniform: true, classifier_kind: ui_text("shape") }));
     component_round_trips(Component::Progress(ProgressProps { completed: 12.0, total: Some(100.0), value_text: label("12 of 100") }));
@@ -281,6 +295,14 @@ fn snaps(values: &[f64]) -> crate::UiFixedList<f64> {
     list
 }
 
+fn fixture_scale(value: &serde_json::Value) -> crate::UiNumberScale {
+    match value.as_str() {
+        Some("log") => crate::UiNumberScale::Log,
+        Some("linear") | None => crate::UiNumberScale::Linear,
+        Some(other) => panic!("unknown number scale {other}"),
+    }
+}
+
 fn fixture_snaps(value: &serde_json::Value) -> Vec<f64> {
     value.as_array().expect("fixture snaps").iter().map(|snap| snap.as_f64().expect("numeric snap")).collect()
 }
@@ -293,7 +315,7 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
         assert_eq!(verdict, row["valid"].as_bool().expect("valid"), "{}", row["case"]);
     }
     for row in fixture["pointer"].as_array().expect("pointer rows") {
-        let value = crate::slider_pointer_value(row["value"].as_f64().expect("value"), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"), row["step"].as_f64().expect("step"), fixture_snaps(&row["snaps"]));
+        let value = crate::slider_pointer_value(row["value"].as_f64().expect("value"), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"), row["step"].as_f64().expect("step"), fixture_snaps(&row["snaps"]), fixture_scale(&row["scale"]));
         assert_eq!(value, row["expected"].as_f64().expect("expected"), "{}", row["case"]);
     }
     for row in fixture["adjacent"].as_array().expect("adjacent rows") {
@@ -324,7 +346,44 @@ fn number_controls_fixture_pins_the_detent_pointer_key_and_precision_laws() {
     }
     for row in fixture["valueTexts"].as_array().expect("value text rows") {
         let component: Component = serde_json::from_value(row["component"].clone()).expect("value text component");
-        assert_eq!(crate::accessibility_value(&component).text.as_deref(), row["valueText"].as_str(), "{}", row["case"]);
+        let value = crate::accessibility_value(&component);
+        assert_eq!(value.text.as_deref(), row["valueText"].as_str(), "{}", row["case"]);
+        for (field, spoken) in [("valueNow", value.now), ("valueMin", value.min), ("valueMax", value.max)] {
+            if let Some(expected) = row.get(field) {
+                assert_eq!(spoken, expected.as_f64(), "{}: {field}", row["case"]);
+            }
+        }
+    }
+    for row in fixture["axis"].as_array().expect("axis rows") {
+        let (value, min, max, scale) = (row["value"].as_f64().expect("value"), row["min"].as_f64().expect("min"), row["max"].as_f64().expect("max"), fixture_scale(&row["scale"]));
+        let position = crate::slider_axis_position(value, min, max, scale);
+        assert!((position - row["position"].as_f64().expect("position")).abs() <= 1e-12, "{}: position {position}", row["case"]);
+        if (min..=max).contains(&value) {
+            let back = crate::slider_axis_value(position, min, max, scale);
+            assert!((back - value).abs() <= 1e-12 * value.abs().max(1.0), "{}: value {back}", row["case"]);
+        }
+    }
+    for row in fixture["dial"].as_array().expect("dial rows") {
+        let angle = crate::dial_angle(row["position"].as_f64().expect("position"));
+        assert!((angle - row["angle"].as_f64().expect("angle")).abs() <= 1e-12, "{}: angle {angle}", row["case"]);
+        assert!((crate::dial_position(angle) - row["back"].as_f64().expect("back")).abs() <= 1e-12, "{}: back", row["case"]);
+    }
+    for row in fixture["display"].as_array().expect("display rows") {
+        let precision = row["precision"].as_u64().map(|precision| precision as u16);
+        assert_eq!(crate::ui_number_display_text(row["stored"].as_f64().expect("stored"), row["factor"].as_f64(), precision), row["text"].as_str().expect("text"), "{}", row["case"]);
+    }
+    for row in fixture["typed"].as_array().expect("typed rows") {
+        let precision = row["precision"].as_u64().map(|precision| precision as u16);
+        let stored = crate::ui_number_typed_value(row["typed"].as_f64().expect("typed"), row["factor"].as_f64(), precision, fixture_snaps(&row["candidates"]));
+        assert_eq!(stored, row["expected"].as_f64().expect("expected"), "{}", row["case"]);
+    }
+    for row in fixture["limits"].as_array().expect("limit rows") {
+        let limits: Option<crate::UiNumberLimits> = serde_json::from_value(row["limits"].clone()).expect("fixture limits");
+        let (min, max) = (row["min"].as_f64(), row["max"].as_f64());
+        let crossed = crate::ui_number_crossed_bound(row["value"].as_f64().expect("value"), min, max, limits.as_ref());
+        let lower = limits.as_ref().map_or(min, |limits| limits.min.as_ref().map(|bound| bound.value));
+        let side = crossed.map(|bound| if lower == Some(bound.value) && limits.as_ref().is_none_or(|limits| limits.min.as_ref() == Some(&bound)) { "min" } else { "max" });
+        assert_eq!(side, row["crossed"].as_str(), "{}", row["case"]);
     }
     for row in fixture["documents"].as_array().expect("document rows") {
         let node = serde_json::json!({ "id": 1, "key": row["case"], "component": row["component"], "layout": { "kind": "leaf", "width": "hug", "height": "hug" }, "style": {}, "activity": "idle", "accessibility": {} });

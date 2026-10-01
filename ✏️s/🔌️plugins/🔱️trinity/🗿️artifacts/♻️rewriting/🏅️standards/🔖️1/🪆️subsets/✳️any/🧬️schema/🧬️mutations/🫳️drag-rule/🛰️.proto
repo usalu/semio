@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.s.trinity.rewriting.mutation.drag_rule_nodes;
+// drag-rule-nodes / DragRuleNodes
+message DragRuleNodes { repeated string targets = 1; double dx = 2; double dy = 3; }

@@ -57,9 +57,10 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
         actor: actor.clone(),
         group_id: None,
         stamped_edit_id: None,
+        line: None,
     });
     let edit_id = format!("map-{role}-edit-{ordinal}");
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![format!("{role}:forward")],
@@ -137,9 +138,10 @@ fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u6
         actor: actor.clone(),
         group_id: None,
         stamped_edit_id: None,
+        line: None,
     });
     let edit_id = format!("map-store-edit-{ordinal}");
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: edit_id.clone(),
         actor: Some(actor.clone()),
         forwards: vec![DemoMutation::SetN(SetN { n: next })],

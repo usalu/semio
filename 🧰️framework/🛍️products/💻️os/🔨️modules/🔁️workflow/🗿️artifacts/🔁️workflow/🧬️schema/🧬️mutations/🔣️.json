@@ -56,6 +56,12 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/unbind-output/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/move-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/os/workflow/artifacts/workflow/mutation/set-node-positions/schema.json"
     }
   ]
 }

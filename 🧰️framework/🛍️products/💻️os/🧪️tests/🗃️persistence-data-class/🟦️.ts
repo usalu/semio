@@ -12,7 +12,7 @@ import {
   type PersistenceBinding,
   type PersistenceDataClass,
 } from "../../🟦️.ts";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const fixture = JSON.parse(

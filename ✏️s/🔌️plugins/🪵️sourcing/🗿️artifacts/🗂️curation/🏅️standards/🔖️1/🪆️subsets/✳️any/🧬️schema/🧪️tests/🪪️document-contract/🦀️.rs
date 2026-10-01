@@ -5,7 +5,7 @@ use protocol::MutationDiff;
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {
-    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
     let snapshot: CurationSnapshot = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
     let artifact: CurationArtifact = dsl::json::from_json_str(&vectors["document"].to_string()).unwrap();
     assert_eq!(artifact.to_snapshot(), snapshot);

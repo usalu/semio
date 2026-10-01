@@ -21,6 +21,7 @@ use super::change_layer_pixels;
 use super::change_layer_mask;
 use super::change_layer_transform;
 use super::change_layer_adjustment_parameter;
+use super::paint_stroke;
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
@@ -48,6 +49,7 @@ pub enum RasterMutation {
     ChangeLayerMask(change_layer_mask::ChangeLayerMask),
     ChangeLayerTransform(change_layer_transform::ChangeLayerTransform),
     ChangeLayerAdjustmentParameter(change_layer_adjustment_parameter::ChangeLayerAdjustmentParameter),
+    PaintStroke(paint_stroke::PaintStroke),
 }
 
 /// 🧯️ Cold disposal of a scratch mutation nobody will apply again — the store retires decoded
@@ -237,7 +239,7 @@ pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
 /// `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest against the enum,
 /// since the framework never parses Rust.
 pub const KINDS: &[&str] =
-    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter"];
+    &["create-layer", "delete-layer", "reorder-layers", "rename-layer", "change-layer-visible", "change-layer-locked", "change-layer-opacity", "change-layer-blend-mode", "move-layer", "resize-layer", "change-layer-adjustment-kind", "add-layer-asset", "remove-layer-asset", "change-layer-pixels", "change-layer-mask", "change-layer-transform", "change-layer-adjustment-parameter", "paint-stroke"];
 //#endregion 🔖️Kinds
 
 //#region 🧪️KindsCatalog

@@ -1,6 +1,6 @@
 import { lstatSync, realpathSync } from "node:fs";
 import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
-import { BundleScript } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { canonicalGoPlan, runCanonicalGoTests } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 export type GoInputSelectionOperations = Readonly<{

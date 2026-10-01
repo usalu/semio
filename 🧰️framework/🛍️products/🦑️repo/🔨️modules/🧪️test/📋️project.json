@@ -11,7 +11,9 @@
         "forwardAllArgs": true
       },
       "cache": true,
-      "inputs": ["commandCompositionSources"],
+      "inputs": [
+        "commandCompositionSources"
+      ],
       "outputs": []
     },
     "test-discover": {
@@ -47,7 +49,11 @@
         "command": "bun ./📜️script.ts oracle",
         "forwardAllArgs": true
       },
-      "inputs": ["default", "^default", "normOracleSources"]
+      "inputs": [
+        "default",
+        "^default",
+        "normOracleSources"
+      ]
     },
     "test-subject": {
       "executor": "nx:run-commands",
@@ -62,7 +68,11 @@
         "command": "bun ./📜️script.ts parity",
         "forwardAllArgs": true
       },
-      "inputs": ["default", "^default", "normOracleSources"]
+      "inputs": [
+        "default",
+        "^default",
+        "normOracleSources"
+      ]
     },
     "test-report": {
       "executor": "nx:run-commands",
@@ -78,7 +88,9 @@
           "runtime": "node -e \"const c=require('crypto'),f=require('fs'),p=require('path'),r=process.argv[1],h=c.createHash('sha256');(function walk(x){if(!f.existsSync(x))return;const s=f.lstatSync(x);if(s.isDirectory())for(const e of f.readdirSync(x).sort())walk(p.join(x,e));else if(s.isFile()){h.update(p.relative(r,x).split(p.sep).join('/')+String.fromCharCode(0));h.update(f.readFileSync(x));}})(r);process.stdout.write(h.digest('hex'));\" .🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📤️results.jsonl"
         }
       ],
-      "outputs": ["{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📋️junit.xml"]
+      "outputs": [
+        "{workspaceRoot}/.🧬semio/🦑️repo/⚡️cache/tests/reports/latest/📋️junit.xml"
+      ]
     },
     "test-clean": {
       "executor": "nx:run-commands",
@@ -164,11 +176,56 @@
       },
       "outputs": []
     },
+    "test-schema-mutation-labels": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-labels",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-labels-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-labels --census",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-editability": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-editability",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-schema-mutation-editability-census": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts schema mutation-editability --census",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
     "test-mutation-payload-parity": {
       "executor": "nx:run-commands",
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
         "command": "bun ./📜️script.ts test mutation-payload-parity",
+        "forwardAllArgs": true
+      },
+      "outputs": []
+    },
+    "test-mutation-history-gates": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts test mutation-history-gates",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -179,7 +236,11 @@
         "command": "bun ./📜️script.ts fixture verify",
         "forwardAllArgs": true
       },
-      "inputs": ["default", "^default", "htmlSourcePairs"]
+      "inputs": [
+        "default",
+        "^default",
+        "htmlSourcePairs"
+      ]
     },
     "test-fixture-audit": {
       "executor": "nx:run-commands",
@@ -234,7 +295,11 @@
         "command": "bun ./📜️script.ts run",
         "forwardAllArgs": true
       },
-      "inputs": ["default", "^default", "normOracleSources"]
+      "inputs": [
+        "default",
+        "^default",
+        "normOracleSources"
+      ]
     },
     "acceptance-goal": {
       "executor": "nx:run-commands",
@@ -255,6 +320,14 @@
         "forwardAllArgs": true
       },
       "outputs": []
+    },
+    "inventory-provider-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test",
+        "command": "bun ./📜️script.ts inventory-provider-check"
+      }
     }
   },
   "namedInputs": {

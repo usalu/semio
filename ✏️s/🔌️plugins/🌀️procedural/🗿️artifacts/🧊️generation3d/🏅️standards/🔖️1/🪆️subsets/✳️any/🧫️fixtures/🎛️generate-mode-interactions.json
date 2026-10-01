@@ -57,7 +57,7 @@
     { "operation": "deleteSelection", "dispatchedBy": "deleteKey", "required": [] },
     { "operation": "connect", "dispatchedBy": "portDrag", "required": ["sourceNodeId", "sourcePortId", "targetNodeId", "targetPortId"] },
     { "operation": "disconnect", "dispatchedBy": "wireCut", "required": ["synapseId"] },
-    { "operation": "move", "dispatchedBy": "nodeDrag", "required": ["nodeId", "x", "y"] }
+    { "operation": "move", "dispatchedBy": "nodeDrag", "required": ["gestureId", "nodeIds", "dx", "dy"] }
   ],
   "commandTriggers": [
     { "command": "reorganize", "triggers": ["contextMenu", "keybinding", "commandPalette"], "keys": "mod+alt+l" },

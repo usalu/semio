@@ -4,7 +4,7 @@
 pub mod feature;
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;
 
 use crate::document_dsl::REUSE_MAP_EXAMPLE_TEXT;

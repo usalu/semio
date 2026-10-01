@@ -3,7 +3,7 @@
 //! 🕳️ THE ONE VERB THAT DOES NOT REFUSE A REFERENCED TARGET. Every other `delete-` in this
 //! vocabulary raises `mutation.target-referenced` while a referrer is alive; `delete-node` keeps
 //! the permissive behaviour its own committed vector states in so many words —
-//! `🧪️tests/🚫️removes-the-column-head-056295` asserts that frame `f1` keeps naming `n3` after the
+//! `🧪️tests/🚫️removes` asserts that frame `f1` keeps naming `n3` after the
 //! node is gone ("delete-node is cascade-free"). Changing it would overturn a specified behaviour,
 //! so the asymmetry is recorded here rather than silently removed. `node_referrers` in
 //! `🌐️any/🧬️schema/🧬️mutations/🦀️.rs` is the scan a future cascade would use.

@@ -95,5 +95,5 @@ mod tests;
 mod mutation_vectors;
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-config-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod window_config_ownership;

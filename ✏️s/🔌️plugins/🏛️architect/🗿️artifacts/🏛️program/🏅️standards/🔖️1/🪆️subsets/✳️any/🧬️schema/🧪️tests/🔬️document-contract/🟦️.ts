@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { parseProgramArtifact } from "../../🟦️.ts";
 import { parseProgramSnapshot } from "../../📸️snapshot/🟦️.ts";
 import { parseProgramDiff } from "../../🔺️diff/🟦️.ts";

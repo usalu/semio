@@ -10,8 +10,11 @@
 
 //#endregion 🧲️Header
 
+import { runMutationInventoryProviderChecksV1 } from "./🏭️inventory/🔌️providers/🧪️tests/🟦️.ts";
 import { join } from "node:path";
-import { Script, ScriptRouter, orchestratorBudgetOpts, resolveTestLevel, runBundleScriptMain, runCmd } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, resolveTestLevel, runCmd } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { OracleScript, ParityScript, SubjectScript } from "./⚖️parity/📋️orchestration/🟦️.ts";
 import { ContractScript, DiscoverScript, RunScript } from "./🧾️contracts/📋️orchestration/🟦️.ts";
 import { FixtureScript } from "./🧾️provenance/📋️orchestration/🟦️.ts";
@@ -33,7 +36,7 @@ class DslScript extends Script {
   }
 }
 
-/** 🧪️ Selects the suite, schema gate, portable command-composition source contract, or the payload-parity lint corpus. */
+/** 🧪️ Selects the suite, schema gate, portable command-composition source contract, or the payload-parity or history-gate lint corpus. */
 class TestScript extends Script {
   async run(segments: string[]): Promise<void> {
     if (segments[0] === "schema") return new SchemaScript(this.root, this.repoRoot).run(segments.slice(1));
@@ -42,9 +45,9 @@ class TestScript extends Script {
       runCmd(process.execPath, ["test", join(import.meta.dir, "🧪️tests", "🧱️command-composition-source", "🟦️.ts")], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
-    if (segments[0] === "mutation-payload-parity") {
-      if (segments.length !== 1) throw new Error("Expected test mutation-payload-parity");
-      runCmd(process.execPath, ["test", `./${join(import.meta.dir, "🧪️tests", "🧪️mutation-payload-parity", "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    if (segments[0] === "mutation-payload-parity" || segments[0] === "mutation-history-gates") {
+      if (segments.length !== 1) throw new Error(`Expected test ${segments[0]}`);
+      runCmd(process.execPath, ["test", `./${join(import.meta.dir, "🧪️tests", `🧪️${segments[0]}`, "🟦️.ts").slice(this.repoRoot.length + 1)}`], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
       return;
     }
     return new RunScript(this.root, this.repoRoot).run(segments);
@@ -71,6 +74,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("nx", NxScript)
   .register("doctor", DoctorScript)
   .register("inventory", InventoryScript)
+  .register("inventory-provider-check", class extends Script { run(args: string[]): void { if (args.length) throw new Error("inventory-provider-check accepts no overrides"); console.log(`mutation inventory provider: ${runMutationInventoryProviderChecksV1()} laws`); } })
   .register("fixture", FixtureScript)
   .register("probe", ProbeScript)
   .register("matrix", MatrixScript)
@@ -79,4 +83,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("manifest", ManifestScript)
   .register("acceptance", AcceptanceScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url);

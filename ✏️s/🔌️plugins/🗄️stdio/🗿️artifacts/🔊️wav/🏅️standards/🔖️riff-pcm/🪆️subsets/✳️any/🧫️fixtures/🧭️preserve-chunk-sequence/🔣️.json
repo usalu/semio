@@ -19,11 +19,11 @@
     { "fourcc": "data", "data": [9, 0, 10, 0] }
   ],
   "chunkOrder": [
-    { "kind": "other", "value": 0 },
+    { "kind": "other", "value": "0" },
     { "kind": "format" },
-    { "kind": "other", "value": 1 },
-    { "kind": "other", "value": 2 },
+    { "kind": "other", "value": "1" },
+    { "kind": "other", "value": "2" },
     { "kind": "samples" },
-    { "kind": "other", "value": 3 }
+    { "kind": "other", "value": "3" }
   ]
 }

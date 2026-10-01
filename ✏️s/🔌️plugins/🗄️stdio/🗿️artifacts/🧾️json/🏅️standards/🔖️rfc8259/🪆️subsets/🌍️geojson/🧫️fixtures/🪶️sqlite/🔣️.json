@@ -1,0 +1,66 @@
+{
+  "dialect": "s.stdio.json@rfc8259/geojson",
+  "cases": [
+    {
+      "id": "point",
+      "text": "{\"type\":\"Point\",\"coordinates\":[12,48,5],\"foreign\":{\"keep\":[true,null]}}",
+      "codes": []
+    },
+    {
+      "id": "null-feature",
+      "text": "{\"type\":\"Feature\",\"id\":\"世界\",\"geometry\":null,\"properties\":{\"a\":1,\"a\":2}}",
+      "codes": []
+    },
+    {
+      "id": "left-handed",
+      "text": "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[0,1],[1,1],[0,0]]]}",
+      "codes": [
+        "stdio.json.geojson.left-handed-ring"
+      ]
+    },
+    {
+      "id": "legacy-crs",
+      "text": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"urn:ogc:def:crs:EPSG::4326\"}},\"coordinates\":[12,48]}",
+      "codes": [
+        "stdio.json.geojson.legacy-crs"
+      ]
+    },
+    {
+      "id": "range",
+      "text": "{\"type\":\"Point\",\"coordinates\":[181,0]}",
+      "codes": [
+        "stdio.json.geojson.not-rfc7946"
+      ]
+    },
+    {
+      "id": "unclosed",
+      "text": "{\"type\":\"Polygon\",\"coordinates\":[[[0,0],[1,0],[1,1],[0,1]]]}",
+      "codes": [
+        "stdio.json.geojson.not-rfc7946"
+      ]
+    },
+    {
+      "id": "properties",
+      "text": "{\"type\":\"Feature\",\"geometry\":null,\"properties\":false}",
+      "codes": [
+        "stdio.json.geojson.not-rfc7946"
+      ]
+    },
+    {
+      "id": "line",
+      "text": "{\"type\":\"LineString\",\"coordinates\":[[0,0]]}",
+      "codes": [
+        "stdio.json.geojson.not-rfc7946"
+      ]
+    },
+    {
+      "id": "mercator",
+      "text": "{\"type\":\"Point\",\"crs\":{\"type\":\"name\",\"properties\":{\"name\":\"EPSG:3857\"}},\"coordinates\":[0,0]}",
+      "codes": [
+        "stdio.json.geojson.legacy-crs"
+      ]
+    }
+  ],
+  "editCoordinateLexeme": "181",
+  "cancelNodes": 600
+}

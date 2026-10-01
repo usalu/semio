@@ -1647,6 +1647,8 @@ impl crate::value::FromValue for MutationMeta {
 pub struct Edit<Op> {
     pub id: String,
     pub actor: Option<String>,
+    /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
+    pub line: Option<String>,
     pub forwards: Vec<Op>,
     pub inverse: Vec<Op>,
     pub mutation_meta: Vec<MutationMeta>,
@@ -1692,6 +1694,7 @@ impl<Op: crate::value::ToValue> crate::value::ToValue for Edit<Op> {
         if self.finished_at.is_some() {
             entries.push(("finishedAt".to_string(), crate::value::ToValue::to_value(&self.finished_at)));
         }
+        entries.push(("line".to_string(), crate::value::ToValue::to_value(&self.line)));
         crate::value::DslValue::object(entries)
     }
 }
@@ -1702,6 +1705,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         };
         let mut id = None;
         let mut actor = None;
+        let mut line = None;
         let mut forwards = None;
         let mut inverse = None;
         let mut mutation_meta = Vec::new();
@@ -1714,6 +1718,10 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         for (key, entry) in fields {
             match key.as_str() {
                 "id" => id = Some(<String as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("id"))?),
+                "line" => {
+                    if line.is_some() { return Err(crate::value::ValueError::new("Edit repeats line")); }
+                    line = Some(<Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("line"))?);
+                }
                 "actor" => actor = <Option<String> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("actor"))?,
                 "forwards" => forwards = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("forwards"))?),
                 "inverse" => inverse = Some(<Vec<Op> as crate::value::FromValue>::from_value(entry).map_err(|error| error.under("inverse"))?),
@@ -1730,6 +1738,7 @@ impl<Op: crate::value::FromValue> crate::value::FromValue for Edit<Op> {
         Ok(Edit {
             id: id.ok_or_else(|| crate::value::ValueError::new("Edit missing id"))?,
             actor,
+            line: line.ok_or_else(|| crate::value::ValueError::new("Edit missing line"))?,
             forwards: forwards.ok_or_else(|| crate::value::ValueError::new("Edit missing forwards"))?,
             inverse: inverse.ok_or_else(|| crate::value::ValueError::new("Edit missing inverse"))?,
             mutation_meta,

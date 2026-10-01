@@ -43,15 +43,15 @@
           "scenarios": [
             {
               "id": "replaces-the-envelope-wrapping-a-value-subset",
-              "directoryName": "✉️replaces-the-envelope-wrapping-a-value-subset"
+              "directoryName": "✉️replaces"
             },
             {
               "id": "reasserts-the-value-envelope-unchanged",
-              "directoryName": "🪞️reasserts-the-value-envelope-unchanged"
+              "directoryName": "🪞️reasserts"
             },
             {
               "id": "retypes-a-value-envelope-to-an-empty-image",
-              "directoryName": "🔁️retypes-a-value-envelope-to-an-empty-image"
+              "directoryName": "🔁️retypes"
             }
           ]
         },
@@ -62,7 +62,7 @@
           "scenarios": [
             {
               "id": "refuses-a-value-envelope",
-              "directoryName": "🚫️refuses-a-value-envelope"
+              "directoryName": "🚫️refuses"
             }
           ]
         }
@@ -1457,35 +1457,35 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a63825249342e4c9b305e62e552ef3f98137dbcc0f71a20597ec99560776e971",
           "bytes": 836
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:8a9a996da0a49f00ef78032dd5cba969c38045febc4fc7647e2faac0bf7970ee",
           "bytes": 624
         },
         {
           "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4c33649059530497fa997d63a5667db89fc4db5aff94162a6be47e01db7e4b82",
           "bytes": 645
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces-the-envelope-wrapping-a-value-subset/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/✉️replaces/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
           "bytes": 26
@@ -1522,35 +1522,35 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:f5ce469c29f2ad485595bfb929cbcfd47d13847c2c185cc868b1a5409d57f2fd",
           "bytes": 836
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:b3318f86a7be5426bc966a5c4485851c87e805f826c21388cb23d187aa0117a4",
           "bytes": 645
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts-the-value-envelope-unchanged/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🪞️reasserts/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
           "bytes": 26
@@ -1587,35 +1587,35 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4058a2df6025695f0e3177f2c3bbfa096a4266e4b9cee493ee2ef62dd7cc1501",
           "bytes": 360
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:6b1a3bcbd1394468f77a33d28cc168432161afd867f34ef3c94e007b7e40b180",
           "bytes": 240
         },
         {
           "role": "expected-diff-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:b3c0e3d6e836745b24ac4f77937cb2b93353310ca5a724f53cad417945806596",
           "bytes": 261
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes-a-value-envelope-to-an-empty-image/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔁️retypes/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ba8bdf03c2e1c5446d0e45dca677a0735260f57562c5b778059a9f6627a2551a",
           "bytes": 26
@@ -1652,28 +1652,28 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "mutation-json",
-          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:682915d9106faf92ff68f799d2e82fdb26306494b950d1635067910253cb5460",
           "bytes": 146
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:1138e8bc0ddffdccf2b46322a0ee12b49d7ed4ed9c87a2aae4a210481a8c03af",
           "bytes": 624
         },
         {
           "role": "outcome-json",
-          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses-a-value-envelope/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🧬️mutations/🖼️apply-image/🚫️refuses/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ef0e739c6fee5011ff26edb6130d42dfe6c5c676f7ec5b6e6f08ad806724e9aa",
           "bytes": 94

@@ -1,4 +1,4 @@
-//! 🧪️ `change-timestamp` fixture — `🎯️direct-behavior`.
+//! 🧪️ `change-timestamp` fixture — `🎯️direct`.
 //!
 //! Source of truth is the committed JSON quintet beside this file: the before-snapshot, the
 //! mutation payload, the after-snapshot, the sparse diff and the declared outcome. Every value in
@@ -17,11 +17,11 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
-const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct-behavior/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕰️change-timestamp/🎯️direct/🎯️outcome/🔣️.json");
 
 fn before() -> PngSnapshot {
     dsl::json::from_json_str(BEFORE).expect("committed before-snapshot decodes")

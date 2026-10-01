@@ -1,9 +1,9 @@
-//! ⚖️ `change-node-morph-weights` implementation case `⚖️sets-the-node-1b9600`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/⚖️change-weights/⚖️sets-the-node-1b9600/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! ⚖️ `change-node-morph-weights` implementation case `⚖️sets`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/⚖️change-weights/⚖️sets/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeNodeMorphWeightsMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-node-morph-weights");
-    super::super::component::fixture_corpus_tests::assert_case("🌳️node/⚖️change-weights/⚖️sets-the-node-1b9600");
+    super::super::component::fixture_corpus_tests::assert_case("🌳️node/⚖️change-weights/⚖️sets");
 }

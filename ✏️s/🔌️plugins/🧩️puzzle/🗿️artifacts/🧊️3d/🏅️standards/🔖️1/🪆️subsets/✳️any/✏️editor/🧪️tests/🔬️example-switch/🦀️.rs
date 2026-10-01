@@ -31,9 +31,9 @@ async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from()
 }
 
 /// 🎵️ Wave W-X: a whole-fixture switch must stay cursorized (hostile law) but land as ONE
-/// coalesced document-replacement emit — chunked by mutation kind, not one ingress per item.
+/// document-replacement emit with no coalesce key — chunked by mutation kind, not one ingress per item.
 #[test]
-fn set_active_example_chunks_by_kind_and_emits_one_coalesced_gesture() {
+fn set_active_example_chunks_by_kind_and_emits_one_uncoalesced_edit() {
     use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
     let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&CONCRETE_FOREST_EXAMPLE_FIXTURE.clone())).into());
     let config = Puzzle3dConfig::default();
@@ -65,7 +65,7 @@ fn set_active_example_chunks_by_kind_and_emits_one_coalesced_gesture() {
         + 2;
     assert!(emit.artifact_mutations.len() > 1, "the completed emit still carries one mutation per deleted/created item; observed {}", emit.artifact_mutations.len());
     assert_eq!(emit.artifact_mutations.len(), items, "chunking must not drop or fuse mutation kinds (items plus domain and catalogs)");
-    assert_eq!(emit.coalesce_key.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY));
+    assert_eq!(emit.coalesce_key, None, "an example load is ONE intent edit, never coalesced into a neighbouring edit");
     assert_eq!(emit.description.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION));
     assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
     assert_eq!(emit.ui_scope, puzzle3d_scope(Puzzle3dScopeClass::Chrome));
@@ -153,7 +153,7 @@ async fn the_nakagin_switch_assembles_every_object_onto_a_mesh_the_same_publicat
 }
 
 /// 🎵️ Wave W-AA: `VcsArtifactApp::backfill_command_log` labels an unpublished tool-job edit from
-/// `Emit.description`, else the first op `print_op()` (`delete-object id=…`). The coalesced
+/// `Emit.description`, else the first op `print_op()` (`delete-object id=…`). The
 /// Complete emit must carry "Set Active Example" and no window-config resize — one history row,
 /// not a Shell `Resize Window` step of the switch. One-undo restore is
 /// `set_active_example_lands_as_one_edit_and_republishes_the_world_scene`.
@@ -175,7 +175,7 @@ fn set_active_example_history_is_one_set_active_example_row() {
     };
     assert_eq!(emit.description.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION));
     assert!(emit.window_config_mutations.is_empty(), "a fixture switch must not emit a separate window-resize undo step");
-    assert_eq!(emit.coalesce_key.as_deref(), Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY));
+    assert_eq!(emit.coalesce_key, None, "an example load is ONE intent edit, never coalesced into a neighbouring edit");
 }
 
 /// 🎯️ Wave W-S2: a document swap must hand the render host a NEW camera-fit revision, and an

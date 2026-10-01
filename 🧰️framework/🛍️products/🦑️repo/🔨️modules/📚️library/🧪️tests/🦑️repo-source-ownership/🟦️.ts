@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { basename, dirname, resolve } from "node:path";
 import Ajv from "ajv";
 import ts from "typescript";
-import { classifyPackageSource, loadCatalogTaxonomy, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
+import { classifyPackageSource, semanticDirectoryKindId } from "../../🔍️discovery/🟦️.ts";
 
 /** 🧾️ Reads the parse diagnostics every `createSourceFile` result carries and the public `SourceFile` type omits. */
 const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
@@ -12,7 +12,7 @@ const parsedDiagnostics = (source: ts.SourceFile): readonly ts.Diagnostic[] =>
 type Entry = Readonly<{
   legacy: string;
   owner: string;
-  kind: "dotnet" | "rust" | "typescript" | "typescript-declaration" | "typescript-jsx";
+  kind: "dotnet" | "rust" | "typescript" | "typescript-declaration" | "javascript-declaration" | "typescript-jsx";
   boundary: "cargo-bin" | "cargo-lib" | "declaration" | "dotnet-compile" | "next-layout" | "next-page" | "next-route" | "none" | "package-reexport";
   anchor: string;
   glue?: string;
@@ -29,11 +29,13 @@ const libraryRoot = resolve(import.meta.dir, "../..");
 const repoRoot = resolve(libraryRoot, "../../../../..");
 const fixture = JSON.parse(readFileSync(resolve(libraryRoot, "🧫️fixtures/🦑️repo-source-ownership/🔣️.json"), "utf8")) as Fixture;
 const schema = JSON.parse(readFileSync(resolve(libraryRoot, "🧬️schema/🦑️repo-source-ownership/🔣️.json"), "utf8"));
+const taxonomy = JSON.parse(readFileSync(resolve(libraryRoot, "🔣️taxonomy.json"), "utf8"));
 const basenames: Readonly<Record<Entry["kind"], string>> = {
   dotnet: "🔷️.cs",
   rust: "🦀️.rs",
   typescript: "🟦️.ts",
   "typescript-declaration": "🟦️.d.mts",
+  "javascript-declaration": "🟨️.d.mts",
   "typescript-jsx": "🟦️.tsx",
 };
 const wrappers = new Set<Entry["boundary"]>(["package-reexport", "next-route", "next-layout", "next-page"]);
@@ -54,6 +56,10 @@ describe("repository source ownership", () => {
       expect(existsSync(owner), row.owner).toBe(true);
       expect(basename(owner), row.owner).toBe(basenames[row.kind]);
       expect(readFileSync(owner, "utf8"), row.owner).toContain(row.anchor);
+      if (row.boundary === "declaration") {
+        expect(legacy).toBe(owner);
+        continue;
+      }
       if (!wrappers.has(row.boundary)) {
         expect(existsSync(legacy), row.legacy).toBe(false);
         continue;
@@ -68,7 +74,6 @@ describe("repository source ownership", () => {
   });
 
   test("resolves the complete registered ancestry of both library source owners", () => {
-    const taxonomy = loadCatalogTaxonomy();
     expect(fixture.ownerDirectoryChains).toHaveLength(2);
     for (const chain of fixture.ownerDirectoryChains) {
       expect(existsSync(resolve(repoRoot, chain.owner)), chain.owner).toBe(true);
@@ -82,13 +87,13 @@ describe("repository source ownership", () => {
 
   test("parses all TypeScript owners and delegates with the installed compiler oracle", () => {
     for (const row of fixture.entries) {
-      if (!row.kind.startsWith("typescript")) continue;
+      if (!row.kind.startsWith("typescript") && row.kind !== "javascript-declaration") continue;
       for (const path of [row.owner, ...(wrappers.has(row.boundary) ? [row.legacy] : [])]) {
         const source = readFileSync(resolve(repoRoot, path), "utf8");
         const kind = path.endsWith("x") ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
         const parsed = ts.createSourceFile(path, source, ts.ScriptTarget.Latest, true, kind);
         expect(parsedDiagnostics(parsed), path).toEqual([]);
-        if (path === row.legacy) expect(parsed.statements.every((statement) => ts.isExportDeclaration(statement)), path).toBe(true);
+        if (wrappers.has(row.boundary) && path === row.legacy) expect(parsed.statements.every((statement) => ts.isExportDeclaration(statement)), path).toBe(true);
       }
     }
   });
@@ -106,7 +111,6 @@ describe("repository source ownership", () => {
   });
 
   test("classifies retained TypeScript package entries as declarations", () => {
-    const taxonomy = loadCatalogTaxonomy();
     const packageEntries = fixture.entries.filter(({ boundary, kind }) => boundary === "package-reexport" && kind === "typescript");
     expect(packageEntries).toHaveLength(3);
     for (const row of packageEntries) {

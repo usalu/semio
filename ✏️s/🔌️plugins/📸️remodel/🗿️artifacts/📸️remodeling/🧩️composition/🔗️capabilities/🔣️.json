@@ -1,0 +1,23 @@
+{
+  "schema": "semio.repository.cargo-capability-links/v1",
+  "groups": [
+    {
+      "feature": "video-containers",
+      "requires": [],
+      "targets": [
+        {
+          "package": "semio-s-artifact-stdio-avi",
+          "owner": "../../../🗄️stdio/🗿️artifacts/📼️avi",
+          "manifest": "../../../🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust/Cargo.toml",
+          "feature": "video-avi"
+        },
+        {
+          "package": "semio-s-artifact-stdio-mp4",
+          "owner": "../../../🗄️stdio/🗿️artifacts/🎥️mp4",
+          "manifest": "../../../🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust/Cargo.toml",
+          "feature": "video-mp4"
+        }
+      ]
+    }
+  ]
+}

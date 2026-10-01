@@ -33,7 +33,7 @@ mod subject {
             "paint" => Some(LowpolyCommand::AddPaintLayer(paint::add_paint_layer::AddPaintLayer { object_id: None, name: Some("Detail".into()) })),
             "selection" => Some(LowpolyCommand::SetActiveObject(selection::set_active_object::SetActiveObject { object_id: "obj-1".into() })),
             "utility" => Some(LowpolyCommand::SetUtilityParam(utility::set_utility_param::SetUtilityParam { key: "brushSize".into(), value_json: "20".into() })),
-            "transform" => Some(LowpolyCommand::TransformEnd(transform::transform_end::TransformEnd {})),
+            "transform" => Some(LowpolyCommand::TranslateSelection(transform::translate_selection::TranslateSelection { dx: 1.0, dy: 0.0, dz: 0.0 })),
             "uv" => Some(LowpolyCommand::UnwrapActive(uv::unwrap_active::UnwrapActive {})),
             _ => None,
         }
@@ -58,8 +58,8 @@ mod subject {
 
     pub fn catalog_size(_ctx: &Context) -> Result<Outcome, String> {
         let ids = LowpolyCommand::TOOL_JOB_IDS;
-        if ids.len() != 47 {
-            return Err(format!("LowpolyCommand::TOOL_JOB_IDS has {} entries, expected exactly 47", ids.len()));
+        if ids.len() != 48 {
+            return Err(format!("LowpolyCommand::TOOL_JOB_IDS has {} entries, expected exactly 48", ids.len()));
         }
         let mut sorted: Vec<&&str> = ids.iter().collect();
         sorted.sort_unstable();

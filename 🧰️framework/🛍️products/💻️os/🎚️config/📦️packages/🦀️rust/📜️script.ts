@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** ⚙️ Validates the canonical OS configuration owner. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -14,4 +16,4 @@ class CheckScript extends BundleScript {
   }
 }
 
-await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript), import.meta.url, { defaultCommand: "test" });
+await runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("check", CheckScript), { defaultCommand: "test" });

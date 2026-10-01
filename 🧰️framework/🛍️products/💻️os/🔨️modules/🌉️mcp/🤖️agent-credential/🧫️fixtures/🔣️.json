@@ -10,7 +10,7 @@
     {
       "id": "fixture.exchange",
       "credentialSchema": "fixture.credential/v1",
-      "path": "/auth/agent-sessions",
+      "path": "/other/sessions",
       "valid": true
     },
     {

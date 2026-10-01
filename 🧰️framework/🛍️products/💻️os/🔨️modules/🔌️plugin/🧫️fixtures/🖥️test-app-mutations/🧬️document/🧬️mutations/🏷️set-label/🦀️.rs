@@ -13,8 +13,12 @@ pub(crate) struct SetLabel {
 
 impl MutationKind<TestSnapshot, TestMutation> for SetLabel {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "set", entity: "label", kind: "set-label", record: "SetLabel" };
-    fn diff(&self, _: &TestSnapshot) -> MutationOutcome<TestDiff> {
-        MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None })
+    fn diff(&self, base: &TestSnapshot) -> MutationOutcome<TestDiff> {
+        let outcome = MutationOutcome::new(TestDiff { count: None, label: Some(self.value.clone()), slot: None });
+        match base.label == self.value {
+            true => outcome.warn("mutation.no-op", format!("the label already reads {}", self.value)),
+            false => outcome,
+        }
     }
     fn inverse(&self, base: &TestSnapshot) -> Vec<TestMutation> {
         vec![Self { value: base.label.clone() }.into()]

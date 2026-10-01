@@ -11,7 +11,7 @@ use framework_schema::ArtifactSchema;
 
 //#region 🔖️Geometry
 /// 📐 A 3D point/vector (BCF-XML `visinfo.xsd` `Point`/`Direction` — both are `{X,Y,Z}` triples).
-#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfPoint3 {
     pub x: f64,
@@ -22,11 +22,24 @@ pub struct BcfPoint3 {
 /// 📷 A viewpoint's camera — the `visinfo.xsd` `PerspectiveCamera`/`OrthogonalCamera` choice,
 /// typed as a real Rust enum rather than two optional fields (the XSD makes them mutually
 /// exclusive via `xs:choice`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslEnum)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum BcfCamera {
     Perspective { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, field_of_view: f64 },
     Orthogonal { view_point: BcfPoint3, direction: BcfPoint3, up_vector: BcfPoint3, view_to_world_scale: f64 },
+}
+impl dsl::DslField for BcfCamera {
+    fn shape() -> dsl::Shape { dsl::Shape::Statements(<Self as dsl::DslVariants>::variants()) }
+    fn to_value(&self) -> dsl::FieldValue { dsl::FieldValue::Statements(vec![<Self as dsl::DslVariants>::to_named_record(self)]) }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Statements(values) if values.len() == 1 => {
+                let (keyword, record) = &values[0];
+                <Self as dsl::DslVariants>::from_named_record(keyword, record).map_err(|error| error.message)
+            }
+            _ => Err("BCF camera requires exactly one typed choice".into()),
+        }
+    }
 }
 //#endregion 🔖️Geometry
 
@@ -34,7 +47,7 @@ pub enum BcfCamera {
 /// 👁️ `visinfo.xsd` `ComponentVisibility`: `DefaultVisibility` attribute (spec default `true`)
 /// plus the `Exceptions` component list (IFC guids of components whose visibility is the inverse
 /// of the default).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfVisibility {
     pub default_visibility: bool,
@@ -44,7 +57,7 @@ pub struct BcfVisibility {
 
 /// 🎨 One `visinfo.xsd` `ComponentColoringColor`: a hex color (`ColorType`, e.g. `"FFFF0000"`)
 /// applied to a set of component IFC guids.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfColoring {
     pub color: String,
@@ -56,7 +69,7 @@ pub struct BcfColoring {
 /// per this artifact's completeness target (a `Component` element's own optional
 /// `OriginatingSystem`/`AuthoringToolId` children are out of scope — not modeled, matching the
 /// target's `selection: Vec<String>` shape exactly).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfComponents {
     #[value(default)]
@@ -73,7 +86,7 @@ pub struct BcfComponents {
 /// identity, `date`/`author`/`text` are the required `<Date>`/`<Author>`/`<Comment>` children
 /// verbatim, `viewpoint_ref` is the optional `<Viewpoint Guid="...">` child's `Guid` attribute
 /// (references a `BcfViewpoint` in the same topic by guid, not a filename).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfComment {
     pub guid: String,
@@ -93,11 +106,12 @@ pub struct BcfComment {
 /// canonical `<guid>.bcfv`/`<guid>.png` filenames (documented normal form, per
 /// `codec_retention_law` — arbitrary on-disk filenames from a real BCF tool are read on decode but
 /// not preserved verbatim; the typed content is what round-trips).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfViewpoint {
     pub guid: String,
     #[value(default)]
+    #[dsl(block)]
     pub camera: Option<BcfCamera>,
     #[value(default)]
     pub components: Option<BcfComponents>,
@@ -115,7 +129,7 @@ pub struct BcfViewpoint {
 /// elements* per `markup.xsd`'s real element sequence (NOT attributes — a defect in this
 /// artifact's pre-wave model, which wrongly treated `Priority` as an attribute). `comments` and
 /// `viewpoints` are guid-keyed collections, each with its own per-field diff.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfTopic {
     pub guid: String,
@@ -143,17 +157,18 @@ pub struct BcfTopic {
 /// `bcf.version` or consumed by a topic's `markup.bcf`/`.bcfv`/snapshot triad -- e.g.
 /// `project.bcfp`, custom extension files, or a topic folder that lacks a `markup.bcf` entirely.
 /// This artifact's own simple package wrapper's raw-retention mechanism (see module doc).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct BcfRawPart {
     pub name: String,
     #[value(default)]
+    #[dsl(base64)]
     pub data: Vec<u8>,
 }
 //#endregion 🔖️RawPart
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.bcf")]
 pub struct BcfSnapshot {
@@ -180,49 +195,47 @@ impl Default for BcfSnapshot {
 }
 
 impl store::ArtifactDsl for BcfSnapshot {
-    const EXTENSION: &'static str = "bcf";
+    const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
-        "stdio.bcf"
+        STDIO_BCF_DOCUMENT_SCHEMA
     }
+
     fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((_, rest)) => rest,
             Err(_) => text,
         };
-        let hex: String = body.chars().filter(|c| !c.is_whitespace()).collect();
-        if !hex.len().is_multiple_of(2) {
-            return Err(store::TextError::new("odd hex length", dsl::TextSpan::at(1, 1)));
-        }
-        let mut bytes = Vec::with_capacity(hex.len() / 2);
-        for i in (0..hex.len()).step_by(2) {
-            bytes.push(u8::from_str_radix(&hex[i..i + 2], 16).map_err(|e| store::TextError::new(format!("invalid hex: {e}"), dsl::TextSpan::at(1, 1)))?);
-        }
-        crate::io::decode_bcf(&bytes).map_err(|e| store::TextError::new(e, dsl::TextSpan::at(1, 1)))
+        let record = dsl::parse(body, &Self::__dsl_spec(), &dsl::ParseOptions { limits: dsl::Limits { max_bytes: 32 * 1024 * 1024, ..dsl::Limits::default() }, mode: dsl::SourceMode::Document })?;
+        Self::__dsl_from_record(&record)
     }
+
     fn print_dsl(&self) -> String {
-        let bytes = crate::io::encode_bcf(self).unwrap_or_default();
-        let body: String = bytes.iter().map(|b| format!("{b:02x}")).collect();
+        let body = dsl::print(&self.__dsl_to_record(), &Self::__dsl_spec(), dsl::JoinMode::Document);
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 impl store::ArtifactPack for BcfSnapshot {
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::io::encode_bcf(self).map_err(store::PackError::Schema)?;
+        let raw = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
+
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
         if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema("pack envelope mismatch".into()));
+            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
         }
-        let _ = options;
-        crate::io::decode_bcf(&inner).map_err(store::PackError::Schema)
+        let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
     }
+
+    fn record_spec() -> Option<dsl::RecordSpec> {
+        Some(Self::__dsl_spec())
+    }
+    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
 }
 //#endregion 🔖️Snapshot
 

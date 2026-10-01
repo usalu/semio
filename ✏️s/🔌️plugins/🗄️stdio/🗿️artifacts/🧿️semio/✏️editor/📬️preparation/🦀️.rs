@@ -169,7 +169,7 @@ where
                 let mutation = self.mutation.take().ok_or_else(|| format!("{}-mutation-owner", self.prefix))?;
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
                 let id = authority.edit_id();
-                let edit = protocol::Edit {
+                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
                     id: id.clone(),
                     actor: Some(authority.actor().to_string()),
                     forwards: vec![mutation],

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫳️drag-rule",
+  "semanticKind": "drag-rule-nodes",
+  "displayName": "Drag Rule Nodes",
+  "emoji": "🫳️",
+  "aggregateVariant": "DragRuleNodes",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "drag-rule-nodes",
+  "binaryTag": 9,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

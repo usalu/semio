@@ -1,13 +1,13 @@
 //! 🧬️ Imperative configuration mutation collection.
 
 use super::*;
-#[path = "📸️replace-config/🦀️.rs"]
+#[path = "📸️replace/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
-#[path = "📤️set-run-output/🦀️.rs"]
+#[path = "📤️set-run/🦀️.rs"]
 mod set_run_output;
 pub use set_run_output::SetRunOutput;
-#[path = "🧩️set-contributions/🦀️.rs"]
+#[path = "🧩️set/🦀️.rs"]
 mod set_contributions;
 pub use set_contributions::SetContributions;
 

@@ -4,7 +4,7 @@ import { gltfWireArray, gltfWireByte, gltfWireIndex, gltfWireObject, gltfWireReq
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreateBufferPayload {
-  position: number;
+  position: bigint;
   bytes: number[];
 }
 

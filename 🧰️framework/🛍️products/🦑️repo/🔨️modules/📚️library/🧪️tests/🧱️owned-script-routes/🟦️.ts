@@ -3,7 +3,7 @@ import Ajv from "ajv";
 import ts from "typescript";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { findRepoRoot } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { ownedScriptRoutes, resolveOwnedScriptRoute } from "../../🏃️process/🧭️routing/🧩️contributions/🟦️.ts";
 import fixture from "../../🧫️fixtures/🧱️owned-script-routes/🔣️.json";
 import schema from "../../🧬️schema/🧱️owned-script-routes/🔣️.json";
@@ -24,7 +24,7 @@ test("portable command ownership matrix agrees with independent JSON schema and 
 });
 
 test("real contributions bind Nx package commands and root coordinator imports no specific implementation", () => {
-  const root = findRepoRoot(import.meta.dir), routes = ownedScriptRoutes(root);
+  const root = findWorkspaceRoot(import.meta.dir), routes = ownedScriptRoutes(root);
   expect(resolveOwnedScriptRoute(routes, ["verify", "fem2d-window-config-contract"])?.route.project).toBe("@semio-tech/s-fem-composition-tests");
   expect(resolveOwnedScriptRoute(routes, ["verify", "puzzle-fill-policy-self-tests"])?.route.project).toBe("@semio-tech/s-puzzle-composition-tests");
   for (const route of routes) {
@@ -46,7 +46,7 @@ test("real contributions bind Nx package commands and root coordinator imports n
 
 
 test("the neutral repository coordinator builds with every domain plugin source removed from the resolver", async () => {
-  const root = findRepoRoot(import.meta.dir);
+  const root = findWorkspaceRoot(import.meta.dir);
   const { build } = await import("esbuild");
   const output = await build({
     absWorkingDir: root,

@@ -12,6 +12,7 @@ import { afterAll, describe, expect, it } from "vitest";
 import type { CommandRejectionV1 } from "@semio-tech/framework-os";
 import { HISTORY_REFUSAL_LABEL_KEYS, LOCAL_COMMAND_REJECTION_NOTICES_V1, commandRejectionNoticeV1, historyRefusalCodeV1, historyRefusalNoticeV1, historyRefusalOfFaultV1, shellLabel, syncShellLabelLocale } from "../../🟦️.tsx";
 import corpus from "../../🧫️fixtures/🧫️command-rejection/🔣️.json";
+import bandCorpus from "../../🧫️fixtures/🧫️time-travel-band/🔣️.json";
 import decodeCorpus from "../../../../../../🏪️store/🧫️fixtures/🧫️command-rejection/🔣️.json";
 import rejectionSchema from "../../../../../../🏪️store/🔄️sync/🧬️schema/🔣️command-rejection/🔣️.json";
 import historyPatchSchema from "../../../../../../../../../🔨️modules/🎠️kernel/🧬️schema/🔣️history-patch/🔣️.json";
@@ -60,7 +61,7 @@ describe("command rejection notice", () => {
 
   it("localizes every history-edit refusal code in both languages, and a dispatch fault names one by its code or its first cause", () => {
     const codes = Object.keys(HISTORY_REFUSAL_LABEL_KEYS);
-    expect(codes).toEqual(["history.malformed-transition", "history.unknown-target", "history.transition-refused", "timeTravel.frozen", "timeTravel.illegal", "timeTravel.stale", "timeTravel.blocked", "timeTravel.empty", "timeTravel.cancelled", "timeTravel.name-invalid"]);
+    expect(codes).toEqual(bandCorpus.refusals.map((row) => row.code));
     const texts = { en: [] as string[], de: [] as string[] };
     for (const locale of ["en", "de"] as const) {
       syncShellLabelLocale(locale);

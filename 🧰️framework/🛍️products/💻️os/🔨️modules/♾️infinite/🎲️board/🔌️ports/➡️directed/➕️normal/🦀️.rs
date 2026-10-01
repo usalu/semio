@@ -1033,7 +1033,7 @@ pub mod board_host {
 
     impl Drop for BoardFillPlacement {
         fn drop(&mut self) {
-            assert!(self.terminal_is_empty(), "Puzzle2d fill placement must reach exact terminal-empty before Drop");
+            assert!(self.terminal_is_empty() || std::thread::panicking(), "Puzzle2d fill placement must reach exact terminal-empty before Drop");
         }
     }
 
@@ -1077,7 +1077,7 @@ pub mod board_host {
 
     impl Drop for BoardFillCheckpoint {
         fn drop(&mut self) {
-            assert!(self.state.is_none(), "Puzzle2d fill checkpoint must transfer or close its exact state before Drop");
+            assert!(self.state.is_none() || std::thread::panicking(), "Puzzle2d fill checkpoint must transfer or close its exact state before Drop");
         }
     }
 
@@ -6067,7 +6067,7 @@ pub mod board_host {
 
     impl Drop for BoardFillSnapshotCapture {
         fn drop(&mut self) {
-            assert!(self.terminal_is_empty(), "Puzzle2d fill capture must reach exact terminal-empty before Drop");
+            assert!(self.terminal_is_empty() || std::thread::panicking(), "Puzzle2d fill capture must reach exact terminal-empty before Drop");
         }
     }
 
@@ -6486,7 +6486,7 @@ pub mod board_host {
 
     impl Drop for BoardFillSnapshotIngress {
         fn drop(&mut self) {
-            assert!(self.terminal_is_empty(), "Puzzle2d artifact fill ingress must reach exact terminal-empty before Drop");
+            assert!(self.terminal_is_empty() || std::thread::panicking(), "Puzzle2d artifact fill ingress must reach exact terminal-empty before Drop");
         }
     }
 
@@ -7474,7 +7474,7 @@ pub mod board_host {
 
     impl Drop for BoardFillJob {
         fn drop(&mut self) {
-            assert!(semio_framework_job::InteractiveJob::terminal_is_empty(self), "Puzzle2d fill job must reach exact terminal-empty before Drop");
+            assert!(semio_framework_job::InteractiveJob::terminal_is_empty(self) || std::thread::panicking(), "Puzzle2d fill job must reach exact terminal-empty before Drop");
         }
     }
 

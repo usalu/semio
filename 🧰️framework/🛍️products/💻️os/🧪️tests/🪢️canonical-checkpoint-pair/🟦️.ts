@@ -7,7 +7,7 @@ import { describe, expect, it } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {
   CANONICAL_CHECKPOINT_PAIR_HEADER_MAX_BYTES,
   CANONICAL_CHECKPOINT_PAIR_MAX_PAIR_BYTES,

@@ -65,7 +65,7 @@
           "scenarios": [
             {
               "id": "rejects-adding-a-block-to-a-missing-step",
-              "directoryName": "🧪️rejects-adding-a-block-to-a-missing-step"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "no-ops-on-a-duplicate-step-id",
-              "directoryName": "🧪️no-ops-on-a-duplicate-step-id"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "changes-the-playbook-title",
-              "directoryName": "🧪️changes-the-playbook-title"
+              "directoryName": "🧪️changes"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "rejects-moving-a-block-into-a-missing-step",
-              "directoryName": "🧪️rejects-moving-a-block-into-a-missing-step"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-step-is-already-at-that-index",
-              "directoryName": "🧪️no-ops-when-the-step-is-already-at-that-index"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "rejects-removing-a-block-missing-from-its-step",
-              "directoryName": "🧪️rejects-removing-a-block-missing-from-its-step"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "rejects-removing-a-missing-step",
-              "directoryName": "🧪️rejects-removing-a-missing-step"
+              "directoryName": "🧪️rejects"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-block-is-already-identical",
-              "directoryName": "🧪️no-ops-when-the-block-is-already-identical"
+              "directoryName": "🧪️no"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "no-ops-when-the-header-is-already-current",
-              "directoryName": "🧪️no-ops-when-the-header-is-already-current"
+              "directoryName": "🧪️no"
             }
           ]
         }

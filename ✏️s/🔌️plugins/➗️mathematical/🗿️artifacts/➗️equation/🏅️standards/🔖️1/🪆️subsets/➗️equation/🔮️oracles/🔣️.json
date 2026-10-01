@@ -49,12 +49,12 @@
       "vectors": [
         {
           "mutationId": "change-coefficient",
-          "sourceMutationDirectoryName": "🎚️change-coefficient",
-          "mutationDirectoryName": "🎚️change-coefficient",
+          "sourceMutationDirectoryName": "🎚️change",
+          "mutationDirectoryName": "🎚️change",
           "scenarios": [
             {
               "id": "raises-the-leading-coefficient-to-three-halves",
-              "directoryName": "🧪️raises-the-leading-coefficient-to-three-halves"
+              "directoryName": "🧪️raises"
             }
           ]
         }
@@ -288,14 +288,14 @@
       "files": [
         {
           "role": "expected-before-json",
-          "path": "../🧫️fixtures/🎚️change-coefficient/⬅️before.json",
+          "path": "../🧫️fixtures/🎚️change/⬅️before.json",
           "mediaType": "application/json",
           "sha256": "sha256:23ac796b09a3359c8fcee96e5fc265de2c3667df663c0162be94b85dbad5802d",
           "bytes": 1280
         },
         {
           "role": "expected-after-json",
-          "path": "../🧫️fixtures/🎚️change-coefficient/➡️after.json",
+          "path": "../🧫️fixtures/🎚️change/➡️after.json",
           "mediaType": "application/json",
           "sha256": "sha256:a3ab2d3c849a3f2b5c51c390c93e81a37b174c7d1a171e1164356ff4ab7fb9d2",
           "bytes": 1280

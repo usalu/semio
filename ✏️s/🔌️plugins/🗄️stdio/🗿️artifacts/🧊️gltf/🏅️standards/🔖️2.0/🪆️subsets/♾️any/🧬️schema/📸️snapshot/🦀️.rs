@@ -41,6 +41,7 @@ use std::fmt;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslScalar)]
 pub enum GltfSourceForm {
     #[default]
     Json,
@@ -342,6 +343,7 @@ fn is_false(v: &bool) -> bool {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAsset {
     pub version: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -373,6 +375,7 @@ impl Default for GltfAsset {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfScene {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -398,6 +401,7 @@ pub struct GltfScene {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfNode {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -491,6 +495,7 @@ pub struct GltfPrimitive {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfMesh {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -515,6 +520,7 @@ pub struct GltfMesh {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfSparseIndices {
     pub buffer_view: usize,
     #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
@@ -527,6 +533,7 @@ pub struct GltfSparseIndices {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfSparseValues {
     pub buffer_view: usize,
     #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
@@ -539,6 +546,7 @@ pub struct GltfSparseValues {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfSparseAccessor {
     pub count: usize,
     pub indices: GltfSparseIndices,
@@ -549,6 +557,7 @@ pub struct GltfSparseAccessor {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAccessor {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -590,6 +599,7 @@ pub struct GltfAccessor {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfBufferView {
     pub buffer: usize,
     #[serde(default = "default_zero_usize", skip_serializing_if = "is_zero_usize")]
@@ -620,6 +630,7 @@ pub struct GltfBufferView {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfBuffer {
     pub byte_length: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -643,6 +654,7 @@ pub struct GltfBuffer {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfTextureInfo {
     pub index: usize,
     #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
@@ -660,6 +672,7 @@ pub struct GltfTextureInfo {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfNormalTextureInfo {
     pub index: usize,
     #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
@@ -680,6 +693,7 @@ pub struct GltfNormalTextureInfo {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfOcclusionTextureInfo {
     pub index: usize,
     #[serde(default = "default_zero_u64", skip_serializing_if = "is_zero_u64", rename = "texCoord")]
@@ -700,6 +714,7 @@ pub struct GltfOcclusionTextureInfo {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfPbrMetallicRoughness {
     #[serde(default = "default_vec4_one", skip_serializing_if = "is_vec4_one")]
     #[value(default = "default_vec4_one", skip_serializing_if = "is_vec4_one")]
@@ -732,6 +747,7 @@ impl Default for GltfPbrMetallicRoughness {
 
 /// 🔀️ `material.alphaMode` (§5.23.1).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(dsl::DslScalar)]
 pub enum GltfAlphaMode {
     #[default]
     #[serde(rename = "OPAQUE")]
@@ -754,6 +770,7 @@ fn is_opaque(v: &GltfAlphaMode) -> bool {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfMaterial {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -814,6 +831,7 @@ impl Default for GltfMaterial {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfTexture {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -837,6 +855,7 @@ pub struct GltfTexture {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfImage {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -862,6 +881,7 @@ pub struct GltfImage {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfSampler {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -898,6 +918,7 @@ impl Default for GltfSampler {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfSkin {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -924,6 +945,7 @@ pub struct GltfSkin {
 /// 🎞️ `animations[i].channels[j].target.path` (§5.5.2) -- the 4 spec-defined animatable
 /// properties.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(dsl::DslScalar)]
 pub enum GltfAnimationPath {
     #[serde(rename = "translation")]
     #[value(rename = "translation")]
@@ -943,6 +965,7 @@ pub enum GltfAnimationPath {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAnimationChannelTarget {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -960,6 +983,7 @@ pub struct GltfAnimationChannelTarget {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAnimationChannel {
     pub sampler: usize,
     pub target: GltfAnimationChannelTarget,
@@ -973,6 +997,7 @@ pub struct GltfAnimationChannel {
 
 /// 📈️ `animations[i].samplers[j].interpolation` (§5.5.3), default `LINEAR`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
+#[derive(dsl::DslScalar)]
 pub enum GltfInterpolation {
     #[default]
     #[serde(rename = "LINEAR")]
@@ -995,6 +1020,7 @@ fn is_linear(v: &GltfInterpolation) -> bool {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAnimationSampler {
     pub input: usize,
     #[serde(default, skip_serializing_if = "is_linear")]
@@ -1013,6 +1039,7 @@ pub struct GltfAnimationSampler {
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfAnimation {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -1037,6 +1064,7 @@ pub struct GltfAnimation {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfOrthographic {
     pub xmag: f64,
     pub ymag: f64,
@@ -1054,6 +1082,7 @@ pub struct GltfOrthographic {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(dsl::DslRecord)]
 pub struct GltfPerspective {
     #[serde(default, skip_serializing_if = "Option::is_none", rename = "aspectRatio")]
     #[value(default, skip_serializing_if = "Option::is_none", rename = "aspectRatio")]
@@ -1115,6 +1144,7 @@ impl<'de> Deserialize<'de> for GltfCameraProjection {
 
 /// 📷️ `cameras[i]` (§5.10).
 #[derive(Clone, Debug, PartialEq)]
+#[derive(dsl::DslRecord)]
 pub struct GltfCamera {
     pub projection: GltfCameraProjection,
     pub name: Option<String>,
@@ -1263,6 +1293,7 @@ impl dsl::FromValue for GltfCamera {
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 #[derive(Default)]
+#[derive(dsl::DslRecord)]
 pub struct GltfDocument {
     pub asset: GltfAsset,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -1359,50 +1390,5 @@ impl Default for GltfSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-//#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for GltfSnapshot {
-    const EXTENSION: &'static str = "gltf";
-    fn envelope_id() -> &'static str {
-        "stdio.gltf"
-    }
-
-    fn parse_dsl(text: &str) -> Result<Self, store::TextError> {
-        let body = match store::semio_format::split_text_preamble(text) {
-            Ok((_, rest)) => rest,
-            Err(_) => text,
-        };
-        crate::engine::parse_gltf_document(body.trim().as_bytes()).map_err(|e| store::TextError::new(format!("gltf json: {e}"), dsl::TextSpan::at(1, 1)))
-    }
-    fn print_dsl(&self) -> String {
-        let body_bytes = crate::engine::serialize_gltf_document(self);
-        let body = String::from_utf8(body_bytes).unwrap_or_else(|_| "{}".into());
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-        store::semio_format::wrap_text(&envelope, &body)
-    }
-}
-
-impl store::ArtifactPack for GltfSnapshot {
-    /// 📦️ P2-FG3: routes through the REAL `.glb` binary container (`encode_glb`), not the prior
-    /// F6-era `serialize_gltf_document` JSON-as-"binary" shortcut — glTF's own genuine binary
-    /// serialization, matching `../💾️binary/📡️.protocol.semio`'s real chunk-container
-    /// framing exactly (this is what that protocol file's `walk_protocol` is built to walk; per
-    /// the recipe's own instruction, the protocol description must match what `encode_pack`
-    /// actually produces). A raw `.glb` file byte-for-byte (unwrapped) still decodes directly via
-    /// `crate::engine::decode_glb` (🧐️analyzer's own fast path) — this impl only
-    /// adds the SEMIO envelope around the SAME real container, it does not invent a second shape.
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = crate::engine::encode_glb(self).map_err(store::PackError::Schema)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::Schema(e.to_string()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::Schema(format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token())));
-        }
-        let _ = options;
-        crate::engine::decode_glb(&inner).map_err(store::PackError::Schema)
-    }
-}
-//#endregion 🔖️HandcraftedArtifactCodecs
+#[path="📦️pack/🦀️.rs"]
+mod owned_pack;

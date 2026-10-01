@@ -1,7 +1,8 @@
 /** 🏃️ Entity-kind generator command composition. */
 import { existsSync, readFileSync } from "node:fs";
 import { relative } from "node:path";
-import { BundleScript, getWorkspaceRoot } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { writeGeneratedFileIfChanged } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🗂️files/🟦️.ts";
 import { entityKindIndexByEmoji } from "../../🟦️.ts";
 import { GENERATOR_ID, REFRESH_COMMAND, readEntityCatalog } from "../📥️source/🟦️.ts";

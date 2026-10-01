@@ -140,7 +140,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
@@ -151,7 +151,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
@@ -162,7 +162,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
@@ -173,7 +173,7 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
@@ -184,11 +184,11 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             },
             {
               "id": "keeps-indexed-storage",
-              "directoryName": "🎨️keeps-indexed-storage"
+              "directoryName": "🎨️keeps"
             }
           ]
         }

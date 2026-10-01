@@ -178,3 +178,70 @@ Failures observed and NOT caused by this work (code strings / levels play no par
   zip base/iso21320 + TS twin + editor test, las, stl, obj, ifc, step, dxf, ply, html, epw, svg, bcf, binary, csv, tsv,
   xlsx, docx, md, xml, pptx, dwg, deflate, json, pdf ×9, gltf mapping/fixtures/tests, media png/jpg/wav/tiff/mp4/gif/mp3/
   avi/bmp, law oracle test).
+
+## Session 2 — 2026-10-01
+
+Successor S2-CODES (coordinator `⚪552b484a…`). Scratch: `🗑️generated/s2-codes/`. Rules 1–24 obeyed (no git writes, no ticket
+tools, foreground, private `target-nde-s2-codes`).
+
+### S2.1 Repair (rule 21)
+
+The session-1 report promised a "§9" that was never written (cut ~08:00). Disk truth, verified file by file:
+- `🧪️w3-codes-warning-level.py` had run (all `🎯️outcome` docs, Python twins, remodel TS twin, per-case Rust readers,
+  features, `level_of` normaliser deleted) — EXCEPT the 23 layout files W3-T-LAYOUT authored afterwards (6 outcomes, 17
+  readers), still `"warn"`.
+- Workflow run checked seam (`apply_run_operation_checked` + law `checked_run_admission_matches_the_typed_diff_rejection`)
+  and generation3d (`apply_generation3d_mutation` + law `checked_apply_propagates_the_vocabulary_outcome_unchanged`):
+  source-complete and committed (auto-commit 11:16); workflow-run lib had passed 21/21 at 03:37.
+
+### S2.2 One level spelling (`warning`), everywhere
+
+- Re-ran `🧪️w3-codes-warning-level.py`: the 23 layout files; dry re-run = 0. (A peer's §14 short-slug rename of the layout and
+  remodel case directories landed minutes later and carried these contents; verified no `"warn"` remains.)
+- Generators that would re-emit `"warn"`: `🧪️w1-f-author-selection-vectors.py`, `🧪️w3-t-puzzle-author-vectors.py`,
+  `🧪️w3-t-layout-author-vectors.py` (outcome dicts + the Rust reader template) → `warning`.
+- Census (`git grep`, tracked + untracked, `🗑️generated/s2-codes/warn-census.txt`): no `"warn"` outcome level left in any
+  fixture, decoder, TS or Python twin. Remaining `"warn"` hits are other vocabularies (trace record levels, hub
+  observability log levels, lint severities, `console.warn`, go output types) and the Rust builder method names
+  `MutationMessage::warn` / `MutationOutcome::warn` (an API name, not a wire spelling; the gate maps it to `warning`).
+- Gate now refuses the alias instead of skipping it (`📜️script.ts` rule-2 region): TS `refuse(..)`/`{level, code}` and
+  Python tuple patterns match `warn` so it is reported (`… at warn is fixed at warning, not warn`); new Gherkin
+  `{level: …, code: mutation.…}` message check (code + level; `mutation.apply.<detail>` placeholders excluded); new Rust
+  hand-decoder check `"warn" => …Severity::Warning` (`outcome level "warn" is a retired spelling of "warning"`).
+  `🎯️outcome` documents already compared levels exactly. Proof: `🧪️s2-codes-level-alias-negatives.ts`.
+- Second level tables removed: per-case readers derived a rejected outcome's level as `invariant ⇒ Fatal, else Error`
+  (wrong for `duplicate-id` and `mutation.apply.*`). Now `protocol::outcome_code_level(code)`:
+  17 layout readers + the layout author template, the lowpoly paint-stroke laws (`🧪️s2-codes-vocabulary-level-readers.py`).
+- `🏪️store/🧫️fixtures/🧫️command-rejection` (session-1 follow-up 4): decode data `mutation.note` → `mutation.cascade` (info).
+
+### S2.3 Checked-apply adapters
+
+- generation2d `apply_generation2d_mutation` had the generation3d defect: it applied a refused diff's empty delta and
+  answered `Ok` (refusal silently dropped). Now the same checked shape: `Result<(), Vec<MutationMessage>>`, the diff's own
+  messages unchanged on Error/Fatal, apply-time rejection joined as the `Fatal` `mutation.apply.*` message. Stale unit test
+  `delete_widget_on_unknown_id_is_a_noop_with_no_inverse` (it only passed because of the defect) →
+  `…_is_rejected_with_no_inverse`; new law `checked_apply_propagates_the_vocabulary_outcome_unchanged` (target-missing
+  ×4 kinds, invariant on a non-finite move, no-op). All callers are tests using `.expect`/`.is_ok()` (incl. the peer's new
+  `🧪️gesture-leaves`).
+- Workflow run + generation3d: unchanged (S2.1).
+
+### S2.4 Remodel oracle
+
+`bun 🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📜️script.ts oracle exhaustive --case 📸️mutate-remodeling-1`
+(the Python second implementation, all 36 kinds, incl. every remapped refusal code): **273/275 passed, 0 failed, 2 errored**
+— both errors are `unresolved fixture …/🛠️update-camera/🔍️refines-the-cam-0eaef0/…`: a peer's in-flight §14 short-slug
+rename of the remodel case directories (746 paths moved at 12:16, feature rows not yet re-pointed). `quick` plans 0 scenarios
+(level-gated). Oracle-vs-Rust parity (`parity exhaustive`) needs the remodel Rust subject built: see S2.6.
+
+### S2.5 Gate verdict (c)
+
+| check | result |
+|---|---|
+| seven rules, one inventory (`🧪️s2-codes-outcome-law-bundle.ts`, same bundle + `high` filter as `verify mutation-outcome-law`) | **0 breaches** (all 7 rules 0), 162 s under load |
+| rule 2 alone (`🧪️w3-codes-outcome-law.ts`) | 0 breaches, 118 s |
+| `🧪️w3-codes-gate-negatives.ts` | 13 reported, missing [], unexpected [] |
+| `🧪️s2-codes-level-alias-negatives.ts` | 6 reported (Rust decoder, TS refuse, TS object, Python, Gherkin, outcome doc), 0 canonical controls reported |
+| `bun ./📜️script.ts verify mutation-outcome-law` | CRASHES before the gate: the `verify` router's owned-command table throws `Invalid owned command ✒️writer/📦️packages/🦀️rust/📋️project.json:graph-generate` (`workspaceCommand` of one word; also `graph-wire-check`) — peer writer graph work, committed 11:16; not this WP's tree |
+
+Rule-1 breaches by owner: **none remain**. The 47 📕️norm `🔺️diff` leaves of session 1 are fixed (norm-2/norm-3).
+

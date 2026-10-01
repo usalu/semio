@@ -4,7 +4,9 @@ import { schemaDocumentAuthorityOracle } from "../../🏗️builder/🧪️tests
 import { extensionRetirementOracle } from "../../🧪️tests/🔬️extension-retirement/🟦️.ts";
 import { createPluginRunnerTests } from "../../🧪️tests/🏃️runner-self-tests/🟦️.ts";
 /** 🦀️ Awaited plugin SDK checks and exact-filter native regression tests. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runExactCargoLaws, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, nextestArtifactLocation } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -31,6 +33,7 @@ import { timeTravelScenarioOracle } from "../../🧪️tests/🧪️time-travel/
 import { supersedeLedgerOracle } from "../../🧪️tests/🧪️supersede-ledger/🟦️.ts";
 import { historyAlternativesOracle } from "../../🧪️tests/🧪️history-alternatives/🟦️.ts";
 import { historyLabelReloadOracle } from "../../🧪️tests/🧪️history-label-reload/🟦️.ts";
+import { composedChildHistoryOracle } from "../../🧪️tests/🧪️composed-child-history/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -53,6 +56,7 @@ class TestScript extends BundleScript {
     console.log(`supersede-ledger-oracle cases=${supersedeLedgerOracle(this.repoRoot)}`);
     console.log(`history-alternatives-oracle cases=${historyAlternativesOracle(this.repoRoot)}`);
     console.log(`history-label-reload-oracle cases=${historyLabelReloadOracle(this.repoRoot)}`);
+    console.log(`composed-child-history-oracle cases=${composedChildHistoryOracle(this.repoRoot)}`);
     if (segments.length === 1 && segments[0] === "--retained-child-close-exact") {
       const receipts = await runExactCargoLaws({
         cwd: this.root,
@@ -321,5 +325,5 @@ const createPluginRunnerTestsInstance = createPluginRunnerTests({ Ajv, assert, p
 export const pluginTestRunnerSelfTests = createPluginRunnerTestsInstance.pluginTestRunnerSelfTests;
 
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

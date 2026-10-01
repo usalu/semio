@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_gif::editor::gif_87a::Gif87aEditor",
       "factory": "semio_s_artifact_stdio_gif::editor::gif_87a::create_gif_87a_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "gif87a_editor",
+        "sqliteSnapshot": "sqlite_snapshot_gif87a_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_gif::viewer::gif_87a::Gif87aViewer",
       "factory": "semio_s_artifact_stdio_gif::viewer::gif_87a::create_gif_87a_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-image",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_gif::editor::gif_89a::Gif89aEditor",
       "factory": "semio_s_artifact_stdio_gif::editor::gif_89a::create_gif_89a_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "gif89a_editor",
+        "sqliteSnapshot": "sqlite_snapshot_gif89a_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -41,10 +50,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_gif::viewer::gif_89a::Gif89aViewer",
       "factory": "semio_s_artifact_stdio_gif::viewer::gif_89a::create_gif_89a_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -72,5 +81,36 @@
         "wgpu": 6327
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "GifMutation",
+      "snapshot": "semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot",
+      "mutation": "semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::GifMutation"
+    },
+    {
+      "name": "GifMutation",
+      "snapshot": "semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::GifSnapshot",
+      "mutation": "semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::mutations::GifMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.gif",
+      "standard": "87a",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/7️⃣87a/🪆️subsets/✳️any",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.gif",
+      "standard": "89a",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎞️gif/🏅️standards/9️⃣89a/🪆️subsets/🧱️base",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

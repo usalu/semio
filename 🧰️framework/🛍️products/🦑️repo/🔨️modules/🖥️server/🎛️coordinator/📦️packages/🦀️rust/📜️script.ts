@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ `@semio-tech/repo-coordinator-rs` router: `bun ./📜️script.ts build|test|run`. */
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, resolveTestLevel, runCargoTestBudgeted, runCmd, runCmdStatus } from "../../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const CRATE = "semio-framework-repo-coordinator";
 
@@ -26,4 +28,4 @@ class RunScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

@@ -169,7 +169,7 @@ fn inverse_disconnect_synapse_when_missing_returns_empty() {
 
 /// 📍️ `move-widget` addresses a widget that must already exist — the position map is an override
 /// on a live widget, never a free-standing entry — so the base has to carry `extrude` itself
-/// (`📍️move-widget/🔺️diff/🦀️.rs`'s `mutation.target-missing` branch).
+/// (`📍️move/🔺️diff/🦀️.rs`'s `mutation.target-missing` branch).
 fn snapshot_with_extrude_widget() -> Generation3dSnapshot {
     let mut base = default_generation3d_snapshot();
     base.host_snapshot.widgets.push(Widget::InputNote { id: "extrude".into(), text: String::new() });

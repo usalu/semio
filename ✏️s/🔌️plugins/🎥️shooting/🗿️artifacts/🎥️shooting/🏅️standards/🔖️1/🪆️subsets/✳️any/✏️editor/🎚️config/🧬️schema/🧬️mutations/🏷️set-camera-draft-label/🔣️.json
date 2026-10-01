@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏷️set-camera-draft-label",
+  "owner": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏷️set-camera",
   "semanticKind": "set-camera-draft-label",
   "displayName": "Set Camera Draft Label",
   "emoji": "🏷️",

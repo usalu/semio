@@ -875,7 +875,7 @@
         }
       },
       {
-        "directory": "🌊️roughness/🧽️deviation-from-smoothed-geometry",
+        "directory": "🌊️roughness/🧽️deviation-from-smoothed",
         "id": "s.stdio.gltf.inference.deviation-from-smoothed-geometry.v1",
         "kind": "inference",
         "responsibility": "Atomic deviation-from-smoothed-geometry glTF geometric inference.",

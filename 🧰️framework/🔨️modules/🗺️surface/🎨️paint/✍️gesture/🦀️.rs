@@ -1,4 +1,6 @@
-//! 🖌️ Bounded pixel and mask stroke intent; authoritative publication belongs to the editor.
+//! 🖌️ Bounded pixel and mask stroke intent: the layer, the tool and the samples in the target image's pixels, dispatched
+//! once on release as `paintStroke`. The editor's paint tool builds the parametric leaf from them and the session brush,
+//! and its ONE deterministic rasterizer paints it; the target revision only decides whether the gesture still holds.
 use super::{affine_from_json,Affine,LayerNode,MaskJson,MaskState,Point,RasterHost};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
@@ -11,7 +13,8 @@ enum StrokeRevision {Pixels(Option<String>),Mask(String)}
 pub struct PaintStrokeCommand {
     pub layer_id:String,
     revision:StrokeRevision,
-    pub operation:String,
+    pub tool:&'static str,
+    pub points:Vec<[f64;2]>,
 }
 
 enum RevisionRef<'a> {Pixels(Option<&'a str>),Mask(&'a MaskJson)}
@@ -66,7 +69,7 @@ impl PaintGesture {
             RevisionRef::Pixels(key)=>(StrokeRevision::Pixels(key.map(str::to_owned)),None),
             RevisionRef::Mask(mask)=>(StrokeRevision::Mask(dsl::json::to_json_string(mask)),Some(mask.clone())),
         };
-        let mut gesture=Self{command:PaintStrokeCommand{layer_id:id.clone(),revision,operation:String::new()},mask,world:matrix,inverse,points:Vec::with_capacity(2048)};gesture.push(point);Some(gesture)
+        let mut gesture=Self{command:PaintStrokeCommand{layer_id:id.clone(),revision,tool:"brush",points:Vec::new()},mask,world:matrix,inverse,points:Vec::with_capacity(2048)};gesture.push(point);Some(gesture)
     }
 
     pub fn matches(&self,host:&RasterHost)->bool{
@@ -86,12 +89,10 @@ impl PaintGesture {
         if self.points.last()!=Some(&point){self.points.push(point);}
     }
 
-    pub fn finish(mut self,size:f32,opacity:f32,color:[u8;4],hardness:f32,erase:bool,alpha:u8)->Option<PaintStrokeCommand>{
+    pub fn finish(mut self,erase:bool)->Option<PaintStrokeCommand>{
         if self.points.is_empty(){return None;}
-        self.command.operation=match self.command.revision{
-            StrokeRevision::Pixels(_)=>serde_json::json!({"kind":"stroke","points":self.points,"size":size,"opacity":opacity,"color":color,"hardness":hardness,"erase":erase}),
-            StrokeRevision::Mask(_)=>serde_json::json!({"kind":"alphaStroke","points":self.points,"size":size,"opacity":opacity,"hardness":hardness,"alpha":if erase{0}else{alpha}}),
-        }.to_string();
+        self.command.tool=if erase {"eraser"} else {"brush"};
+        self.command.points=std::mem::take(&mut self.points);
         Some(self.command)
     }
 
@@ -102,11 +103,13 @@ impl PaintGesture {
 }
 
 impl PaintStrokeCommand {
-    pub fn action(&self)->&'static str{match self.revision{StrokeRevision::Pixels(_)=>"editPixels",StrokeRevision::Mask(_)=>"editMask"}}
-    pub fn revision_field(&self)->&'static str{match self.revision{StrokeRevision::Pixels(_)=>"expectedImageKey",StrokeRevision::Mask(_)=>"expectedMask"}}
+    /// 🏷️ The verb a released stroke dispatches, whatever its target: the editor reads the target from its session.
+    pub fn action(&self)->&'static str{"paintStroke"}
+    /// 🎯️ The image the stroke was drawn against: `Pixels` with the layer's image key, `Mask` with its mask's JSON.
+    pub fn target(&self)->PaintTarget{match self.revision{StrokeRevision::Pixels(_)=>PaintTarget::Pixels,StrokeRevision::Mask(_)=>PaintTarget::Mask}}
     pub fn revision_value(&self)->Option<&str>{match &self.revision{StrokeRevision::Pixels(key)=>key.as_deref(),StrokeRevision::Mask(mask)=>Some(mask)}}
     pub fn close_step(&mut self)->bool{
-        if self.layer_id.pop().is_some()||self.operation.pop().is_some(){return false;}
+        if self.layer_id.pop().is_some()||self.points.pop().is_some(){return false;}
         match &mut self.revision{
             StrokeRevision::Pixels(key)=>{if key.as_mut().is_some_and(|key|key.pop().is_some()){return false;}*key=None;}
             StrokeRevision::Mask(mask)=>if mask.pop().is_some(){return false;},

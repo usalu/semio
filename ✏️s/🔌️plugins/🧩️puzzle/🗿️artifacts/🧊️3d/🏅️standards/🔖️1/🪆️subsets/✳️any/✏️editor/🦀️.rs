@@ -726,19 +726,7 @@ fn puzzle3d_action_artifact_intent(action: &str) -> bool {
 }
 
 //#region 🔖️Quaternions
-pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul};
-
-pub fn quat_rotate_vector(quat: [f64; 4], vector: [f64; 3]) -> [f64; 3] {
-    let [x, y, z, w] = quat;
-    let vx = vector[0];
-    let vy = vector[1];
-    let vz = vector[2];
-    let ix = w * vx + y * vz - z * vy;
-    let iy = w * vy + z * vx - x * vz;
-    let iz = w * vz + x * vy - y * vx;
-    let iw = -x * vx - y * vy - z * vz;
-    [ix * w + iw * -x + iy * -z - iz * -y, iy * w + iw * -y + iz * -x - ix * -z, iz * w + iw * -z + ix * -y - iy * -x]
-}
+pub use crate::standards::v1::subsets::any::schema::mutations::{quat_from_axis_angle, quat_mul, quat_rotate_vector};
 //#endregion 🔖️Quaternions
 
 //#region 🔖️FixtureQueries
@@ -819,13 +807,7 @@ pub fn target_volume_scale_json(volume: &Puzzle3dTargetVolume) -> [f64; 3] {
     }
 }
 
-pub fn puzzle3d_vortex_full_id(object_id: &str, vortex_id: &str) -> String {
-    if vortex_id.contains(':') {
-        vortex_id.to_string()
-    } else {
-        format!("{object_id}:{vortex_id}")
-    }
-}
+pub use crate::standards::v1::subsets::any::schema::mutations::puzzle3d_vortex_full_id;
 
 pub fn world_vortex_position(object: &Puzzle3dObject, vortex: &Puzzle3dVortex) -> [f64; 3] {
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
@@ -1688,105 +1670,10 @@ pub fn fixture_from_engine_fixture(envelope: &Puzzle3dScene, fixture: &crate::st
 //#endregion 🔖️EngineBridge
 
 //#region 🔖️AttractionResolve
-/// 📐️ Attraction placement math — a quaternion-only port of the compose kernel's `compute_child_plane`
-/// so it composes directly with `Puzzle3dObject.orientation`. Every attraction is directed
-/// (`attracting` → `attracted`); an attracted object's world pose is derived from the attracting
-/// vortex's world pose plus the 6 connection-style parameters (gap/shift/rise/rotation/turn/tilt,
-/// angles in degrees, same semantics as compose connections).
-const PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE: f64 = 0.01;
-
-fn vec3_sub(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[0] - b[0], a[1] - b[1], a[2] - b[2]]
-}
-
-fn vec3_add(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[0] + b[0], a[1] + b[1], a[2] + b[2]]
-}
-
-fn vec3_scale(a: [f64; 3], s: f64) -> [f64; 3] {
-    [a[0] * s, a[1] * s, a[2] * s]
-}
-
-fn vec3_cross(a: [f64; 3], b: [f64; 3]) -> [f64; 3] {
-    [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]
-}
-
-fn vec3_dot(a: [f64; 3], b: [f64; 3]) -> f64 {
-    a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
-}
-
-fn vec3_len(a: [f64; 3]) -> f64 {
-    vec3_dot(a, a).sqrt()
-}
-
-fn vec3_normalize(a: [f64; 3]) -> [f64; 3] {
-    let len = vec3_len(a);
-    if len < 1e-12 {
-        a
-    } else {
-        vec3_scale(a, 1.0 / len)
-    }
-}
-
-fn deg_to_rad(deg: f64) -> f64 {
-    deg * std::f64::consts::PI / 180.0
-}
-
-fn rad_to_deg(rad: f64) -> f64 {
-    rad * 180.0 / std::f64::consts::PI
-}
-
-fn quat_conjugate(q: [f64; 4]) -> [f64; 4] {
-    [-q[0], -q[1], -q[2], q[3]]
-}
-
-fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
-    let len = (q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]).sqrt();
-    if len < 1e-12 {
-        [0.0, 0.0, 0.0, 1.0]
-    } else {
-        [q[0] / len, q[1] / len, q[2] / len, q[3] / len]
-    }
-}
-
-/// 🧭️ The quaternion rotating unit vector `from` onto unit vector `to`.
-fn puzzle3d_quaternion_from_unit_vectors(from: [f64; 3], to: [f64; 3]) -> [f64; 4] {
-    let r = vec3_dot(from, to) + 1.0;
-    let quat = if r < 0.000_001 {
-        if from[0].abs() > from[2].abs() {
-            [-from[1], from[0], 0.0, 0.0]
-        } else {
-            [0.0, -from[2], from[1], 0.0]
-        }
-    } else {
-        let c = vec3_cross(from, to);
-        [c[0], c[1], c[2], r]
-    };
-    quat_normalize(quat)
-}
-
-/// 🧲️ The align-quaternion special case for when the attracted vortex is already (anti)parallel to the
-/// attracting vortex. Falls back to an alternate cross axis when the attracting direction is exactly
-/// ±Z — a double-degenerate corner the compose kernel's own branch doesn't otherwise guard.
-fn puzzle3d_attraction_align_quat(parent_dir: [f64; 3], child_dir: [f64; 3]) -> [f64; 4] {
-    let reverse_child = vec3_scale(child_dir, -1.0);
-    let cross_vec = vec3_cross(parent_dir, reverse_child);
-    if vec3_len(cross_vec) < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
-        if parent_dir[2].abs() < PUZZLE3D_ATTRACTION_ALIGN_TOLERANCE {
-            puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], [0.0, 0.0, -1.0])
-        } else {
-            let mut axis = vec3_cross([0.0, 0.0, 1.0], parent_dir);
-            if vec3_len(axis) < 1e-9 {
-                axis = vec3_cross([1.0, 0.0, 0.0], parent_dir);
-            }
-            let axis = vec3_normalize(axis);
-            let half = std::f64::consts::FRAC_PI_2;
-            quat_normalize([axis[0] * half.sin(), axis[1] * half.sin(), axis[2] * half.sin(), half.cos()])
-        }
-    } else {
-        puzzle3d_quaternion_from_unit_vectors(reverse_child, parent_dir)
-    }
-}
+/// 📐️ Attraction placement math lives with the selection leaves that re-solve attractions on every move
+/// (`🧬️schema/🧬️mutations` `🔖️AttractionPose`); the editor resolves whole fixtures with the same kernel.
+pub use crate::standards::v1::subsets::any::schema::mutations::derive_attraction_params;
+use crate::standards::v1::subsets::any::schema::mutations::{puzzle3d_attraction_child_pose, quat_normalize};
 
 /// 📌️ Resolves an attraction endpoint (`objectId:vortexId`) to its owning object id and its vortex's
 /// LOCAL (object-frame) position/direction — the frame the connector math expects, before the object's
@@ -1812,76 +1699,6 @@ fn puzzle3d_attraction_object_ids(fixture: &Puzzle3dFixture, attraction: &Puzzle
         return None;
     }
     Some((attracting_object, attracted_object))
-}
-
-/// 📐️ Forward attraction placement — given the attracting object's world pose (`t_a`/`q_a`), both
-/// vortices' LOCAL position/direction, and the 6 connection-style parameters (angles in degrees),
-/// returns the attracted object's world pose.
-#[allow(clippy::too_many_arguments)]
-fn puzzle3d_attraction_child_pose(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], gap: f64, shift: f64, rise: f64, rotation_deg: f64, turn_deg: f64, tilt_deg: f64) -> ([f64; 3], [f64; 4]) {
-    let parent_dir = vec3_normalize(d_a);
-    let child_dir = vec3_normalize(d_b);
-    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
-
-    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
-    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
-    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
-    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
-
-    let rotate_q = quat_from_axis_angle(parent_dir[0], parent_dir[1], parent_dir[2], -deg_to_rad(rotation_deg));
-    let turn_axis = quat_rotate_vector(rotate_q, raise_dir);
-    let tilt_axis = quat_rotate_vector(rotate_q, shift_dir);
-    let turn_q = quat_from_axis_angle(turn_axis[0], turn_axis[1], turn_axis[2], deg_to_rad(turn_deg));
-    let tilt_q = quat_from_axis_angle(tilt_axis[0], tilt_axis[1], tilt_axis[2], deg_to_rad(tilt_deg));
-
-    let mut orientation_local = quat_conjugate(align_q);
-    orientation_local = quat_mul(orientation_local, quat_conjugate(rotate_q));
-    orientation_local = quat_mul(orientation_local, quat_conjugate(turn_q));
-    orientation_local = quat_mul(orientation_local, quat_conjugate(tilt_q));
-    let orientation_local = quat_normalize(orientation_local);
-
-    let offset = vec3_add(vec3_add(t_a, p_a), vec3_add(vec3_add(vec3_scale(gap_dir, gap), vec3_scale(shift_dir, shift)), vec3_scale(raise_dir, rise)));
-    let t_b = vec3_sub(quat_rotate_vector(orientation_local, offset), p_b);
-    let q_b = quat_normalize(quat_mul(orientation_local, q_a));
-    (t_b, q_b)
-}
-
-/// 🔁️ Inverse of `puzzle3d_attraction_child_pose` — given the attracted object's CURRENT world pose,
-/// derives the 6 parameters that reproduce it exactly, so moving/rotating an attracted object never
-/// causes a resolve-triggered snap-back and creating an attraction never moves either endpoint.
-#[allow(clippy::too_many_arguments)]
-pub fn derive_attraction_params(t_a: [f64; 3], q_a: [f64; 4], p_a: [f64; 3], d_a: [f64; 3], p_b: [f64; 3], d_b: [f64; 3], t_b: [f64; 3], q_b: [f64; 4]) -> (f64, f64, f64, f64, f64, f64) {
-    let parent_dir = vec3_normalize(d_a);
-    let child_dir = vec3_normalize(d_b);
-    let align_q = puzzle3d_attraction_align_quat(parent_dir, child_dir);
-    let pq = puzzle3d_quaternion_from_unit_vectors([0.0, 1.0, 0.0], parent_dir);
-    let gap_dir = quat_rotate_vector(pq, [0.0, 1.0, 0.0]);
-    let shift_dir = quat_rotate_vector(pq, [1.0, 0.0, 0.0]);
-    let raise_dir = quat_rotate_vector(pq, [0.0, 0.0, 1.0]);
-
-    let orientation_local = quat_normalize(quat_mul(q_b, quat_conjugate(q_a)));
-
-    let offset = quat_rotate_vector(quat_conjugate(orientation_local), vec3_add(t_b, p_b));
-    let diff = vec3_sub(vec3_sub(offset, t_a), p_a);
-    let gap = vec3_dot(diff, gap_dir);
-    let shift = vec3_dot(diff, shift_dir);
-    let rise = vec3_dot(diff, raise_dir);
-
-    let residual = quat_mul(align_q, orientation_local);
-    let m = quat_mul(quat_mul(quat_conjugate(pq), residual), pq);
-    let col_x = quat_rotate_vector(m, [1.0, 0.0, 0.0]);
-    let col_y = quat_rotate_vector(m, [0.0, 1.0, 0.0]);
-
-    let clamp = |v: f64| v.clamp(-1.0, 1.0);
-    let tilt_rad = -(clamp(col_y[2])).asin();
-    let (rotation_rad, turn_rad) = if (col_y[2].abs() - 1.0).abs() < 1e-6 {
-        (col_x[1].atan2(col_x[0]), 0.0)
-    } else {
-        let col_z = quat_rotate_vector(m, [0.0, 0.0, 1.0]);
-        ((-col_x[2]).atan2(col_z[2]), col_y[0].atan2(col_y[1]))
-    };
-
-    (gap, shift, rise, rad_to_deg(rotation_rad), rad_to_deg(turn_rad), rad_to_deg(tilt_rad))
 }
 
 /// 🌲️ Resolves every attracted object's world pose from its attracting root, over a directed BFS per
@@ -4499,15 +4316,23 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum Puzzle3dTransformStage {
     Read,
+    Scan,
     Commit,
     Complete,
     Closing,
 }
 
+/// 🎞️ What `Read` states for one transform: the finished record, or the drop whose proximity scan `Scan` pages.
+enum Puzzle3dTransformGesture {
+    Stated(utilities::transform::Puzzle3dSelectionRecord),
+    Scanning(utilities::transform::Puzzle3dRelocateScan),
+}
+
 /// 🛠️ The ONE retained work of every selection transform — a gumball translate/rotate/scale, a target-volume
 /// gumball relocate, a Relocate-utility drop, an inspector origin nudge. `Read` states the gesture as ONE
-/// [`utilities::transform::Puzzle3dSelectionRecord`] (the gesture's own ids, else the live selection), and
-/// `Commit` runs it through the transform tool: one `ToolTransaction` whose parametric leaves publish as ONE
+/// [`utilities::transform::Puzzle3dSelectionRecord`] (the gesture's own ids, else the live selection); a drop's
+/// proximity scan then runs page by page in `Scan` (one progress report per page, cancellable between pages), and
+/// `Commit` runs the record through the transform tool: one `ToolTransaction` whose parametric leaves publish as ONE
 /// edit stamped with the ref minted from the admission's `authoring_seed`. A gesture that moves nothing leaves
 /// zero trace; nothing addressed, or everything addressed locked, is one localized refusal.
 struct Puzzle3dTransformWork {
@@ -4515,6 +4340,7 @@ struct Puzzle3dTransformWork {
     authoring_seed: String,
     stage: Puzzle3dTransformStage,
     record: Option<utilities::transform::Puzzle3dSelectionRecord>,
+    scan: Option<utilities::transform::Puzzle3dRelocateScan>,
     refusal: Option<fn(&Puzzle3dLabels) -> &'static str>,
     view_state: Option<semio_framework_plugin::ViewModel>,
     window_config: Option<semio_framework_plugin::WindowConfigSnapshot>,
@@ -4522,7 +4348,7 @@ struct Puzzle3dTransformWork {
 
 impl Puzzle3dTransformWork {
     fn new(tool_id: &'static str, authoring_seed: String) -> Self {
-        Self { tool_id, authoring_seed, stage: Puzzle3dTransformStage::Read, record: None, refusal: None, view_state: None, window_config: None }
+        Self { tool_id, authoring_seed, stage: Puzzle3dTransformStage::Read, record: None, scan: None, refusal: None, view_state: None, window_config: None }
     }
 
     /// 🕹️ The ids a selection-scoped verb addresses: the command's own `ids`, else the live selection at
@@ -4540,14 +4366,14 @@ impl Puzzle3dTransformWork {
     }
 
     /// 🎬️ The gesture this command states on `document`, or the refusal it answers with instead.
-    fn read(&self, command: &Puzzle3dCommand, document: &Puzzle3dSnapshot, interaction: &protocol::InteractionState) -> Result<Option<utilities::transform::Puzzle3dSelectionRecord>, fn(&Puzzle3dLabels) -> &'static str> {
+    fn read(&self, command: &Puzzle3dCommand, document: &Puzzle3dSnapshot, interaction: &protocol::InteractionState) -> Result<Option<Puzzle3dTransformGesture>, fn(&Puzzle3dLabels) -> &'static str> {
         let args = command.args();
         match self.tool_id {
             "translateSelection" | "rotateSelection" | "scaleSelection" => {
                 let targets = [Self::addressed(command, interaction, PUZZLE3D_GRANULARITY_OBJECT), Self::selected(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME)].concat();
-                Ok(utilities::transform::Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets))
+                Ok(utilities::transform::Puzzle3dSelectionRecord::from_gumball(self.tool_id, args, targets).map(Puzzle3dTransformGesture::Stated))
             }
-            "relocateTargetVolume" => Ok(utilities::transform::Puzzle3dSelectionRecord::from_pose_delta(args)),
+            "relocateTargetVolume" => Ok(utilities::transform::Puzzle3dSelectionRecord::from_pose_delta(args).map(Puzzle3dTransformGesture::Stated)),
             "worldRelocate" => {
                 let object_id = args.and_then(|args| args.get("objectId")).and_then(Value::as_str).unwrap_or("");
                 let Some(position) = args.and_then(|args| args.get("position")).and_then(value_as_vec3) else { return Ok(None) };
@@ -4555,12 +4381,12 @@ impl Puzzle3dTransformWork {
                     return Err(|labels| labels.selection_locked.as_str());
                 }
                 let radius = window_ownership::config_from_snapshot(self.window_config.as_ref()).proximity_radius;
-                Ok(utilities::transform::puzzle3d_relocate_record(document, object_id, position, radius))
+                Ok(utilities::transform::Puzzle3dRelocateScan::begin(document, object_id, position, radius).map(Puzzle3dTransformGesture::Scanning))
             }
             _ => {
                 let Some(offset) = puzzle3d_inspector_origin_nudge(args) else { return Ok(None) };
                 let granularity = if args.and_then(|args| args.get("entity")).and_then(Value::as_str) == Some("targetVolume") { PUZZLE3D_GRANULARITY_TARGET_VOLUME } else { PUZZLE3D_GRANULARITY_OBJECT };
-                Ok(Some(utilities::transform::Puzzle3dSelectionRecord::new(Self::addressed(command, interaction, granularity), utilities::transform::Puzzle3dSelectionMotion::Drag { offset })))
+                Ok(Some(Puzzle3dTransformGesture::Stated(utilities::transform::Puzzle3dSelectionRecord::new(Self::addressed(command, interaction, granularity), utilities::transform::Puzzle3dSelectionMotion::Drag { offset }))))
             }
         }
     }
@@ -4601,9 +4427,11 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         self.window_config = config;
     }
 
-    fn extent(&self, command: &Puzzle3dCommand, _snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
+    /// 🔢️ `Read` + `Commit`, plus one `Scan` step per page of objects a drop measures.
+    fn extent(&self, command: &Puzzle3dCommand, snapshot: &Puzzle3dPlaySnapshot, interaction: &protocol::InteractionState) -> Option<usize> {
         let addressed = Self::addressed(command, interaction, PUZZLE3D_GRANULARITY_OBJECT).len().checked_add(Self::selected(interaction, PUZZLE3D_GRANULARITY_TARGET_VOLUME).len())?;
-        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2)
+        let pages = if self.tool_id == "worldRelocate" { snapshot.typed().objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE).max(1) } else { 0 };
+        (addressed <= crate::retained_command::PUZZLE_COMMAND_DECODED_ITEMS).then_some(2 + pages)
     }
 
     fn step(
@@ -4617,11 +4445,21 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         match self.stage {
             Puzzle3dTransformStage::Read => {
                 match self.read(command, snapshot.typed(), interaction) {
-                    Ok(record) => self.record = record,
+                    Ok(Some(Puzzle3dTransformGesture::Stated(record))) => self.record = Some(record),
+                    Ok(Some(Puzzle3dTransformGesture::Scanning(scan))) => self.scan = Some(scan),
+                    Ok(None) => {}
                     Err(refusal) => self.refusal = Some(refusal),
                 }
-                self.stage = Puzzle3dTransformStage::Commit;
+                self.stage = if self.scan.is_some() { Puzzle3dTransformStage::Scan } else { Puzzle3dTransformStage::Commit };
                 Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle3d-transform-read", en: "Reading the gesture", de: "Geste wird gelesen" })
+            }
+            Puzzle3dTransformStage::Scan => {
+                let scan = self.scan.as_mut().ok_or_else(|| Fault::from("puzzle3d-transform-scan-owner"))?;
+                if scan.step(snapshot.typed(), utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE) {
+                    self.record = self.scan.take().map(utilities::transform::Puzzle3dRelocateScan::finish);
+                    self.stage = Puzzle3dTransformStage::Commit;
+                }
+                Ok(crate::retained_command::PuzzleCommandWorkStep::Progress { stage: "puzzle3d-transform-scan", en: "Measuring nearby vortices", de: "Nahe Vortices werden gemessen" })
             }
             Puzzle3dTransformStage::Commit => Ok(crate::retained_command::PuzzleCommandWorkStep::Complete(self.commit(snapshot))),
             Puzzle3dTransformStage::Complete => Err(Fault::from("puzzle3d-transform-complete-repolled")),
@@ -4637,14 +4475,14 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
         if maximum_items == 0 {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 0, released_bytes: 0 };
         }
-        if self.record.take().is_some() || self.refusal.take().is_some() || self.view_state.take().is_some() || self.window_config.take().is_some() {
+        if self.record.take().is_some() || self.scan.take().is_some() || self.refusal.take().is_some() || self.view_state.take().is_some() || self.window_config.take().is_some() {
             return semio_framework_job::InteractiveJobCloseStep::Pending { released_items: 1, released_bytes: 0 };
         }
         semio_framework_job::InteractiveJobCloseStep::Complete
     }
 
     fn terminal_is_empty(&self) -> bool {
-        self.stage == Puzzle3dTransformStage::Closing && self.record.is_none() && self.refusal.is_none() && self.view_state.is_none() && self.window_config.is_none()
+        self.stage == Puzzle3dTransformStage::Closing && self.record.is_none() && self.scan.is_none() && self.refusal.is_none() && self.view_state.is_none() && self.window_config.is_none()
     }
 }
 
@@ -5307,7 +5145,6 @@ enum Puzzle3dSetActiveExampleStage {
 /// by ten and made a real example load overrun its own declared envelope.
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_FIXED_STEPS: usize = 13;
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK: usize = 8;
-const PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY: &str = "set-active-example";
 const PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION: &str = "Set Active Example";
 
 struct Puzzle3dSetActiveExampleWork {
@@ -5573,7 +5410,6 @@ impl crate::retained_command::PuzzleCommandWork<EditorApp<Puzzle3dPlayApp>> for 
                     config_mutations,
                     ui_scope: puzzle3d_scope(Puzzle3dScopeClass::Chrome),
                     description: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_DESCRIPTION.into()),
-                    coalesce_key: Some(PUZZLE3D_SET_ACTIVE_EXAMPLE_COALESCE_KEY.into()),
                     ..Default::default()
                 }))
             }
@@ -6829,7 +6665,7 @@ fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Op
 
 fn puzzle3d_config_store_edit(forward: Puzzle3dConfigMutation, inverse: Vec<Puzzle3dConfigMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle3dConfigMutation> {
     let id = format!("puzzle3d-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -6986,8 +6822,17 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
 // `setActiveExample`'s work loop (`Puzzle3dSetActiveExampleWork`) emits many different mutation
 // kinds (delete/create object, attraction, target volume, reference, compatibility, domain,
 // catalogs). Each kind is batched to `PUZZLE3D_SET_ACTIVE_EXAMPLE_CHUNK` and the Complete emit
-// is one coalesced document-replacement gesture (`set-active-example`), not one store commit per item.
+// is ONE document-replacement edit (no coalesce key), not one store commit per item.
 struct Puzzle3dArtifactStorePreparationFactory;
+
+/// 🧾️ Inverse rows a selection leaf may restore: every object its attraction re-solve carries along and every
+/// attraction it re-derives is one absolute setter per changed field, a count only the base knows. `preflight`
+/// never sees the base, so it declares as many rows as the one-item byte budget can retain.
+const PUZZLE3D_SELECTION_INVERSE_ROWS: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / std::mem::size_of::<Puzzle3dMutation>();
+
+/// 🪢️ Inverse rows a removal may restore: the record itself plus the attractions it severs, bounded like puzzle 2d's
+/// edges per node.
+const PUZZLE3D_REMOVAL_INVERSE_ROWS: usize = 1 + 64;
 
 struct Puzzle3dArtifactStorePreparation {
     base: Option<store::SnapshotRead<Puzzle3dPlaySnapshot>>,
@@ -7004,7 +6849,7 @@ struct Puzzle3dArtifactStorePreparation {
 
 fn puzzle3d_artifact_store_edit(forward: Puzzle3dMutation, inverse: Vec<Puzzle3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Puzzle3dMutation> {
     let id = format!("puzzle3d-artifact-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -7032,11 +6877,20 @@ fn puzzle3d_artifact_store_edit(forward: Puzzle3dMutation, inverse: Vec<Puzzle3d
 }
 
 impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
-    fn preflight(&self, _mutation: &Puzzle3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    /// 🧾️ `work_items` counts staged edit ROWS — the forward row plus every row the inverse yields: a selection
+    /// leaf restores up to one setter per changed pose field of every record it moves (scaling: one per target, no
+    /// re-solve), a removal restores the record and the attractions it severed, every other kind is point-invertible.
+    fn preflight(&self, mutation: &Puzzle3dMutation, description: Option<&str>, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
         if lane != store::HistoryLane::Document || description.is_some_and(|value| value.len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES) {
             return Err("Puzzle3d Artifact preparation rejected its lane or description envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES })
+        let retained = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+        Ok(match mutation {
+            Puzzle3dMutation::DragSelection(_) | Puzzle3dMutation::RotateSelection(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE3D_SELECTION_INVERSE_ROWS, retained),
+            Puzzle3dMutation::ScaleSelection(payload) => store::ArtifactStoreOneItemFootprint::for_one_item(payload.targets.len(), retained),
+            Puzzle3dMutation::DeleteObject(_) | Puzzle3dMutation::RemoveObjectVortex(_) => store::ArtifactStoreOneItemFootprint::for_one_item(PUZZLE3D_REMOVAL_INVERSE_ROWS, retained),
+            _ => store::ArtifactStoreOneItemFootprint::for_one_invertible_item(retained),
+        })
     }
 
     fn begin(

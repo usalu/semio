@@ -152,19 +152,19 @@ Feature: Apply every typed semio BREP mutation to the real concrete-forest struc
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id              | dir               | fixture                                                            |
-      | create-vertex   | 🏗️create-vertex   | 🏔️adds-an-apex-vertex-above-the-square                             |
-      | delete-vertex   | 🗑️delete-vertex   | 🚫️removes-a-corner-vertex-and-cascades-into-its-two-incident-edges |
-      | create-edge     | 🖇️create-edge     | 📐️adds-a-diagonal-edge-across-the-square                           |
-      | delete-edge     | ✂️delete-edge     | 🚫️removes-the-closing-edge-and-keeps-its-two-vertices              |
-      | create-face     | 🔷create-face      | 🔷️adds-an-opposing-face-over-the-same-loop                         |
-      | delete-face     | 🚮delete-face      | 🚫️removes-the-only-face-and-leaves-its-loop-behind                 |
-      | create-shell    | 🐚create-shell     | 🐚️adds-a-second-shell-that-reuses-the-face-with-flipped-sense      |
-      | delete-shell    | 💥delete-shell     | 🚫️removes-the-only-shell-and-leaves-its-faces-behind               |
-      | create-solid    | 🧊create-solid     | 🧊️adds-a-second-solid-that-treats-the-shell-as-a-void              |
-      | delete-solid    | 🕳️delete-solid    | 🚫️removes-the-only-solid-and-leaves-its-shell-behind               |
-      | replace-curve   | ➰replace-curve    | ➰️swaps-the-first-edges-line-for-a-circular-arc                    |
-      | replace-surface | 🗺️replace-surface | 🛢️swaps-the-faces-plane-for-a-cylinder                             |
-      | move-vertex     | 📍move-vertex      | 📍️lifts-the-third-corner-off-the-base-plane                        |
+      | create-vertex   | 🏗️create-vertex   | 🏔️adds                             |
+      | delete-vertex   | 🗑️delete-vertex   | 🚫️removes |
+      | create-edge     | 🖇️create-edge     | 📐️adds                           |
+      | delete-edge     | ✂️delete-edge     | 🚫️removes              |
+      | create-face     | 🔷create-face      | 🔷️adds                         |
+      | delete-face     | 🚮delete-face      | 🚫️removes                 |
+      | create-shell    | 🐚create-shell     | 🐚️adds      |
+      | delete-shell    | 💥delete-shell     | 🚫️removes               |
+      | create-solid    | 🧊create-solid     | 🧊️adds              |
+      | delete-solid    | 🕳️delete-solid    | 🚫️removes               |
+      | replace-curve   | ➰replace-curve    | ➰️swaps                    |
+      | replace-surface | 🗺️replace-surface | 🛢️swaps                             |
+      | move-vertex     | 📍move-vertex      | 📍️lifts                        |
 
   @id-identity-round-trip
   @level-long

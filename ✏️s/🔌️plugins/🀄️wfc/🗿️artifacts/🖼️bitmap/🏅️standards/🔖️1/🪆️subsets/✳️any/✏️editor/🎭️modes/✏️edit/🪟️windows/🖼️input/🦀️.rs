@@ -19,6 +19,27 @@ pub const BODY_KEY: &str = "wfc.bitmap.input";
 const SURFACE_ID: &str = "wfc.bitmap.input";
 //#endregion 🔖️Constants
 
+//#region 🖱️Canvas
+/// 🪪️ Whether a dispatched `surfaceId` names THIS pane — the published id, or the `window:<window-kind-id>` the React
+/// host stamps its scene nodes with.
+pub fn owns_surface(surface_id: &str) -> bool {
+    surface_id == SURFACE_ID || surface_id.ends_with(WFC_BITMAP_WINDOW_INPUT)
+}
+
+/// 🖱️ The pointer and camera verbs both canvas hosts dispatch at a `Canvas2d` surface unprompted. Every bitmap pane
+/// declares them, or the shell refuses each hover with `undeclared-action`; on the input pane they drive the brush.
+pub fn canvas_actions() -> Vec<ActionDefinition> {
+    let canvas = |id: &str, label: LocalizedLabel| ActionDefinition { in_palette: false, ..ActionDefinition::bounded_catalog(id, label, ActionKind::View) };
+    vec![
+        canvas("canvasPointerDown", LocalizedLabel::native("Canvas Pointer Down", "Leinwand-Zeiger gedrückt")),
+        canvas("canvasPointerMove", LocalizedLabel::native("Canvas Pointer Move", "Leinwand-Zeiger bewegt")),
+        canvas("canvasPointerUp", LocalizedLabel::native("Canvas Pointer Up", "Leinwand-Zeiger gelöst")),
+        canvas("canvasDoubleClick", LocalizedLabel::native("Canvas Double Click", "Leinwand-Doppelklick")),
+        canvas("setCamera", LocalizedLabel::native("Sync Camera", "Kamera abgleichen")),
+    ]
+}
+//#endregion 🖱️Canvas
+
 //#region 🔖️ActionArgs
 /// 📝️ A brush stroke's arguments: its sampled cells in drawing order (each `{x, y}`), and an optional palette
 /// colour that defaults to the window's armed one. The host gesture protocol (`phase`, `reason`) is not a palette
@@ -107,6 +128,7 @@ pub fn definition() -> WindowKindDefinition {
             ..ActionDefinition::bounded_catalog("change-seed", LocalizedLabel::native("Change Seed", "Seed ändern"), ActionKind::Mutation)
         },
     ]);
+    definition.actions.extend(canvas_actions());
     for action in &mut definition.actions {
         action.semantics.execution.interactive_job = semio_framework::InteractiveJobClassification::Migrated;
     }

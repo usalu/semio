@@ -15,6 +15,10 @@ mod outbound_announcement_tests;
 #[path = "../🧪️supersede-replay/🦀️.rs"]
 mod supersede_replay_tests;
 
+#[cfg(test)]
+#[path = "../🧪️tool-transaction/🦀️.rs"]
+mod tool_transaction_tests;
+
 use super::fixture_mutations::{
     demo::{AddN, DeleteN, DemoMutation, RestoreN, SetN},
     lossy::{LossyMutation, SetN as LossySetN},
@@ -463,6 +467,7 @@ fn snapshot_read_lease_contention_returns_the_exact_untouched_owner() {
 #[test]
 fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep_strings() {
     let edit = Edit::<DemoMutation> {
+        line: None,
         id: "edit-owner".repeat(128),
         actor: Some("actor-owner".repeat(128)),
         forwards: Vec::new(),
@@ -493,6 +498,7 @@ fn artifact_store_edit_retirement_is_interruptible_and_terminal_empty_after_deep
 #[test]
 fn artifact_store_edit_retirement_rejects_and_returns_the_exact_nonempty_mutation_owner() {
     let edit = Edit::<DemoMutation> {
+        line: None,
         id: "edit-owner".into(),
         actor: None,
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
@@ -1996,7 +2002,7 @@ impl MutationDiff<DemoSnapshot> for LossyDiff {
 
 #[test]
 fn rejected_history_mutation_and_metadata_owners_close_under_one_item_grants() {
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: "rejected-edit".repeat(32),
         actor: Some("actor".repeat(64)),
         forwards: vec![DemoMutation::SetN(SetN { n: 7 })],
@@ -2268,7 +2274,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let history = crate::os_spr::HistoryLog {
                 doc_id: "member-retained".into(),
                 schema: "demo/v1".into(),
-                edits: vec![crate::os_spr::HistoryEdit {
+                edits: vec![crate::os_spr::HistoryEdit { line: None,
                     id: "raw-edit".into(),
                     actor: Some("raw-actor".into()),
                     started_at: "started".into(),
@@ -2308,7 +2314,7 @@ fn member_open_partial_parse_and_initialization_owners_retire_exactly() {
             let forwards = vec![DemoMutation::decode_op(&encoded).unwrap()];
             let inverse = if stage == "inverse" { vec![DemoMutation::decode_op(&encoded).unwrap()] } else { Vec::new() };
             retained
-                .stage_edit(Edit {
+                .stage_edit(Edit { line: None,
                     id: "pending-edit".into(),
                     actor: Some("actor".into()),
                     forwards,
@@ -2841,7 +2847,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let id = stamped.as_ref().map_or_else(|| format!("retained-one-item-{sequence_number}"), |mutation| mutation.0.clone());
         let mutation_id = stamped.unwrap_or_else(|| MutationId(format!("{id}#0")));
         let forward = mutation;
-        let edit = Edit {
+        let edit = Edit { line: None,
             id: id.clone(),
             actor: Some(authority.actor.clone()),
             forwards: vec![forward],
@@ -3037,14 +3043,14 @@ fn close_durable_publication(publication: &mut ArtifactStoreBatchPublication<Dem
 }
 
 fn close_demo_artifact_store(store: &mut ArtifactStore<DemoSnapshot, DemoMutation>) {
-    for _ in 0..4_096 {
+    for _ in 0..16_384 {
         let step = SpaceMember::close_owned_step(store, 1, 512).expect("demo artifact store closes under its bounded owner grant");
         if step == SnapshotRetirementStep::Complete {
             assert!(SpaceMember::close_owned_terminal_is_empty(store));
             return;
         }
     }
-    panic!("demo artifact store did not reach its exact terminal-empty witness");
+    panic!("demo artifact store did not reach its exact terminal-empty witness ({})", store.close_owned_phase_witness());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -4039,21 +4045,12 @@ async fn artifact_store_one_item_stale_saturation_and_cancel_leave_root_generati
     assert_eq!(store.content_revision_now(), revision);
     assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
 
-    let saturated_ids = (0..crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map(|index| format!("saturated-{index}")).collect::<Vec<_>>();
-    store.applied_edit_ids.extend(saturated_ids.iter().cloned());
-    store.envelope.cursor.as_mut().expect("initialized cursor").applied_edit_ids.extend(saturated_ids.iter().cloned());
-    store.revision_accumulator.applied.extend((0..crate::os_vcs::ARTIFACT_HISTORY_LEDGER_CAPACITY).map(|_| CursorRevisionRecord { id_digest: [1; 32], edit_digest: [2; 32], prefix_digest: [3; 32] }));
-    let mut saturated = store
-        .begin_apply_batch(semio_framework_job::OperationId(4), generation, revision, "retained-test".into(), vec![DemoMutation::SetN(SetN { n: 10 })], None, HistoryLane::Document, Some(&admissible), None)
-        .expect("capacity is validated by retained commit preflight");
-    let grant = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 512 };
-    let saturation = (0..64).find_map(|_| store.advance_apply_batch(&mut saturated, grant).err()).expect("maximum plus one fails before store mutation");
-    assert!(saturation.to_string().contains("preinstalled fixed applied and revision capacity"), "the ledger ceiling is what refuses the commit: {saturation}");
-    saturated.begin_close();
-    close_durable_publication(&mut saturated);
-    assert_eq!(store.generation_now(), generation);
-    assert_eq!(store.content_revision_now(), revision);
-    assert!(Arc::ptr_eq(&root, &store.snapshot_root()));
+    for n in 1..=65 {
+        store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n })], description: None, transaction: None }).await.expect("an edit past one history page");
+    }
+    assert_eq!(store.applied_edit_ids().len(), 65);
+    assert_eq!(serde_json::to_value(store.snapshot_root().as_ref()).unwrap(), serde_json::json!({ "n": 65 }));
+    assert_ne!(store.generation_now(), generation);
     close_demo_artifact_store(&mut store);
 }
 
@@ -4446,7 +4443,7 @@ impl ToValue for GroupReadTriggerSnapshot {
 }
 
 fn group_read_fixture_edit(id: &str) -> Edit<()> {
-    Edit { id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, verb: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
+    Edit { line: None, id: id.into(), actor: None, forwards: Vec::new(), inverse: Vec::new(), mutation_meta: Vec::new(), description: None, verb: None, coalesce_key: None, sequence_number: 0, started_at: String::new(), finished_at: None }
 }
 
 fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEnvelope<GroupReadTriggerSnapshot, ()> {
@@ -4463,10 +4460,12 @@ fn group_read_fixture_envelope(snapshot: GroupReadTriggerSnapshot) -> ArtifactEn
         migrated_from: None,
         owner: None,
         lanes: BTreeMap::new(),
+        viewer_checkpoint_id: None,
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
         transitions: Vec::new(),
         history_shape: crate::os_spr::HistoryShape::Document,
+        open_transaction: None,
     })
 }
 
@@ -4496,7 +4495,7 @@ fn retained_group_envelope_read_captures_history_and_cursor_before_serializer_co
         let reads = Arc::new(std::sync::atomic::AtomicUsize::new(0));
         let mut envelope = group_read_fixture_envelope(GroupReadTriggerSnapshot { value: 0, commit: inject_commit.then(|| owner.clone()), reads: Arc::clone(&reads) });
         let prepared_ids: Vec<String> = serde_json::from_value(fixture["prepared"]["appliedEditIds"].clone()).unwrap();
-        envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners { applied_edit_ids: prepared_ids.clone(), redo_edit_ids: Vec::new(), checkpoint_id: None }, &view).unwrap();
+        envelope.cursor.as_mut().unwrap().stage_group_owned(ArtifactCursorOwners { applied_edit_ids: prepared_ids.clone().into(), redo_edit_ids: Vec::new().into(), checkpoint_id: None }, &view).unwrap();
         for id in &prepared_ids[1..] {
             let reservation = envelope.vcs.edits.reserve_group_one(&view).unwrap();
             envelope.vcs.edits.stage_group_reserved(reservation, group_read_fixture_edit(id), &view).unwrap();
@@ -4579,7 +4578,7 @@ async fn retained_group_cursor_shares_history_visibility_and_retires_displaced_r
     let held_before_commit: &ArtifactCursorOwners = &cursor;
     let held_history = history.iter();
     assert!(owner.commit());
-    assert_eq!(held_before_commit.applied_edit_ids, vec!["initial"]);
+    assert_eq!(held_before_commit.applied_edit_ids, ["initial".to_string()]);
     assert_eq!(held_history.cloned().collect::<Vec<_>>(), vec!["initial"]);
     assert_eq!(serde_json::to_value(&cursor).expect("committed cursor serialization"), fixture["after"]);
     assert_eq!(cursor.applied_edit_ids, history.iter().cloned().collect::<Vec<_>>());
@@ -4822,7 +4821,7 @@ fn mutation_envelope_at(actor: &str, mutation_id: &str, operation: DemoMutation,
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode demo mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: hlc,
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -5014,7 +5013,7 @@ async fn applied_edit_ids_stay_sorted_by_hlc_after_a_backdated_remote_insert() {
     store.ingest_remote(backdated).await.expect("backdated insert");
 
     assert_eq!(store.applied_edit_ids()[0], "op-backdated", "the backdated edit must sort before both local edits");
-    assert_eq!(&store.applied_edit_ids()[1..], local_ids.as_slice());
+    assert!(store.applied_edit_ids().iter().skip(1).eq(local_ids.iter()));
 
     let envelope = store.envelope();
     let hlcs: Vec<HybridLogicalTimestamp> = store.applied_edit_ids().iter().map(|id| envelope.vcs.edits.iter().find(|edit| edit.id == *id).and_then(|edit| edit.mutation_meta.first()).map(|meta| meta.timestamp).expect("meta")).collect();
@@ -5659,8 +5658,11 @@ async fn alternatives_switch_restores_checkpoint_chain() {
     store.dispatch(ArtifactCommand::CreateAlternative { name: "branch-a".into() }).await.expect("create alternative");
     let alt_id = store.envelope().vcs.alternatives.last().expect("the branched alternative follows the trunk").id.clone();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply on branch");
-    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("switch");
-    assert_eq!(store.snapshot().expect("snapshot").n, Some(1));
+    assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
+    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk");
+    assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "the trunk tip does not show another line's uncommitted edit");
+    store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: alt_id }).await.expect("back to the alternative");
+    assert_eq!(store.snapshot().expect("snapshot").n, Some(2), "the alternative tip keeps the edit that was authored on it");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -5672,12 +5674,15 @@ async fn checkout_old_checkpoint_then_commit_creates_a_fork() {
     let c1 = store.envelope().vcs.checkpoints[0].id.clone();
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() }).await.expect("commit c2");
+    let transitions = store.envelope().transitions.len();
     store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: c1.clone() }).await.expect("checkout c1");
+    assert_eq!(store.envelope().transitions.len(), transitions, "a checkout is this viewer's head and authors no shared event");
     assert_eq!(store.current_checkpoint_id().await, Some(c1.as_str()));
-    store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None, transaction: None }).await.expect("apply");
-    store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("fork".into()), authors: Vec::new() }).await.expect("commit fork");
+    assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "an explicit checkout hides the later trunk commit");
+    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk tip");
+    assert_eq!(store.snapshot().expect("snapshot").n, Some(2));
     let children: Vec<&Checkpoint> = store.envelope().vcs.checkpoints.iter().filter(|checkpoint| checkpoint.parent_id.as_deref() == Some(c1.as_str())).collect();
-    assert_eq!(children.len(), 2, "checking out an old checkpoint before committing must fork, not extend the trunk");
+    assert_eq!(children.len(), 1, "looking at an old checkpoint does not fork the trunk");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -5724,12 +5729,12 @@ async fn history_columns_assigns_distinct_lanes_and_pulls_main_only_descendants_
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 2 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).await.expect("commit a1");
 
-    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).await.expect("checkout root");
+    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("back to the trunk");
     store.dispatch(ArtifactCommand::CreateAlternative { name: "feature-b".into() }).await.expect("create feature-b");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 3 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).await.expect("commit b1");
 
-    store.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: root.clone() }).await.expect("checkout root again");
+    { let trunk = store.trunk_alternative_id(); store.dispatch(ArtifactCommand::SwitchAlternative { alternative_id: trunk }) }.await.expect("trunk again");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 4 })], description: None, transaction: None }).await.expect("apply");
     store.dispatch(ArtifactCommand::CommitCheckpoint { message: Some("main resumed".into()), authors: Vec::new() }).await.expect("commit main resumed");
 
@@ -5781,7 +5786,7 @@ async fn sample_envelope_for_backbone_test() -> crate::os_spr::MutationEnvelope 
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: vec![1, 2, 3] },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -5933,7 +5938,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
 
     let document_id = ArtifactId("demo".to_string());
     let schema = SchemaId("test.document-codec-roundtrip/v1".to_string());
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: "edit-1".into(),
         actor: Some("peer".into()),
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
@@ -6459,6 +6464,7 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
     test_support::assert_store_roundtrip(DemoSnapshot { n: Some(4) }, DemoMutation::SetN(SetN { n: 9 })).await;
 
     let edit = Edit::<DemoMutation> {
+        line: None,
         id: "edit-command-envelope".into(),
         actor: Some("actor-fallback".into()),
         forwards: vec![DemoMutation::SetN(SetN { n: 9 })],
@@ -6495,6 +6501,7 @@ async fn test_support_round_trip_helpers_pass_for_demo_operation() {
 #[should_panic(expected = "did not decode back into an equal forward operation")]
 async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
     let edit = Edit::<LossyMutation> {
+        line: None,
         id: "edit-lossy".into(),
         actor: None,
         forwards: vec![LossyMutation::SetN(LossySetN { n: 7 })],
@@ -6575,7 +6582,7 @@ async fn document_text_round_trips_after_apply_and_checkpoint() {
 
 #[semio_framework_async_macros::async_test]
 async fn parse_document_text_rejects_invalid_op_line_with_span() {
-    let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 sequence=1 started=\"1\"\n  not-an-op\n".to_string() };
+    let files = ArtifactTextFiles { dsl: "n=0\n".to_string(), ops: "doc demo schema=demo/v1\nedit e1 sequence=1 started=\"1\" line=[]\n  not-an-op\n".to_string() };
     let error = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.unwrap_err();
     assert_eq!(error.span.line, 3);
 }
@@ -6957,7 +6964,7 @@ fn severity_mutation_envelope_at(document_id: &str, actor: &str, mutation_id: &s
         diff: crate::os_spr::ArtifactDiff { schema: SchemaId("demo/v1".to_string()), payload: operation.encode_op().expect("encode severity mutation") },
         inverse: crate::os_spr::InverseMutation { schema: SchemaId("demo/v1".to_string()), payload: Vec::new() },
         timestamp,
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 
@@ -7344,7 +7351,7 @@ async fn spr_parse_rejects_history_without_authoritative_operation_metadata() {
     let history = crate::os_spr::HistoryLog {
         doc_id: "metadata-required".to_string(),
         schema: "demo/v1".to_string(),
-        edits: vec![crate::os_spr::HistoryEdit {
+        edits: vec![crate::os_spr::HistoryEdit { line: None,
             id: "edit-1".to_string(),
             actor: Some("author".to_string()),
             started_at: String::new(),
@@ -7388,6 +7395,7 @@ async fn ops_header_line_commit_round_trips_including_delimiter_and_quote_charac
         by: vec![OpsAuthor { id: "a:1,x".to_string(), name: "Alice, A. \"the great\"".to_string(), avatar: None }, OpsAuthor { id: "b2".to_string(), name: "Bob".to_string(), avatar: Some("b.png".to_string()) }],
         message: Some("first \"checkpoint\"".to_string()),
         at: "18".to_string(),
+        line: Vec::new(),
     };
     let printed = header.print_op();
     assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
@@ -7398,7 +7406,7 @@ async fn ops_header_line_commit_round_trips_including_delimiter_and_quote_charac
 
 #[semio_framework_async_macros::async_test]
 async fn ops_header_line_edit_round_trips_including_a_quoted_description() {
-    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()), verb: None };
+    let header = OpsHeaderLine::Edit { id: "e1".to_string(), sequence: 42, started: "1".to_string(), actor: None, finished: None, key: None, description: Some("hello \"world\"".to_string()), verb: None, line: Vec::new() };
     let printed = header.print_op();
     assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
     assert!(!printed.contains("actor="), "an absent optional field must be omitted: {printed}");
@@ -7446,8 +7454,11 @@ async fn document_text_round_trips_with_an_active_alternative_and_a_quoted_descr
     assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
     let files = print_document_text(store.envelope()).await.expect("print document text");
     assert!(files.ops.lines().any(|line| line.starts_with("branch ")), "an alternative must print as a `branch` transition line: {}", files.ops);
-    test_support::assert_document_text_round_trip(&store).await;
     test_support::assert_document_pack_round_trip(&store).await;
+    let parsed = parse_document_text::<DemoSnapshot, DemoMutation>(&files.dsl, &files.ops).await.expect("parse document text");
+    assert!(parsed.envelope.active_alternative_id.is_none(), "the ops text is the shared log and hydrates to the trunk");
+    assert_eq!(parsed.snapshot.n, store.snapshot().expect("snapshot").n);
+    test_support::retire_parsed_document(parsed);
 }
 
 /// 🔁️ E1 is withdrawn by a revert transition and stays withdrawn once the same author's e2 lands:
@@ -7808,16 +7819,28 @@ async fn structural_history_replicates_as_events_over_a_backbone() {
         ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 9 })], description: None, transaction: None },
         ArtifactCommand::CommitCheckpoint { message: Some("two".into()), authors: Vec::new() },
     ];
-    for command in steps {
-        a.dispatch(command).await.expect("a authors the step");
+    let (shared, local) = steps.split_at(6);
+    for command in shared {
+        a.dispatch(command.clone()).await.expect("a authors the step");
         b.tick().await.expect("b folds the step's events");
-        assert_eq!(history_position(&a).await, history_position(&b).await, "b must sit exactly where a sits after every step");
+        assert_eq!(history_position(&a).await, history_position(&b).await, "shared trunk steps land on both replicas");
     }
+    for command in local {
+        a.dispatch(command.clone()).await.expect("a authors on the new alternative");
+        b.tick().await.expect("b folds the shared events and stays on the trunk");
+    }
+    assert_eq!(a.snapshot().expect("a"), DemoSnapshot { n: Some(9) });
+    assert_eq!(b.snapshot().expect("b"), DemoSnapshot { n: Some(1) }, "b never left the trunk");
+    assert!(a.envelope().active_alternative_id.is_some());
+    assert!(b.envelope().active_alternative_id.is_none());
     let first = a.envelope().vcs.checkpoints[0].id.clone();
-    a.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: first }).await.expect("a checks out the first checkpoint");
-    b.tick().await.expect("b folds the checkout");
-    assert_eq!(history_position(&a).await, history_position(&b).await);
-    assert_eq!(b.snapshot().expect("snapshot"), DemoSnapshot { n: Some(1) });
+    let transitions = a.envelope().transitions.len();
+    a.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: first }).await.expect("a checks out the first checkpoint locally");
+    b.tick().await.expect("b has no checkout event to fold");
+    assert_eq!(a.envelope().transitions.len(), transitions);
+    assert_eq!(a.snapshot().expect("a"), DemoSnapshot { n: Some(1) });
+    assert_eq!(b.snapshot().expect("b"), DemoSnapshot { n: Some(1) });
+    assert_ne!(a.envelope().active_alternative_id, b.envelope().active_alternative_id);
     assert_eq!(a.envelope().vcs.alternatives, b.envelope().vcs.alternatives, "alternative chains are folded facts on both replicas");
 }
 
@@ -7834,18 +7857,20 @@ async fn a_concurrent_checkout_and_edit_converge_in_either_arrival_order() {
     }
     let known: HashSet<MutationId> = a.event_log().expect("a's log").into_iter().map(|event| event.mutation_id).collect();
     let checkpoint_id = a.envelope().vcs.checkpoints[0].id.clone();
-    a.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("a checks out the checkpoint");
+    let transitions = a.envelope().transitions.len();
+    a.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id: checkpoint_id.clone() }).await.expect("a checks out the checkpoint");
+    assert_eq!(a.envelope().transitions.len(), transitions, "a's checkout authors nothing a peer could fold");
     b.dispatch(ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 7 })], description: None, transaction: None }).await.expect("b's concurrent edit");
     let fresh_from = |store: &ArtifactStore<DemoSnapshot, DemoMutation>| store.event_log().expect("log").into_iter().filter(|event| !known.contains(&event.mutation_id)).collect::<Vec<_>>();
-    let (from_a, from_b) = (fresh_from(&a), fresh_from(&b));
+    let from_b = fresh_from(&b);
+    assert!(fresh_from(&a).is_empty());
     for event in from_b {
         a.ingest_remote(event).await.expect("a folds b's edit");
     }
-    for event in from_a {
-        b.ingest_remote(event).await.expect("b folds a's checkout");
-    }
-    assert_eq!(history_position(&a).await, history_position(&b).await, "the fold is a function of the event set, not of arrival order");
-    assert_eq!(a.applied_edit_ids(), b.applied_edit_ids());
+    assert_eq!(a.snapshot().expect("a"), DemoSnapshot { n: Some(1) }, "a's explicit checkout hides uncommitted edits");
+    assert_eq!(b.snapshot().expect("b"), DemoSnapshot { n: Some(7) });
+    b.dispatch(ArtifactCommand::CheckoutCheckpoint { checkpoint_id }).await.expect("b looks at the same checkpoint");
+    assert_eq!(history_position(&a).await, history_position(&b).await, "equal heads over the same events agree");
 }
 
 /// 💾️ A reload replays the persisted events into the exact positions — through `.pack`+`.spr` and
@@ -7870,7 +7895,8 @@ async fn reload_replays_the_event_log_into_the_same_positions() {
     let text = print_document_text(store.envelope()).await.expect("print text");
     assert!(text.ops.contains("\ncommit ") && text.ops.contains("\nbranch ") && text.ops.contains("\nrevert "), "the text mirror states the semantic transitions: {}", text.ops);
     let from_text = ArtifactStore::new(parse_document_text::<DemoSnapshot, DemoMutation>(&text.dsl, &text.ops).await.expect("parse text").envelope).await;
-    assert_eq!(history_position(&from_text).await, expected, ".ops reload restores every position by folding events");
+    assert_eq!(from_text.snapshot().expect("text snapshot"), expected.0, "the ops text folds the shared events");
+    assert!(from_text.envelope().active_alternative_id.is_none(), "the ops text has no viewer head and hydrates to the trunk");
 }
 
 //#endregion 🔖️EventLogCatchUp
@@ -7893,7 +7919,8 @@ async fn space_member_checkout_switches_at_the_alternative_tip_and_falls_back_to
 
     SpaceMember::checkout(&mut store, &tip, &alt_id).await.expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(1), "restored the old checkpoint's state");
-    assert_eq!(store.envelope().active_alternative_id, None, "the checked-out checkpoint is no longer any alternative's tip, so nothing is active");
+    assert_eq!(store.envelope().active_alternative_id.as_deref(), Some(alt_id.as_str()), "the checkpoint is still on this alternative, so the line stays");
+    assert_eq!(store.envelope().viewer_checkpoint_id.as_deref(), Some(tip.as_str()));
 }
 
 //#endregion 🔖️SpaceMemberCheckoutRouting

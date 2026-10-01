@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::PptxEditor",
       "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::base::create_pptx_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pptx_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pptx_editor"
+      }
     },
     {
       "owner": "stdio-office",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::PptxViewer",
       "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::base::create_pptx_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-office",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::PptxStrictEditor",
       "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pptx_strict_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pptx_strict_editor"
+      }
     },
     {
       "owner": "stdio-office",
@@ -41,7 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::PptxStrictViewer",
       "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::strict::create_pptx_strict_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-office",
@@ -50,7 +60,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalEditor",
       "factory": "semio_s_artifact_stdio_pptx::editor::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pptx_transitional_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pptx_transitional_editor"
+      }
     },
     {
       "owner": "stdio-office",
@@ -59,22 +73,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::PptxTransitionalViewer",
       "factory": "semio_s_artifact_stdio_pptx::viewer::pptx::standards::v_ecma_376::subsets::transitional::create_pptx_transitional_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "pptx",
-      "factory_id": "stdio.native.pptx.v1",
-      "descriptor_codec_id": "s.stdio.pptx.standard.ecma-376.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.pptx.standard.ecma-376.codec.codec-stdio-pptx-extension-pptx.v1",
-      "artifact_kind": "s.stdio.pptx",
-      "artifact_schema": "stdio.pptx",
-      "extension": "pptx",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
-      "protocol_source_sha256": "83c2f6a9860ca932773a56bd3af8d558ebee223162e7b6bcecfff263988ea705",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -115,6 +115,56 @@
         "react": 6271,
         "wgpu": 6371
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "PptxMutation",
+      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::mutations::PptxMutation"
+    },
+    {
+      "name": "PptxStrictMutation",
+      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::strict::schema::mutations::PptxStrictMutation"
+    },
+    {
+      "name": "PptxTransitionalMutation",
+      "snapshot": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::base::schema::snapshot::PptxSnapshot",
+      "mutation": "semio_s_artifact_stdio_pptx::standards::v_ecma_376::subsets::transitional::schema::mutations::PptxTransitionalMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "strict",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🔒️strict",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pptx",
+      "standard": "ecma-376",
+      "subset": "transitional",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🌉️transitional",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.pptx.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📽️pptx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

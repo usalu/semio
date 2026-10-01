@@ -1,7 +1,9 @@
 #!/usr/bin/env bun
 /** 🧭️ `repo-cli-go` router: `bun ./📜️script.ts test`. */
 import type { FileLinter } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, defineLint, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runBundleScriptMain, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { defineLint, goCoverageArgs, goLevelTestArgs, resolveTestLevel, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 export const policyFile = "🐹️.go";
 
@@ -33,4 +35,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url);

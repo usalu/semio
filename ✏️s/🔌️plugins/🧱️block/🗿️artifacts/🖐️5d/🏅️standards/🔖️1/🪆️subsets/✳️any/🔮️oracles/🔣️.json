@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "allows-plug-to-socket",
-              "directoryName": "🧪️allows-plug-to-socket"
+              "directoryName": "🧪️allows"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "adds-color-attribute-to-shell",
-              "directoryName": "🧪️adds-color-attribute-to-shell"
+              "directoryName": "🧪️adds"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "tags-shell-as-structural",
-              "directoryName": "🧪️tags-shell-as-structural"
+              "directoryName": "🧪️tags"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "rekinds-north-grip-as-socket",
-              "directoryName": "🧪️rekinds-north-grip-as-socket"
+              "directoryName": "🧪️rekinds"
             }
           ]
         },
@@ -131,7 +131,7 @@
           "scenarios": [
             {
               "id": "recolors-plug-grip-kind",
-              "directoryName": "🧪️recolors-plug-grip-kind"
+              "directoryName": "🧪️recolors"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "swaps-plug-default-rope-kind",
-              "directoryName": "🧪️swaps-plug-default-rope-kind"
+              "directoryName": "🧪️swaps"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "relabels-plug-grip-kind",
-              "directoryName": "🧪️relabels-plug-grip-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "rewrites-session-notes",
-              "directoryName": "🧪️rewrites-session-notes"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -175,7 +175,7 @@
           "scenarios": [
             {
               "id": "rewrites-part-kind-description",
-              "directoryName": "🧪️rewrites-part-kind-description"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -186,7 +186,7 @@
           "scenarios": [
             {
               "id": "repoints-part-kind-icon",
-              "directoryName": "🧪️repoints-part-kind-icon"
+              "directoryName": "🧪️repoints"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "relabels-part-kind",
-              "directoryName": "🧪️relabels-part-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "switches-unit-to-centimeter",
-              "directoryName": "🧪️switches-unit-to-centimeter"
+              "directoryName": "🧪️switches"
             }
           ]
         },
@@ -219,18 +219,18 @@
           "scenarios": [
             {
               "id": "switches-variant-to-b",
-              "directoryName": "🧪️switches-variant-to-b"
+              "directoryName": "🧪️switches"
             }
           ]
         },
         {
           "mutationId": "change-representation-description",
-          "sourceMutationDirectoryName": "📜change-representation-description",
-          "mutationDirectoryName": "📜change-representation-description",
+          "sourceMutationDirectoryName": "📜change-representation",
+          "mutationDirectoryName": "📜change-representation",
           "scenarios": [
             {
               "id": "rewrites-shell-description",
-              "directoryName": "🧪️rewrites-shell-description"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "promotes-shell-to-lod2",
-              "directoryName": "🧪️promotes-shell-to-lod2"
+              "directoryName": "🧪️promotes"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "repoints-shell-mesh-url",
-              "directoryName": "🧪️repoints-shell-mesh-url"
+              "directoryName": "🧪️repoints"
             }
           ]
         },
@@ -285,7 +285,7 @@
           "scenarios": [
             {
               "id": "appends-frame-representation",
-              "directoryName": "🧪️appends-frame-representation"
+              "directoryName": "🧪️appends"
             }
           ]
         },
@@ -318,7 +318,7 @@
           "scenarios": [
             {
               "id": "removes-shell-representation",
-              "directoryName": "🧪️removes-shell-representation"
+              "directoryName": "🧪️removes"
             }
           ]
         },
@@ -351,7 +351,7 @@
           "scenarios": [
             {
               "id": "swings-north-grip-along-the-rim",
-              "directoryName": "🧪️swings-north-grip-along-the-rim"
+              "directoryName": "🧪️swings"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "scenarios": [
             {
               "id": "repositions-north-grip-in-world",
-              "directoryName": "🧪️repositions-north-grip-in-world"
+              "directoryName": "🧪️repositions"
             }
           ]
         },
@@ -373,7 +373,7 @@
           "scenarios": [
             {
               "id": "drops-material-attribute",
-              "directoryName": "🧪️drops-material-attribute"
+              "directoryName": "🧪️drops"
             }
           ]
         },
@@ -395,7 +395,7 @@
           "scenarios": [
             {
               "id": "revokes-plug-to-plug",
-              "directoryName": "🧪️revokes-plug-to-plug"
+              "directoryName": "🧪️revokes"
             }
           ]
         },
@@ -406,7 +406,7 @@
           "scenarios": [
             {
               "id": "drops-finish-attribute-from-shell",
-              "directoryName": "🧪️drops-finish-attribute-from-shell"
+              "directoryName": "🧪️drops"
             }
           ]
         },
@@ -417,7 +417,7 @@
           "scenarios": [
             {
               "id": "untags-shell-printable",
-              "directoryName": "🧪️untags-shell-printable"
+              "directoryName": "🧪️untags"
             }
           ]
         },
@@ -428,7 +428,7 @@
           "scenarios": [
             {
               "id": "renames-plug-to-coupler",
-              "directoryName": "🧪️renames-plug-to-coupler"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -439,7 +439,7 @@
           "scenarios": [
             {
               "id": "renames-part-kind-to-pod",
-              "directoryName": "🧪️renames-part-kind-to-pod"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -450,7 +450,7 @@
           "scenarios": [
             {
               "id": "renames-shell-to-hull",
-              "directoryName": "🧪️renames-shell-to-hull"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -494,7 +494,7 @@
           "scenarios": [
             {
               "id": "circle-to-rectangle",
-              "directoryName": "🧪️circle-to-rectangle"
+              "directoryName": "🧪️circle"
             }
           ]
         },
@@ -505,7 +505,7 @@
           "scenarios": [
             {
               "id": "reorients-and-rescales-part",
-              "directoryName": "🧪️reorients-and-rescales-part"
+              "directoryName": "🧪️reorients"
             }
           ]
         }

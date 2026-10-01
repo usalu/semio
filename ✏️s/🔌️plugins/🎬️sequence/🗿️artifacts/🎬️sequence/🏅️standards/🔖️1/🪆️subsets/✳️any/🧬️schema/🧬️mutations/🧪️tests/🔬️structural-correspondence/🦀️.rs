@@ -173,9 +173,9 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "connect-steps";
         let variant = "ConnectSteps";
-        let directory = "🔗️connect-steps";
+        let directory = "🔗️connect";
         let participation = "detect";
-        let owner = dependency_mutation_root.join("🔗️connect-steps");
+        let owner = dependency_mutation_root.join("🔗️connect");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));
@@ -203,9 +203,9 @@ fn direct_owners_descriptors_surfaces_and_catalog_correspond() {
     {
         let kind = "disconnect-steps";
         let variant = "DisconnectSteps";
-        let directory = "✂️disconnect-steps";
+        let directory = "✂️disconnect";
         let participation = "detect";
-        let owner = dependency_mutation_root.join("✂️disconnect-steps");
+        let owner = dependency_mutation_root.join("✂️disconnect");
         let source = std::fs::read_to_string(owner.join("🦀️.rs")).expect("direct Rust owner");
         let descriptor: serde_json::Value = serde_json::from_str(&std::fs::read_to_string(owner.join("🔣️.json")).expect("direct descriptor")).expect("valid descriptor");
         assert!(source.contains("MutationKind") && source.contains("SEMANTICS"));

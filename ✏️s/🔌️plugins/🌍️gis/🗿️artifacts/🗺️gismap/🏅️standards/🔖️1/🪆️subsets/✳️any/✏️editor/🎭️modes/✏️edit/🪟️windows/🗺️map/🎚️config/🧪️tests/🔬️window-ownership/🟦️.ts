@@ -19,7 +19,7 @@ type Fixture = {
 };
 
 const here = fileURLToPath(new URL(".", import.meta.url));
-const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️window-ownership/🔣️.json`, "utf8")) as Fixture;
+const fixture = JSON.parse(readFileSync(`${here}/../../🧫️fixtures/🔬️window/🔣️.json`, "utf8")) as Fixture;
 const schema = JSON.parse(readFileSync(`${here}/../../🧬️schema/🔣️.json`, "utf8"));
 
 const target = (instances: WindowInstance[], id: string, expectedKind: string): void => {

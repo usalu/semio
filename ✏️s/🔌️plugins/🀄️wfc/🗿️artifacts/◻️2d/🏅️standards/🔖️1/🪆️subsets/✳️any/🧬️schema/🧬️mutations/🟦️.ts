@@ -1,3 +1,5 @@
+import {binary64,binary64Value,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
+import {wfc2dMediaEqual} from "../📸️snapshot/🟦️.ts";
 // 🧬️ WFC 2D mutations — the TypeScript twin of `🦀️.rs` and its seventeen triad leaves, ported branch
 // by branch from the Rust diff builders (never generated). This is the SECOND implementation the
 // cross-language fixture oracle replays every committed quintet through: it must produce the same
@@ -29,26 +31,26 @@ export const WFC_2D_MUTATION_KINDS = [
 
 /** 🧬️ Externally tagged, exactly as the Rust enum encodes: one variant key per object. */
 export type Wfc2dMutation =
-  | { readonly ChangeSeed: { readonly seed: number } }
+  | { readonly ChangeSeed: { readonly seed: bigint } }
   | { readonly CreateSlot: { readonly slot: Wfc2dSlot } }
   | { readonly DeleteSlot: { readonly id: string } }
-  | { readonly MoveSlot: { readonly id: string; readonly x: number; readonly y: number } }
-  | { readonly ResizeSlot: { readonly id: string; readonly width: number; readonly height: number } }
+  | { readonly MoveSlot: { readonly id: string; readonly x: Binary64; readonly y: Binary64 } }
+  | { readonly ResizeSlot: { readonly id: string; readonly width: Binary64; readonly height: Binary64 } }
   | { readonly ConnectSlots: { readonly edge: Wfc2dSlotEdge } }
   | { readonly DisconnectSlots: { readonly id: string } }
   | { readonly PinSlot: { readonly id: string; readonly tileId: string } }
   | { readonly UnpinSlot: { readonly id: string } }
   | { readonly CreateTile: { readonly tile: Wfc2dTile } }
   | { readonly DeleteTile: { readonly id: string } }
-  | { readonly ChangeTileWeight: { readonly tileId: string; readonly weight: number } }
+  | { readonly ChangeTileWeight: { readonly tileId: string; readonly weight: Binary64 } }
   | { readonly ChangeTileMedia: { readonly tileId: string; readonly media: Wfc2dTileMedia } }
   | { readonly CreateRule: { readonly rule: Wfc2dRule } }
   | { readonly DeleteRule: { readonly id: string } }
-  | { readonly DragSlots: { readonly targets: readonly string[]; readonly dx: number; readonly dy: number } }
+  | { readonly DragSlots: { readonly targets: readonly string[]; readonly dx: Binary64; readonly dy: Binary64 } }
   | { readonly SetSlotPositions: { readonly positions: readonly Wfc2dSlotPosition[] } };
 
 /** 📌️ One slot's absolute lower corner, in document units. */
-export type Wfc2dSlotPosition = { readonly id: string; readonly x: number; readonly y: number };
+export type Wfc2dSlotPosition = { readonly id: string; readonly x: Binary64; readonly y: Binary64 };
 
 /** 🧾️ The payload record of one object row: refuses a non-object or any key outside `keys`. */
 function payloadRecord(value: unknown, keys: readonly string[], what: string): Record<string, unknown> {
@@ -59,14 +61,14 @@ function payloadRecord(value: unknown, keys: readonly string[], what: string): R
 }
 
 /** 🔢️ A finite number field, refused by name otherwise. */
-function finiteNumber(raw: unknown, what: string): number {
+function finiteNumber(raw: unknown, what: string): Binary64 {
   if (typeof raw !== "number" || !Number.isFinite(raw)) throw new TypeError(`${what} must be a finite number`);
-  return raw;
+  return binary64(raw);
 }
 
 /** ✋️ Decodes one `drag-slots` payload, refusing what its schema refuses: an unknown or missing key, no target or
  * one twice, an empty id, or a non-finite offset. */
-export function parseDragSlots(value: unknown): { readonly targets: readonly string[]; readonly dx: number; readonly dy: number } {
+export function parseDragSlots(value: unknown): { readonly targets: readonly string[]; readonly dx: Binary64; readonly dy: Binary64 } {
   const row = payloadRecord(value, ["targets", "dx", "dy"], "drag-slots payload");
   if (!Array.isArray(row.targets) || row.targets.length === 0 || row.targets.some((id) => typeof id !== "string" || id.length === 0)) throw new TypeError("A drag names at least one slot id");
   const targets = row.targets as string[];
@@ -125,22 +127,22 @@ function distinctIds(ids: readonly string[]): boolean {
 export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOutcome {
   if ("DragSlots" in mutation) {
     const { targets, dx, dy } = mutation.DragSlots;
-    if (!distinctIds(targets) || !Number.isFinite(dx) || !Number.isFinite(dy)) return refuse("fatal", "mutation.invariant");
+    if (!distinctIds(targets) || !Number.isFinite(binary64Value(dx)) || !Number.isFinite(binary64Value(dy))) return refuse("fatal", "mutation.invariant");
     const missing = targets.filter((id) => !base.slots.some((slot) => slot.id === id));
     if (missing.length === targets.length) return refuse("error", "mutation.target-missing");
-    if (dx === 0 && dy === 0) return ok({}, [...partial(missing), { level: "warning", code: "mutation.no-op" }]);
-    const moved = base.slots.flatMap((slot, index) => (targets.includes(slot.id) ? [[index, { ...slot, x: slot.x + dx, y: slot.y + dy }] as const] : []));
+    if (binary64Value(dx) === 0 && binary64Value(dy) === 0) return ok({}, [...partial(missing), { level: "warning", code: "mutation.no-op" }]);
+    const moved = base.slots.flatMap((slot, index) => (targets.includes(slot.id) ? [[index, { ...slot, x: binary64(binary64Value(slot.x) + binary64Value(dx)), y: binary64(binary64Value(slot.y) + binary64Value(dy)) }] as const] : []));
     return ok({ slotsUpserted: moved }, partial(missing));
   }
   if ("SetSlotPositions" in mutation) {
     const { positions } = mutation.SetSlotPositions;
     const ids = positions.map((position) => position.id);
-    if (!distinctIds(ids) || positions.some((position) => !Number.isFinite(position.x) || !Number.isFinite(position.y))) return refuse("fatal", "mutation.invariant");
+    if (!distinctIds(ids) || positions.some((position) => !Number.isFinite(binary64Value(position.x)) || !Number.isFinite(binary64Value(position.y)))) return refuse("fatal", "mutation.invariant");
     const missing = ids.filter((id) => !base.slots.some((slot) => slot.id === id));
     if (missing.length === ids.length) return refuse("error", "mutation.target-missing");
     const moved = base.slots.flatMap((slot, index) => {
       const position = positions.find((row) => row.id === slot.id);
-      return position && (position.x !== slot.x || position.y !== slot.y) ? [[index, { ...slot, x: position.x, y: position.y }] as const] : [];
+      return position && (binary64Value(position.x) !== binary64Value(slot.x) || binary64Value(position.y) !== binary64Value(slot.y)) ? [[index, { ...slot, x: position.x, y: position.y }] as const] : [];
     });
     if (moved.length === 0) return ok({}, [...partial(missing), { level: "warning", code: "mutation.no-op" }]);
     return ok({ slotsUpserted: moved }, partial(missing));
@@ -151,7 +153,7 @@ export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOu
   if ("CreateSlot" in mutation) {
     const slot = mutation.CreateSlot.slot;
     if (base.slots.some((row) => row.id === slot.id)) return refuse("fatal", "mutation.duplicate-id");
-    if (slot.width <= 0 || slot.height <= 0) return refuse("fatal", "mutation.invariant");
+    if (binary64Value(slot.width) <= 0 || binary64Value(slot.height) <= 0) return refuse("fatal", "mutation.invariant");
     if (slot.pinnedTileId !== undefined && !base.tiles.some((tile) => tile.id === slot.pinnedTileId)) return refuse("fatal", "mutation.invariant");
     return ok({ slotsUpserted: [[orderedIndex(base.slots, slot.id, (row) => row.id), slot]] });
   }
@@ -166,16 +168,16 @@ export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOu
     const index = base.slots.findIndex((row) => row.id === id);
     if (index === -1) return refuse("error", "mutation.target-missing");
     const slot = base.slots[index]!;
-    if (slot.x === x && slot.y === y) return noop();
+    if (binary64Value(slot.x) === binary64Value(x) && binary64Value(slot.y) === binary64Value(y)) return noop();
     return ok({ slotsUpserted: [[index, { ...slot, x, y }]] });
   }
   if ("ResizeSlot" in mutation) {
     const { id, width, height } = mutation.ResizeSlot;
     const index = base.slots.findIndex((row) => row.id === id);
     if (index === -1) return refuse("error", "mutation.target-missing");
-    if (width <= 0 || height <= 0) return refuse("fatal", "mutation.invariant");
+    if (binary64Value(width) <= 0 || binary64Value(height) <= 0) return refuse("fatal", "mutation.invariant");
     const slot = base.slots[index]!;
-    if (slot.width === width && slot.height === height) return noop();
+    if (binary64Value(slot.width) === binary64Value(width) && binary64Value(slot.height) === binary64Value(height)) return noop();
     return ok({ slotsUpserted: [[index, { ...slot, width, height }]] });
   }
   if ("ConnectSlots" in mutation) {
@@ -212,7 +214,7 @@ export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOu
   if ("CreateTile" in mutation) {
     const tile = mutation.CreateTile.tile;
     if (base.tiles.some((row) => row.id === tile.id)) return refuse("fatal", "mutation.duplicate-id");
-    if (!Number.isFinite(tile.weight) || tile.weight < 0) return refuse("fatal", "mutation.invariant");
+    if (!Number.isFinite(binary64Value(tile.weight)) || binary64Value(tile.weight) < 0) return refuse("fatal", "mutation.invariant");
     return ok({ tilesUpserted: [[orderedIndex(base.tiles, tile.id, (row) => row.id), tile]] });
   }
   if ("DeleteTile" in mutation) {
@@ -227,9 +229,9 @@ export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOu
     const { tileId, weight } = mutation.ChangeTileWeight;
     const index = base.tiles.findIndex((row) => row.id === tileId);
     if (index === -1) return refuse("error", "mutation.target-missing");
-    if (!Number.isFinite(weight) || weight < 0) return refuse("fatal", "mutation.invariant");
+    if (!Number.isFinite(binary64Value(weight)) || binary64Value(weight) < 0) return refuse("fatal", "mutation.invariant");
     const tile = base.tiles[index]!;
-    if (tile.weight === weight) return noop();
+    if (binary64Value(tile.weight) === binary64Value(weight)) return noop();
     return ok({ tilesUpserted: [[index, { ...tile, weight }]] });
   }
   if ("ChangeTileMedia" in mutation) {
@@ -237,7 +239,7 @@ export function wfc2dDiff(mutation: Wfc2dMutation, base: Wfc2dSnapshot): Wfc2dOu
     const index = base.tiles.findIndex((row) => row.id === tileId);
     if (index === -1) return refuse("error", "mutation.target-missing");
     const tile = base.tiles[index]!;
-    if (JSON.stringify(tile.media) === JSON.stringify(media)) return noop();
+    if (wfc2dMediaEqual(tile.media, media)) return noop();
     return ok({ tilesUpserted: [[index, { ...tile, media }]] });
   }
   if ("CreateRule" in mutation) {
@@ -262,14 +264,14 @@ export function applyWfc2dMutation(mutation: Wfc2dMutation, base: Wfc2dSnapshot)
 export function wfc2dInverse(mutation: Wfc2dMutation, base: Wfc2dSnapshot): readonly Wfc2dMutation[] {
   if ("DragSlots" in mutation) {
     const { targets, dx, dy } = mutation.DragSlots;
-    if (!distinctIds(targets) || !Number.isFinite(dx) || !Number.isFinite(dy) || (dx === 0 && dy === 0)) return [];
+    if (!distinctIds(targets) || !Number.isFinite(binary64Value(dx)) || !Number.isFinite(binary64Value(dy)) || (binary64Value(dx) === 0 && binary64Value(dy) === 0)) return [];
     const positions = base.slots.filter((slot) => targets.includes(slot.id)).map((slot) => ({ id: slot.id, x: slot.x, y: slot.y }));
     return positions.length === 0 ? [] : [{ SetSlotPositions: { positions } }];
   }
   if ("SetSlotPositions" in mutation) {
     const requested = mutation.SetSlotPositions.positions;
-    if (!distinctIds(requested.map((position) => position.id)) || requested.some((position) => !Number.isFinite(position.x) || !Number.isFinite(position.y))) return [];
-    const positions = base.slots.filter((slot) => requested.some((position) => position.id === slot.id && (position.x !== slot.x || position.y !== slot.y))).map((slot) => ({ id: slot.id, x: slot.x, y: slot.y }));
+    if (!distinctIds(requested.map((position) => position.id)) || requested.some((position) => !Number.isFinite(binary64Value(position.x)) || !Number.isFinite(binary64Value(position.y)))) return [];
+    const positions = base.slots.filter((slot) => requested.some((position) => position.id === slot.id && (binary64Value(position.x) !== binary64Value(slot.x) || binary64Value(position.y) !== binary64Value(slot.y)))).map((slot) => ({ id: slot.id, x: slot.x, y: slot.y }));
     return positions.length === 0 ? [] : [{ SetSlotPositions: { positions } }];
   }
   if ("ChangeSeed" in mutation) return [{ ChangeSeed: { seed: base.seed } }];

@@ -29,7 +29,7 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
   refuses an unadmitted kind. Here the corresponding `replace-part-grip` vector really does rekind
   `grip-1` — on a grip a fastener IS attached to — and the document moves. That narrows the siblings'
   three readings to one: the verb is implemented and attachment does not block it. Their
-  `📇️null-catalogs-is-noop` counterpart is settled here too: this subset commits a vector showing that
+  `📇️null` counterpart is settled here too: this subset commits a vector showing that
   `replace-kind-catalogs` with a NULL argument is accepted and does NOTHING, which is what makes the
   siblings' missing catalogue inverse a gap in the VOCABULARY rather than in an implementation.
 
@@ -85,9 +85,9 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
     Examples:
       | id                            | vector                                                       |
       | create-part                   | 🌱create-part/🌱️appends-part-c                          |
-      | delete-part                   | 🗑️delete-part/🚫️removes-part-a-and-severs-fastener      |
+      | delete-part                   | 🗑️delete-part/🚫️removes      |
       | move-part2d                   | 📍move-part2d/📍️moves-part-a                            |
-      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle-to-rectangle         |
+      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle         |
       | edit-part2d-text              | ✏️edit-part2d-text/✏️retitles-part-a                   |
       | change-part2d-icon            | 🎨change-part2d-icon/🎨️swaps-icon                       |
       | change-part2d-hidden          | 🙈change-part2d-hidden/🙈️hides-part-a                   |
@@ -100,29 +100,29 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | change-part-kind              | 🏗️change-part-kind/🏷️reassigns-kind                     |
       | change-part-anchor            | ⚓change-part-anchor/⚓️fixed-to-derived                 |
       | add-part-grip                 | ➕add-part-grip/✊️appends-grip-3                        |
-      | remove-part-grip              | ➖remove-part-grip/🚫️removes-grip-1-and-severs-fastener |
+      | remove-part-grip              | ➖remove-part-grip/🚫️removes |
       | replace-part-grip             | 🔌replace-part-grip/🏷️rekinds-grip-1                    |
       | connect-grips                 | 🪢️connect-grips/🔩️adds-second-fastener                  |
       | disconnect-grips              | ✂️disconnect-grips/🚫️removes-fast-1                    |
-      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions-fast-1        |
+      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions        |
       | change-fastener-kind          | 🎯change-fastener-kind/🏷️rekinds-fast-1                 |
       | rename-puzzle5d               | 🏷️rename-puzzle5d/📃️relabels-document                   |
-      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering           |
-      | change-description            | 🗒️change-description/📝️rewrites-description             |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
+      | change-domain                 | 🌐change-domain/⚙️architecture           |
+      | change-description            | 🗒️change-description/📝️rewrites             |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds           |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes     |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null         |
       | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2               |
       | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1               |
       | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                   |
       | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z              |
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides          |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks          |
       | drag-selection2d             | ✋️drag-selection2d/✋️drags-two-parts                  |
-      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags-part-and-volume            |
-      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns-part-and-volume          |
-      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales-parts-and-volume         |
+      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags            |
+      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns          |
+      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales         |
 
   @id-inverse
   @level-exhaustive
@@ -144,9 +144,9 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
     Examples:
       | id                            | vector                                                       |
       | create-part                   | 🌱create-part/🌱️appends-part-c                          |
-      | delete-part                   | 🗑️delete-part/🚫️removes-part-a-and-severs-fastener      |
+      | delete-part                   | 🗑️delete-part/🚫️removes      |
       | move-part2d                   | 📍move-part2d/📍️moves-part-a                            |
-      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle-to-rectangle         |
+      | replace-part2d-geometry       | 🧊replace-part2d-geometry/🔳️circle         |
       | edit-part2d-text              | ✏️edit-part2d-text/✏️retitles-part-a                   |
       | change-part2d-icon            | 🎨change-part2d-icon/🎨️swaps-icon                       |
       | change-part2d-hidden          | 🙈change-part2d-hidden/🙈️hides-part-a                   |
@@ -159,29 +159,29 @@ Feature: Apply every typed puzzle5d assembly mutation twice — once in Rust, on
       | change-part-kind              | 🏗️change-part-kind/🏷️reassigns-kind                     |
       | change-part-anchor            | ⚓change-part-anchor/⚓️fixed-to-derived                 |
       | add-part-grip                 | ➕add-part-grip/✊️appends-grip-3                        |
-      | remove-part-grip              | ➖remove-part-grip/🚫️removes-grip-1-and-severs-fastener |
+      | remove-part-grip              | ➖remove-part-grip/🚫️removes |
       | replace-part-grip             | 🔌replace-part-grip/🏷️rekinds-grip-1                    |
       | connect-grips                 | 🪢️connect-grips/🔩️adds-second-fastener                  |
       | disconnect-grips              | ✂️disconnect-grips/🚫️removes-fast-1                    |
-      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions-fast-1        |
+      | replace-fastener-geometry     | 🧮replace-fastener-geometry/📍️repositions        |
       | change-fastener-kind          | 🎯change-fastener-kind/🏷️rekinds-fast-1                 |
       | rename-puzzle5d               | 🏷️rename-puzzle5d/📃️relabels-document                   |
-      | change-domain                 | 🌐change-domain/⚙️architecture-to-engineering           |
-      | change-description            | 🗒️change-description/📝️rewrites-description             |
-      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds-grip-pair           |
-      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes-grip-pair     |
-      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null-catalogs-is-noop         |
+      | change-domain                 | 🌐change-domain/⚙️architecture           |
+      | change-description            | 🗒️change-description/📝️rewrites             |
+      | connect-kind-compatibility    | 🤝connect-kind-compatibility/🤝️adds           |
+      | disconnect-kind-compatibility | 💔disconnect-kind-compatibility/🚫️removes     |
+      | replace-kind-catalogs         | 📚replace-kind-catalogs/📇️null         |
       | create-target-volume          | 🌍create-target-volume/🧊️appends-volume-2               |
       | delete-target-volume          | 🪦delete-target-volume/🚫️removes-volume-1               |
       | move-target-volume            | 🚀move-target-volume/⬆️lifts-volume-1                   |
       | rotate-target-volume          | 🌀rotate-target-volume/🔄️half-turn-about-z              |
       | scale-target-volume           | 📐scale-target-volume/📏️per-axis-to-uniform             |
-      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides-volume-1          |
-      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks-volume-1          |
+      | change-target-volume-hidden   | 🙈change-target-volume-hidden/🙈️hides          |
+      | change-target-volume-locked   | 🔐change-target-volume-locked/🔒️locks          |
       | drag-selection2d             | ✋️drag-selection2d/✋️drags-two-parts                  |
-      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags-part-and-volume            |
-      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns-part-and-volume          |
-      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales-parts-and-volume         |
+      | drag-selection3d             | 🚚️drag-selection3d/🚚️drags            |
+      | rotate-selection3d           | 🔄️rotate-selection3d/🔄️turns          |
+      | scale-selection3d            | 🔍️scale-selection3d/🔍️scales         |
 
   @id-identity-round-trip
   @level-long

@@ -1903,7 +1903,7 @@ struct EnergyModelStorePreparation {
 /// 🧾️ One retained document edit, authored exactly as the store's live authority describes it.
 fn energy_model_retained_edit<M>(id: String, authority: &store::ArtifactStoreOneItemLiveAuthority, forwards: Vec<M>, inverse: Vec<M>, description: Option<String>) -> protocol::Edit<M> {
     let mutation_id = protocol::MutationId(format!("{id}#0"));
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id,
         actor: Some(authority.actor().to_string()),
         forwards,

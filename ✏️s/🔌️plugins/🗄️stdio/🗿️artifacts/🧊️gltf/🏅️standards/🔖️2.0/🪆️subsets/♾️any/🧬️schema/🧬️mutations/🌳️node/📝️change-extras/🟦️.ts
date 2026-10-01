@@ -8,7 +8,7 @@ export type GltfDataPresence =
   | { state: "present"; value: GltfJson };
 
 export interface GltfChangeNodeExtraDataPayload {
-  node: number;
+  node: bigint;
   data: GltfDataPresence;
 }
 

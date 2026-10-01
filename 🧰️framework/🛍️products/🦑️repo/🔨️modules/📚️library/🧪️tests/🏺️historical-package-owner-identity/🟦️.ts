@@ -155,12 +155,14 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const root = mkdtempSync(join(ticketRoot, "🧪️purity-transaction-"));
   const write = (path: string, bytes: string | Buffer) => { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), bytes); };
   const git = (args: string[]) => { const run = Bun.spawnSync(["git", ...args], { cwd: root, stdout: "pipe", stderr: "pipe" }); if (run.exitCode) throw new Error(run.stderr.toString()); return run.stdout.toString().trim(); };
-  const taxonomy = probeClone(loadCatalogTaxonomy());
+  const base = probeClone(loadCatalogTaxonomy());
+  const { commandBundle, members } = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/🖍️draw-source-scenario/🔣️.json"), "utf8")) as { commandBundle: { directoryKinds: Taxonomy["semanticDirectoryKinds"]; descendantContract: Taxonomy["semanticDescendantContracts"][string] }; members: readonly { path: string; content: string }[] };
+  const taxonomy: ProbeTaxonomy = { ...base, semanticDirectoryKinds: { ...base.semanticDirectoryKinds, ...commandBundle.directoryKinds }, semanticDescendantContracts: { ...base.semanticDescendantContracts, "draw-editor-command-bundle-v1": commandBundle.descendantContract } };
   const schemaPath = golden.taxonomy.path;
   const historyPath = relative(repoRoot, goldenPath).replaceAll("\\", "/");
   const catalog = JSON.parse(readFileSync(join(libraryRoot, "🧫️fixtures/📐️cad-draw-path-projection/🔣️.json"), "utf8"));
   const projection = catalog.projections[1];
-  for (const row of projection.mappings) write(row.sourcePath, row.sourcePath === golden.mappings[29][0] ? sourceBytes() : row.sourcePath.endsWith("Cargo.toml") ? vector.fixture.manifest : "pub fn fixture() -> usize { 1 }\n");
+  for (const row of projection.mappings) write(row.sourcePath, row.sourcePath === golden.mappings[29][0] ? sourceBytes() : row.sourcePath.endsWith("Cargo.toml") ? vector.fixture.manifest : row.sourcePath.endsWith("/📜️script.ts") ? members.find(({ path }) => `${projection.sourceRoot}/${path}` === row.sourcePath)!.content : "pub fn fixture() -> usize { 1 }\n");
   delete taxonomy.generatorContracts["plugin-registry"]!.inputDiscovery;
   taxonomy.generatorContracts["plugin-registry"]!.inputPatterns = ["🧪️unrelated-input"];
   taxonomy.frozenCoordinateEvidenceContracts = { ...taxonomy.frozenCoordinateEvidenceContracts, "remaining-package-purity-history-v1": { path: historyPath, sha256: sha(goldenBytes), schemaVersion: 1, coordinates: vector.historicalCoordinates } };
@@ -177,7 +179,7 @@ test("genuine historical census remains unchanged through a scoped Draw transact
   const plan = (scope: string) => planTaxonomy(inventoryTaxonomy({ repoRoot: root, scope, workers: 1 }), { baselineCommit, excludedTreeDigests: [] });
   const source = plan(projection.sourceRoot);
   expect(source.unresolved.filter((row) => row.severity === "error")).toEqual([]);
-  expect(source.moves).toHaveLength(11);
+  expect(source.moves.map(({ sourcePath, destinationPath }) => ({ sourcePath, destinationPath }))).toEqual(projection.mappings);
   expect(source.regenerations).toHaveLength(0);
   expect(source.edits.filter((row) => row.path === historyPath)).toHaveLength(0);
   expect(source.edits.filter((row) => row.path === "🔣️neighbor.json")).toHaveLength(1);

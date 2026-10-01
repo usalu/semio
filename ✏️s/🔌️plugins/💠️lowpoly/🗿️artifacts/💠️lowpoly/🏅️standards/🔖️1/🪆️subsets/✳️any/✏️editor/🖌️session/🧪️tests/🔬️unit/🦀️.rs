@@ -1,74 +1,44 @@
 use super::*;
 use crate::schema::default_snapshot;
 
+fn stroke_gesture(object_id: &str, u: f32) -> LowpolyPaintGesture {
+    LowpolyPaintGesture {
+        states: vec!["streaming".into()],
+        authoring_seed: "seed".into(),
+        base_revision: "00".into(),
+        transaction: protocol::TransactionRef { id: "tx-0000000000000001".into(), tool: "s.lowpoly.lowpoly@1/*#editor#paint".into() },
+        leaf: LowpolyMutation::ApplyPaintStroke(crate::mutations::apply_paint_stroke::ApplyPaintStroke { object_id: object_id.into(), layer_index: 0, eraser: false, color: [200, 30, 30, 255], radius: 4.0, hardness: 1.0, opacity: 1.0, points: vec![[u, 0.5]] }),
+    }
+}
+
+/// 🫧️ The transient's pack and its scratch rehydration are exact: an open paint gesture survives both, and a
+/// republished cache never drops it.
 #[test]
-fn transient_schema_pack_and_typed_scratch_round_trip_exactly() {
-    let transient = LowpolyTransient::default();
+fn transient_pack_and_scratch_round_trip_exactly() {
+    let transient = LowpolyTransient::default().with_paint("lowpoly-main", Some(stroke_gesture("obj-1", 0.5)));
     let pack = transient.encode_pack();
     assert_eq!(LowpolyTransient::decode_pack(&pack).expect("transient pack"), transient);
-    let mut scratch = LowpolyScratch::from_transient(&transient, LowpolySelection::default()).expect("typed transient");
-    scratch.begin_stroke_drag();
-    let next = scratch.transient_snapshot().expect("typed transient snapshot");
-    let restored = LowpolyScratch::from_transient(&next, LowpolySelection::default()).expect("typed transient restore");
-    assert!(restored.stroke_drag_active());
-    assert_eq!(restored.mesh_workspace_map(), scratch.mesh_workspace_map());
+    let scratch = LowpolyScratch::from_transient(&transient, LowpolySelection::default());
+    assert_eq!(scratch.transient_snapshot(), transient, "the scratch republishes the gesture it rehydrated");
 }
 
+/// 🪟️ Paint gestures are keyed by their owning window: clearing one leaves the other, and the mesh root stays shared.
 #[test]
-fn gesture_lifecycle_transitions_share_the_immutable_mesh_root() {
+fn paint_gestures_are_keyed_by_window_and_share_the_mesh_root() {
     let transient = LowpolyTransient::with_test_workspace_bytes(LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
-    let paint = transient.begin_stroke_drag();
-    let transform = transient.begin_transform_drag();
-    let reset = transient.reset_gestures();
-    assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &paint.state.mesh_workspace));
-    assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &transform.state.mesh_workspace));
-    assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &reset.state.mesh_workspace));
-    assert!(paint.state.stroke_drag_active && transform.state.transform_drag_active);
-    assert!(!reset.state.stroke_drag_active && !reset.state.transform_drag_active);
+    let both = transient.with_paint("lowpoly-main", Some(stroke_gesture("obj-1", 0.25))).with_paint("lowpoly-uv", Some(stroke_gesture("obj-1", 0.75)));
+    let uv_only = both.with_paint("lowpoly-main", None);
+    assert!(Arc::ptr_eq(&transient.state.mesh_workspace, &uv_only.state.mesh_workspace), "a paint gesture never copies the mesh root");
+    assert!(uv_only.paint("lowpoly-main").is_none());
+    assert_eq!(uv_only.paint("lowpoly-uv"), both.paint("lowpoly-uv"));
 }
 
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_is_none_without_an_active_transform_drag() {
-    let scratch = LowpolyScratch::default();
-    assert!(scratch.gesture_preview().is_none(), "no live gumball drag, nothing to preview");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_reflects_the_live_gumball_drag_and_clears_on_commit() {
-    let mut scratch = LowpolyScratch::default();
-    let projection = default_snapshot();
-    let config = LowpolyConfig::default();
-    scratch.set_transform_drag_active(true);
-
-    let tick_a = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.5, 0.0, 0.0)), "translate");
-    assert!(tick_a.artifact_mutations.is_empty(), "mid-drag ticks emit zero operations (scratch-commit pattern)");
-    let (key, seq_after_a, payload_a) = scratch.gesture_preview().expect("a live gumball drag is previewable");
-    assert_eq!(key, "gesture:transform");
-    let value_a: serde_json::Value = serde_json::from_slice(&payload_a).expect("payload is valid json");
-    assert_eq!(value_a["objectId"], serde_json::json!(projection.objects[0].id));
-    assert_ne!(value_a["patch"], Into::<serde_json::Value>::into(dsl::ToValue::to_value(&LowpolyObjectPatch::default())), "the patch anchored to the drag-start snapshot must reflect the first tick");
-
-    let tick_b = scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(0.25, 0.0, 0.0)), "translate");
-    assert!(tick_b.artifact_mutations.is_empty());
-    let (_, seq_after_b, payload_b) = scratch.gesture_preview().expect("still live mid-drag");
-    assert!(seq_after_b > seq_after_a, "seq is monotone per tick, for staleness detection on the receiving end");
-    assert_ne!(payload_a, payload_b, "the base-anchored patch accumulates both ticks, not just the latest one");
-
-    let end = scratch.commit_transform();
-    assert_eq!(end.artifact_mutations.len(), 1, "the whole drag commits as exactly one real operation");
-    assert!(scratch.gesture_preview().is_none(), "the drag ended: nothing left to preview, and the commit above already carried the real operation");
-}
-
-#[semio_framework_async_macros::async_test]
-async fn gesture_preview_is_a_pure_read_never_mutating_the_transform_session() {
-    let mut scratch = LowpolyScratch::default();
-    let projection = default_snapshot();
-    let config = LowpolyConfig::default();
-    scratch.set_transform_drag_active(true);
-    scratch.transform_selection(&projection, &config, "mesh", vec![], Transform::Translate(Vec3::new(1.0, 0.0, 0.0)), "translate");
-    let object_id = scratch.transform.as_ref().unwrap().object_id.clone();
-    let mesh_before = scratch.transform.as_ref().unwrap().doc.mesh_workspace().get(&object_id).cloned();
-    let _ = scratch.gesture_preview();
-    let _ = scratch.gesture_preview();
-    assert_eq!(scratch.transform.as_ref().unwrap().doc.mesh_workspace().get(&object_id).cloned(), mesh_before, "gesture_preview must never mutate the live transform scratch it reads");
+/// 👁️ The preview applies every window's provisional leaf and is `None` without an open gesture.
+#[test]
+fn paint_preview_applies_every_open_leaf() {
+    let document = default_snapshot();
+    assert!(LowpolyTransient::default().paint_preview(&document).is_none(), "nothing open, nothing to preview");
+    let preview = LowpolyTransient::default().with_paint("lowpoly-main", Some(stroke_gesture("obj-1", 0.5))).paint_preview(&document).expect("an open stroke previews");
+    assert_ne!(preview.objects[0].paint_layers[0].materialized_pixels(), document.objects[0].paint_layers[0].materialized_pixels(), "the provisional dab shows");
+    assert_eq!(preview.objects[0].mesh_content, document.objects[0].mesh_content, "a paint preview never touches the mesh");
 }

@@ -1,3 +1,4 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧊️ wfc3d snapshot — the persisted WFC problem over an arbitrary 3d slot graph. Mirrors the Rust
  * `🦀️.rs` sibling; `TileMedia3d` is INTERNALLY tagged on `kind` (`#[value(tag = "kind")]`), so a
  * medium rides as `{ kind, ...its own fields }`. */
@@ -28,24 +29,24 @@ export interface ArtifactChildHandle {
 }
 
 export type TileMedia3d =
-  | { kind: "mesh"; positions: number[]; indices: number[]; color?: Color }
+  | { kind: "mesh"; positions: Binary64[]; indices: number[]; color?: Color }
   | { kind: "meshChild"; child: ArtifactChildHandle };
 
 export interface Tile {
   id: string;
   label?: string;
-  weight: number;
+  weight: Binary64;
   media: TileMedia3d;
 }
 
 export interface Slot3d {
   id: string;
-  x: number;
-  y: number;
-  z: number;
-  width: number;
-  height: number;
-  depth: number;
+  x: Binary64;
+  y: Binary64;
+  z: Binary64;
+  width: Binary64;
+  height: Binary64;
+  depth: Binary64;
   pinnedTileId?: string;
 }
 
@@ -71,7 +72,7 @@ export interface Wfc3dSnapshot {
   /** @state artifact */
   schema: string;
   /** @state artifact */
-  seed: number;
+  seed: bigint;
   /** @state artifact */
   slots: Slot3d[];
   /** @state artifact */

@@ -100,35 +100,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
           "bytes": 3
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4b691502f82471d3b7b64b676dbf0ff53138a635959f0361250115e4341da872",
           "bytes": 50
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
           "bytes": 3
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/📸️replace/✅️replace/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:ca3d163bab055381827226140568f3bef7eaac187cebd76878e0b63e9e442356",
           "bytes": 3
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/📸️replace-presence/✅️replace-presence-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/📸️replace/✅️replace/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

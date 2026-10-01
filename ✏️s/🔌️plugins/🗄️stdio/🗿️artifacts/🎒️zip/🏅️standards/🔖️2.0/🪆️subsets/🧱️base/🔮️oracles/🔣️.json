@@ -105,7 +105,7 @@
           "scenarios": [
             {
               "id": "extends-the-readme-and-adds-a-version-member",
-              "directoryName": "📖️extends-the-readme-and-adds-a-version-member"
+              "directoryName": "📖️extends"
             }
           ]
         }

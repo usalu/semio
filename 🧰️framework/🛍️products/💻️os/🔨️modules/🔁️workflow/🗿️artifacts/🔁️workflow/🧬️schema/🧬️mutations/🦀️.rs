@@ -22,6 +22,8 @@ mod connect_ports;
 mod disconnect_edge;
 #[path = "↔️move-node/🦀️.rs"]
 mod move_node;
+#[path = "🚚️move-nodes/🦀️.rs"]
+mod move_nodes;
 #[path = "🚮remove-input/🦀️.rs"]
 mod remove_input;
 #[path = "🗑️remove-node/🦀️.rs"]
@@ -36,6 +38,8 @@ mod unbind_input;
 mod unbind_output;
 #[path = "🔓unbind-parameter-field/🦀️.rs"]
 mod unbind_parameter_field;
+#[path = "📍️set-node-positions/🦀️.rs"]
+mod set_node_positions;
 #[path = "🔄update-node-ports/🦀️.rs"]
 mod update_node_ports;
 
@@ -49,10 +53,12 @@ pub use change_parameter::ChangeParameter;
 pub use connect_ports::ConnectPorts;
 pub use disconnect_edge::DisconnectEdge;
 pub use move_node::MoveNode;
+pub use move_nodes::MoveNodes;
 pub use remove_input::RemoveInput;
 pub use remove_node::RemoveNode;
 pub use remove_parameter::RemoveParameter;
 pub use rename_node::RenameNode;
+pub use set_node_positions::{SetNodePositions, WorkflowNodePosition};
 pub use unbind_input::UnbindInput;
 pub use unbind_output::UnbindOutput;
 pub use unbind_parameter_field::UnbindParameterField;
@@ -82,8 +88,30 @@ pub enum WorkflowMutation {
     UnbindInput(UnbindInput),
     BindOutput(BindOutput),
     UnbindOutput(UnbindOutput),
+    MoveNodes(MoveNodes),
+    SetNodePositions(SetNodePositions),
 }
 //#endregion 🔖️Aggregate
+
+//#region 🔖️GestureLeaves
+/// 🔢️ A label number in both languages: at most three decimals, a decimal comma in German.
+pub(super) fn workflow_label_number(value: f64) -> (String, String) {
+    let english = format!("{}", (value * 1_000.0).round() / 1_000.0);
+    let german = english.replace('.', ",");
+    (english, german)
+}
+
+/// 🧱️ The payload-intrinsic target law every multi-node leaf states in its schema: at least one node, each once.
+pub(super) fn workflow_targets_invariant(targets: &[String]) -> Result<(), &'static str> {
+    if targets.is_empty() || targets.iter().any(String::is_empty) {
+        return Err("a multi-node leaf names at least one non-empty workflow node");
+    }
+    if targets.iter().enumerate().any(|(at, id)| targets[..at].contains(id)) {
+        return Err("a multi-node leaf names each workflow node once");
+    }
+    Ok(())
+}
+//#endregion 🔖️GestureLeaves
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]

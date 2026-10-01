@@ -2,7 +2,7 @@
 
 use super::HomeTransient;
 
-#[path = "📬️apply-directory-page/🦀️.rs"]
+#[path = "📬️apply-directory/🦀️.rs"]
 mod apply_directory_page;
 pub use apply_directory_page::ApplyDirectoryPage;
 

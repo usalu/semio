@@ -30,12 +30,12 @@ Feature: Apply every typed note document canvas mutation twice — once in Rust,
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                       | vector                                                       |
-      | change-grid-visible      | 👁️change-grid-visible/🙈️hides-the-grid                 |
-      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens-grid-spacing            |
-      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles-grid-subdivisions |
-      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises-grid-opacity            |
+      | change-grid-visible      | 👁️change-grid-visible/🙈️hides                 |
+      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens            |
+      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles |
+      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises            |
       | change-snap-enabled      | 🧲️change-snap-enabled/🧲️enables-snap                   |
-      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves-snap-grid-spacing  |
+      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves  |
 
   @id-inverse
   @level-exhaustive
@@ -50,9 +50,9 @@ Feature: Apply every typed note document canvas mutation twice — once in Rust,
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                       | vector                                                       |
-      | change-grid-visible      | 👁️change-grid-visible/🙈️hides-the-grid                 |
-      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens-grid-spacing            |
-      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles-grid-subdivisions |
-      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises-grid-opacity            |
+      | change-grid-visible      | 👁️change-grid-visible/🙈️hides                 |
+      | change-grid-spacing      | 📏️change-grid-spacing/📏️widens            |
+      | change-grid-subdivisions | 🔢️change-grid-subdivisions/🔢️doubles |
+      | change-grid-opacity      | 🌫️change-grid-opacity/🌫️raises            |
       | change-snap-enabled      | 🧲️change-snap-enabled/🧲️enables-snap                   |
-      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves-snap-grid-spacing  |
+      | change-snap-grid-spacing | 📐️change-snap-grid-spacing/📐️halves  |

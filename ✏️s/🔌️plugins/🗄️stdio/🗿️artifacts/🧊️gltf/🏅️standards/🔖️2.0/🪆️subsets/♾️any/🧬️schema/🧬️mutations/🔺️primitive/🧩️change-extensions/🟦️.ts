@@ -8,8 +8,8 @@ export type GltfDataPresence =
   | { state: "present"; value: GltfJson };
 
 export interface GltfChangePrimitiveExtensionDataPayload {
-  mesh: number;
-  primitive: number;
+  mesh: bigint;
+  primitive: bigint;
   data: GltfDataPresence;
 }
 

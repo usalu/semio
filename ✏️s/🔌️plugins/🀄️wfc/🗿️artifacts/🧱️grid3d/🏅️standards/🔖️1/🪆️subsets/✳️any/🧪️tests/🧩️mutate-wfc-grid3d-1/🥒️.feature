@@ -32,20 +32,20 @@ Feature: Apply every typed grid3d mutation twice — once in Rust, once in Pytho
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                 | vector                                             |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99     |
+      | change-seed        | 🎲️change-seed/🎲️reseeds     |
       | resize-grid        | 📐️resize-grid/📐️grows-the-grid-to-3x2x2            |
-      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches-the-x-axis-columns |
+      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches |
       | change-periodicity | 🔁️change-periodicity/🔁️wraps-the-x-axis            |
       | create-tile        | 🧱️create-tile/🧱️adds-the-roof-tile                 |
-      | delete-tile        | 🕳️delete-tile/🕳️removes-the-air-tile-and-cascades  |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias   |
-      | change-tile-media  | 🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh  |
+      | delete-tile        | 🕳️delete-tile/🕳️removes  |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises   |
+      | change-tile-media  | 🖼️change-tile-media/🖼️replaces  |
       | create-rule        | 🚦️create-rule/🚦️allows-air-above-air               |
-      | delete-rule        | ❌️delete-rule/❌️removes-the-floor-wall-rule        |
+      | delete-rule        | ❌️delete-rule/❌️removes        |
       | pin-cell           | 📌️pin-cell/📌️pins-the-far-cell-to-wall             |
       | unpin-cell         | 📍️unpin-cell/📍️releases-the-origin-cell            |
-      | mask-cell          | 🚫️mask-cell/🚫️carves-out-the-far-edge-cell         |
-      | unmask-cell        | 🔓️unmask-cell/🔓️restores-the-masked-corner         |
+      | mask-cell          | 🚫️mask-cell/🚫️carves         |
+      | unmask-cell        | 🔓️unmask-cell/🔓️restores         |
 
   @id-inverse
   @level-exhaustive
@@ -67,17 +67,17 @@ Feature: Apply every typed grid3d mutation twice — once in Rust, once in Pytho
     And the reference's own inverse of the committed mutation restores the before-snapshot exactly
     Examples:
       | id                 | vector                                             |
-      | change-seed        | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99     |
+      | change-seed        | 🎲️change-seed/🎲️reseeds     |
       | resize-grid        | 📐️resize-grid/📐️grows-the-grid-to-3x2x2            |
-      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches-the-x-axis-columns |
+      | change-cell-sizes  | 📏️change-cell-sizes/📏️stretches |
       | change-periodicity | 🔁️change-periodicity/🔁️wraps-the-x-axis            |
       | create-tile        | 🧱️create-tile/🧱️adds-the-roof-tile                 |
-      | delete-tile        | 🕳️delete-tile/🕳️removes-the-air-tile-and-cascades  |
-      | change-tile-weight | ⚖️change-tile-weight/⚖️raises-the-wall-tile-bias   |
-      | change-tile-media  | 🖼️change-tile-media/🖼️replaces-the-wall-tile-mesh  |
+      | delete-tile        | 🕳️delete-tile/🕳️removes  |
+      | change-tile-weight | ⚖️change-tile-weight/⚖️raises   |
+      | change-tile-media  | 🖼️change-tile-media/🖼️replaces  |
       | create-rule        | 🚦️create-rule/🚦️allows-air-above-air               |
-      | delete-rule        | ❌️delete-rule/❌️removes-the-floor-wall-rule        |
+      | delete-rule        | ❌️delete-rule/❌️removes        |
       | pin-cell           | 📌️pin-cell/📌️pins-the-far-cell-to-wall             |
       | unpin-cell         | 📍️unpin-cell/📍️releases-the-origin-cell            |
-      | mask-cell          | 🚫️mask-cell/🚫️carves-out-the-far-edge-cell         |
-      | unmask-cell        | 🔓️unmask-cell/🔓️restores-the-masked-corner         |
+      | mask-cell          | 🚫️mask-cell/🚫️carves         |
+      | unmask-cell        | 🔓️unmask-cell/🔓️restores         |

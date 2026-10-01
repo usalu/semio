@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "appends-a-second-frame-at-the-end",
-              "directoryName": "🆕️appends-a-second-frame-at-the-end"
+              "directoryName": "🆕️appends"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "moves-the-last-frame-to-the-front",
-              "directoryName": "⏮️moves-the-last-frame-to-the-front"
+              "directoryName": "⏮️moves"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "removes-the-leading-frame",
-              "directoryName": "🚫️removes-the-leading-frame"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "removes-the-comment-entry-and-keeps-the-author-entry",
-              "directoryName": "💬️removes-the-comment-entry-and-keeps-the-author-entry"
+              "directoryName": "💬️removes"
             }
           ]
         },
@@ -107,7 +107,7 @@
           "scenarios": [
             {
               "id": "raises-the-source-bit-depth-to-sixteen",
-              "directoryName": "🔢️raises-the-source-bit-depth-to-sixteen"
+              "directoryName": "🔢️raises"
             }
           ]
         },
@@ -118,7 +118,7 @@
           "scenarios": [
             {
               "id": "records-the-source-colorspace-as-rgba",
-              "directoryName": "🌈️records-the-source-colorspace-as-rgba"
+              "directoryName": "🌈️records"
             }
           ]
         },
@@ -129,7 +129,7 @@
           "scenarios": [
             {
               "id": "widens-the-frameless-canvas-to-four-by-two",
-              "directoryName": "↔️widens-the-frameless-canvas-to-four-by-two"
+              "directoryName": "↔️widens"
             }
           ]
         },
@@ -140,7 +140,7 @@
           "scenarios": [
             {
               "id": "slows-the-second-frame-down",
-              "directoryName": "⏳️slows-the-second-frame-down"
+              "directoryName": "⏳️slows"
             }
           ]
         },
@@ -151,7 +151,7 @@
           "scenarios": [
             {
               "id": "repaints-the-only-frame-black",
-              "directoryName": "⬛️repaints-the-only-frame-black"
+              "directoryName": "⬛️repaints"
             }
           ]
         },
@@ -162,7 +162,7 @@
           "scenarios": [
             {
               "id": "attaches-an-icc-profile-where-there-was-none",
-              "directoryName": "🎨️attaches-an-icc-profile-where-there-was-none"
+              "directoryName": "🎨️attaches"
             }
           ]
         },
@@ -173,7 +173,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-existing-author-entry",
-              "directoryName": "✍️rewrites-the-existing-author-entry"
+              "directoryName": "✍️rewrites"
             }
           ]
         },
@@ -184,7 +184,7 @@
           "scenarios": [
             {
               "id": "retargets-the-document-onto-a-grayscale-sixteen-bit-variant",
-              "directoryName": "⚫️retargets-the-document-onto-a-grayscale-sixteen-bit-variant"
+              "directoryName": "⚫️retargets"
             }
           ]
         }

@@ -1,6 +1,24 @@
 use super::*;
 
 #[test]
+fn intrinsic_bytes_survive_action_publication_and_refuse_exhausted_credits() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    let mut queue = BoundedActionQueue::default();
+    for row in fixture["cases"].as_array().unwrap() {
+        let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
+        let expected = DslValue::Object(vec![("octets".into(), DslValue::Bytes(bytes.clone()))]);
+        let mut reservation = queue.reserve("c", "a", bytes.len() + 8).unwrap();
+        reservation.builder().value(None, &expected).unwrap();
+        reservation.publish().unwrap();
+        assert_eq!(queue.pop_front().unwrap().into_descriptor().unwrap().args, Some(expected));
+    }
+    let mut reservation = queue.reserve("c", "a", 4).unwrap();
+    assert_eq!(reservation.builder().value(None, &DslValue::Bytes(vec![0, 255, 1])), Err(BoundedActionFault::ByteCredits));
+    assert_eq!(reservation.publish(), Err(BoundedActionFault::ByteCredits));
+    assert!(queue.is_empty());
+}
+
+#[test]
 fn retained_string_action_pages_a_large_utf8_value_and_publishes_once() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📦️retained-string-action/🔣️.json")).unwrap();
     let bytes = fixture["largeDraftBytes"].as_u64().unwrap() as usize;

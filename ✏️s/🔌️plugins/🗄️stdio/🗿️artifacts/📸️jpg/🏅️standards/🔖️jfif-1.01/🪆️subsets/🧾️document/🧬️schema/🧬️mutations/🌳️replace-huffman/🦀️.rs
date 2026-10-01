@@ -1,0 +1,73 @@
+//! 🧬️ Authoritative replace-huffman-table mutation.
+use crate::schema::diff::*;
+use crate::schema::mutations::JpgMutation;
+use crate::schema::snapshot::*;
+
+//#region Payload
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf)]
+#[mutation_leaf(contract = ::protocol)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+pub struct ReplaceHuffmanTableMutation {
+    pub table: JpgHuffmanTable,
+}
+//#endregion Payload
+
+//#region Facets
+#[path = "💾️binary/🦀️.rs"]
+pub mod binary;
+#[path = "📝️text/🦀️.rs"]
+pub mod text;
+//#endregion Facets
+
+//#region Semantics
+impl protocol::MutationKind<JpgSnapshot, JpgMutation> for ReplaceHuffmanTableMutation {
+    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "huffman-table", kind: "replace-huffman-table", record: "ReplaceHuffmanTable" };
+    fn diff(&self, base: &JpgSnapshot) -> protocol::MutationOutcome<JpgDiff> {
+        let Self { table } = self;
+        protocol::MutationOutcome::new(contribute(base, table.clone()))
+    }
+    fn inverse(&self, base: &JpgSnapshot) -> Vec<JpgMutation> {
+        let Self { table } = self;
+        let outcome = <Self as protocol::MutationKind<JpgSnapshot, JpgMutation>>::diff(self, base);
+        if <JpgDiff as protocol::DiffAlgebra<JpgSnapshot>>::is_empty(outcome.diff()) {
+            return Vec::new();
+        }
+        {
+            let key = JpgHuffmanTableKey { class: table.class, id: table.id };
+            match base.huffman_tables.iter().find(|t| t.class == key.class && t.id == key.id) {
+                Some(existing) => vec![JpgMutation::ReplaceHuffmanTable(ReplaceHuffmanTableMutation { table: existing.clone() })],
+                None => vec![JpgMutation::RemoveHuffmanTable(crate::schema::mutations::RemoveHuffmanTableMutation { key })],
+            }
+        }
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        protocol::LocalizedLabel::native("Replace huffman table", "Huffman-Tabelle ersetzen")
+    }
+    fn target(&self) -> Vec<String> {
+        vec!["replace-huffman-table".into()]
+    }
+}
+pub fn contribute(base: &JpgSnapshot, table: JpgHuffmanTable) -> JpgDiff {
+    let key = huffman_key(&table);
+    let d = match base.huffman_tables.iter().find(|t| huffman_key(t) == key) {
+        Some(existing) => {
+            let fd = JpgHuffmanTableDiff::between(existing, &table);
+            if fd.is_empty() {
+                JpgHuffmanTablesDiff::default()
+            } else {
+                JpgHuffmanTablesDiff { removed: vec![], modified: vec![JpgHuffmanTableModified { key, diff: fd }], added: vec![] }
+            }
+        }
+        None => JpgHuffmanTablesDiff { removed: vec![], modified: vec![], added: vec![JpgHuffmanTableAdded { index: base.huffman_tables.len(), item: table }] },
+    };
+    JpgDiff { huffman_tables: (!d.is_empty()).then_some(d), ..Default::default() }
+}
+//#endregion Semantics
+
+#[cfg(test)]
+pub(crate) fn test_case() -> JpgMutation {
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌳️replace-huffman/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-huffman-table payload")
+}
+#[cfg(test)]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
+mod tests_direct_behavior;

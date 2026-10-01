@@ -1,14 +1,15 @@
+import type {Binary64} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 📐️ `change-node-transform` wire twin: the flat `Apply` payload `GltfTransformNodePayload` and the phase wire `ChangeNodeTransformMutation`, exactly as `./🦀️.rs` writes them.
  * @see ./🧬️schema/🔣️.json */
 import { gltfWireArray, gltfWireIndex, gltfWireLiteral, gltfWireNullable, gltfWireNumber, gltfWireObject, gltfWireRequired, gltfWireTagged, gltfWireTuple } from "../../../📸️snapshot/🟦️.ts";
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export type GltfNodeTransform =
-  | { kind: "matrix"; matrix: number[] }
-  | { kind: "trs"; translation: [number, number, number] | null; rotation: [number, number, number, number] | null; scale: [number, number, number] | null };
+  | { kind: "matrix"; matrix: Binary64[] }
+  | { kind: "trs"; translation: [Binary64, Binary64, Binary64] | null; rotation: [Binary64, Binary64, Binary64, Binary64] | null; scale: [Binary64, Binary64, Binary64] | null };
 
 export interface GltfTransformNodePayload {
-  node: number;
+  node: bigint;
   transform: GltfNodeTransform;
 }
 

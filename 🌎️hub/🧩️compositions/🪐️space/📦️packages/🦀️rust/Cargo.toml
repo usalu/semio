@@ -59,6 +59,8 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
 base64_codec = { path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
+semio-framework-artifact-workflow-workflow = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { path = "../../../../../🧰️framework/🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-scene = { workspace = true }
 

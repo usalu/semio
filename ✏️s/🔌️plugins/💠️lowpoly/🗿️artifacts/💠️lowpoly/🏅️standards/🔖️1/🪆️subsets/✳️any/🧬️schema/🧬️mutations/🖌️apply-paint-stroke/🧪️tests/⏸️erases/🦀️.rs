@@ -1,0 +1,25 @@
+//! 🧪️ `apply-paint-stroke` fixture — `⏸️erases`.
+//!
+//! Source of truth is the committed JSON bundle, computed by the independent float32 brush in
+//! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/🧪️w3-t-spatial-lowpoly-paint.py`.
+//!
+//! ⏸️ An eraser dab over the already transparent second layer has no alpha left to remove: the stroke is a declared no-op.
+
+use super::laws;
+
+const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/⏸️erases/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/⏸️erases/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/⏸️erases/🦠️mutation/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️apply-paint-stroke/⏸️erases/🎯️outcome/🔣️.json");
+
+/// ⛔️ The refused or no-op stroke leaves the document byte-identical and emits the declared diagnostic.
+#[test]
+fn refusal_leaves_the_document_untouched() {
+    laws::refusal(BEFORE, MUTATION, AFTER, OUTCOME);
+}
+
+/// 🔣️ Every committed JSON file is canonical: decode→encode is a fixed point.
+#[test]
+fn committed_json_is_canonical() {
+    laws::canonical(BEFORE, AFTER, MUTATION, None);
+}

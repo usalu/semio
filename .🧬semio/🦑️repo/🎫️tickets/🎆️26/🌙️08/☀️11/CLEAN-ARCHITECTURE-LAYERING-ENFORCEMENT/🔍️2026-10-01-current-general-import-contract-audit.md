@@ -27,3 +27,7 @@ Generic tiled-map already uses its own `MapDescriptorJson`, while the actual GIS
 ## Current Execution Checkpoint
 
 The canonical four selected Cargo locks are refreshed, including concrete Stdio dev-only sha2/blake3 oracles. The exact owned GIS MCP scheduler49018 was verified by its process command and resumed after the TS executor authorized the safe workspace handoff. Native Stdio receipt and LAS graph execution remains coordinated with the plugin executor. Actual source publication four laws and registered publication runtime already passed; generated catalog inventory is still pending real current descriptor emission.
+
+## Fresh Public Surface Checkpoint
+
+A current read after concurrent ownership edits confirms `table_row_json` has no executable definition (one stale comment remains), `media_transport_contract_valid` is crate-private, and tiled-map `events` is private. This audit does not attribute those changes to this lane. Public generic MCP JSON interfaces remain in `🧵️bridge`, `📣️notify`, `⚠️errors`, `🗂️catalog`, `🐚️channel`, `📒️audit`, `🛡️policy`, and `🖥️ui`; their first-party public interface extraction remains separately outstanding. The newly authored Hub auth and installed-service callbacks expose first-party types, without solving the unrelated retained MCP interfaces.

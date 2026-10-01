@@ -1,12 +1,93 @@
 {
   "sources": [
-    {"id": "empty-source-manifest", "input": {"roots": [], "files": []}, "accepted": true, "files": []},
-    {"id": "duplicate-same-source-is-once", "input": {"roots": ["future"], "files": ["future/🟦️.tsx", "future/🟦️.tsx"]}, "accepted": true, "files": ["future/🟦️.tsx"]},
-    {"id": "case-colliding-source-refuses", "input": {"roots": ["future"], "files": ["future/A.tsx", "future/a.tsx"]}, "accepted": false, "files": []},
-    {"id": "noncanonical-source-refuses", "input": {"roots": ["future"], "files": ["future/é.tsx"]}, "accepted": false, "files": []},
-    {"id": "escaping-source-refuses", "input": {"roots": ["future"], "files": ["future/../other/🟦️.tsx"]}, "accepted": false, "files": []},
-    {"id": "absolute-source-refuses", "input": {"roots": ["future"], "files": ["/future/🟦️.tsx"]}, "accepted": false, "files": []},
-    {"id": "undeclared-source-field-refuses", "input": {"roots": [], "files": [], "legacy": true}, "accepted": false, "files": []}
+    {
+      "id": "empty-source-manifest",
+      "input": {
+        "roots": [],
+        "files": []
+      },
+      "accepted": true,
+      "files": []
+    },
+    {
+      "id": "duplicate-same-source-is-once",
+      "input": {
+        "roots": [
+          "future"
+        ],
+        "files": [
+          "future/🟦️.tsx",
+          "future/🟦️.tsx"
+        ]
+      },
+      "accepted": true,
+      "files": [
+        "future/🟦️.tsx"
+      ]
+    },
+    {
+      "id": "case-colliding-source-refuses",
+      "input": {
+        "roots": [
+          "future"
+        ],
+        "files": [
+          "future/A.tsx",
+          "future/a.tsx"
+        ]
+      },
+      "accepted": false,
+      "files": []
+    },
+    {
+      "id": "noncanonical-source-refuses",
+      "input": {
+        "roots": [
+          "future"
+        ],
+        "files": [
+          "future/é.tsx"
+        ]
+      },
+      "accepted": false,
+      "files": []
+    },
+    {
+      "id": "escaping-source-refuses",
+      "input": {
+        "roots": [
+          "future"
+        ],
+        "files": [
+          "future/../other/🟦️.tsx"
+        ]
+      },
+      "accepted": false,
+      "files": []
+    },
+    {
+      "id": "absolute-source-refuses",
+      "input": {
+        "roots": [
+          "future"
+        ],
+        "files": [
+          "/future/🟦️.tsx"
+        ]
+      },
+      "accepted": false,
+      "files": []
+    },
+    {
+      "id": "undeclared-source-field-refuses",
+      "input": {
+        "roots": [],
+        "files": [],
+        "legacy": true
+      },
+      "accepted": false,
+      "files": []
+    }
   ],
   "scopes": [
     {
@@ -106,61 +187,282 @@
     }
   ],
   "scans": [
-    {"id": "numeric-rgb-api-is-not-css", "roots": ["future"], "files": {"future/🟦️.ts": "export const white = rgb(1, 1, 1);"}, "expected": {"px": [], "color": []}},
-    {"id": "xml-character-reference-is-not-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const text = \"Widget &#169;\";"}, "expected": {"px": [], "color": []}},
-    {"id": "four-digit-alpha-color-is-raw", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"#1234\";"}, "expected": {"px": [], "color": ["raw-hex-color"]}},
-    {"id": "five-digit-hash-is-not-css-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const text = \"#12345\";"}, "expected": {"px": [], "color": []}},
-    {"id": "inline-comment-is-not-style", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"bg-background\"; /* #123456 */"}, "expected": {"px": [], "color": []}},
-    {"id": "multiline-comment-is-not-style", "roots": ["future"], "files": {"future/🟦️.ts": "/*\n#123456\n*/\nexport const style = \"bg-background\";"}, "expected": {"px": [], "color": []}},
-    {"id": "escaped-color-is-still-color", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"\\u0023123456\";"}, "expected": {"px": [], "color": ["raw-hex-color"]}},
-    {"id": "escaped-sizing-is-still-sizing", "roots": ["future"], "files": {"future/🟦️.ts": "export const style = \"w-\\u005b13px]\";"}, "expected": {"px": ["tailwind-arbitrary-px"], "color": []}},
+    {
+      "id": "rust-quote-character-does-not-hide-next-style",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🦀️.rs": "let q = '\"';\nlet c = \"#abc\";"
+      },
+      "expected": {
+        "px": [],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "statement-regex-is-not-a-style-literal",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "if (ok) /\"#abc\"/.test(value);"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "nested-control-regex-is-not-a-style-literal",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "if (test(\"(\")) /* comment */ /\"#abc\"/.test(value);"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "numeric-rgb-api-is-not-css",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const white = rgb(1, 1, 1);"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "xml-character-reference-is-not-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const text = \"Widget &#169;\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "four-digit-alpha-color-is-raw",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const style = \"#1234\";"
+      },
+      "expected": {
+        "px": [],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "five-digit-hash-is-not-css-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const text = \"#12345\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "inline-comment-is-not-style",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const style = \"bg-background\"; /* #123456 */"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "multiline-comment-is-not-style",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "/*\n#123456\n*/\nexport const style = \"bg-background\";"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "escaped-color-is-still-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const style = \"\\u0023123456\";"
+      },
+      "expected": {
+        "px": [],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "escaped-sizing-is-still-sizing",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.ts": "export const style = \"w-\\u005b13px]\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": []
+      }
+    },
     {
       "id": "palette-role-authors-color-but-not-sizing",
-      "roots": ["future"],
-      "files": {"future/🎨️palette/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🎨️palette/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": []
+      }
     },
     {
       "id": "hairline-utility-does-not-exempt-other-sizing",
-      "roots": ["future"],
-      "files": {"future/🟦️.tsx": "export const style = \"h-px w-[13px]\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "export const style = \"h-px w-[13px]\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": []
+      }
     },
     {
-      "id": "unbounded-radius-does-not-exempt-other-sizing",
-      "roots": ["future"],
-      "files": {"future/🟦️.tsx": "export const style = \"rounded-[9999px] w-[13px]\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": []}
+      "id": "oversized-radius-pixel-is-not-exempt",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "export const style = \"rounded-[9999px]\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": []
+      }
     },
     {
       "id": "application-expectation-does-not-exempt-style",
-      "roots": ["future"],
-      "files": {"future/🟦️.tsx": "expect(\"w-[13px] #123456\");"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "expect(\"w-[13px] #123456\");"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
     },
     {
       "id": "pixel-comment-is-not-a-class",
-      "roots": ["future"],
-      "files": {"future/🟦️.tsx": "// reference w-[13px]"},
-      "expected": {"px": [], "color": []}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "// reference w-[13px]"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
     },
     {
       "id": "preview-scope-enforces-pixel-sizing",
-      "roots": ["future"],
-      "files": {"future/.storybook/preview.tsx": "export const style = \"w-[13px] #123456\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/.storybook/preview.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
     },
     {
       "id": "ascii-fixture-name-has-no-data-authority",
-      "roots": ["future"],
-      "files": {"future/fixture/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/fixture/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
     },
     {
       "id": "renderer-module-name-has-no-color-exemption",
-      "roots": ["future"],
-      "files": {"future/renderer-modules/🟦️.tsx": "export const style = \"w-[13px] #123456\";"},
-      "expected": {"px": ["tailwind-arbitrary-px"], "color": ["raw-hex-color"]}
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/renderer-modules/🟦️.tsx": "export const style = \"w-[13px] #123456\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
     },
     {
       "id": "empty-scope-ignores-deleted-owner-sources",
@@ -299,6 +601,62 @@
       },
       "expected": {
         "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "rust-format-field-is-not-a-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🦀️.rs": "let label = format!(\"{:#010b}\", 3);"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "rust-raw-format-field-is-not-a-color",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🦀️.rs": "let label = format!(r#\"{:#010b}\"#, 3);"
+      },
+      "expected": {
+        "px": [],
+        "color": []
+      }
+    },
+    {
+      "id": "rust-format-preserves-literal-color-data",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🦀️.rs": "let label = format!(\"{{ #abc }} {:#010b}\", 3);"
+      },
+      "expected": {
+        "px": [],
+        "color": [
+          "raw-hex-color"
+        ]
+      }
+    },
+    {
+      "id": "oversized-width-pixel-is-not-exempt",
+      "roots": [
+        "future"
+      ],
+      "files": {
+        "future/🟦️.tsx": "export const style = \"w-[9999px]\";"
+      },
+      "expected": {
+        "px": [
+          "tailwind-arbitrary-px"
+        ],
         "color": []
       }
     }

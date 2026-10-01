@@ -1,6 +1,6 @@
 // 🧪️ Example `hex-ring` — the laws every bundled problem keeps, asserted against the TypeScript twin.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { orderedIndex, wfc2dRelations } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { applyWfc2dMutation, wfc2dInverse, type Wfc2dMutation } from "../../../../🧬️schema/🧬️mutations/🟦️.ts";

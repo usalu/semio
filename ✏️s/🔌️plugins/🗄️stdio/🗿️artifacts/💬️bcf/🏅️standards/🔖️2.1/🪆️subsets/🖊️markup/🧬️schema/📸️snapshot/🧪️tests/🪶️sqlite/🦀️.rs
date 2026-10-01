@@ -1,4 +1,45 @@
 use super::*;
+#[semio_framework_async_macros::async_test]
+async fn sqlite_snapshot_bcf_actual_erased_codec_preserves_every_owned_binary64_word() {
+    use semio_framework_os_kernel::{io::{ArtifactDialect, IoPayload}, sqlite_snapshot::SnapshotEncoding};
+    semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("BCF binary64 SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
+    let codec = store::document_codec("stdio.bcf").await.unwrap().unwrap();
+    let provider = codec.snapshot_sqlite.as_ref().unwrap();
+    let dialect = ArtifactDialect { artifact_kind: "s.stdio.bcf".into(), standard: "2.1".into(), subset: "*".into() };
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔢️binary64.json")).unwrap();
+    for word in corpus["ieee754Binary64Bits"].as_array().unwrap() {
+        let value = f64::from_bits(word.as_str().unwrap().parse().unwrap());
+        let point = BcfPoint3 { x: value, y: value, z: value };
+        let mut snapshot = fixture();
+        snapshot.topics[0].viewpoints[0].camera = Some(BcfCamera::Perspective { view_point: point, direction: point, up_vector: point, field_of_view: value });
+        snapshot.topics[0].viewpoints[1].camera = Some(BcfCamera::Orthogonal { view_point: point, direction: point, up_vector: point, view_to_world_scale: value });
+        let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
+        for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
+            let payload = match encoding {
+                SnapshotEncoding::Binary => IoPayload::Binary(<BcfSnapshot as store::ArtifactPack>::encode_pack_with(&snapshot, &store::PackEncodeOptions::default()).unwrap()),
+                SnapshotEncoding::Text => IoPayload::Text(<BcfSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)),
+            };
+            let database = (provider.export)(&codec.schema, &dialect, &payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            assert_eq!(database, expected);
+            let restored = (provider.import)(&codec.schema, &dialect, database, encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap().value;
+            let restored = match restored {
+                IoPayload::Binary(bytes) => <BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),
+                IoPayload::Text(text) => <BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),
+            };
+            assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap(), expected);
+        }
+    }
+}
+
+
+#[test]
+fn sqlite_snapshot_bcf_native_factory_has_the_actual_structural_identity() {
+    let codec = (crate::native_codecs()[0].codec)();
+    let actual = store::ArtifactCodec::bare::<BcfSnapshot, crate::BcfMutation>(crate::STDIO_BCF_DOCUMENT_SCHEMA);
+    assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash), semio_framework_hash::hex_lower(&actual.pack_schema_hash));
+    let manifest: serde_json::Value = serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();
+    assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash), manifest["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap());
+}
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue},ArtifactSqliteSnapshot};
 
 fn fixture()->BcfSnapshot{store::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}

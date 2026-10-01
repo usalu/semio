@@ -1,0 +1,19 @@
+{
+  "messages": [
+    {
+      "code": "mutation.partial",
+      "level": "warning",
+      "target": [
+        "frame-ghost"
+      ]
+    },
+    {
+      "code": "mutation.partial",
+      "level": "warning",
+      "target": [
+        "frame-text"
+      ]
+    }
+  ],
+  "status": "applied"
+}

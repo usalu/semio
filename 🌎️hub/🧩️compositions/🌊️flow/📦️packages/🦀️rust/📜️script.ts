@@ -4,7 +4,9 @@ import { GenerateScript as GraphGenerateScript, OwnerGraphWireCheckScript } from
 
 
 
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargo, runCargoTestBudgeted, runExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class SourceTestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -57,4 +59,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("add-widget-retained-check", AddWidgetRetainedCheckScript);
 registerPlaygroundSiteBuildCommands(router);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

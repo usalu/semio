@@ -1,0 +1,9 @@
+{
+  "schema": "semio.framework.process.test-level-budgets/v1",
+  "levels": {
+    "fundamental": 15000,
+    "quick": 300000,
+    "long": 900000,
+    "exhaustive": 1800000
+  }
+}

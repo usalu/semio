@@ -19,14 +19,14 @@
     "files": [
       {
         "role": "input-svg",
-        "path": "./🖌️change-stroke-color/⬅️before.svg",
+        "path": "./🖌️change-stroke/⬅️before.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:3e8de7fa0ef36d0aefcf37aaf2caeac477d275e1d0ffb45de01474332fc1db34",
         "bytes": 440
       },
       {
         "role": "expected-svg",
-        "path": "./🖌️change-stroke-color/➡️after.svg",
+        "path": "./🖌️change-stroke/➡️after.svg",
         "mediaType": "image/svg+xml",
         "sha256": "sha256:a7a0f32ddaf424f2caedd1a8ef4c36d945931d68027bbb1c1a895ca91f0ac07b",
         "bytes": 440

@@ -31,6 +31,12 @@ export class ArtifactSqliteProjection {
     artifactSqliteValueBudget(this.bytes + bytes, this.options);
   }
 
+  /** ⏱️ Cancel a borrowed domain traversal before it owns another entity. */
+  async checkpoint(): Promise<void> {
+    if (this.completed) throw new Error("Artifact SQLite projection is completed");
+    await artifactSqliteCheckpoint(this.options, "projectSnapshot", this.count, 0);
+  }
+
   /** 🔗️ Inserts supplied semantic cells with an explicit or per-table surrogate identity. */
   async insert(name: string, cells: readonly SqliteValue[], identity?: bigint): Promise<bigint> {
     if (this.completed) throw new Error("Artifact SQLite projection is completed");

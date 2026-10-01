@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf14a::Pdf14AEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf14a::create_pdf14_a_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf14_a_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf14_a_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf14a::Pdf14AViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14a::create_pdf14_a_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf14::Pdf14Editor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf14::create_pdf14_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf14_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf14_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -41,7 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf14::Pdf14Viewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14::create_pdf14_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -50,7 +60,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf14x::Pdf14XEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf14x::create_pdf14_x_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf14_x_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf14_x_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -59,7 +73,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf14x::Pdf14XViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf14x::create_pdf14_x_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -68,7 +83,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17a::Pdf17AEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17a::create_pdf17_a_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_a_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_a_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -77,7 +96,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17a::Pdf17AViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17a::create_pdf17_a_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -86,7 +106,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17::Pdf17Editor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17::create_pdf17_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -95,7 +119,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17::Pdf17Viewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17::create_pdf17_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -104,7 +129,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17e::Pdf17EEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17e::create_pdf17_e_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_e_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_e_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -113,7 +142,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17e::Pdf17EViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17e::create_pdf17_e_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -122,7 +152,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17h::Pdf17HEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17h::create_pdf17_h_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_h_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_h_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -131,7 +165,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17h::Pdf17HViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17h::create_pdf17_h_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -140,7 +175,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17ua::Pdf17UaEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17ua::create_pdf17_ua_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_ua_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_ua_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -149,7 +188,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17ua::Pdf17UaViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17ua::create_pdf17_ua_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -158,7 +198,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17vt::Pdf17VtEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17vt::create_pdf17_vt_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_vt_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_vt_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -167,7 +211,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17vt::Pdf17VtViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17vt::create_pdf17_vt_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-pdf",
@@ -176,7 +221,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_pdf::editor::pdf17x::Pdf17XEditor",
       "factory": "semio_s_artifact_stdio_pdf::editor::pdf17x::create_pdf17_x_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "pdf17_x_editor",
+        "sqliteSnapshot": "sqlite_snapshot_pdf17_x_editor"
+      }
     },
     {
       "owner": "stdio-pdf",
@@ -185,35 +234,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_pdf::viewer::pdf17x::Pdf17XViewer",
       "factory": "semio_s_artifact_stdio_pdf::viewer::pdf17x::create_pdf17_x_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "pdf",
-      "factory_id": "stdio.native.pdf.v1",
-      "descriptor_codec_id": "s.stdio.pdf.standard.1-4.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.pdf.standard.1-4.codec.codec-stdio-pdf-extension-pdf.v1",
-      "artifact_kind": "s.stdio.pdf",
-      "artifact_schema": "stdio.pdf",
-      "extension": "pdf",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "b28921d3dd2e9e7b35883cec9e392147dff6904c7b17b27ed2fdcf919f5368c9",
-      "protocol_source_sha256": "5b8b94d26a497072be460cc1083c95ac59a6a12e6381df3dc538597f24b21fb6",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
-    },
-    {
-      "artifact": "pdf",
-      "descriptor_codec_id": "s.stdio.pdf.standard.1-7.codec.native-document.v1",
-      "factory_id": "stdio.native.pdf17.v1",
-      "artifact_kind": "s.stdio.pdf",
-      "artifact_schema": "stdio.pdf.1.7",
-      "extension": "pdf",
-      "pack_schema_hash": "a46af80e3811edc4530ed91c6a864d6a1b90fd87d1a72c8088ea1b47fd0b4c4e",
-      "runtime_capability_id": "s.stdio.pdf.standard.1-7.codec.codec-stdio-pdf-1-7-extension-pdf.v1",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "protocol_source_sha256": "b92db22ccdb887e23b1e41c86071a9d236ed8415fede659200494c6b45472355",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -338,6 +360,152 @@
         "react": 6265,
         "wgpu": 6365
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "PdfA1Mutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::a::schema::mutations::PdfA1Mutation"
+    },
+    {
+      "name": "PdfMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::mutations::PdfMutation"
+    },
+    {
+      "name": "PdfX1Mutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_4::subsets::x::schema::mutations::PdfX1Mutation"
+    },
+    {
+      "name": "PdfAMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::a::schema::mutations::PdfAMutation"
+    },
+    {
+      "name": "PdfMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::PdfMutation"
+    },
+    {
+      "name": "PdfEMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::schema::mutations::PdfEMutation"
+    },
+    {
+      "name": "PdfHMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::h::schema::mutations::PdfHMutation"
+    },
+    {
+      "name": "PdfUaMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::ua::schema::mutations::PdfUaMutation"
+    },
+    {
+      "name": "PdfVtMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::vt::schema::mutations::PdfVtMutation"
+    },
+    {
+      "name": "PdfXMutation",
+      "snapshot": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot",
+      "mutation": "semio_s_artifact_stdio_pdf::standards::v1_7::subsets::x::schema::mutations::PdfXMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "a",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🗄️a",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.4",
+      "subset": "x",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🖨️x",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "a",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🗄️a",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "e",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/📐️e",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "h",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/⚕️h",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "ua",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/♿️ua",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "vt",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧾️vt",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.pdf",
+      "standard": "1.7",
+      "subset": "x",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🖨️x",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.pdf.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
+    },
+    {
+      "factoryId": "stdio.native.pdf17.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

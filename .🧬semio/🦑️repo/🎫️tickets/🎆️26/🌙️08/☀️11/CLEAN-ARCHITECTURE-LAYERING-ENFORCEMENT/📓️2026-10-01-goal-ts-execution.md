@@ -1252,3 +1252,69 @@ Additional owned physical paths (flat):
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🔣️.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧬️schema/🛠️preparation/🔣️.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟨️.mjs`
+
+
+## Selected Workspace Handoff — Current Enforcement and Remaining Proofs
+
+All generated evidence below remains in `🗑️generated/goal-ts/workspace-membership`. No shared source or caches were deleted, no Git command wrote state, and neither the architecture goal nor this ticket was closed. The completed physical root removal proofs recorded above remain the successful evidence for actual Bun frozen installation, selected Nx execution, and private surviving framework Cargo compilation without S, without Hub, and without both. They are not a claim that every retained concrete consumer is valid after its dependencies disappear.
+
+### Current importer and command authority
+
+The genuine newly authored Hub auth client is admitted through current source discovery. Hub's inherited `semio-framework-os-mcp` path now names the actual general MCP owner exactly once. The first refresh exposed a duplicate TOML key and is retained as RED evidence; the second registered `workspace:deps-cargo-lock` run completed GREEN in 13.7s, including the auth client and current Stdio test-only hash oracles. Evidence: `selected-cargo-lock-auth-second.log`. Source versions, selected workspace/profile policy, and runtime external dependency constraints were preserved.
+
+The latest actual registered `workspace:deps-js-contract` and `@semio-tech/cargo-workspaces:runtime-contract-check` both passed in `contracts-current-final.log`. The former tests exact installer argument selection, rejection, cancellation/failure propagation, and independently bundled Node execution. The latter tests the closed admitted/refused runtime input corpus through independent Ajv, Bun, and Node implementations. The new runtime CLI request body itself still needs a closed schema rather than its current field checks; the result schema does not discharge that separate input requirement.
+
+The selected Cargo/Bun contract rerun in the same log is RED on unchanged deadlines: Bun's specific-removal native test exceeded its existing 5s test limit, then the existing 15s suite deadline; Cargo's artifact/plugin removal test likewise exceeded 5s, then the same 15s suite limit. Every recorded semantic assertion preceding those deadlines passed. Earlier successful runs are retained; this latest run must not be presented as passing. Concurrent graph/native workloads were observed, but their causal contribution is not proved. A quiet registered retry is required; neither deadlines nor corpus scope were increased.
+
+### Source fixtures and permanent ownership
+
+The Cargo exclusion corpus now covers all three authored lexical exclusions, including the current research root, and real `Cargo.toml` leaf paths. Its two native Cargo recipe cases use independent fast-glob and Bun/Iarna TOML equality, actual metadata, current source patterns, and lexical exclusion before metadata access. Its registry filesystem oracle still refuses opaque access and symlink content. The oracle now executes the actual EINTR/vanished-directory helpers and actual skip predicate rather than relying on removed free bindings. The registered Cargo exclusion target passed in `source-fixtures-current-fourth.log`.
+
+The Cargo transaction command source target also passed in that log. Its native build declarations are bound to their actual native-build owner, its compiler runs with the real Bun host types, and an actual optional package-name callback narrowing error was repaired at the native orchestration owner.
+
+Repo source ownership now describes the existing authored JavaScript module declaration `🟨️.d.mts` directly, with no forwarding declaration or alias. The fixture and closed schema admit its truthful declaration kind and actual semantic ancestry; the previously missing runtime directory kind is authored under the dependency owner. The AST wrapper rule applies only to actual wrappers. A subsequent run passed its schema/API assertions but timed out in the former full taxonomy-loader path; the focused test now reads the same authoritative taxonomy source once and runs the same pure semantic/classification APIs without unrelated initialization. The fresh final rerun is retained as `source-ownership-pure-current.log`; its completion status must be read before claiming GREEN.
+
+The cold dependency-bootstrap fixtures now declare their own closed source membership, copy the new neutral Cargo/Bun/payload eager source owners, and retain their selected owner graph dependencies (native-host, deployment, installation identity, and browser-engine selection). Their graph fixture owns a genuine empty Cargo workspace with a source recipe and no fabricated packages. These fixture edits have not yet been proved by the full cold Nx tooling/bootstrap execution. The production tooling patch contribution also still lacks its own closed schema/corpus and no-follow path proof; this remains required follow-up, rather than a passing cold-install claim.
+
+### Strict gate and transaction execution
+
+`strict-typescript-current.log` executed the actual strict dependency gate and was RED solely on the genuine GLTF SQLite test's unresolved root codec module. The plugin executor confirmed the actual owner aggregator subsequently appeared from concurrent codec authoring; no test or capability was removed. A fresh registered strict retry is running with explicit owned artifacts and evidence `strict-typescript-current-final.log` (unified exec session 18237). Do not infer its result from the earlier graph waiting output.
+
+The fresh registered transaction-v2 target remains RED twice under the unchanged 14s aggregate contract: its shared active-reference fixture was not published before the existing 10s readiness wait expired. Evidence: `transaction-current-fourteen-second.log` and `transaction-current-fourteen-second-retry.log`. The second reached shard 7 failure; its Nx run duration was 18.7s, with 16.0s task duration. The prior exact 62-law/98-case green proof remains historical evidence only. No golden, SHA identity, assertion, budget, or WAL behavior was relaxed to make these new runs pass.
+
+Launch seed now explicitly registers current runtime admission, neutral capability contract, Semio composition preparation, and WAV canonical architecture commands at orders 900.05687–900.05690. Existing comments and markers were preserved. Final generated launch/catalog publication remains pending the genuine owner descriptor sweep and current publication; these seed rows must be included in that final registered generation.
+
+The isolated copied-workspace Nx daemon and plugin workers belonging exclusively to this lane were stopped after their proofs completed (PIDs 7123, 7132, 7209, 7332, 23201, 23959). Their source copies and logs remain intact. Shared live Nx/Cargo processes were not killed or reset.
+
+### Additional Flat Owned Files in This Handoff
+
+- `🌎️hub/Cargo.toml` — truthful inherited general MCP path key, unique dependency authority.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json` — actual neutral runtime dependency directory ancestry.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts` — source recipe lexical exclusion before metadata, authored compose owners preserved, root control manifest not treated as package.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts` — direct runtime admitted/refused declarations.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🚧️cargo-discovery-exclusions/🟦️.ts` — native membership and current filesystem implementation oracles.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🚧️cargo-discovery-exclusions/🔣️.json` — complete lexical exclusion/native filename corpus.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🦑️repo-source-ownership/🟦️.ts` — direct declaration, actual wrappers, pure taxonomy source execution.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🦑️repo-source-ownership/🔣️.json` — truthful declaration/ancestry identities.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🦑️repo-source-ownership/🔣️.json` — matching closed declaration/ancestry contract.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/🧱️cargo-transaction-command-source/🔣️.json` — actual native build export authority.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧱️cargo-transaction-command-source/🟦️.ts` — actual Bun host compiler types.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📋️native-orchestration/🟦️.ts` — guarded native package callback binding.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🧪️tests/🟦️.ts` — current selected/all scope argument rejection.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/📦️dependencies/🟦️.ts` — explicit cold fixture source/workspace authority.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/nx-bootstrap/🔣️.json` — direct neutral source eager inventory.
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧫️fixtures/dependency-bootstrap/🔣️.json` — current neutral Node graph implementation inventory.
+- `.vscode/🧩️launch.seed.jsonc` — current owned executable registrations, generated launch pending.
+
+
+### Final Current Snapshot for Audit Rotation
+
+The final strict retry completed: RED, 3m28s, 9,413 inventoried sources, 18 forbidden edges. GLTF's actual SQLite owner module resolved successfully. Sixteen remaining edges resolve installed third-party Next/pdfjs/D3 packages under `🏢️semio-tech/node_modules/.bun/...`; the current `frameworkNoImplementationRule` matches the broad physical implementation-area prefix before distinguishing installed external package storage from first-party ownership. Correct that semantic ownership contract with an independent resolver corpus while preserving package-name-based first-party rules. This is not a reason to exempt a whole implementation area or all terminal imports. Two remaining genuine edges are the plugin-root Note document-contract test's type imports into the Note artifact schema/diff. Its fixture, test, command body, and required package route must become owned by the actual Note artifact together. Exact graph evidence: `strict-typescript-current-final.log` and the retained `artifacts/strict-final/canonical-direction-failure.json`.
+
+Repo source ownership final is GREEN: seven tests, 219 assertions, test duration 11.15s and registered Nx duration 13.6s. Its pure taxonomy ancestry test took 2.66ms, replacing the prior unrelated full-loader timeout without changing the authored taxonomy or expected ancestry. Evidence: `source-ownership-pure-current.log`.
+
+The final source exclusion/native command checks are GREEN; current Cargo/Bun native oracle deadline failures and both transaction shared-reference readiness failures remain RED as recorded above. No proof was recaptured as a golden and no skip, baseline, owner relabel, budget increase, or legacy route was added.
+
+Plugin execution identified one additional current generic preparation defect during handoff: `prepareCargoWorkspaceInvocation`'s selected native-operation list omits real compiling `cargo run` (also `bench`, `doc`, `rustdoc`). Its preparation child currently inherits stdout, so preparation diagnostic output can contaminate a caller's machine-readable native output. This requires a closed neutral command corpus plus tests and a diagnostic projection to stderr while preserving actual selected binary stdout; it remains unimplemented in this stopped lane. Parent explicitly requested no further expansion before recycling the audit slot.
+
+All owned sessions have now completed. The final strict session 18237 and source-ownership session 91415 were retained until their real registered outcomes; transaction session 69207 completed RED; workspace/dependency contract session 13415 completed with two GREEN and two deadline RED targets; source fixtures session 80084 completed with exclusion/native-command GREEN and the then-stale ownership schema RED, subsequently corrected and proved by 91415. Shared native/descriptor sessions belong to their owning agents and remain untouched. Final generated registry/launch refresh, quiet bounded native contract/transaction retries, tooling patch schema/cold execution, input-body schema, source CAS concurrency/cancellation and member-comment lexer probes remain explicit pending obligations for the broader active goal.

@@ -1537,20 +1537,29 @@ impl PendingRasterAuthorityClose {
     }
 }
 
+/// 🧵️ Native scene state shared by the shared-pool workers; under `cfg(test)` each test thread owns its own
+/// (`crate::interpreter::test_worker_cell`), so no law meets another law's scenes.
 #[cfg(not(target_arch = "wasm32"))]
-struct WorkerCell<T>(std::sync::OnceLock<std::sync::Mutex<RefCell<T>>>);
+struct WorkerCell<T>(#[cfg(not(test))] std::sync::OnceLock<std::sync::Mutex<RefCell<T>>>, #[cfg(test)] std::marker::PhantomData<fn() -> T>);
 
 #[cfg(not(target_arch = "wasm32"))]
 impl<T> WorkerCell<T> {
     const fn new() -> Self {
-        Self(std::sync::OnceLock::new())
+        #[cfg(not(test))]
+        return Self(std::sync::OnceLock::new());
+        #[cfg(test)]
+        return Self(std::marker::PhantomData);
     }
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl<T: Default> WorkerCell<T> {
+impl<T: Default + 'static> WorkerCell<T> {
     fn with<R>(&self, f: impl FnOnce(&RefCell<T>) -> R) -> R {
-        let guard = self.0.get_or_init(|| std::sync::Mutex::new(RefCell::new(T::default()))).lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        #[cfg(not(test))]
+        let state = self.0.get_or_init(|| std::sync::Mutex::new(RefCell::new(T::default())));
+        #[cfg(test)]
+        let state = crate::interpreter::test_worker_cell::<RefCell<T>>(std::ptr::from_ref(self).addr());
+        let guard = state.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
         f(&guard)
     }
 }
@@ -2149,7 +2158,7 @@ impl CanvasPointerWire {
     }
 }
 
-const CANVAS_POINTER_WIRE_KEYS: &[&str] = &["surfaceId", "x", "y", "width", "height", "shift", "ctrl", "meta", "alt", "extend", "worldX", "worldY", "button", "cancelled", "samples"];
+const CANVAS_POINTER_WIRE_KEYS: &[&str] = &["surfaceId", "x", "y", "width", "height", "shift", "ctrl", "meta", "alt", "extend", "worldX", "worldY", "button", "cancelled", "samples", "worldSamples"];
 
 fn canvas_pointer_action_bytes(scene: &UiComponentSceneNode, action: &str) -> Result<usize, ui_wgpu::wgpu::BoundedActionFault> {
     canvas_pointer_action_address_bytes(&scene.controller_id, &scene.surface_id, action)
@@ -2194,6 +2203,12 @@ fn write_canvas_pointer_action_address(batch: &mut ui_wgpu::wgpu::BoundedActionB
             builder.number(None, f64::from(wire.screen_y))?;
             builder.end_container()?;
             builder.end_container()?;
+            builder.begin_array(Some("worldSamples"))?;
+            builder.begin_array(None)?;
+            builder.number(None, f64::from(wire.world_x))?;
+            builder.number(None, f64::from(wire.world_y))?;
+            builder.end_container()?;
+            builder.end_container()?;
         }
         builder.end_container()
     })
@@ -2224,7 +2239,14 @@ fn canvas_state_snapshot(surface_id: &str) -> (Viewport, bool) {
     SCENE_STATE.with(|cell| cell.borrow().get(surface_id).map(|state| (state.viewport, matches!(state.drag.as_ref().map(|drag| &drag.mode), Some(SceneDragMode::PanViewport)))).unwrap_or((Viewport::default(), false)))
 }
 
-fn canvas_active_utility(scene: &UiComponentSceneNode) -> Option<String> {
+/// 🔭️ The live camera `(x, y, zoom)` of one Canvas2d host as its input path reads it — the view the gumball twin
+/// (`📐️Canvas2dHost/🎯️targets/🧊️wgpu`) measures a gesture in.
+fn canvas_camera(surface_id: &str) -> (f64, f64, f64) {
+    let (viewport, _) = canvas_state_snapshot(surface_id);
+    (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom))
+}
+
+pub(crate) fn canvas_active_utility(scene: &UiComponentSceneNode) -> Option<String> {
     let layers: Vec<CanvasLayer> = serde_json::from_str(scene.canvas_2d.as_ref()?.layers_json.as_str()).ok()?;
     layers.into_iter().find(|layer| layer.role.as_deref() == Some("meta")).and_then(|layer| layer.utility)
 }
@@ -2234,6 +2256,9 @@ fn canvas_gesture_matches(active: &CanvasGesture, pointer_id: ui_render::Pointer
 }
 
 fn cancel_canvas_pointer_gesture_into(pointer_id: Option<ui_render::PointerId>, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
+    if crate::canvas2d_gumball::cancel_into(pointer_id, "captureLost", input)? {
+        return Ok(true);
+    }
     let Some(active) = CANVAS_GESTURE.with(|cell| {
         let gestures = cell.borrow();
         match pointer_id {
@@ -2317,6 +2342,9 @@ pub(crate) fn cancel_canvas_pointer_gesture_for(pointer_id: ui_render::PointerId
 
 /// 🧹️ Releases one Canvas input owner after the exact window token has entered close.
 pub(crate) fn retire_canvas_window_step(window_id: &str) -> bool {
+    if crate::canvas2d_gumball::retire_window(window_id) {
+        return true;
+    }
     if CANVAS_GESTURE.with(|cell| {
         let mut gestures = cell.borrow_mut();
         let Some(slot) = gestures.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|active| active.window_id == window_id)) else { return false };
@@ -2336,6 +2364,7 @@ pub(crate) fn retire_canvas_window_step(window_id: &str) -> bool {
 }
 
 pub(crate) fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) {
+    crate::canvas2d_gumball::request_cancel(|window, _, _| window == window_id);
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.window_id == window_id) {
             active.cancellation_requested = true;
@@ -2349,6 +2378,7 @@ pub(crate) fn request_canvas_pointer_gesture_cancel_for_window(window_id: &str) 
 }
 
 pub(crate) fn request_canvas_pointer_gesture_cancel_for_host(host_id: &str) {
+    crate::canvas2d_gumball::request_cancel(|_, host, _| host == host_id);
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten().filter(|active| active.host_id == host_id) {
             active.cancellation_requested = true;
@@ -2362,6 +2392,7 @@ pub(crate) fn request_canvas_pointer_gesture_cancel_for_host(host_id: &str) {
 }
 
 pub(crate) fn request_stale_canvas_authority_cancel(mut generation_is_live: impl FnMut(&str, u64) -> bool) {
+    crate::canvas2d_gumball::request_cancel(|window, _, generation| !generation_is_live(window, generation));
     CANVAS_GESTURE.with(|cell| {
         for active in cell.borrow_mut().slots.iter_mut().flatten() {
             if !generation_is_live(&active.window_id, active.document_generation) {
@@ -2377,6 +2408,9 @@ pub(crate) fn request_stale_canvas_authority_cancel(mut generation_is_live: impl
 }
 
 pub(crate) fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> bool {
+    if let Some(pointer_id) = crate::canvas2d_gumball::cancel_due() {
+        return cancel_canvas_pointer_gesture_for(pointer_id, input);
+    }
     let gesture_due = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.cancellation_requested).map(|active| active.pointer_id));
     if let Some(pointer_id) = gesture_due {
         return cancel_canvas_pointer_gesture_for(pointer_id, input);
@@ -2389,6 +2423,7 @@ pub(crate) fn canvas_pointer_terminal_step(input: &mut ui_wgpu::wgpu::InputState
 }
 
 pub(crate) fn cancel_stale_canvas_authority(window_id: &str, host_id: &str, document_generation: u64, input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+    crate::canvas2d_gumball::cancel_stale_into(window_id, host_id, document_generation, input)?;
     let stale_gesture = CANVAS_GESTURE.with(|cell| cell.borrow().slots.iter().flatten().find(|active| active.window_id == window_id && active.host_id == host_id && active.document_generation != document_generation).map(|active| active.pointer_id));
     if let Some(pointer_id) = stale_gesture {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
@@ -2412,6 +2447,9 @@ pub fn canvas_pointer_move_into(
     input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>,
 ) -> Result<bool, ui_wgpu::wgpu::BoundedActionFault> {
     cancel_stale_canvas_authority(window_id, &scene.host_id, document_generation, input)?;
+    if let Some(handled) = crate::canvas2d_gumball::pointer_move_into(scene, inner, pointer_id, window_id, document_generation, x, y, canvas_camera(&scene.host_id), input)? {
+        return Ok(handled);
+    }
     let active = CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).filter(|active| canvas_gesture_matches(active, pointer_id, window_id, &scene.host_id, document_generation)).cloned());
     let down = active.is_some();
     if !inner.contains(x, y) {
@@ -2485,6 +2523,9 @@ pub fn canvas_pointer_button_into(
     }
     if down && CANVAS_GESTURE.with(|cell| cell.borrow().get(pointer_id).is_some()) {
         cancel_canvas_pointer_gesture_into(Some(pointer_id), input)?;
+    }
+    if let Some(handled) = crate::canvas2d_gumball::pointer_button_into(scene, inner, pointer_id, window_id, document_generation, x, y, down, button, canvas_camera(&scene.host_id), input)? {
+        return Ok(handled);
     }
     if down && !CANVAS_GESTURE.with(|cell| cell.borrow().has_capacity_for(pointer_id)) {
         return Err(ui_wgpu::wgpu::BoundedActionFault::ItemCredits);
@@ -2600,7 +2641,7 @@ fn canvas_catalogue_leave_action(hover: &CanvasCatalogueHover) -> ActionDescript
     canvas_addressed_action(&hover.controller_id, &hover.surface_id, "canvasDragLeave", semio_framework::dsl_value!({}))
 }
 
-fn write_scene_action_batch(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
+pub(crate) fn write_scene_action_batch(input: &mut ui_wgpu::wgpu::InputState<ActionDescriptor>, actions: &[ActionDescriptor], commit: impl FnOnce()) -> Result<(), ui_wgpu::wgpu::BoundedActionFault> {
     let bytes = actions.iter().try_fold(0usize, |sum, action| sum.checked_add(scene_action_bytes(action)?).ok_or(ui_wgpu::wgpu::BoundedActionFault::ByteCredits))?;
     let mut batch = input.reserve_actions(actions.len(), bytes)?;
     for action in actions {
@@ -7005,6 +7046,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
                 }
             });
         }
+        crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.draw);
         ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
         return;
     }
@@ -7113,6 +7155,7 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     if !layers.iter().any(|layer| layer.role.as_deref() != Some("meta")) {
         draw_text(ctx, CANVAS_2D_EMPTY_LABEL, inner.x + inner.w * 0.5 - 36.0, inner.y + inner.h * 0.5, theme.font_size_small, theme.text_muted);
     }
+    crate::canvas2d_gumball::paint(scene, inner, (f64::from(viewport.x), f64::from(viewport.y), f64::from(viewport.zoom)), ctx.draw);
     ctx.input.register_hit(HitTarget { rect: inner, event: None, control_id: Some(scene.host_id.clone()), kind: HitKind::Generic, drag_axis: Some(DragAxis::Both), drag_data: None });
 }
 

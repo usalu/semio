@@ -7,6 +7,7 @@
     "schemaVersion",
     "contractId",
     "owner",
+    "commandBundle",
     "members",
     "consumers",
     "oracle",
@@ -31,6 +32,7 @@
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts"
         ],
         "runtimeModules": [
+          "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs",
           "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🟦️typescript/🟨️.mjs",
@@ -185,6 +187,70 @@
         },
         "commandDirectoryName": {
           "const": "🖱️canvas-pointer-down"
+        }
+      }
+    },
+    "commandBundle": {
+      "description": "The scenario's own sealed command-bundle authority: one root Rust command declaration plus two declaration-only nested Rust packages, overlaid on the taxonomy wherever the authored scenario is planned, so the package-move coverage never binds to the live Draw command bundle.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "directoryKinds",
+        "descendantContract"
+      ],
+      "properties": {
+        "directoryKinds": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "fsm"
+          ],
+          "properties": {
+            "fsm": {
+              "const": {
+                "emoji": "🔄️",
+                "slugPattern": "^fsm$",
+                "allowEmojiOnly": false
+              }
+            }
+          }
+        },
+        "descendantContract": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "rootDirectoryKindId",
+            "requiredNodes",
+            "exclusiveAlternatives",
+            "realizedNodeCount",
+            "pathBudgetReserve"
+          ],
+          "properties": {
+            "rootDirectoryKindId": {
+              "const": "projected-editor-command"
+            },
+            "requiredNodes": {
+              "type": "array",
+              "minItems": 16,
+              "maxItems": 16,
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/definitions/commandBundleNode"
+              }
+            },
+            "exclusiveAlternatives": {
+              "const": []
+            },
+            "realizedNodeCount": {
+              "const": 16
+            },
+            "pathBudgetReserve": {
+              "const": {
+                "derivation": "longest-canonical-descendant-suffix",
+                "bytes": 72
+              }
+            }
+          }
         }
       }
     },
@@ -601,6 +667,123 @@
     }
   },
   "definitions": {
+    "commandBundleNode": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/commandBundleDirectory"
+        },
+        {
+          "$ref": "#/definitions/commandBundleSource"
+        },
+        {
+          "$ref": "#/definitions/commandBundlePackageFile"
+        }
+      ]
+    },
+    "commandBundleSegments": {
+      "type": "array",
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kindId",
+          "literal"
+        ],
+        "properties": {
+          "kindId": {
+            "enum": [
+              "fsm",
+              "macros",
+              "packages",
+              "rust-language"
+            ]
+          },
+          "literal": {
+            "enum": [
+              "🔄️fsm",
+              "✨️macros",
+              "📦️packages",
+              "🦀️rust"
+            ]
+          }
+        }
+      }
+    },
+    "commandBundleDirectory": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pathSegments",
+        "nodeType",
+        "kindId"
+      ],
+      "properties": {
+        "pathSegments": {
+          "$ref": "#/definitions/commandBundleSegments"
+        },
+        "nodeType": {
+          "const": "directory"
+        },
+        "kindId": {
+          "enum": [
+            "projected-editor-command",
+            "fsm",
+            "macros",
+            "packages",
+            "rust-language"
+          ]
+        }
+      }
+    },
+    "commandBundleSource": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pathSegments",
+        "nodeType",
+        "kindId",
+        "sourceFilename"
+      ],
+      "properties": {
+        "pathSegments": {
+          "$ref": "#/definitions/commandBundleSegments"
+        },
+        "nodeType": {
+          "const": "file"
+        },
+        "kindId": {
+          "const": "rust-source"
+        },
+        "sourceFilename": {
+          "const": "🦀️.rs"
+        }
+      }
+    },
+    "commandBundlePackageFile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pathSegments",
+        "nodeType",
+        "fixedFilenameContractId"
+      ],
+      "properties": {
+        "pathSegments": {
+          "$ref": "#/definitions/commandBundleSegments"
+        },
+        "nodeType": {
+          "const": "file"
+        },
+        "fixedFilenameContractId": {
+          "enum": [
+            "cargo-manifest",
+            "nx-project-manifest",
+            "root-script"
+          ]
+        }
+      }
+    },
     "input": {
       "type": "object",
       "additionalProperties": false,

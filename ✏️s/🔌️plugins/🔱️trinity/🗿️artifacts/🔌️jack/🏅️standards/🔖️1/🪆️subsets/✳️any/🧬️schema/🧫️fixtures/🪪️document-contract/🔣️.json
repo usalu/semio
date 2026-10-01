@@ -1,6 +1,6 @@
 {
-  "snapshotFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps-the-name-a-node-already-carries/📸️snapshot/⬅️before/🔣️.json",
-  "diffFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps-the-name-a-node-already-carries/🔺️diff/🔣️.json",
+  "snapshotFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps/📸️snapshot/⬅️before/🔣️.json",
+  "diffFixture": "../../../🧫️fixtures/🧬️mutations/✏️rename-node/✏️keeps/🔺️diff/🔣️.json",
   "expectedChildKind": "s.stdio.semio",
   "invalidDocuments": [
     {

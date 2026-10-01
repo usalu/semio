@@ -18,6 +18,8 @@
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use super::text as snapshot_text;
+#[path="🌱️value/🧬️octets/🦀️.rs"]
+pub(crate) mod octets;
 
 /// 🏷️ Document schema id for `stdio.pdf` (1.7) -- deliberately distinct from 1.4's flat
 /// `stdio.pdf` (avoids colliding with 1.4's own `store::register_document_codec` registration,
@@ -111,7 +113,7 @@ pub enum PdfStreamFilter {
     Dct { color_transform: Option<u32> },
     Jpx,
     Ccitt { parameters: PdfCcittParameters },
-    Jbig2 { globals: Option<Vec<u8>> },
+    Jbig2 { #[value(with="pack::value::bytes::optional")] globals: Option<Vec<u8>> },
     Crypt { name: Option<String> },
 }
 
@@ -218,8 +220,7 @@ impl fmt::Display for PdfDecimal {
 /// streams. Stream `data` is the logical byte sequence after applying every filter that has a
 /// logical decoder (@see [`PdfStreamFilter`]); `/Filter`, `/F`, `/DecodeParms`, and `/DP` are
 /// removed during native deserialization and regenerated from `filters` on write.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
-#[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
+#[derive(Clone, Debug, PartialEq)]
 #[derive(Default)]
 pub enum PdfObject {
     #[default]
@@ -351,7 +352,7 @@ pub const PDF_IDENTITY_MATRIX: PdfMatrix = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0];
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextString {
     Text { text: String },
-    Codes { bytes: Vec<u8> },
+    Codes { #[value(with="pack::value::bytes")] bytes: Vec<u8> },
 }
 
 impl PdfTextString {
@@ -367,7 +368,7 @@ impl PdfTextString {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfTextArrayItem {
     Text { text: String },
-    Codes { bytes: Vec<u8> },
+    Codes { #[value(with="pack::value::bytes")] bytes: Vec<u8> },
     Adjust { amount: f64 },
 }
 
@@ -398,6 +399,7 @@ pub struct PdfInlineImage {
     pub interpolate: bool,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub filters: Vec<PdfStreamFilter>,
+    #[value(with="pack::value::bytes")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub extra: Vec<PdfDictEntry>,
@@ -526,8 +528,8 @@ pub enum PdfColorSpace {
     CalGray { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<f64> },
     CalRgb { white_point: [f64; 3], black_point: Option<[f64; 3]>, gamma: Option<[f64; 3]>, matrix: Option<[f64; 9]> },
     Lab { white_point: [f64; 3], black_point: Option<[f64; 3]>, range: Option<[f64; 4]> },
-    IccBased { components: u32, profile: Vec<u8>, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
-    Indexed { base: Box<PdfColorSpace>, hival: u32, lookup: Vec<u8> },
+    IccBased { components: u32, #[value(with="pack::value::bytes")] profile: Vec<u8>, alternate: Option<Box<PdfColorSpace>>, range: Option<Vec<f64>> },
+    Indexed { base: Box<PdfColorSpace>, hival: u32, #[value(with="pack::value::bytes")] lookup: Vec<u8> },
     Separation { name: String, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction },
     DeviceN { names: Vec<String>, alternate: Box<PdfColorSpace>, tint_transform: PdfFunction, attributes: Option<Vec<PdfDictEntry>> },
     Pattern { base: Option<Box<PdfColorSpace>> },
@@ -554,7 +556,7 @@ impl PdfColorSpace {
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFunction {
-    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, samples: Vec<u8> },
+    Sampled { domain: Vec<f64>, range: Vec<f64>, size: Vec<u32>, bits_per_sample: u32, order: Option<u32>, encode: Option<Vec<f64>>, decode: Option<Vec<f64>>, #[value(with="pack::value::bytes")] samples: Vec<u8> },
     Exponential { domain: Vec<f64>, range: Option<Vec<f64>>, c0: Vec<f64>, c1: Vec<f64>, n: f64 },
     Stitching { domain: Vec<f64>, range: Option<Vec<f64>>, functions: Vec<PdfFunction>, bounds: Vec<f64>, encode: Vec<f64> },
     PostScript { domain: Vec<f64>, range: Vec<f64>, code: String },
@@ -569,7 +571,7 @@ pub enum PdfShadingKind {
     FunctionBased { domain: Option<[f64; 4]>, matrix: Option<PdfMatrix>, function: PdfFunction },
     Axial { coords: [f64; 4], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
     Radial { coords: [f64; 6], domain: Option<[f64; 2]>, function: PdfFunction, extend: [bool; 2] },
-    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, data: Vec<u8> },
+    Mesh { shading_type: u32, bits_per_coordinate: u32, bits_per_component: u32, bits_per_flag: Option<u32>, vertices_per_row: Option<u32>, decode: Vec<f64>, function: Option<PdfFunction>, #[value(with="pack::value::bytes")] data: Vec<u8> },
 }
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -782,15 +784,15 @@ pub struct PdfFontDescriptor {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfFontProgram {
     /// `FontFile`: Type 1 with its clear-text/encrypted/zeros segment lengths.
-    Type1 { data: Vec<u8>, length1: u32, length2: u32, length3: u32 },
+    Type1 { #[value(with="pack::value::bytes")] data: Vec<u8>, length1: u32, length2: u32, length3: u32 },
     /// `FontFile2`: a TrueType (sfnt) program.
-    TrueType { data: Vec<u8> },
+    TrueType { #[value(with="pack::value::bytes")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /Type1C`.
-    Cff { data: Vec<u8> },
+    Cff { #[value(with="pack::value::bytes")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /CIDFontType0C`.
-    CidCff { data: Vec<u8> },
+    CidCff { #[value(with="pack::value::bytes")] data: Vec<u8> },
     /// `FontFile3` with `/Subtype /OpenType`.
-    OpenType { data: Vec<u8> },
+    OpenType { #[value(with="pack::value::bytes")] data: Vec<u8> },
 }
 
 /// 🈴 One `ToUnicode` mapping (§9.10.3): a character code (of `byte_width` bytes) to a Unicode
@@ -894,7 +896,7 @@ pub struct PdfCidVerticalRun {
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum PdfCidToGid {
     Identity,
-    Map { data: Vec<u8> },
+    Map { #[value(with="pack::value::bytes")] data: Vec<u8> },
 }
 
 /// 🔤 A CIDFont (§9.7.4), the descendant of a Type 0 font.
@@ -993,7 +995,7 @@ pub enum PdfImageCodec {
     Dct { color_transform: Option<u32> },
     Jpx,
     Ccitt { parameters: PdfCcittParameters },
-    Jbig2 { globals: Option<Vec<u8>> },
+    Jbig2 { #[value(with="pack::value::bytes::optional")] globals: Option<Vec<u8>> },
 }
 
 /// 🎭 An image's explicit mask (§8.9.6): a stencil image id or colour-key ranges.
@@ -1023,6 +1025,7 @@ pub struct PdfImage {
     pub interpolate: bool,
     #[value(default = "PdfImage::raw")]
     pub codec: PdfImageCodec,
+    #[value(with="pack::value::bytes")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub soft_mask: Option<String>,
@@ -1636,6 +1639,7 @@ pub struct PdfEmbeddedFile {
     pub description: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub mime_type: Option<String>,
+    #[value(with="pack::value::bytes")]
     pub data: Vec<u8>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub creation_date: Option<PdfDate>,
@@ -1660,6 +1664,7 @@ pub struct PdfOutputIntent {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub info: Option<String>,
     #[value(default, skip_serializing_if = "Option::is_none")]
+    #[value(with="pack::value::bytes::optional")]
     pub profile: Option<Vec<u8>>,
 }
 
@@ -2101,7 +2106,7 @@ impl pack::value::ToValue for PdfSnapshot {
             ("language".to_string(), self.language.to_value()),
             ("markInfo".to_string(), self.mark_info.to_value()),
             ("metadata".to_string(), self.metadata.to_value()),
-            ("documentId".to_string(), self.document_id.to_value()),
+            ("documentId".to_string(), octets::document_id_to_value(&self.document_id)),
             ("encryption".to_string(), self.encryption.to_value()),
             ("info".to_string(), self.info.to_value()),
             ("catalogExtra".to_string(), self.catalog_extra.to_value()),
@@ -2155,7 +2160,7 @@ impl pack::value::FromValue for PdfSnapshot {
             language: decode_or_default(field("language"), "language")?,
             mark_info: decode_or_default(field("markInfo"), "markInfo")?,
             metadata: decode_or_default(field("metadata"), "metadata")?,
-            document_id: decode_or_default(field("documentId"), "documentId")?,
+            document_id: octets::document_id_from_value(field("documentId").unwrap_or(pack::value::DslValue::Null)).map_err(|error|error.under("documentId"))?,
             encryption: decode_or_default(field("encryption"), "encryption")?,
             info: decode_or_default(field("info"), "info")?,
             catalog_extra: decode_or_default(field("catalogExtra"), "catalogExtra")?,
@@ -2182,7 +2187,7 @@ impl store::ArtifactDsl for PdfSnapshot {
             }
             Err(_) => text,
         };
-        let record=dsl::parse(body,&snapshot_text::spec(),&dsl::ParseOptions{limits:dsl::Limits{max_bytes:272*1024*1024,max_tokens:32_000_000,max_nodes:8_000_000,..dsl::Limits::default()},mode:dsl::SourceMode::Document})?;
+        let record=dsl::parse(body,&snapshot_text::spec(),&dsl::ParseOptions{limits:dsl::Limits{max_bytes:272*1024*1024,max_tokens:4_000_000,max_nodes:2_000_000,..dsl::Limits::default()},mode:dsl::SourceMode::Document})?;
         snapshot_text::from_record(&record)
     }
     fn print_dsl(&self) -> String {

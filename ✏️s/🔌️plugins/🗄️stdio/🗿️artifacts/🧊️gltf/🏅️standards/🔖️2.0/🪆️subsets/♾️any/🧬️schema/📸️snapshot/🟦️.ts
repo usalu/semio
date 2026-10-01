@@ -1,3 +1,4 @@
+import {binary64,type Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🧬️ GltfSnapshot twin: the typed glTF 2.0 document model exactly as its Rust `ToValue` wire writes it, and the
  * readers that decode that wire. A member the wire omits when empty or default is optional here, as in `🔣️.json`.
  * @see ./🔣️.json
@@ -18,6 +19,7 @@ export type GltfWireReader<T> = (value: unknown, at?: string) => T;
 export interface GltfWireMember<T, Optional extends boolean = boolean> {
   readonly read: GltfWireReader<T>;
   readonly optional: Optional;
+  readonly missing?: () => T;
 }
 
 /** 🗺️ The member table of `T`, in wire order: a required member reads `T[K]`, an omissible one reads it without `undefined`. */
@@ -34,10 +36,10 @@ const gltfWireRecord = (value: unknown, at: string): Readonly<Record<string, unk
 
 export const gltfWireString: GltfWireReader<string> = (value, at = "$") => (typeof value === "string" ? value : gltfWireRefuse(at, "value is not a string"));
 export const gltfWireBoolean: GltfWireReader<boolean> = (value, at = "$") => (typeof value === "boolean" ? value : gltfWireRefuse(at, "value is not a boolean"));
-export const gltfWireNumber: GltfWireReader<number> = (value, at = "$") => (typeof value === "number" && Number.isFinite(value) ? value : gltfWireRefuse(at, "value is not a finite number"));
+export const gltfWireNumber: GltfWireReader<Binary64> = (value, at = "$") => (typeof value === "number" && Number.isFinite(value) ? binary64(value) : gltfWireRefuse(at, "value is not a finite native-wire number"));
 export const gltfWireInteger = (maximum = Number.MAX_SAFE_INTEGER): GltfWireReader<number> => (value, at = "$") =>
   typeof value === "number" && Number.isSafeInteger(value) && value >= 0 && value <= maximum ? value : gltfWireRefuse(at, `value is not an integer in 0..=${maximum}`);
-export const gltfWireIndex = gltfWireInteger();
+export const gltfWireIndex: GltfWireReader<bigint> = (value, at = "$") => BigInt(gltfWireInteger()(value,at));
 export const gltfWireByte = gltfWireInteger(255);
 export const gltfWireLiteral = <const T extends readonly (string | number)[]>(...members: T): GltfWireReader<T[number]> => (value, at = "$") =>
   members.includes(value as T[number]) ? (value as T[number]) : gltfWireRefuse(at, `value is not one of ${members.join(", ")}`);
@@ -51,16 +53,17 @@ export const gltfWireTuple = <T extends readonly unknown[]>(...items: { readonly
   if (!Array.isArray(value) || value.length !== items.length) return gltfWireRefuse(at, `value is not an array of exactly ${items.length} items`);
   return value.map((entry, index) => (items[index] as GltfWireReader<unknown>)(entry, `${at}[${index}]`)) as [...T];
 };
-export const gltfWireMap = <T>(read: GltfWireReader<T>): GltfWireReader<Record<string, T>> => (value, at = "$") =>
-  Object.fromEntries(Object.entries(gltfWireRecord(value, at)).map(([key, entry]) => [key, read(entry, `${at}.${key}`)]));
+export const gltfWireMap = <T>(read: GltfWireReader<T>): GltfWireReader<[string,T][]> => (value, at = "$") =>
+  Object.entries(gltfWireRecord(value, at)).map(([key, entry]) => [key, read(entry, `${at}.${key}`)]);
 export const gltfWireRequired = <T>(read: GltfWireReader<T>): GltfWireMember<T, false> => ({ read, optional: false });
+export const gltfWireDefault = <T>(read: GltfWireReader<T>, missing: () => T): GltfWireMember<T,false> => ({read,optional:false,missing});
 export const gltfWireOptional = <T>(read: GltfWireReader<T>): GltfWireMember<T, true> => ({ read, optional: true });
 export const gltfWireObject = <T extends object>(members: GltfWireMembers<T>): GltfWireReader<T> => (value, at = "$") => {
   const row = gltfWireRecord(value, at);
   for (const key of Object.keys(row)) if (!Object.hasOwn(members, key)) gltfWireRefuse(`${at}.${key}`, "member is not part of the contract");
   return Object.fromEntries(
     Object.entries(members as Readonly<Record<string, GltfWireMember<unknown>>>).flatMap(([key, member]) =>
-      Object.hasOwn(row, key) ? [[key, member.read(row[key], `${at}.${key}`)]] : member.optional ? [] : gltfWireRefuse(`${at}.${key}`, "required member is absent"),
+      Object.hasOwn(row, key) ? [[key, member.read(row[key], `${at}.${key}`)]] : member.missing ? [[key,member.missing()]] : member.optional ? [] : gltfWireRefuse(`${at}.${key}`, "required member is absent"),
     ),
   ) as T;
 };
@@ -73,7 +76,7 @@ export const gltfWireTagged = <T extends object, K extends keyof T & string>(tag
 
 //#region 🧾️Records
 /** 🧩️ This artifact's extras/extensions value: any JSON, owned locally rather than borrowed from a JSON library. */
-export type GltfJson = null | boolean | number | string | GltfJson[] | { [key: string]: GltfJson };
+export type GltfJson = {kind:"null"}|{kind:"boolean";value:boolean}|{kind:"number";value:Binary64}|{kind:"string";value:string}|{kind:"array";values:GltfJson[]}|{kind:"object";members:[string,GltfJson][]};
 
 export interface GltfAsset {
   version: string;
@@ -85,43 +88,43 @@ export interface GltfAsset {
 }
 
 export interface GltfScene {
-  nodes?: number[];
+  nodes: bigint[];
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfNode {
-  children?: number[];
-  mesh?: number;
-  camera?: number;
-  skin?: number;
-  matrix?: number[];
-  translation?: [number, number, number];
-  rotation?: [number, number, number, number];
-  scale?: [number, number, number];
-  weights?: number[];
+  children: bigint[];
+  mesh?: bigint;
+  camera?: bigint;
+  skin?: bigint;
+  matrix?: Binary64[];
+  translation?: [Binary64, Binary64, Binary64];
+  rotation?: [Binary64, Binary64, Binary64, Binary64];
+  scale?: [Binary64, Binary64, Binary64];
+  weights: Binary64[];
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 /** 🎯️ One morph target: attribute semantic to accessor index. */
-export type GltfMorphTarget = Record<string, number>;
+export type GltfMorphTarget = [string,bigint][];
 
 export interface GltfPrimitive {
-  attributes: Record<string, number>;
-  indices?: number;
-  material?: number;
-  mode?: number;
-  targets?: GltfMorphTarget[];
+  attributes: [string,bigint][];
+  indices?: bigint;
+  material?: bigint;
+  mode?: bigint;
+  targets: GltfMorphTarget[];
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfMesh {
-  primitives?: GltfPrimitive[];
-  weights?: number[];
+  primitives: GltfPrimitive[];
+  weights: Binary64[];
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
@@ -133,29 +136,29 @@ export type GltfComponentType = 5120 | 5121 | 5122 | 5123 | 5125 | 5126;
 export type GltfAccessorType = "SCALAR" | "VEC2" | "VEC3" | "VEC4" | "MAT2" | "MAT3" | "MAT4";
 
 export interface GltfSparseIndices {
-  bufferView: number;
-  byteOffset?: number;
+  bufferView: bigint;
+  byteOffset: bigint;
   componentType: GltfComponentType;
 }
 export interface GltfSparseValues {
-  bufferView: number;
-  byteOffset?: number;
+  bufferView: bigint;
+  byteOffset: bigint;
 }
 export interface GltfSparseAccessor {
-  count: number;
+  count: bigint;
   indices: GltfSparseIndices;
   values: GltfSparseValues;
 }
 
 export interface GltfAccessor {
-  bufferView?: number;
-  byteOffset?: number;
+  bufferView?: bigint;
+  byteOffset: bigint;
   componentType: GltfComponentType;
-  normalized?: boolean;
-  count: number;
+  normalized: boolean;
+  count: bigint;
   type: GltfAccessorType;
-  max?: number[];
-  min?: number[];
+  max?: Binary64[];
+  min?: Binary64[];
   sparse?: GltfSparseAccessor;
   name?: string;
   extensions?: GltfJson;
@@ -163,18 +166,18 @@ export interface GltfAccessor {
 }
 
 export interface GltfBufferView {
-  buffer: number;
-  byteOffset?: number;
-  byteLength: number;
-  byteStride?: number;
-  target?: number;
+  buffer: bigint;
+  byteOffset: bigint;
+  byteLength: bigint;
+  byteStride?: bigint;
+  target?: bigint;
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfBuffer {
-  byteLength: number;
+  byteLength: bigint;
   uri?: string;
   name?: string;
   extensions?: GltfJson;
@@ -182,31 +185,31 @@ export interface GltfBuffer {
 }
 
 export interface GltfTextureInfo {
-  index: number;
-  texCoord?: number;
+  index: bigint;
+  texCoord: bigint;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfNormalTextureInfo {
-  index: number;
-  texCoord?: number;
-  scale?: number;
+  index: bigint;
+  texCoord: bigint;
+  scale: Binary64;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfOcclusionTextureInfo {
-  index: number;
-  texCoord?: number;
-  strength?: number;
+  index: bigint;
+  texCoord: bigint;
+  strength: Binary64;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfPbrMetallicRoughness {
-  baseColorFactor?: [number, number, number, number];
+  baseColorFactor: [Binary64, Binary64, Binary64, Binary64];
   baseColorTexture?: GltfTextureInfo;
-  metallicFactor?: number;
-  roughnessFactor?: number;
+  metallicFactor: Binary64;
+  roughnessFactor: Binary64;
   metallicRoughnessTexture?: GltfTextureInfo;
   extensions?: GltfJson;
   extras?: GltfJson;
@@ -220,17 +223,17 @@ export interface GltfMaterial {
   normalTexture?: GltfNormalTextureInfo;
   occlusionTexture?: GltfOcclusionTextureInfo;
   emissiveTexture?: GltfTextureInfo;
-  emissiveFactor?: [number, number, number];
-  alphaMode?: GltfAlphaMode;
-  alphaCutoff?: number;
-  doubleSided?: boolean;
+  emissiveFactor: [Binary64, Binary64, Binary64];
+  alphaMode: GltfAlphaMode;
+  alphaCutoff: Binary64;
+  doubleSided: boolean;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfTexture {
-  sampler?: number;
-  source?: number;
+  sampler?: bigint;
+  source?: bigint;
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
@@ -238,24 +241,24 @@ export interface GltfTexture {
 export interface GltfImage {
   uri?: string;
   mimeType?: string;
-  bufferView?: number;
+  bufferView?: bigint;
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfSampler {
-  magFilter?: number;
-  minFilter?: number;
-  wrapS?: number;
-  wrapT?: number;
+  magFilter?: bigint;
+  minFilter?: bigint;
+  wrapS: bigint;
+  wrapT: bigint;
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfSkin {
-  inverseBindMatrices?: number;
-  skeleton?: number;
-  joints?: number[];
+  inverseBindMatrices?: bigint;
+  skeleton?: bigint;
+  joints: bigint[];
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
@@ -263,46 +266,46 @@ export interface GltfSkin {
 
 export type GltfAnimationPath = "translation" | "rotation" | "scale" | "weights";
 export interface GltfAnimationChannelTarget {
-  node?: number;
+  node?: bigint;
   path: GltfAnimationPath;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfAnimationChannel {
-  sampler: number;
+  sampler: bigint;
   target: GltfAnimationChannelTarget;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export type GltfInterpolation = "LINEAR" | "STEP" | "CUBICSPLINE";
 export interface GltfAnimationSampler {
-  input: number;
-  interpolation?: GltfInterpolation;
-  output: number;
+  input: bigint;
+  interpolation: GltfInterpolation;
+  output: bigint;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfAnimation {
-  channels?: GltfAnimationChannel[];
-  samplers?: GltfAnimationSampler[];
+  channels: GltfAnimationChannel[];
+  samplers: GltfAnimationSampler[];
   name?: string;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 
 export interface GltfOrthographic {
-  xmag: number;
-  ymag: number;
-  zfar: number;
-  znear: number;
+  xmag: Binary64;
+  ymag: Binary64;
+  zfar: Binary64;
+  znear: Binary64;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
 export interface GltfPerspective {
-  aspectRatio?: number;
-  yfov: number;
-  zfar?: number;
-  znear: number;
+  aspectRatio?: Binary64;
+  yfov: Binary64;
+  zfar?: Binary64;
+  znear: Binary64;
   extensions?: GltfJson;
   extras?: GltfJson;
 }
@@ -312,22 +315,22 @@ export type GltfCamera = GltfCameraProjection & { name?: string; extensions?: Gl
 
 export interface GltfDocument {
   asset: GltfAsset;
-  scene?: number;
-  scenes?: GltfScene[];
-  nodes?: GltfNode[];
-  meshes?: GltfMesh[];
-  accessors?: GltfAccessor[];
-  bufferViews?: GltfBufferView[];
-  buffers?: GltfBuffer[];
-  materials?: GltfMaterial[];
-  textures?: GltfTexture[];
-  images?: GltfImage[];
-  samplers?: GltfSampler[];
-  skins?: GltfSkin[];
-  animations?: GltfAnimation[];
-  cameras?: GltfCamera[];
-  extensionsUsed?: string[];
-  extensionsRequired?: string[];
+  scene?: bigint;
+  scenes: GltfScene[];
+  nodes: GltfNode[];
+  meshes: GltfMesh[];
+  accessors: GltfAccessor[];
+  bufferViews: GltfBufferView[];
+  buffers: GltfBuffer[];
+  materials: GltfMaterial[];
+  textures: GltfTexture[];
+  images: GltfImage[];
+  samplers: GltfSampler[];
+  skins: GltfSkin[];
+  animations: GltfAnimation[];
+  cameras: GltfCamera[];
+  extensionsUsed: string[];
+  extensionsRequired: string[];
   extensions?: GltfJson;
   extras?: GltfJson;
 }
@@ -345,18 +348,20 @@ export interface GltfSnapshot {
 //#region 📥️Parsers
 /** 🧩️ Decodes any JSON value into a fresh `GltfJson`, keeping member order. */
 export function parseGltfJson(value: unknown, at = "$"): GltfJson {
-  if (value === null || typeof value === "boolean" || typeof value === "string") return value;
-  if (typeof value === "number") return gltfWireNumber(value, at);
-  if (Array.isArray(value)) return value.map((entry, index) => parseGltfJson(entry, `${at}[${index}]`));
-  return Object.fromEntries(Object.entries(gltfWireRecord(value, at)).map(([key, entry]) => [key, parseGltfJson(entry, `${at}.${key}`)]));
+ if(value===null)return{kind:"null"};
+ if(typeof value==="boolean")return{kind:"boolean",value};
+ if(typeof value==="string")return{kind:"string",value};
+ if(typeof value==="number")return{kind:"number",value:gltfWireNumber(value,at)};
+ if(Array.isArray(value))return{kind:"array",values:value.map((value,index)=>parseGltfJson(value,at+"["+index+"]"))};
+ return{kind:"object",members:Object.entries(gltfWireRecord(value,at)).map(([key,value])=>[key,parseGltfJson(value,at+"."+key)])};
 }
 
 const json = gltfWireOptional(parseGltfJson);
 const name = gltfWireOptional(gltfWireString);
 const index = gltfWireRequired(gltfWireIndex);
 const optionalIndex = gltfWireOptional(gltfWireIndex);
-const indices = gltfWireOptional(gltfWireArray(gltfWireIndex));
-const numbers = gltfWireOptional(gltfWireArray(gltfWireNumber));
+const indices = gltfWireDefault(gltfWireArray(gltfWireIndex),()=>[]);
+const numbers = gltfWireDefault(gltfWireArray(gltfWireNumber),()=>[]);
 const vector3 = gltfWireTuple(gltfWireNumber, gltfWireNumber, gltfWireNumber);
 const vector4 = gltfWireTuple(gltfWireNumber, gltfWireNumber, gltfWireNumber, gltfWireNumber);
 
@@ -389,23 +394,23 @@ export const parseGltfPrimitive = gltfWireObject<GltfPrimitive>({
   indices: optionalIndex,
   material: optionalIndex,
   mode: optionalIndex,
-  targets: gltfWireOptional(gltfWireArray(parseGltfMorphTarget)),
+  targets: gltfWireDefault(gltfWireArray(parseGltfMorphTarget),()=>[]),
   extensions: json,
   extras: json,
 });
-export const parseGltfMesh = gltfWireObject<GltfMesh>({ primitives: gltfWireOptional(gltfWireArray(parseGltfPrimitive)), weights: numbers, name, extensions: json, extras: json });
-export const parseGltfSparseIndices = gltfWireObject<GltfSparseIndices>({ bufferView: index, byteOffset: optionalIndex, componentType: gltfWireRequired(parseGltfComponentType) });
-export const parseGltfSparseValues = gltfWireObject<GltfSparseValues>({ bufferView: index, byteOffset: optionalIndex });
+export const parseGltfMesh = gltfWireObject<GltfMesh>({ primitives: gltfWireDefault(gltfWireArray(parseGltfPrimitive),()=>[]), weights: numbers, name, extensions: json, extras: json });
+export const parseGltfSparseIndices = gltfWireObject<GltfSparseIndices>({ bufferView: index, byteOffset: gltfWireDefault(gltfWireIndex,()=>0n), componentType: gltfWireRequired(parseGltfComponentType) });
+export const parseGltfSparseValues = gltfWireObject<GltfSparseValues>({ bufferView: index, byteOffset: gltfWireDefault(gltfWireIndex,()=>0n) });
 export const parseGltfSparseAccessor = gltfWireObject<GltfSparseAccessor>({ count: index, indices: gltfWireRequired(parseGltfSparseIndices), values: gltfWireRequired(parseGltfSparseValues) });
 export const parseGltfAccessor = gltfWireObject<GltfAccessor>({
   bufferView: optionalIndex,
-  byteOffset: optionalIndex,
+  byteOffset: gltfWireDefault(gltfWireIndex,()=>0n),
   componentType: gltfWireRequired(parseGltfComponentType),
-  normalized: gltfWireOptional(gltfWireBoolean),
+  normalized: gltfWireDefault(gltfWireBoolean,()=>false),
   count: index,
   type: gltfWireRequired(parseGltfAccessorType),
-  max: numbers,
-  min: numbers,
+  max: gltfWireOptional(gltfWireArray(gltfWireNumber)),
+  min: gltfWireOptional(gltfWireArray(gltfWireNumber)),
   sparse: gltfWireOptional(parseGltfSparseAccessor),
   name,
   extensions: json,
@@ -413,7 +418,7 @@ export const parseGltfAccessor = gltfWireObject<GltfAccessor>({
 });
 export const parseGltfBufferView = gltfWireObject<GltfBufferView>({
   buffer: index,
-  byteOffset: optionalIndex,
+  byteOffset: gltfWireDefault(gltfWireIndex,()=>0n),
   byteLength: index,
   byteStride: optionalIndex,
   target: optionalIndex,
@@ -422,14 +427,14 @@ export const parseGltfBufferView = gltfWireObject<GltfBufferView>({
   extras: json,
 });
 export const parseGltfBuffer = gltfWireObject<GltfBuffer>({ byteLength: index, uri: name, name, extensions: json, extras: json });
-export const parseGltfTextureInfo = gltfWireObject<GltfTextureInfo>({ index, texCoord: optionalIndex, extensions: json, extras: json });
-export const parseGltfNormalTextureInfo = gltfWireObject<GltfNormalTextureInfo>({ index, texCoord: optionalIndex, scale: gltfWireOptional(gltfWireNumber), extensions: json, extras: json });
-export const parseGltfOcclusionTextureInfo = gltfWireObject<GltfOcclusionTextureInfo>({ index, texCoord: optionalIndex, strength: gltfWireOptional(gltfWireNumber), extensions: json, extras: json });
+export const parseGltfTextureInfo = gltfWireObject<GltfTextureInfo>({ index, texCoord: gltfWireDefault(gltfWireIndex,()=>0n), extensions: json, extras: json });
+export const parseGltfNormalTextureInfo = gltfWireObject<GltfNormalTextureInfo>({ index, texCoord: gltfWireDefault(gltfWireIndex,()=>0n), scale: gltfWireDefault(gltfWireNumber,()=>binary64(1)), extensions: json, extras: json });
+export const parseGltfOcclusionTextureInfo = gltfWireObject<GltfOcclusionTextureInfo>({ index, texCoord: gltfWireDefault(gltfWireIndex,()=>0n), strength: gltfWireDefault(gltfWireNumber,()=>binary64(1)), extensions: json, extras: json });
 export const parseGltfPbrMetallicRoughness = gltfWireObject<GltfPbrMetallicRoughness>({
-  baseColorFactor: gltfWireOptional(vector4),
+  baseColorFactor: gltfWireDefault(vector4,()=>[binary64(1),binary64(1),binary64(1),binary64(1)]),
   baseColorTexture: gltfWireOptional(parseGltfTextureInfo),
-  metallicFactor: gltfWireOptional(gltfWireNumber),
-  roughnessFactor: gltfWireOptional(gltfWireNumber),
+  metallicFactor: gltfWireDefault(gltfWireNumber,()=>binary64(1)),
+  roughnessFactor: gltfWireDefault(gltfWireNumber,()=>binary64(1)),
   metallicRoughnessTexture: gltfWireOptional(parseGltfTextureInfo),
   extensions: json,
   extras: json,
@@ -440,23 +445,23 @@ export const parseGltfMaterial = gltfWireObject<GltfMaterial>({
   normalTexture: gltfWireOptional(parseGltfNormalTextureInfo),
   occlusionTexture: gltfWireOptional(parseGltfOcclusionTextureInfo),
   emissiveTexture: gltfWireOptional(parseGltfTextureInfo),
-  emissiveFactor: gltfWireOptional(vector3),
-  alphaMode: gltfWireOptional(parseGltfAlphaMode),
-  alphaCutoff: gltfWireOptional(gltfWireNumber),
-  doubleSided: gltfWireOptional(gltfWireBoolean),
+  emissiveFactor: gltfWireDefault(vector3,()=>[binary64(0),binary64(0),binary64(0)]),
+  alphaMode: gltfWireDefault(parseGltfAlphaMode,()=>"OPAQUE"),
+  alphaCutoff: gltfWireDefault(gltfWireNumber,()=>binary64(0.5)),
+  doubleSided: gltfWireDefault(gltfWireBoolean,()=>false),
   extensions: json,
   extras: json,
 });
 export const parseGltfTexture = gltfWireObject<GltfTexture>({ sampler: optionalIndex, source: optionalIndex, name, extensions: json, extras: json });
 export const parseGltfImage = gltfWireObject<GltfImage>({ uri: name, mimeType: name, bufferView: optionalIndex, name, extensions: json, extras: json });
-export const parseGltfSampler = gltfWireObject<GltfSampler>({ magFilter: optionalIndex, minFilter: optionalIndex, wrapS: optionalIndex, wrapT: optionalIndex, name, extensions: json, extras: json });
+export const parseGltfSampler = gltfWireObject<GltfSampler>({ magFilter: optionalIndex, minFilter: optionalIndex, wrapS: gltfWireDefault(gltfWireIndex,()=>10497n), wrapT: gltfWireDefault(gltfWireIndex,()=>10497n), name, extensions: json, extras: json });
 export const parseGltfSkin = gltfWireObject<GltfSkin>({ inverseBindMatrices: optionalIndex, skeleton: optionalIndex, joints: indices, name, extensions: json, extras: json });
 export const parseGltfAnimationChannelTarget = gltfWireObject<GltfAnimationChannelTarget>({ node: optionalIndex, path: gltfWireRequired(parseGltfAnimationPath), extensions: json, extras: json });
 export const parseGltfAnimationChannel = gltfWireObject<GltfAnimationChannel>({ sampler: index, target: gltfWireRequired(parseGltfAnimationChannelTarget), extensions: json, extras: json });
-export const parseGltfAnimationSampler = gltfWireObject<GltfAnimationSampler>({ input: index, interpolation: gltfWireOptional(parseGltfInterpolation), output: index, extensions: json, extras: json });
+export const parseGltfAnimationSampler = gltfWireObject<GltfAnimationSampler>({ input: index, interpolation: gltfWireDefault(parseGltfInterpolation,()=>"LINEAR"), output: index, extensions: json, extras: json });
 export const parseGltfAnimation = gltfWireObject<GltfAnimation>({
-  channels: gltfWireOptional(gltfWireArray(parseGltfAnimationChannel)),
-  samplers: gltfWireOptional(gltfWireArray(parseGltfAnimationSampler)),
+  channels: gltfWireDefault(gltfWireArray(parseGltfAnimationChannel),()=>[]),
+  samplers: gltfWireDefault(gltfWireArray(parseGltfAnimationSampler),()=>[]),
   name,
   extensions: json,
   extras: json,
@@ -488,21 +493,21 @@ export const parseGltfCamera = gltfWireTagged<GltfCamera, "type">("type", {
 export const parseGltfDocument = gltfWireObject<GltfDocument>({
   asset: gltfWireRequired(parseGltfAsset),
   scene: optionalIndex,
-  scenes: gltfWireOptional(gltfWireArray(parseGltfScene)),
-  nodes: gltfWireOptional(gltfWireArray(parseGltfNode)),
-  meshes: gltfWireOptional(gltfWireArray(parseGltfMesh)),
-  accessors: gltfWireOptional(gltfWireArray(parseGltfAccessor)),
-  bufferViews: gltfWireOptional(gltfWireArray(parseGltfBufferView)),
-  buffers: gltfWireOptional(gltfWireArray(parseGltfBuffer)),
-  materials: gltfWireOptional(gltfWireArray(parseGltfMaterial)),
-  textures: gltfWireOptional(gltfWireArray(parseGltfTexture)),
-  images: gltfWireOptional(gltfWireArray(parseGltfImage)),
-  samplers: gltfWireOptional(gltfWireArray(parseGltfSampler)),
-  skins: gltfWireOptional(gltfWireArray(parseGltfSkin)),
-  animations: gltfWireOptional(gltfWireArray(parseGltfAnimation)),
-  cameras: gltfWireOptional(gltfWireArray(parseGltfCamera)),
-  extensionsUsed: gltfWireOptional(gltfWireArray(gltfWireString)),
-  extensionsRequired: gltfWireOptional(gltfWireArray(gltfWireString)),
+  scenes: gltfWireDefault(gltfWireArray(parseGltfScene),()=>[]),
+  nodes: gltfWireDefault(gltfWireArray(parseGltfNode),()=>[]),
+  meshes: gltfWireDefault(gltfWireArray(parseGltfMesh),()=>[]),
+  accessors: gltfWireDefault(gltfWireArray(parseGltfAccessor),()=>[]),
+  bufferViews: gltfWireDefault(gltfWireArray(parseGltfBufferView),()=>[]),
+  buffers: gltfWireDefault(gltfWireArray(parseGltfBuffer),()=>[]),
+  materials: gltfWireDefault(gltfWireArray(parseGltfMaterial),()=>[]),
+  textures: gltfWireDefault(gltfWireArray(parseGltfTexture),()=>[]),
+  images: gltfWireDefault(gltfWireArray(parseGltfImage),()=>[]),
+  samplers: gltfWireDefault(gltfWireArray(parseGltfSampler),()=>[]),
+  skins: gltfWireDefault(gltfWireArray(parseGltfSkin),()=>[]),
+  animations: gltfWireDefault(gltfWireArray(parseGltfAnimation),()=>[]),
+  cameras: gltfWireDefault(gltfWireArray(parseGltfCamera),()=>[]),
+  extensionsUsed: gltfWireDefault(gltfWireArray(gltfWireString),()=>[]),
+  extensionsRequired: gltfWireDefault(gltfWireArray(gltfWireString),()=>[]),
   extensions: json,
   extras: json,
 });

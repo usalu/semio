@@ -3126,7 +3126,7 @@ fn register_guest_document_codec(plugin_id: &str, artifact_schema: &str, dialect
     let codec = store::ArtifactCodec {
         schema: artifact_schema.to_string(),
         extension: "semio",
-        snapshot_sqlite: Some(store::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, subset_validation: store::SnapshotSubsetValidation::Provider, export: guest_sqlite_export, import: guest_sqlite_import }),
+        snapshot_sqlite: Some(store::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import }),
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
         print_mirror: guest_print_mirror,
@@ -5421,7 +5421,7 @@ impl HeadlessWorkspace {
                 Some(probe_store) => Ok(vec![ResourceContent {
                     uri: uri.to_string(),
                     mime_type: Some("application/json".to_string()),
-                    text: Some(serde_json::json!({ "appliedEditIds": probe_store.applied_edit_ids() }).to_string()),
+                    text: Some(serde_json::json!({ "appliedEditIds": probe_store.applied_edit_ids().iter().collect::<Vec<_>>() }).to_string()),
                     blob: None,
                 }]),
                 None => Err(GatewayError::new(GatewayErrorCode::NotFound, format!("`{artifact_id}` has no open history in this workspace"))),

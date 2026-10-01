@@ -4,7 +4,7 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfDeleteCameraPayload {
-  index: number;
+  index: bigint;
 }
 
 export type DeleteCameraMutation = GltfPhase<GltfDeleteCameraPayload, GltfDiff>;

@@ -60,12 +60,12 @@
       "vectors": [
         {
           "mutationId": "change-generation-value",
-          "sourceMutationDirectoryName": "🔢️change-generation-value",
-          "mutationDirectoryName": "🔢️change-generation-value",
+          "sourceMutationDirectoryName": "🔢️change",
+          "mutationDirectoryName": "🔢️change",
           "scenarios": [
             {
               "id": "raises-the-height-answer-in-generation-1",
-              "directoryName": "📏️raises-the-height-answer-in-generation-1"
+              "directoryName": "📏️raises"
             }
           ]
         },
@@ -76,7 +76,7 @@
           "scenarios": [
             {
               "id": "restamps-the-fixture-schema",
-              "directoryName": "🏷️restamps-the-fixture-schema"
+              "directoryName": "🏷️restamps"
             }
           ]
         },
@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "drops-the-note-a-layout-entry",
-              "directoryName": "🧹️drops-the-note-a-layout-entry"
+              "directoryName": "🧹️drops"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "joins-note-b-to-note-c-at-index-1",
-              "directoryName": "🔗️joins-note-b-to-note-c-at-index-1"
+              "directoryName": "🔗️joins"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "appends-generation-2-and-selects-it",
-              "directoryName": "🌱️appends-generation-2-and-selects-it"
+              "directoryName": "🌱️appends"
             }
           ]
         },
@@ -120,7 +120,7 @@
           "scenarios": [
             {
               "id": "inserts-note-c-at-index-2",
-              "directoryName": "📝️inserts-note-c-at-index-2"
+              "directoryName": "📝️inserts"
             }
           ]
         },
@@ -142,51 +142,51 @@
           "scenarios": [
             {
               "id": "removes-note-a-and-flags-the-dangling-synapse",
-              "directoryName": "🚫️removes-note-a-and-flags-the-dangling-synapse"
+              "directoryName": "🚫️removes"
             }
           ]
         },
         {
           "mutationId": "disconnect-synapse",
-          "sourceMutationDirectoryName": "✂️disconnect-synapse",
-          "mutationDirectoryName": "✂️disconnect-synapse",
+          "sourceMutationDirectoryName": "✂️disconnect",
+          "mutationDirectoryName": "✂️disconnect",
           "scenarios": [
             {
               "id": "severs-link-ab-leaving-both-notes",
-              "directoryName": "✂️severs-link-ab-leaving-both-notes"
+              "directoryName": "✂️severs"
             }
           ]
         },
         {
           "mutationId": "move-widget",
-          "sourceMutationDirectoryName": "📍️move-widget",
-          "mutationDirectoryName": "📍️move-widget",
+          "sourceMutationDirectoryName": "📍️move",
+          "mutationDirectoryName": "📍️move",
           "scenarios": [
             {
               "id": "repositions-note-a-on-the-canvas",
-              "directoryName": "📍️repositions-note-a-on-the-canvas"
+              "directoryName": "📍️repositions"
             }
           ]
         },
         {
           "mutationId": "rename-generation",
-          "sourceMutationDirectoryName": "🏷️rename-generation",
-          "mutationDirectoryName": "🏷️rename-generation",
+          "sourceMutationDirectoryName": "🏷️rename",
+          "mutationDirectoryName": "🏷️rename",
           "scenarios": [
             {
               "id": "retitles-generation-1",
-              "directoryName": "🏷️retitles-generation-1"
+              "directoryName": "🏷️retitles"
             }
           ]
         },
         {
           "mutationId": "replace-synapse",
-          "sourceMutationDirectoryName": "🔄️replace-synapse",
-          "mutationDirectoryName": "🔄️replace-synapse",
+          "sourceMutationDirectoryName": "🔄️replace",
+          "mutationDirectoryName": "🔄️replace",
           "scenarios": [
             {
               "id": "repoints-link-ab-onto-the-alt-port",
-              "directoryName": "🔗️repoints-link-ab-onto-the-alt-port"
+              "directoryName": "🔗️repoints"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-note-b-body-in-place",
-              "directoryName": "✍️rewrites-the-note-b-body-in-place"
+              "directoryName": "✍️rewrites"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "pans-and-zooms-the-graph-camera",
-              "directoryName": "📷️pans-and-zooms-the-graph-camera"
+              "directoryName": "📷️pans"
             }
           ]
         }

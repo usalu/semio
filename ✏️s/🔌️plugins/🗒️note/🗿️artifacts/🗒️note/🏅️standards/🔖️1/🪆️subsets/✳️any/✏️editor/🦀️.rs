@@ -587,12 +587,6 @@ impl ArtifactEditor for NotePlayApp {
         command.dispatch(doc, cfg, &mut ctx)
     }
 
-    /// 🏷️ A document op's own localized label, so an ink tool transaction's history row reads its leaf —
-    /// "Drag 2 blocks" / "2 Blöcke ziehen" — instead of the op's text line.
-    fn mutation_label(op: &NoteMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::<NoteSnapshot>::label(op))
-    }
-
     /// 🕹️ `blocks` domain: `HierarchyProvider::Topology` from the document's own Group nesting — see
     /// `note_blocks_topology`'s doc comment.
     fn interaction_topology(doc: &ArtifactView<'_, NoteSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> InteractionTopology {

@@ -1942,8 +1942,9 @@ export type HistoryMutationMessage = {
 };
 
 /** ✏️ One applied mutation of a history row, mirrored from Rust `HistoryMutationEntry`: `pending` = downstream of
- * the mutation being edited and not applied in the preview, `edited` = the session holds a draft for it, `store` = the
- * composed member store that holds it (`<slot>/<childId>`), absent for the document's own. */
+ * the mutation being edited and not applied in the preview, `edited` = the session holds a draft for it, `introduced` =
+ * the session's replay outcome carries a message (level and code) its pre-edit outcome does not, `store` = the composed
+ * member store that holds it (`<slot>/<childId>`), absent for the document's own. */
 export type HistoryMutationEntry = {
   readonly mutationId: string;
   readonly position: number;
@@ -1956,6 +1957,7 @@ export type HistoryMutationEntry = {
   readonly editable?: boolean;
   readonly pending?: boolean;
   readonly edited?: boolean;
+  readonly introduced?: boolean;
   readonly store?: string;
 };
 

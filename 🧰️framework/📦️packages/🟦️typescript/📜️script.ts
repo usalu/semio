@@ -3,7 +3,9 @@
 import { strict as assert } from "node:assert";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runBunx, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 function retainedUiNativeStripOnly(): void {
   const source = new URL("../../🔨️modules/🖱️ui/🧬️contract/🧵️retained/🟦️.ts", import.meta.url).href;
@@ -375,4 +377,4 @@ class InstallationIdentityScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

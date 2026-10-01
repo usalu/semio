@@ -228,8 +228,7 @@
       "toolId": "translateSelection",
       "classification": "migrated",
       "lanes": [
-        "artifact",
-        "transient"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -240,8 +239,7 @@
       "toolId": "rotateSelection",
       "classification": "migrated",
       "lanes": [
-        "artifact",
-        "transient"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -252,8 +250,7 @@
       "toolId": "scaleSelection",
       "classification": "migrated",
       "lanes": [
-        "artifact",
-        "transient"
+        "artifact"
       ],
       "preparation": [
         "Artifact"
@@ -265,18 +262,6 @@
       "classification": "migrated",
       "lanes": [
         "artifact"
-      ],
-      "preparation": [
-        "Artifact"
-      ],
-      "blocker": null
-    },
-    {
-      "toolId": "paintStrokeEnd",
-      "classification": "migrated",
-      "lanes": [
-        "artifact",
-        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -299,18 +284,6 @@
       "classification": "migrated",
       "lanes": [
         "artifact"
-      ],
-      "preparation": [
-        "Artifact"
-      ],
-      "blocker": null
-    },
-    {
-      "toolId": "transformEnd",
-      "classification": "migrated",
-      "lanes": [
-        "artifact",
-        "transient"
       ],
       "preparation": [
         "Artifact"
@@ -511,15 +484,6 @@
       "blocker": null
     },
     {
-      "toolId": "paintStrokeBegin",
-      "classification": "migrated",
-      "lanes": [
-        "transient"
-      ],
-      "preparation": [],
-      "blocker": null
-    },
-    {
       "toolId": "paintSample",
       "classification": "migrated",
       "lanes": [
@@ -534,10 +498,12 @@
       "toolId": "paintStroke",
       "classification": "migrated",
       "lanes": [
+        "artifact",
         "config",
         "transient"
       ],
       "preparation": [
+        "Artifact",
         "Config"
       ],
       "blocker": null
@@ -546,10 +512,12 @@
       "toolId": "paintAt",
       "classification": "migrated",
       "lanes": [
+        "artifact",
         "config",
         "transient"
       ],
       "preparation": [
+        "Artifact",
         "Config"
       ],
       "blocker": null
@@ -558,10 +526,12 @@
       "toolId": "canvasPointerDown",
       "classification": "migrated",
       "lanes": [
+        "artifact",
         "config",
         "transient"
       ],
       "preparation": [
+        "Artifact",
         "Config"
       ],
       "blocker": null
@@ -570,21 +540,28 @@
       "toolId": "canvasPointerMove",
       "classification": "migrated",
       "lanes": [
+        "artifact",
         "config",
         "transient"
       ],
       "preparation": [
+        "Artifact",
         "Config"
       ],
       "blocker": null
     },
     {
-      "toolId": "transformBegin",
+      "toolId": "canvasPointerUp",
       "classification": "migrated",
       "lanes": [
+        "artifact",
+        "config",
         "transient"
       ],
-      "preparation": [],
+      "preparation": [
+        "Artifact",
+        "Config"
+      ],
       "blocker": null
     }
   ]

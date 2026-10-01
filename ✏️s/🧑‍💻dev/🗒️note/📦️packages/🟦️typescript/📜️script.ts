@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, runCargo, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCmd, runCargo, runVitest } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
@@ -12,15 +14,15 @@ if (segments[0] === "note-document-contract") {
         await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-note-note", "--lib", "--", "--nocapture"], this.repoRoot);
         return;
       }
-      const { testNoteDocumentContractOracle } = await import("../../../../🔌️plugins/🗒️note/🧪️tests/🪪️document-contract/🟦️.ts");
+      const { testNoteDocumentContractOracle } = await import("../../../../🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts");
       await testNoteDocumentContractOracle();
       const noteRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗒️note");
       const files = ["", "📸️snapshot", "🔺️diff"].map((facet) => join(noteRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema", facet, "🟦️.ts"));
-      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(noteRoot, "🧪️tests/🪪️document-contract/🟦️.ts")], { cwd: this.repoRoot });
+      runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", ...files, join(noteRoot, "🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🪪️document/🟦️.ts")], { cwd: this.repoRoot });
       return;
     }
     throw new Error('Unknown owned verification '+segments.join(' '));
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript);
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

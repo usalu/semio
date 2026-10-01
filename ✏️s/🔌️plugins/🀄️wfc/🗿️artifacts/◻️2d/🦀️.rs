@@ -162,7 +162,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
                             mod tests_reseeds_the_solve_from_7_to_99;
                         }
                         #[path = "."]
@@ -175,7 +175,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️inserts-slot-d-in-canonical-order/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️create-slot/🧪️tests/🧩️inserts/🦀️.rs"]
                             mod tests_inserts_slot_d_in_canonical_order;
                         }
                         #[path = "."]
@@ -188,7 +188,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes-slot-a-and-cascades-edge-ab/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️delete-slot/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_slot_a_and_cascades_edge_ab;
                         }
                         #[path = "."]
@@ -321,7 +321,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🚫️removes-the-wall-tile-and-cascades-rules-and-pins/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_wall_tile_and_cascades_rules_and_pins;
                         }
                         #[path = "."]
@@ -334,7 +334,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️raises-the-wall-tile-bias/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️raises/🦀️.rs"]
                             mod tests_raises_the_wall_tile_bias;
                         }
                         #[path = "."]
@@ -347,7 +347,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧪️tests/🎨️repaints-the-roof-tile-as-a-raster/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧪️tests/🎨️repaints/🦀️.rs"]
                             mod tests_repaints_the_roof_tile_as_a_raster;
                         }
                         #[path = "."]

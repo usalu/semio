@@ -80,7 +80,7 @@ pub(crate) mod fixture {
                     control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot,0,1)?;
                     if dialect.subset=="*"{return Ok(semio_framework::io_schema::IoOutcome::clean(()));}
                     if dialect!=&semio_framework::io_schema::ArtifactDialect::from($dialect)||dialect.subset!="strict"{return Err("fixture subset has no semantic validator".to_string().into());}
-                    let diagnostics=if self.value<0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.negative-value"),severity:dsl::Severity::Error,span:dsl::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:dsl::FaultScope::default()}]}else if self.value==0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.zero-value"),severity:dsl::Severity::Warning,span:dsl::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:dsl::FaultScope::default()}]}else{Vec::new()};
+                    let diagnostics=if self.value<0{vec![dsl::Diagnostic{code:dsl::FaultCode::new(if self.value==i32::MIN{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}),severity:if self.value==i32::MIN{dsl::Severity::Fatal}else{dsl::Severity::Error},span:dsl::TextSpan::at(1,1),message:"strict fixture requires a non-negative value".into(),expected:None,scope:dsl::FaultScope::default()}]}else if self.value==0{vec![dsl::Diagnostic{code:dsl::FaultCode::new("fixture.strict.zero-value"),severity:dsl::Severity::Warning,span:dsl::TextSpan::at(1,1),message:"strict fixture has no positive value".into(),expected:None,scope:dsl::FaultScope::default()}]}else{Vec::new()};
                     Ok(semio_framework::io_schema::IoOutcome{value:(),diagnostics})
                 }
 
@@ -556,6 +556,26 @@ pub(crate) mod fixture {
         let strict_export = io_route(&ArtifactDialect::from(STD1_STRICT_DIALECT), &sqlite, 1).await.expect("strict export route").value;
         assert!(io_run(&strict_export, IoPayload::Text("{\"value\":-1}".into())).await.is_err());
         let fatal=io_run(&strict_export,IoPayload::Binary(Std1StrictSnapshot{value:i32::MIN}.encode_pack())).await.unwrap_err();assert_eq!(fatal.diagnostics[0].severity,dsl::Severity::Fatal);
+        let strict_import = io_route(&sqlite, &ArtifactDialect::from(STD1_STRICT_DIALECT), 1).await.unwrap().value;
+        for payload in [IoPayload::Binary(Std1StrictSnapshot { value: 0 }.encode_pack()), IoPayload::Text("{\"value\":0}".into())] {
+            let exported = io_run(&strict_export, payload.clone()).await.unwrap();
+            assert_eq!(exported.diagnostics.len(), 1);
+            assert_eq!(exported.diagnostics[0].severity, dsl::Severity::Warning);
+            let restored = io_run(&strict_import, exported.value).await.unwrap();
+            assert_eq!(restored.value, payload);
+            assert_eq!(restored.diagnostics, exported.diagnostics);
+        }
+        let snapshot = Std1StrictSnapshot { value: 1 };
+        let provider = <Std1StrictSnapshot as store::ArtifactSqliteSnapshot>::sqlite_codec();
+        let mut progress = |_| true;
+        let mut control = semio_framework::sqlite_snapshot::SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
+        let database = <Std1StrictSnapshot as store::ArtifactSqliteSnapshot>::to_sqlite_database(&snapshot, &mut control).unwrap();
+        let foreign = ArtifactDialect::from(STD2_ANY_DIALECT);
+        let mut foreign_strict = foreign.clone();
+        foreign_strict.subset = "strict".into();
+        assert!((provider.export)("fixture.foreign/v1", &foreign_strict, &IoPayload::Binary(snapshot.encode_pack()), &mut control).is_err());
+        assert!((provider.import)("fixture.foreign/v1", &foreign_strict, database, semio_framework::sqlite_snapshot::SnapshotEncoding::Binary, &mut control).is_err());
+
         let mut missing_provider = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1");
         missing_provider.snapshot_sqlite = None;
         assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: missing_provider }]).is_err());

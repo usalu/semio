@@ -14,9 +14,11 @@ import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } fr
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { repoCacheDirectory } from "../📚️library/⚡️caching/🟦️.ts";
-import { type BreachRecord, TEST_LEVELS, type TestLevel, findRepoRoot, getRepoMetaDir, getSemioRoot, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { TEST_LEVELS, type TestLevel } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83C\uDFC3\uFE0Fprocess/\uD83E\uDDEA\uFE0Ftesting/\uD83C\uDF9A\uFE0Fbudget/\uD83D\uDFE6\uFE0F.ts";
+import { type BreachRecord, getRepoMetaDir, getSemioRoot, runProbe, testLevelBudgetMs } from "../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { findWorkspaceRoot } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { type Taxonomy, leadingEmojiIdentity, loadCatalogTaxonomy, mutationCatalogSourceOwner, mutationOwnerRelativePath, pathEmojiStatuteFindings } from "../📚️library/🔍️discovery/🟦️.ts";
-import { validateJsonSchemaSubset } from "../📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 import protocolSchema from "./🧬️schema/🔣️.json";
 import { packagesForOwner } from "./🕸️dependencies/🟨️.mjs";
 //#endregion 🔌️Adapters
@@ -4635,6 +4637,8 @@ export const SCHEMA_DIAGNOSTIC_CODE_TABLE = {
   "schema-mutation-aggregate-kinds-redundant": { emitters: ["check"], description: "an aggregate carries `x-semio-mutationKinds`, which restates its `oneOf` `$ref` union and has no reader" },
   "schema-mutation-input-ui": { emitters: ["harness"], description: "a mutation leaf input has no resolvable UI descriptor: no label in every locale (x-semio-ui or the input-label glossary), an invalid x-semio-ui, or a widget its value cannot take" },
   "schema-mutation-payload-parity": { emitters: ["harness"], description: "a committed mutation fixture's leaf payload (cut out of the aggregate wire value as `payload_value()` does) fails or is not fully described by its leaf payload schema, sits in another wire layout, maps to no leaf, or the leaf schema holds an object node without members" },
+  "schema-mutation-label": { emitters: ["harness"], description: "a history row could show something other than its leaf's label in every locale: a leaf label that is locale-invariant data, an empty locale, an operation's text line, a body the gate cannot read, or an app overriding the leaf label" },
+  "schema-mutation-editability": { emitters: ["harness"], description: "a mutation aggregate the generic history editor cannot edit without a declared reason: a hand-written `impl Mutation` that neither forwards the payload accessors nor is a lane, fixture or uninhabited, a generic aggregate without an emitted payload law, or an aggregate variant without a leaf descriptor" },
   "schema-fixture-defines-schema": { emitters: ["harness", "check"], description: "a schema DEFINITION lives inside a `🧪️*`/`🧫️*` tree without the enclosing case declaring `inertSchemaData`" },
   "schema-fixture-local-schema-fallback": { emitters: ["harness"], description: "a fixture resolves its contract from a fixture-local copy instead of the owning scope" },
   "schema-fixture-metadata-invalid": { emitters: ["harness"], description: "a schema-bound fixture's declaration is not the shape the test protocol states" },
@@ -7942,6 +7946,6 @@ export function formatCoverageQuestions(registry: OracleRegistry, rows: readonly
 //#region 🧭️Root
 /** 📁️ Repository root, resolved from this package's own location. */
 export function repoRootFromHere(): string {
-  return findRepoRoot(dirname(fileURLToPath(import.meta.url)));
+  return findWorkspaceRoot(dirname(fileURLToPath(import.meta.url)));
 }
 //#endregion 🧭️Root

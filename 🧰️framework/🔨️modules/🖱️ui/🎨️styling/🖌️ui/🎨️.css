@@ -521,7 +521,7 @@
     }
 
     .temp .react-flow__edge-path {
-      stroke: #e98787;
+      stroke: var(--color-primary);
       stroke-dasharray: 5 5;
     }
 
@@ -796,22 +796,22 @@
   --radius-3xl: 0rem;
   --radius-4xl: 0rem;
   --radius-full: 0rem;
-  --shadow-2xs: 0 0 rgb(0 0 0 / 0);
-  --shadow-xs: 0 0 rgb(0 0 0 / 0);
-  --shadow-sm: 0 0 rgb(0 0 0 / 0);
-  --shadow-md: 0 0 rgb(0 0 0 / 0);
-  --shadow-lg: 0 0 rgb(0 0 0 / 0);
-  --shadow-xl: 0 0 rgb(0 0 0 / 0);
-  --shadow-2xl: 0 0 rgb(0 0 0 / 0);
-  --inset-shadow-2xs: inset 0 0 rgb(0 0 0 / 0);
-  --inset-shadow-xs: inset 0 0 rgb(0 0 0 / 0);
-  --inset-shadow-sm: inset 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-xs: 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-sm: 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-md: 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-lg: 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-xl: 0 0 rgb(0 0 0 / 0);
-  --drop-shadow-2xl: 0 0 rgb(0 0 0 / 0);
+  --shadow-2xs: 0 0 transparent;
+  --shadow-xs: 0 0 transparent;
+  --shadow-sm: 0 0 transparent;
+  --shadow-md: 0 0 transparent;
+  --shadow-lg: 0 0 transparent;
+  --shadow-xl: 0 0 transparent;
+  --shadow-2xl: 0 0 transparent;
+  --inset-shadow-2xs: inset 0 0 transparent;
+  --inset-shadow-xs: inset 0 0 transparent;
+  --inset-shadow-sm: inset 0 0 transparent;
+  --drop-shadow-xs: 0 0 transparent;
+  --drop-shadow-sm: 0 0 transparent;
+  --drop-shadow-md: 0 0 transparent;
+  --drop-shadow-lg: 0 0 transparent;
+  --drop-shadow-xl: 0 0 transparent;
+  --drop-shadow-2xl: 0 0 transparent;
   --ribbon-item-height: var(--size-medium);
   --ribbon-gap: var(--spacing-single);
   --ribbon-group-gap: var(--spacing-single);
@@ -1184,12 +1184,12 @@
     background:
       conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))), conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
     -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
     -webkit-mask-composite: xor;
     mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
     mask-composite: exclude;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1228,12 +1228,12 @@
     background:
       repeating-conic-gradient(from var(--waiting-border-angle), var(--waiting-border-color, var(--border-normal-color)) 0deg 18deg, transparent 18deg 30deg), conic-gradient(color-mix(in oklab, var(--waiting-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
     -webkit-mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
     -webkit-mask-composite: xor;
     mask:
-      linear-gradient(#000 0 0) content-box,
-      linear-gradient(#000 0 0);
+      linear-gradient(black 0 0) content-box,
+      linear-gradient(black 0 0);
     mask-composite: exclude;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1298,12 +1298,12 @@
     celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
   background: var(--celebrate-conic);
   -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
+    linear-gradient(black 0 0) content-box,
+    linear-gradient(black 0 0);
   -webkit-mask-composite: xor;
   mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
+    linear-gradient(black 0 0) content-box,
+    linear-gradient(black 0 0);
   mask-composite: exclude;
 }
 
@@ -7343,8 +7343,8 @@
 ) :is([data-icon], [data-icon-kind="catalog"], [data-icon-kind="themed"], [data-icon-kind="svg"]) {
   background-image: var(--celebrate-conic);
   animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
-  -webkit-mask-image: var(--icon-mask, linear-gradient(#0000 0 0));
-  mask-image: var(--icon-mask, linear-gradient(#0000 0 0));
+  -webkit-mask-image: var(--icon-mask, linear-gradient(transparent 0 0));
+  mask-image: var(--icon-mask, linear-gradient(transparent 0 0));
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   mask-repeat: no-repeat;

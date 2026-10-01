@@ -1,9 +1,9 @@
-//! 🔀️ `reorder-textures` implementation case `🔀️flips-the-albedo-fc33d9`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! 🔀️ `reorder-textures` implementation case `🔀️flips`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/🎨️texture/🔀️reorder/🔀️flips/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ReorderTexturesMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "reorder-textures");
-    super::super::component::fixture_corpus_tests::assert_case("🎨️texture/🔀️reorder/🔀️flips-the-albedo-fc33d9");
+    super::super::component::fixture_corpus_tests::assert_case("🎨️texture/🔀️reorder/🔀️flips");
 }

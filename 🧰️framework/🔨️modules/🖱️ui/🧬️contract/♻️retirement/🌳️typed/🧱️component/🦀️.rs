@@ -132,6 +132,8 @@ typed_scalar!(
     ContainerRole,
     InputKind,
     ToggleAppearance,
+    SliderAppearance,
+    UiNumberScale,
     TreePresentation,
     TreeWindowRowExtent,
     RowActionPlacement,

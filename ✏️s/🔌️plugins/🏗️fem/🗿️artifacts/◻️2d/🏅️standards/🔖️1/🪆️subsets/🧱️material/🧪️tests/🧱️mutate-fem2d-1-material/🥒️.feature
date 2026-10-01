@@ -96,9 +96,9 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id               | dir                | fixture                 |
-    | create-material  | 🌱️create-material  | 🧱️appends-concrete-c30  |
+    | create-material  | 🌱️create-material  | 🧱️appends  |
     | delete-material  | 🗑️delete-material  | 🚫️removes-the-30f7a2    |
-    | replace-material | 🔁️replace-material | 🏗️restates-steel-7c22bc |
+    | replace-material | 🔁️replace-material | 🏗️restates |
 
   @id-frame-vector
   @level-exhaustive
@@ -111,9 +111,9 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id               | dir                | fixture                    |
-    | create-material  | 🌱️create-material  | 🏗️adds-the-c25-slab-11d8df |
-    | delete-material  | 🗑️delete-material  | 🗑️drops-the-spare-00e964   |
-    | replace-material | 🔁️replace-material | 📉️cracks-the-c30-b2b220    |
+    | create-material  | 🌱️create-material  | 🏗️adds |
+    | delete-material  | 🗑️delete-material  | 🗑️drops   |
+    | replace-material | 🔁️replace-material | 📉️cracks    |
 
   @id-reject
   @level-exhaustive
@@ -127,10 +127,10 @@ Feature: Apply every typed fem2d material mutation twice — once in Rust, once 
     Then both implementations leave the document exactly where it was and report the same diagnostic code, level and address
     Examples:
     | id                 | dir                | fixture                      |
-    | create-material-1  | 🌱️create-material  | 🚫️rejects-a-duplicate-f3220b |
-    | create-material-2  | 🌱️create-material  | ⚗️denies-poisson-329e35      |
-    | delete-material-1  | 🗑️delete-material  | ⛔️rejects-a-missing-d5b18f   |
-    | delete-material-2  | 🗑️delete-material  | 🔗️blocks-in-use-e99619       |
-    | replace-material-1 | 🔁️replace-material | ⛔️rejects-a-missing-b3adee   |
-    | replace-material-2 | 🔁️replace-material | 🪪️denies-rename-a0d7aa       |
-    | replace-material-3 | 🔁️replace-material | ⚗️denies-zero-modulus-71e69a |
+    | create-material-1  | 🌱️create-material  | 🚫️rejects |
+    | create-material-2  | 🌱️create-material  | ⚗️denies      |
+    | delete-material-1  | 🗑️delete-material  | ⛔️rejects   |
+    | delete-material-2  | 🗑️delete-material  | 🔗️blocks       |
+    | replace-material-1 | 🔁️replace-material | ⛔️rejects   |
+    | replace-material-2 | 🔁️replace-material | 🪪️denies       |
+    | replace-material-3 | 🔁️replace-material | ⚗️denies |

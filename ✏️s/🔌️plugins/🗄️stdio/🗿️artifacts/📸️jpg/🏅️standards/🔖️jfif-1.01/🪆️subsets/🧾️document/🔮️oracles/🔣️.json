@@ -153,89 +153,89 @@
       "vectors": [
         {
           "mutationId": "change-jfif-header",
-          "sourceMutationDirectoryName": "🪪️change-jfif-header",
-          "mutationDirectoryName": "🪪️change-jfif-header",
+          "sourceMutationDirectoryName": "🪪️change-jfif",
+          "mutationDirectoryName": "🪪️change-jfif",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "replace-quant-table",
-          "sourceMutationDirectoryName": "📊️replace-quant-table",
-          "mutationDirectoryName": "📊️replace-quant-table",
+          "sourceMutationDirectoryName": "📊️replace-quant",
+          "mutationDirectoryName": "📊️replace-quant",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "remove-quant-table",
-          "sourceMutationDirectoryName": "🧹️remove-quant-table",
-          "mutationDirectoryName": "🧹️remove-quant-table",
+          "sourceMutationDirectoryName": "🧹️remove-quant",
+          "mutationDirectoryName": "🧹️remove-quant",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "replace-huffman-table",
-          "sourceMutationDirectoryName": "🌳️replace-huffman-table",
-          "mutationDirectoryName": "🌳️replace-huffman-table",
+          "sourceMutationDirectoryName": "🌳️replace-huffman",
+          "mutationDirectoryName": "🌳️replace-huffman",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "remove-huffman-table",
-          "sourceMutationDirectoryName": "🪓️remove-huffman-table",
-          "mutationDirectoryName": "🪓️remove-huffman-table",
+          "sourceMutationDirectoryName": "🪓️remove-huffman",
+          "mutationDirectoryName": "🪓️remove-huffman",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "change-restart-interval",
-          "sourceMutationDirectoryName": "🔁️change-restart-interval",
-          "mutationDirectoryName": "🔁️change-restart-interval",
+          "sourceMutationDirectoryName": "🔁️change-restart",
+          "mutationDirectoryName": "🔁️change-restart",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "insert-other-segment",
-          "sourceMutationDirectoryName": "📥️insert-other-segment",
-          "mutationDirectoryName": "📥️insert-other-segment",
+          "sourceMutationDirectoryName": "📥️insert-other",
+          "mutationDirectoryName": "📥️insert-other",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "remove-other-segment",
-          "sourceMutationDirectoryName": "🗑️remove-other-segment",
-          "mutationDirectoryName": "🗑️remove-other-segment",
+          "sourceMutationDirectoryName": "🗑️remove-other",
+          "mutationDirectoryName": "🗑️remove-other",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
@@ -246,18 +246,18 @@
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         },
         {
           "mutationId": "change-re-encode-quality",
-          "sourceMutationDirectoryName": "🎚️change-re-encode-quality",
-          "mutationDirectoryName": "🎚️change-re-encode-quality",
+          "sourceMutationDirectoryName": "🎚️change-re",
+          "mutationDirectoryName": "🎚️change-re",
           "scenarios": [
             {
               "id": "direct-behavior",
-              "directoryName": "🎯️direct-behavior"
+              "directoryName": "🎯️direct"
             }
           ]
         }

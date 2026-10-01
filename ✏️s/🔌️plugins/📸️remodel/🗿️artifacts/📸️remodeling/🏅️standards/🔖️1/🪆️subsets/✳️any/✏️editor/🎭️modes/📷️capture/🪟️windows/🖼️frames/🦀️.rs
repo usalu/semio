@@ -97,7 +97,7 @@ fn frames_layers_json(scene: &RemodelingSnapshot, cursor: &RemodelingFrameCursor
 /// a document that carries frames (the committed Synthetic Orbit example, an imported sequence) is never
 /// an empty canvas until the user steps the cursor; a frame index the stream does not carry falls back to
 /// its first frame. A cursor that names a stream the document does NOT carry stays empty: that is the
-/// window-ownership law's witness that two windows' cursors are isolated (`🔬️window-ownership`).
+/// window-ownership law's witness that two windows' cursors are isolated (`🔬️window`).
 fn cursored_frame<'a>(scene: &'a RemodelingSnapshot, cursor: &RemodelingFrameCursor) -> Option<(&'a MediaStream, u32)> {
     let stream = match &cursor.stream_id {
         Some(stream_id) => scene.streams.iter().find(|stream| &stream.id == stream_id)?,

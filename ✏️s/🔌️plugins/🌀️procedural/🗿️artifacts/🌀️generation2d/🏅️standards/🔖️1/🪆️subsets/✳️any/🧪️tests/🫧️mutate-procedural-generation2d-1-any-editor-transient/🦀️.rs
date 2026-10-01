@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-generation-preview" => Vector {
-            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set-generation-preview/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🫧️transient/🧫️fixtures/👁️set-generation-preview/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

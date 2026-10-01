@@ -1,4 +1,4 @@
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "BACKBONE_ENVELOPE_RETRY_WINDOW_MS" | "readBackboneEnvelope" | "writeBackboneEnvelope">, source: TestSource): Promise<void> {

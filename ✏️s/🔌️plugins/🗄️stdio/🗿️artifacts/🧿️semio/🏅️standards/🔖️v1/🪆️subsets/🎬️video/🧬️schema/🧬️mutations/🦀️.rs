@@ -333,6 +333,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⏱️retimes-the-track-and-promotes-a-sample-to-a-keyframe/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/⏱️retimes/🦀️.rs"]
 mod set_snapshot_retimes_the_track_and_promotes_a_sample_to_a_keyframe;
 //#endregion 🧪️FixtureCases

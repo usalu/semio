@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "appends-a-float-column-and-null-pads-every-row",
-              "directoryName": "🏗️appends-a-float-column-and-null-pads-every-row"
+              "directoryName": "🏗️appends"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "drops-the-middle-column-and-cascades-into-every-row",
-              "directoryName": "🗑️drops-the-middle-column-and-cascades-into-every-row"
+              "directoryName": "🗑️drops"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-population-cell-of-the-second-row",
-              "directoryName": "👥️rewrites-the-population-cell-of-the-second-row"
+              "directoryName": "👥️rewrites"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "inserts-a-row-between-the-two-existing-rows",
-              "directoryName": "📥️inserts-a-row-between-the-two-existing-rows"
+              "directoryName": "📥️inserts"
             }
           ]
         },
@@ -118,7 +118,7 @@
           "scenarios": [
             {
               "id": "renames-city-to-town-without-touching-any-row",
-              "directoryName": "✏️renames-city-to-town-without-touching-any-row"
+              "directoryName": "✏️renames"
             }
           ]
         },
@@ -129,7 +129,7 @@
           "scenarios": [
             {
               "id": "moves-the-area-column-to-the-front-and-realigns-every-row",
-              "directoryName": "🔀️moves-the-area-column-to-the-front-and-realigns-every-row"
+              "directoryName": "🔀️moves"
             }
           ]
         },
@@ -140,7 +140,7 @@
           "scenarios": [
             {
               "id": "moves-the-last-row-to-the-front",
-              "directoryName": "🔃️moves-the-last-row-to-the-front"
+              "directoryName": "🔃️moves"
             }
           ]
         }

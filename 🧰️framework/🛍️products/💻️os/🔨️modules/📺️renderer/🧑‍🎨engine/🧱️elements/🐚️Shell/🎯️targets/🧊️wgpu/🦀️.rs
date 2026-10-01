@@ -4069,14 +4069,15 @@ pub struct ShellState {
     /// ⏪️ The live history-edit session `HistoryPatch.timeTravel` last carried (`None` = no session) — what the
     /// time-travel band, the pane chips and the `ui.timeTravel.*` chords read (see `⏪️time-travel`).
     history_time_travel: Option<semio_framework::kernel::HistoryTimeTravel>,
+    /// 🎯️ Where keyboard focus goes once the session edge that named it reaches the screen, and until when its target
+    /// may take before the band fallback (`⏪️time-travel` `TimeTravelFocus`).
+    time_travel_focus: Option<(time_travel::TimeTravelFocus, f64)>,
     /// ⏱️ When the native shell last re-read the history for replay progress (`TIME_TRAVEL_POLL_MS` apart).
     #[cfg(not(target_arch = "wasm32"))]
     time_travel_polled_at_ms: f64,
     /// 📁️ This device's remembered folder bindings (`os.config.local-folders`), loaded once and kept current by every
     /// commit (see `📎️local-folders`).
     local_folder_bindings: Option<semio_framework_os_config::opening_config::mutations::LocalFolderBindings>,
-    /// 🚪️ How a remembered folder comes back on this build: reopened directly (native) or by the person's gesture.
-    local_folder_reattach: local_folders::LocalFolderReattach,
     /// 🔁️ The document whose remembered folder the direct reattach already tried, so a failure is offered, not retried.
     local_folder_reattach_tried: Option<String>,
     /// 📌️ Ms-since-epoch of the last uncommitted-count CHANGE (any direction — mirrors
@@ -5013,7 +5014,7 @@ impl WindowMeasuresProjection<'_> {
     fn measure(&mut self, measure: &WindowMeasure) -> Result<Option<ui_contract::UiNodeId>, String> {
         match measure {
             WindowMeasure::Number { id, label, value, min, max, step, loading, waiting, disabled, on_change, .. } => {
-                let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None, precision: None, snaps: Default::default() };
+                let input = ui_contract::InputProps { kind: ui_contract::InputKind::Number, value: UiText::clipped(&value.to_string()), placeholder: None, commit: Some(UiText::clipped("blur")), min: *min, max: *max, step: *step, accept: None, precision: None, ..Default::default() };
                 let record = MeasureRecord {
                     bindings: measure_bindings(ui_contract::Trigger::Commit, on_change, None)?,
                     activity: measure_activity(*loading, *waiting),
@@ -5096,7 +5097,7 @@ fn measure_container(role: ui_contract::ContainerRole, label: Option<&str>, defa
 }
 
 fn measure_slider(value: f64, min: f64, max: f64, step: Option<f64>, unit: Option<&str>) -> ui_contract::Component {
-    ui_contract::Component::Slider(ui_contract::SliderProps { value, min, max, step: step.unwrap_or(0.0), unit: unit.map(UiText::clipped), snaps: ui_contract::UiFixedList::default() })
+    ui_contract::Component::Slider(ui_contract::SliderProps { value, min, max, step: step.unwrap_or(0.0), unit: unit.map(UiText::clipped), ..Default::default() })
 }
 
 fn measure_activity(loading: Option<bool>, waiting: Option<bool>) -> ui_contract::Activity {
@@ -5674,7 +5675,7 @@ impl PanelProjection<'_> {
                     step: input.step,
                     accept: input.accept.as_deref().map(UiText::clipped),
                     precision: None,
-                    snaps: Default::default(),
+                    ..Default::default()
                 };
                 let trigger = if input.commit.is_some() { ui_contract::Trigger::Commit } else { ui_contract::Trigger::Change };
                 let mut bindings = measure_bindings(trigger, &input.on_change, None)?;
@@ -5726,7 +5727,7 @@ impl PanelProjection<'_> {
             UiNode::NumberStepper(stepper) => {
                 let key = self.key(Some(stepper.id.as_str()));
                 let id = self.reserve();
-                let props = ui_contract::NumberStepperProps { value: stepper.value, step: stepper.step, uniform: stepper.uniform, min: None, max: None, precision: None };
+                let props = ui_contract::NumberStepperProps { value: stepper.value, step: stepper.step, uniform: stepper.uniform, ..Default::default() };
                 let mut bindings = measure_bindings(ui_contract::Trigger::Change, &stepper.on_absolute, None)?;
                 bindings.try_push(measure_binding(ui_contract::Trigger::Delta, &stepper.on_delta, None)?).map_err(|_| format!("panel stepper '{}' binds more moments than one record admits", stepper.id))?;
                 self.place(id, key, ui_contract::Component::NumberStepper(props), Self::stack_layout(ui_contract::Axis::Horizontal, ui_contract::SpaceToken::None), PanelRecord { bindings, activity, disabled, ..PanelRecord::default() })
@@ -7182,10 +7183,10 @@ impl ShellState {
             history_entries: BTreeMap::new(),
             history_current_checkpoint_id: None,
             history_time_travel: None,
+            time_travel_focus: None,
             #[cfg(not(target_arch = "wasm32"))]
             time_travel_polled_at_ms: 0.0,
             local_folder_bindings: None,
-            local_folder_reattach: local_folders::LOCAL_FOLDER_REATTACH,
             local_folder_reattach_tried: None,
             last_uncommitted_edit_at_ms: None,
             auto_checkin_pending: false,
@@ -11687,7 +11688,7 @@ impl ShellState {
                     self.ensure_local_folder_bindings();
                     let Some(offer) = self.folder_reconnect_offer() else { return Ok(()) };
                     if let Err(error) = self.reattach_local_folder(&offer).await {
-                        self.note_folder_reconnect_fault(&error);
+                        self.note_dispatch_fault(&error);
                     }
                     Ok(())
                 }
@@ -15798,6 +15799,7 @@ impl ShellState {
         self.presented_input_epoch = witness.0;
         self.presented_input_candidate = None;
         crate::interpreter::publish_accessibility_visible_documents();
+        self.resolve_time_travel_focus(input);
         let chrome_accessibility = self.chrome_accessibility_nodes(input.hits());
         let focus_changed = self.presented_chrome_accessibility.iter_mut().zip(&chrome_accessibility).fold(false, |changed, (previous, current)| {
             let focus_changed = previous.focused != current.focused;
@@ -24723,7 +24725,7 @@ impl ChromeDialogRequest {
     /// 👆️ A pointer at `share` of a slider's rail: the shared detent law of every renderer.
     fn point_slider(&mut self, index: usize, share: f64) {
         let Some(ChromeDialogFieldKind::Slider { min, max, step, snaps, .. }) = self.fields.get(index).map(|field| field.kind.clone()) else { return };
-        self.set_slider(index, ui_contract::slider_pointer_value(min + share.clamp(0.0, 1.0) * (max - min), min, max, step, snaps));
+        self.set_slider(index, ui_contract::slider_pointer_value(min + share.clamp(0.0, 1.0) * (max - min), min, max, step, snaps, ui_contract::UiNumberScale::Linear));
     }
 
     /// 🧷️ A reference field's referenced ids, in order.

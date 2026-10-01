@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🌐️ Owned native and browser geometry-session build and law routes. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, runExactCargoLaws, buildBudgetMs, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runExactCargoLaws, buildBudgetMs, runWasmPackWebBuild } from "../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { sessionLaws } from "../../🧪️tests/🏷️ownership/🟦️.ts";
 import { browserSessionLaws } from "../../🧪️tests/🌐️browser/🟦️.ts";
 class BrowserScript extends BundleScript { async run(): Promise<void> { sessionLaws(); await browserSessionLaws(); } }
@@ -20,4 +22,4 @@ class CanonicalScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("canonical-architecture", CanonicalScript).register("browser-test", BrowserScript).register("source-check", SourceScript).register("check", CheckScript).register("test", TestScript).register("wasm", WasmScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });

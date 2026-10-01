@@ -5,7 +5,7 @@ import draft7 from "ajv/dist/refs/json-schema-draft-07.json" with { type: "json"
 import viewportSchema from "../../../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🪟️viewport/◻️2d/🧬️schema/🔣️.json" with { type: "json" };
 import { applyPatch, type Operation } from "fast-json-patch";
 import schema from "../../🔣️.json" with { type: "json" };
-import fixture from "../../🧫️fixtures/🪪️document-contract/🔣️.json" with { type: "json" };
+import fixture from "../../🧫️fixtures/🪪️document/🔣️.json" with { type: "json" };
 import { parseFem2dResultsWindowConfig } from "../../🟦️.ts";
 
 export function testFem2dResultsWindowConfigContract(): void {

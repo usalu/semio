@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve, sep } from "node:path";
 import { createRequire } from "node:module";
-import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { getWorkspaceRoot } from "../../../🗂️workspaces/🟦️.ts";
 import { runOwnedCommand } from "../../../🏃️process/🎛️owned-execution/🟦️.ts";
 

@@ -149,24 +149,24 @@ Feature: Apply every typed semio IMAGE mutation to a real animated raster, again
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                    | dir                     | slug                                                        |
-      | set-snapshot          | 📸️set-snapshot          | ⚫️retargets-document-grayscale-sixteen-bit-variant |
-      | set-dimensions        | 📐️set-dimensions        | ↔️widens-the-frameless-canvas-to-four-by-two                  |
-      | set-colorspace        | 🌈️set-colorspace        | 🌈️records-the-source-colorspace-as-rgba                       |
-      | set-bit-depth         | 🔢️set-bit-depth         | 🔢️raises-the-source-bit-depth-to-sixteen                      |
-      | set-icc               | 🎨️set-icc               | 🎨️attaches-an-icc-profile-where-there-was-none                |
-      | insert-frame          | ➕️insert-frame          | 🆕️appends-a-second-frame-at-the-end                           |
-      | remove-frame          | 🚫️remove-frame           | 🚫️removes-the-leading-frame                                   |
-      | move-frame            | 🔀️move-frame            | ⏮️moves-the-last-frame-to-the-front                           |
-      | set-frame-delay       | ⏱️set-frame-delay       | ⏳️slows-the-second-frame-down                                 |
-      | set-frame-pixels      | 🖌️set-frame-pixels      | ⬛️repaints-the-only-frame-black                               |
-      | set-metadata-entry    | 🏷️set-metadata-entry    | ✍️rewrites-the-existing-author-entry                          |
-      | remove-metadata-entry | 🗑️remove-metadata-entry | 💬️removes-comment-entry-keeps-author-entry        |
+      | set-snapshot          | 📸️set-snapshot          | ⚫️retargets |
+      | set-dimensions        | 📐️set-dimensions        | ↔️widens                  |
+      | set-colorspace        | 🌈️set-colorspace        | 🌈️records                       |
+      | set-bit-depth         | 🔢️set-bit-depth         | 🔢️raises                      |
+      | set-icc               | 🎨️set-icc               | 🎨️attaches                |
+      | insert-frame          | ➕️insert-frame          | 🆕️appends                           |
+      | remove-frame          | 🚫️remove-frame           | 🚫️removes                                   |
+      | move-frame            | 🔀️move-frame            | ⏮️moves                           |
+      | set-frame-delay       | ⏱️set-frame-delay       | ⏳️slows                                 |
+      | set-frame-pixels      | 🖌️set-frame-pixels      | ⬛️repaints                               |
+      | set-metadata-entry    | 🏷️set-metadata-entry    | ✍️rewrites                          |
+      | remove-metadata-entry | 🗑️remove-metadata-entry | 💬️removes        |
 
   @id-spec-vector-no-mutation
   @level-exhaustive
   @mode-differential
   Scenario: no-mutation leaves the committed three-frame vector exactly as it stands
-    Given the committed before-snapshot shared://🧬️mutations/🔀️move-frame/⏮️moves-the-last-frame-to-the-front/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🔀️move-frame/⏮️moves/📸️snapshot/⬅️before/🔣️.json
     When both implementations apply the nullary mutation to it
       """
       {"mutation": "noMutation"}

@@ -526,4 +526,28 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     assert_eq!(rotated.rotation, std::f64::consts::FRAC_PI_2, "the downstream turn lands on the edited frame");
     assert_eq!((rotated.width, rotated.height), (80.0, 80.0), "the downstream scaling lands on the edited frame");
 }
+
+/// 🧺️ Every committed quintet's inverse fits the fold footprint its leaf declares (`layout_mutation_inverse_rows`) — the
+/// Artifact lane admits the forward row plus exactly that many inverse rows, so an under-declared leaf fail-closes its
+/// gesture — and a multi-frame drag, turn and scaling declare exactly the rows they restore.
+#[test]
+fn every_committed_inverse_fits_its_declared_fold_footprint() {
+    let root = std::path::Path::new(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations"));
+    let mut checked = 0;
+    for leaf in std::fs::read_dir(root).expect("the committed fixture tree").flatten() {
+        for case in std::fs::read_dir(leaf.path()).expect("the leaf's cases").flatten() {
+            let (Ok(before), Ok(payload)) = (std::fs::read_to_string(case.path().join("📸️snapshot/⬅️before/🔣️.json")), std::fs::read_to_string(case.path().join("🦠️mutation/🔣️.json"))) else { continue };
+            let (base, mutation) = bridge_decode_pair(&before, &payload).expect("the committed quintet decodes");
+            let (rows, declared) = (mutation.inverse(&base).len(), layout_mutation_inverse_rows(&mutation));
+            assert!(rows <= declared, "{}: inverts to {rows} rows but declares {declared}", case.path().display());
+            checked += 1;
+        }
+    }
+    assert!(checked >= 45, "every committed before/after quintet is checked, saw {checked}");
+    let mut document = sample_doc();
+    document.pages[0].frames.push(new_rect("frame-2"));
+    for mutation in [drag_frames(&["frame-1", "frame-2"], 3.0, 4.0), rotate_frames(&["frame-1", "frame-2"], (5.0, 5.0), 0.5), scale_frames(&["frame-1", "frame-2"], (5.0, 5.0), 2.0, 3.0)] {
+        assert_eq!(mutation.inverse(&document).len(), layout_mutation_inverse_rows(&mutation), "{mutation:?} declares exactly the rows it restores");
+    }
+}
 //#endregion 🖼️FrameSelectionLaws

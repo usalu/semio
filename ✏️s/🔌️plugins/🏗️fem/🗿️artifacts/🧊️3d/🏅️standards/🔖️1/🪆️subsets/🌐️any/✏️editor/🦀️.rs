@@ -420,7 +420,7 @@ fn admit_fem3d_artifact_mutation(mutation: &Fem3dMutation) -> Result<store::Arti
 /// the config lane's `fem3d_config_edit` twin, differing only in `M` and the edit-id prefix.
 fn fem3d_artifact_edit(forward: Fem3dMutation, inverse: Vec<Fem3dMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<Fem3dMutation> {
     let id = format!("fem3d-artifact-retained-{}-{}", authority.operation().0, authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -776,12 +776,6 @@ impl ArtifactEditor for Fem3dPlayApp {
 
     fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
         Some(semio_framework_plugin::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>())
-    }
-
-    /// 🏷️ A document op's own localized label, so a gumball transaction's history row reads its leaf — "Move 2 nodes
-    /// by (0.5, 0, 0)" / "2 Knoten um (0,5; 0; 0) verschieben" — instead of the op's text line.
-    fn mutation_label(op: &Fem3dMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::<Fem3dSnapshot>::label(op))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

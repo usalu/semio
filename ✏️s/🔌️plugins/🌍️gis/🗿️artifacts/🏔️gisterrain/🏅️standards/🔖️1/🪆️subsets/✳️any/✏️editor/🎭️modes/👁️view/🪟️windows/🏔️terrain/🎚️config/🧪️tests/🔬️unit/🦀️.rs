@@ -64,7 +64,7 @@ fn gis_terrain_window_config_isolates_two_registered_windows_and_reloads() {
                 use crate::editor::gis3d::Gis3dCommand;
                 use semio_framework_plugin::{PluginApp, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-config-ownership/🔣️.json")).expect("neutral Terrain window fixture");
+                let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).expect("neutral Terrain window fixture");
                 let left_id = fixture["leftWindowId"].as_str().expect("left window id");
                 let right_id = fixture["rightWindowId"].as_str().expect("right window id");
                 let roster = ViewModel { window_instances: [left_id, right_id].into_iter().map(|id| ViewWindowInstance { id: id.into(), window_kind_id: GisTerrainWindowConfigOwner::WINDOW_KIND_ID.into() }).collect(), ..Default::default() };

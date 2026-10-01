@@ -543,7 +543,7 @@ fn sourcing_curation_store_edit(
     authority: &store::ArtifactStoreOneItemLiveAuthority,
 ) -> protocol::Edit<SourcingCurationConfigMutation> {
     let id = format!("sourcing-curation-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -749,7 +749,7 @@ fn sourcing_curation_document_edit(
     authority: &store::ArtifactStoreOneItemLiveAuthority,
 ) -> protocol::Edit<SourcingMutation> {
     let id = format!("sourcing-curation-document-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

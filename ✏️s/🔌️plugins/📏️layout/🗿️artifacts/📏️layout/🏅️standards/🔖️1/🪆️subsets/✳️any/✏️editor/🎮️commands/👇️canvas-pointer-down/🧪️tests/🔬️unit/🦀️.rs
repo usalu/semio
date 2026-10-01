@@ -14,7 +14,7 @@ use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, ViewWindowInstanc
 /// registry (the six verbs are `Migrated` rows there), a bound live instance, a `ViewModel` naming
 /// the Blueprint window the gesture addresses (the retained work's `extent` refuses a command
 /// without one), and the host's settle protocol ([`settled_dispatch`]) — exactly
-/// `🧪️tests/🔬️window-ownership`'s recipe. Retire it with [`close_registered`], never drop it.
+/// `🧪️tests/🔬️window`'s recipe. Retire it with [`close_registered`], never drop it.
 ///
 /// 🚧️ `canvasPointerDown`/`canvasPointerMove` are still `BatchOnlyPendingRewrite` in the manifest
 /// (no retained factory row), so `dispatch_typed` refuses them with `interactive-job.missing-factory`

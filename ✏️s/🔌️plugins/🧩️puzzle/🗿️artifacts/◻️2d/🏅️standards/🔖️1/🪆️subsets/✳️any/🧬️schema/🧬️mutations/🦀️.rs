@@ -596,6 +596,12 @@ impl Mutation<Value> for Puzzle2dMutation {
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle2dSnapshot>::may_emit_foreign_steps(self)
     }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle2dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle2dSnapshot>::conflict_target(self)
+    }
 }
 
 /// 🧮️ Computes the exact typed semantic mutation sequence turning `before` into `after` (both the
@@ -773,6 +779,12 @@ impl Mutation<Puzzle2dPlaySnapshot> for Puzzle2dMutation {
     }
     fn may_emit_foreign_steps(&self) -> bool {
         Mutation::<Puzzle2dSnapshot>::may_emit_foreign_steps(self)
+    }
+    fn from_payload_value(kind: &str, value: dsl::DslValue) -> Result<Self, dsl::ValueError> {
+        <Self as Mutation<Puzzle2dSnapshot>>::from_payload_value(kind, value)
+    }
+    fn conflict_target(&self) -> Vec<String> {
+        Mutation::<Puzzle2dSnapshot>::conflict_target(self)
     }
 }
 

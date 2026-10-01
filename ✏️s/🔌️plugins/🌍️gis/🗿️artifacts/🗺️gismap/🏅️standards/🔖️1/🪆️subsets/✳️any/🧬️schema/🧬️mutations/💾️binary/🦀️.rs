@@ -148,6 +148,18 @@ impl GisMapOwnedRetirement {
                     drop(self.owner.take());
                     Ok(store::SnapshotRetirementStep::Complete)
                 }
+                dsl::DslValue::Bytes(value) => {
+                    if self.phase == 0 {
+                        if value.len() > maximum_bytes { return Ok(store::SnapshotRetirementStep::Pending { released_items: 0, released_bytes: 0 }); }
+                        let bytes = std::mem::take(value);
+                        let released_bytes = bytes.len();
+                        drop(bytes);
+                        self.phase = 1;
+                        return Ok(store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes });
+                    }
+                    drop(self.owner.take());
+                    Ok(store::SnapshotRetirementStep::Complete)
+                }
                 dsl::DslValue::Array(values) => {
                     if let Some(value) = values.pop() {
                         Ok(Self::spawn(&mut self.active, GisMapRetirementOwner::Value(value)))

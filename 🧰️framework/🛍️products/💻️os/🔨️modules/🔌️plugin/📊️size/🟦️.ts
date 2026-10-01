@@ -5,37 +5,9 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import {
-  BundleScript,
-  ScriptRouter,
-  buildBudgetMs,
-  daemonBudgetOpts,
-  describeDevPortOccupant,
-  devServerUrl,
-  getWorkspaceRoot,
-  getRepoMetaDir,
-  isDevPortInUse,
-  loadFrameworkOsPlaygroundCatalog,
-  wgpuDevPlayUrl,
-  runBundleScriptMain,
-  runCmd,
-  runCmdStatus,
-  runBunxStatus,
-  runNodeBinStatus,
-  runProbe,
-  runVitest,
-  spawnDaemon,
-  type SpawnDaemonHandle,
-  runViteBunxDev,
-  frameworkOsPlaygroundDefaultPort,
-  frameworkOsLockedPrefsEnv,
-  resolveTestLevel,
-  atTestLevel,
-  cargoProfileDir,
-  selectComponentWasmProfile,
-  semioBuildMode,
-  semioShipEnv,
-} from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../📇️registry/📦️deployment/🟦️.ts";
 

@@ -133,17 +133,17 @@ Feature: Apply every typed semio GRAPH mutation to the Nakagin Capsule Tower's p
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                   | dir                    | fixture                                                    |
-      | create-node          | 🏗️create-node         | 🔎️appends-a-filter-node-to-the-end-of-the-node-set           |
-      | delete-node          | 🗑️delete-node         | 🚫️removes-the-sink-node-and-severs-the-edge-into-it          |
-      | change-node-kind     | 🔧change-node-kind     | 🔧️retypes-the-source-node-without-relabelling-it             |
-      | change-node-label    | 🖍️change-node-label   | 🔤️relabels-the-source-node-without-retyping-it               |
-      | move-node            | 📍move-node            | 📍️moves-the-sink-node-to-a-new-canvas-position               |
-      | add-node-port        | 🔌add-node-port        | 🔌️inserts-an-in-port-ahead-of-the-existing-out-port          |
-      | remove-node-port     | 🔚remove-node-port     | 🔚️detaches-the-trailing-out-port-from-the-source-node        |
-      | add-node-property    | ➕add-node-property    | ⚖️inserts-a-weight-property-ahead-of-the-colour-property     |
-      | remove-node-property | ➖remove-node-property | ➖️detaches-the-trailing-weight-property-from-the-source-node |
-      | create-edge          | 🌉️create-edge          | 🌉️connects-the-source-node-to-the-sink-node                  |
-      | delete-edge          | ✂️delete-edge         | ✂️removes-the-feedback-edge-and-keeps-both-endpoints         |
+      | create-node          | 🏗️create-node         | 🔎️appends           |
+      | delete-node          | 🗑️delete-node         | 🚫️removes          |
+      | change-node-kind     | 🔧change-node-kind     | 🔧️retypes             |
+      | change-node-label    | 🖍️change-node-label   | 🔤️relabels               |
+      | move-node            | 📍move-node            | 📍️moves               |
+      | add-node-port        | 🔌add-node-port        | 🔌️inserts          |
+      | remove-node-port     | 🔚remove-node-port     | 🔚️detaches        |
+      | add-node-property    | ➕add-node-property    | ⚖️inserts     |
+      | remove-node-property | ➖remove-node-property | ➖️detaches |
+      | create-edge          | 🌉️create-edge          | 🌉️connects                  |
+      | delete-edge          | ✂️delete-edge         | ✂️removes         |
 
   @id-identity-round-trip
   @level-long

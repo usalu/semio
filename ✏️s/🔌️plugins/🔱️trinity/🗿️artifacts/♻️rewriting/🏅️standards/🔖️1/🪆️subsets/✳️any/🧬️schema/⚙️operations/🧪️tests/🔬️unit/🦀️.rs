@@ -1,4 +1,5 @@
 use super::*;
+use crate::standards::v1::subsets::any::schema::mutations::{change_parameter_binding, change_rule_layout_point, edit_before_fixture, edit_lhs, edit_rhs, remove_parameter_binding, remove_rule_layout_point};
 use crate::LayoutPoint;
 use ::store::os_store::test_support::{assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 use protocol::os_spr::protocol_laws::{assert_mutation_diff_absorb_law, assert_mutation_inverse_law, assert_outcome_policy_matrix};
@@ -40,9 +41,7 @@ async fn op_text_round_trip_remove_rule_layout_point() {
 async fn document_text_round_trip_rewrite_rule_store() {
     let base = sample_rule_state();
     let mut store = new_rewrite_rule_store(create_rewrite_rule_envelope("test", base.clone())).await.expect("valid artifact store");
-    let mut next = base.clone();
-    next.lhs_json = "{}".into();
-    dispatch_rewrite_rule_mutations(&mut store, rewriting_snapshot_mutations(&base, &next)).await.unwrap();
+    dispatch_rewrite_rule_mutations(&mut store, vec![edit_lhs("{}".into())]).await.unwrap();
     assert_document_text_round_trip(&store).await;
     assert_document_pack_round_trip(&store).await;
 }

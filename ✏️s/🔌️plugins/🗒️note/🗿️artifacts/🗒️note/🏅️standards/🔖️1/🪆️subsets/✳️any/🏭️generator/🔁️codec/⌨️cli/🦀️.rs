@@ -31,10 +31,10 @@ fn values(args: &[String], flag: &str) -> Vec<String> {
 
 fn physical_directory(id: &str) -> &'static str {
     match id {
-        "retitles-the-document" => "📜️document/🧫️fixtures/🏷️retitles-the-document",
+        "retitles-the-document" => "📜️document/🧫️fixtures/🏷️retitles",
         "adds-the-diagram-asset" => "🖼️asset/🧫️fixtures/➕️adds-the-diagram-asset",
         "swaps-the-logo-payload" => "🖼️asset/🧫️fixtures/🔁️swaps-the-logo-payload",
-        "removes-the-logo-asset" => "🖼️asset/🧫️fixtures/🗑️removes-the-logo-asset",
+        "removes-the-logo-asset" => "🖼️asset/🧫️fixtures/🗑️removes",
         "creates-an-ink-block" => "🧱️block/🧫️fixtures/🖋️creates-an-ink-block",
         "deletes-the-intro-text-block" => "🧱️block/🧫️fixtures/✂️deletes-the-intro-text-block",
         "deletes-the-ink-and-text-blocks" => "🧱️block/🧫️fixtures/🗑️deletes-the-ink-and-text-blocks",
@@ -45,8 +45,8 @@ fn physical_directory(id: &str) -> &'static str {
         "resizes-the-image-block" => "🧱️block/🧫️fixtures/↔️resizes-the-image-block",
         "hides-the-intro-text-block" => "🧱️block/🧫️fixtures/🙈️hides-the-intro-text-block",
         "edits-the-intro-paragraph" => "📝️text/🧫️fixtures/✏️edits-the-intro-paragraph",
-        "thickens-the-sketch-stroke" => "🖋️ink/🧫️fixtures/🖊️thickens-the-sketch-stroke",
-        "redraws-the-sketch-polyline" => "🖋️ink/🧫️fixtures/🎨️redraws-the-sketch-polyline",
+        "thickens-the-sketch-stroke" => "🖋️ink/🧫️fixtures/🖊️thickens",
+        "redraws-the-sketch-polyline" => "🖋️ink/🧫️fixtures/🎨️redraws",
         other => panic!("unknown recipe {other}"),
     }
 }

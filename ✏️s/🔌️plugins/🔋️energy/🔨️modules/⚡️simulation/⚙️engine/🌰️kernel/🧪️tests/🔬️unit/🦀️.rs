@@ -96,6 +96,35 @@ fn advance_timestep_with_airflow_network() {
 }
 
 #[test]
+fn weekly_schedule_lookup_reads_sunday_first_slots() {
+    use crate::model::ScheduleId;
+    use crate::schedule::{DailySchedule, ScheduleContext, ScheduleInterpolation, ScheduleSet, WeeklySchedule};
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../🗓️schedule/🧫️fixtures/weekly-day-slots/🔣️.json")).unwrap();
+    let hour = fixture["hour"].as_u64().unwrap() as u8;
+    let mut daily = Vec::new();
+    let mut ids = [ScheduleId(0); 7];
+    for (slot, value) in fixture["dailyValueBySlot"].as_array().unwrap().iter().enumerate() {
+        let id = ScheduleId((slot as u32) + 1);
+        ids[slot] = id;
+        daily.push(DailySchedule { id, hourly_values: [value.as_f64().unwrap(); 24], interpolation: ScheduleInterpolation::Discrete, limits: None });
+    }
+    let set = ScheduleSet { daily, weekly: vec![WeeklySchedule { id: ScheduleId(100), daily_schedule_ids: ids }], ..Default::default() };
+    for case in fixture["cases"].as_array().unwrap() {
+        let dow = case["dayOfWeek"].as_u64().unwrap() as u8;
+        let ctx = ScheduleContext { year: 2026, month: 1, day: 1, hour, day_of_week: dow, timestep_index: 0, is_dst: false };
+        let mut work = None;
+        let mut got = None;
+        for _ in 0..64 {
+            if let Some(value) = super::schedule_lookup_step(&mut work, &set, ScheduleId(100), &ctx) {
+                got = Some(value);
+                break;
+            }
+        }
+        assert!((got.expect("weekly lookup") - case["value"].as_f64().unwrap()).abs() < 1e-9);
+    }
+}
+
+#[test]
 fn advance_timestep_applies_fault_severity_to_ideal_loads() {
     use crate::model::*;
     let mut model = crate::sim::test_model_single_zone();

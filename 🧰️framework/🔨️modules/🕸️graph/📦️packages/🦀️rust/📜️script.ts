@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 📜️ `@semio-tech/framework-graph` task router. */
-import { ScriptRouter, runBundleScriptMain } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { CheckGeneratedScript, GenerateScript, LintScript, PreviewGeneratedScript, TestScript } from "../../🛂️manifest/🏃️execution/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir)
@@ -10,4 +11,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test", TestScript)
   .register("lint", LintScript);
 
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url, { defaultCommand: "generate" });
+if (import.meta.main) await runScriptMain(router, { defaultCommand: "generate" });

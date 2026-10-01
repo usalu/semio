@@ -66,9 +66,9 @@ const DSL_ASSET: &str = "asset://🎬️demo/🗣️.dsl.semio";
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "change-schema" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags-the-playground-document-schema/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/✒️change-schema/📅️retags/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-playground-1: {other:?} is not a declared kind of this subset"),
     }

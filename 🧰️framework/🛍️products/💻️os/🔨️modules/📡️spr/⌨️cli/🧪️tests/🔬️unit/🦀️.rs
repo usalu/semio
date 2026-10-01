@@ -10,7 +10,7 @@ async fn temp_path(name: &str) -> PathBuf {
 }
 
 async fn sample_edit(id: &str, actor: Option<&str>, description: Option<&str>, coalesce_key: Option<&str>) -> crate::os_spr::HistoryEdit {
-    crate::os_spr::HistoryEdit {
+    crate::os_spr::HistoryEdit { line: None,
         id: id.to_string(),
         actor: actor.map(str::to_string),
         started_at: format!("2026-07-27T00:00:{id}Z", id = &id[id.len().saturating_sub(2)..]),
@@ -48,6 +48,7 @@ async fn build_history_file(name: &str, edit_count: usize, with_checkpoint_and_a
             authors: Vec::new(),
             message: None,
             timestamp: "2026-07-27T00:02:00Z".to_string(),
+            line_id: None,
         });
         let branch = crate::os_spr::HistoryTransition::Branch { alternative_id: "alt-main".to_string(), name: "main".to_string(), checkpoint_id: "cp0".to_string() };
         for (logical, transition) in [commit, branch].iter().enumerate() {

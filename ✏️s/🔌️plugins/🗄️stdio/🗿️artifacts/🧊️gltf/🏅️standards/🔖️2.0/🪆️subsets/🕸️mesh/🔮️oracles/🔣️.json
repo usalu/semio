@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "binds-position-inside-the-first-morph-target",
-              "directoryName": "🔗️binds-position-98e14f"
+              "directoryName": "🔗️binds"
             }
           ]
         },
@@ -27,7 +27,7 @@
           "scenarios": [
             {
               "id": "binds-texcoord-0-to-the-second-accessor",
-              "directoryName": "📍️binds-texcoord-0-fc0e9a"
+              "directoryName": "📍️binds"
             }
           ]
         },
@@ -38,7 +38,7 @@
           "scenarios": [
             {
               "id": "binds-the-scalar-index-accessor-to-the-primitive",
-              "directoryName": "🔢️binds-the-scalar-2b0259"
+              "directoryName": "🔢️binds"
             }
           ]
         },
@@ -49,36 +49,36 @@
           "scenarios": [
             {
               "id": "binds-the-steel-material-to-the-primitive",
-              "directoryName": "🔗️binds-the-steel-1cd6cc"
+              "directoryName": "🔗️binds"
             }
           ]
         },
         {
           "mutationId": "change-mesh-extension-data",
-          "sourceMutationDirectoryName": "🧩️change-extensions",
-          "mutationDirectoryName": "🧩️change-extensions",
+          "sourceMutationDirectoryName": "🧩️change",
+          "mutationDirectoryName": "🧩️change",
           "scenarios": [
             {
               "id": "attaches-an-unlit-extension-object-to-the-mesh",
-              "directoryName": "🔌️attaches-an-9e1e51"
+              "directoryName": "🔌️attaches"
             }
           ]
         },
         {
           "mutationId": "change-mesh-extra-data",
-          "sourceMutationDirectoryName": "📝️change-extras",
-          "mutationDirectoryName": "📝️change-extras",
+          "sourceMutationDirectoryName": "📝️change",
+          "mutationDirectoryName": "📝️change",
           "scenarios": [
             {
               "id": "attaches-an-author-extras-object-to-the-mesh",
-              "directoryName": "✍️attaches-an-8df0ce"
+              "directoryName": "✍️attaches"
             }
           ]
         },
         {
           "mutationId": "change-mesh-morph-weights",
-          "sourceMutationDirectoryName": "⚖️change-weights",
-          "mutationDirectoryName": "⚖️change-weights",
+          "sourceMutationDirectoryName": "⚖️change",
+          "mutationDirectoryName": "⚖️change",
           "scenarios": [
             {
               "id": "sets-the-two-mesh-morph-weights-to-a-half-and-a-quarter",
@@ -93,14 +93,14 @@
           "scenarios": [
             {
               "id": "renames-the-hull-mesh-to-deck",
-              "directoryName": "✏️renames-the-hull-0a49e7"
+              "directoryName": "✏️renames"
             }
           ]
         },
         {
           "mutationId": "change-primitive-extension-data",
-          "sourceMutationDirectoryName": "🧩️change-extensions",
-          "mutationDirectoryName": "🧩️change-extensions",
+          "sourceMutationDirectoryName": "🧩️change",
+          "mutationDirectoryName": "🧩️change",
           "scenarios": [
             {
               "id": "attaches-a-draco-extension-object-to-the-primitive",
@@ -110,23 +110,23 @@
         },
         {
           "mutationId": "change-primitive-extra-data",
-          "sourceMutationDirectoryName": "📝️change-extras",
-          "mutationDirectoryName": "📝️change-extras",
+          "sourceMutationDirectoryName": "📝️change",
+          "mutationDirectoryName": "📝️change",
           "scenarios": [
             {
               "id": "attaches-a-lod-extras-object-to-the-primitive",
-              "directoryName": "📝️attaches-a-lod-698164"
+              "directoryName": "📝️attaches"
             }
           ]
         },
         {
           "mutationId": "change-primitive-topology-mode",
-          "sourceMutationDirectoryName": "📐️change-topology",
-          "mutationDirectoryName": "📐️change-topology",
+          "sourceMutationDirectoryName": "📐️change",
+          "mutationDirectoryName": "📐️change",
           "scenarios": [
             {
               "id": "switches-primitive-from-triangles-to-triangle-strip",
-              "directoryName": "📐️triangle-81bc44"
+              "directoryName": "📐️triangle"
             }
           ]
         },
@@ -148,7 +148,7 @@
           "scenarios": [
             {
               "id": "inserts-an-empty-mesh-ahead-of-the-hull-mesh",
-              "directoryName": "🕸️inserts-an-empty-49e11c"
+              "directoryName": "🕸️inserts"
             }
           ]
         },
@@ -192,7 +192,7 @@
           "scenarios": [
             {
               "id": "removes-the-hull-mesh-and-renumbers-the-node-binding",
-              "directoryName": "🔗️removes-the-hull-b7a141"
+              "directoryName": "🔗️removes"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "removes-the-first-of-two-morph-targets",
-              "directoryName": "🚫️removes-the-db72f4"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -214,7 +214,7 @@
           "scenarios": [
             {
               "id": "removes-the-trailing-empty-primitive",
-              "directoryName": "🚫️removes-the-8d7de9"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "swaps-the-position-and-texcoord-accessors",
-              "directoryName": "🚚️swaps-the-257557"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -236,7 +236,7 @@
           "scenarios": [
             {
               "id": "swaps-the-hull-and-deck-meshes",
-              "directoryName": "🚚️swaps-the-hull-and-9758af"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -247,7 +247,7 @@
           "scenarios": [
             {
               "id": "swaps-the-two-morph-targets",
-              "directoryName": "🚚️swaps-the-two-1f4aeb"
+              "directoryName": "🚚️swaps"
             }
           ]
         },
@@ -269,7 +269,7 @@
           "scenarios": [
             {
               "id": "moves-the-position-primitive-behind-the-strip-primitive",
-              "directoryName": "🚚️moves-the-1c0787"
+              "directoryName": "🚚️moves"
             }
           ]
         },
@@ -291,7 +291,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-accessors-and-remaps-both-attributes",
-              "directoryName": "🔀️flips-the-two-e56161"
+              "directoryName": "🔀️flips"
             }
           ]
         },
@@ -302,7 +302,7 @@
           "scenarios": [
             {
               "id": "flips-the-hull-and-deck-meshes",
-              "directoryName": "🔀️flips-the-hull-ebfffa"
+              "directoryName": "🔀️flips"
             }
           ]
         },
@@ -324,7 +324,7 @@
           "scenarios": [
             {
               "id": "flips-the-two-morph-targets",
-              "directoryName": "🔀️flips-the-two-14d32f"
+              "directoryName": "🔀️flips"
             }
           ]
         },
@@ -357,7 +357,7 @@
           "scenarios": [
             {
               "id": "unbinds-normal-from-the-first-morph-target",
-              "directoryName": "🔗️unbinds-normal-9e80f9"
+              "directoryName": "🔗️unbinds"
             }
           ]
         },
@@ -368,7 +368,7 @@
           "scenarios": [
             {
               "id": "unbinds-normal-from-the-primitive",
-              "directoryName": "🔗️unbinds-normal-d381d3"
+              "directoryName": "🔗️unbinds"
             }
           ]
         },
@@ -379,7 +379,7 @@
           "scenarios": [
             {
               "id": "returns-the-primitive-to-non-indexed-drawing",
-              "directoryName": "✂️returns-the-618d30"
+              "directoryName": "✂️returns"
             }
           ]
         },
@@ -390,7 +390,7 @@
           "scenarios": [
             {
               "id": "returns-the-primitive-to-the-default-material",
-              "directoryName": "✂️returns-the-b08a34"
+              "directoryName": "✂️returns"
             }
           ]
         }

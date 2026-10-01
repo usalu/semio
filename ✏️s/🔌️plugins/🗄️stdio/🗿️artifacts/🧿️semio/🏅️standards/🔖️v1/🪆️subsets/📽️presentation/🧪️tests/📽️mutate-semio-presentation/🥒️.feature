@@ -61,7 +61,7 @@ Feature: Apply every typed semio PRESENTATION mutation to a real conference deck
   carried slide 23's content under slide 1's identifier, and this pair of scenarios was red against
   the independent implementation. The committed specification vector could not see it, because its
   replacement reuses the same single slide id; the subset's own fixture
-  `🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses-slide-order` now pins the reorder in the
+  `🧫️fixtures/🧬️mutations/📸️set-snapshot/🔃️reverses` now pins the reorder in the
   production crate as well.
 
   `spec-vector-` keeps the evidence this case rested on before the oracle existed: the committed

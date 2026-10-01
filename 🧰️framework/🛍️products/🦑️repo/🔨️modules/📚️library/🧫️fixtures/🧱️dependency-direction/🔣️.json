@@ -185,7 +185,7 @@
           "target": "✏️s/🔌️plugins/📐️cad/🟦️.ts",
           "reference": "unresolved-package",
           "syntax": "static",
-          "package": "@semio-tech/cad-js"
+          "package": "@semio-tech/cad-cad-rs"
         }
       ],
       "forbidden": [
@@ -351,7 +351,13 @@
       ],
       "forbidden": [
         "edge"
-      ]
+      ],
+      "forbiddenRules": {
+        "edge": [
+          "io-renderer-independent",
+          "framework-modules-no-products"
+        ]
+      }
     },
     {
       "id": "io-type-only-ui-alias",
@@ -490,7 +496,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
           "syntax": "dynamic",
           "reference": "relative"
         }
@@ -505,10 +511,10 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
           "syntax": "type",
           "reference": "package-subpath",
-          "package": "@semio-tech/cad-js"
+          "package": "@semio-tech/cad-cad-rs"
         }
       ],
       "forbidden": [
@@ -517,7 +523,7 @@
     },
     {
       "id": "plugin-owner-artifact",
-      "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "from": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
       "dependencies": [
         {
           "id": "edge",
@@ -532,7 +538,7 @@
     },
     {
       "id": "plugin-owner-extension-subpath",
-      "from": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+      "from": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
       "dependencies": [
         {
           "id": "edge",
@@ -552,7 +558,7 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
           "syntax": "static",
           "reference": "relative"
         }
@@ -565,9 +571,448 @@
       "dependencies": [
         {
           "id": "edge",
-          "target": "✏️s/🧑‍💻dev/📐️cad/📦️packages/🟦️typescript/🟦️.ts",
+          "target": "✏️s/🔌️plugins/📐️cad/🧪️tests/🔬️boundary/🟦️.ts",
           "syntax": "static",
           "reference": "relative"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-implementation-root",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/node_modules/.bun/vendor@1.0.0/node_modules/vendor/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-nested-workspace",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/🔌️plugins/📐️cad/📦️packages/🟦️typescript/node_modules/vendor/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-scoped",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🌎️hub/node_modules/@external/neutral/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-pnpm",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "♻️mit-bestand/node_modules/.pnpm/vendor@1/node_modules/vendor/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-root-source",
+      "from": "📜️script.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/node_modules/vendor/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "source-node-modules-lookalike",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/node_modules-lookalike/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "source-nested-implementation",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/apps/example/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "installed-authored-alias",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/entry.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "os-hub-ts",
+          "installation": "🏢️semio-tech/node_modules/.bun/os-hub-ts@workspace/node_modules/os-hub-ts"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "installed-authored-direct-path",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/node_modules/.bun/os-hub-ts@workspace/node_modules/os-hub-ts/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "installed-external-package",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/entry.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "vendor",
+          "installation": "🏢️semio-tech/node_modules/.bun/vendor@1/node_modules/vendor"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "installed-external-io-role",
+      "from": "🧰️framework/🔨️modules/🚪️io/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "🏢️semio-tech/node_modules/.bun/react@19/node_modules/react/index.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "installed-authored-public-subpath",
+      "from": "🧰️framework/🔨️modules/🧵️job/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "edge",
+          "target": "✏️s/entry.ts",
+          "reference": "package-subpath",
+          "syntax": "type",
+          "package": "os-hub-ts",
+          "installation": "🏢️semio-tech/node_modules/.bun/os-hub-ts@workspace/node_modules/os-hub-ts"
+        }
+      ],
+      "forbidden": [
+        "edge"
+      ]
+    },
+    {
+      "id": "general-module-product-relative-static",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-relative-type",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "type"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-relative-dynamic",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "dynamic"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-relative-export",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "export"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-relative-require",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "require"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-permanent-tooling",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/📜️script.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-native-oracle",
+      "from": "🧰️framework/🔨️modules/🧬️schema/🔮️oracles/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-alias",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "@semio-tech/repo-lib"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-product-subpath",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package-subpath",
+          "syntax": "type",
+          "package": "@semio-tech/repo-lib"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-installed-authored-product",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "type",
+          "package": "@semio-tech/repo-lib",
+          "installation": "🧰️framework/🛍️products/🦑️repo/node_modules/.bun/@semio-tech+repo-lib@0.0.0/node_modules/@semio-tech/repo-lib"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "general-module-installed-external-product-storage",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "external",
+          "target": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+          "reference": "package",
+          "syntax": "static",
+          "package": "neutral-installed-product-vendor",
+          "installation": "🧰️framework/🛍️products/🦑️repo/node_modules/.bun/neutral-installed-product-vendor@0.0.0/node_modules/neutral-installed-product-vendor"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "general-module-product-storage-lookalike",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "upward",
+          "target": "🧰️framework/🛍️products/🦑️repo/node_modules-lookalike/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": [
+        "upward"
+      ],
+      "forbiddenRules": {
+        "upward": [
+          "framework-modules-no-products"
+        ]
+      }
+    },
+    {
+      "id": "product-consumes-general-module",
+      "from": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "downward",
+          "target": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
+        }
+      ],
+      "forbidden": []
+    },
+    {
+      "id": "general-module-consumes-general-module",
+      "from": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/🧪️tests/🔬️boundary/🟦️.ts",
+      "dependencies": [
+        {
+          "id": "peer",
+          "target": "🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts",
+          "reference": "relative",
+          "syntax": "static"
         }
       ],
       "forbidden": []
@@ -1009,6 +1454,52 @@
       "expectedPackages": [],
       "expectedPlugins": [],
       "accept": false
+    },
+    {
+      "id": "source-glob-new-owner-with-opaque-storage",
+      "members": [
+        "✏️s/**",
+        "!**/node_modules/**",
+        "!**/🧫️fixtures/**"
+      ],
+      "directories": [
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript"
+      ],
+      "manifests": {
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": {
+          "name": "@semio-tech/example",
+          "exports": {
+            ".": "./🟦️.ts"
+          }
+        },
+        "✏️s/node_modules/vendor": "{",
+        "✏️s/🧫️fixtures/unreadable": "{"
+      },
+      "expectedPackages": [
+        "@semio-tech/example"
+      ],
+      "expectedPlugins": [
+        "🧪️example"
+      ],
+      "accept": true,
+      "nextManifests": {
+        "✏️s/🔌️plugins/🧪️example/🗿️artifacts/🧪️example/📦️packages/🟦️typescript": {
+          "name": "@semio-tech/example-artifact",
+          "exports": {
+            ".": "./🟦️.ts"
+          }
+        },
+        "✏️s/🔌️plugins/🧪️example/📦️packages/🟦️typescript": {
+          "name": "@semio-tech/example-current",
+          "exports": {
+            ".": "./🟦️.ts"
+          }
+        }
+      },
+      "nextExpectedPackages": [
+        "@semio-tech/example-artifact",
+        "@semio-tech/example-current"
+      ]
     }
   ],
   "publicExportCases": [
@@ -1327,8 +1818,8 @@
       ]
     },
     {
-      "owner": "✏️s/🔌️plugins/🗒️note/📦️packages/🟦️typescript",
-      "name": "@semio-tech/note-js",
+      "owner": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/📦️packages/🟦️typescript",
+      "name": "@semio-tech/note-note-js",
       "commands": [
         "test"
       ]
@@ -1360,6 +1851,33 @@
       "commands": [
         "test"
       ]
+    }
+  ],
+  "policyOwners": [
+    {
+      "owner": "🌎️hub/📦️packages/🟦️typescript",
+      "name": "os-hub-ts"
+    },
+    {
+      "owner": "🧰️framework/📦️packages/🟦️typescript",
+      "name": "@semio-tech/framework"
+    },
+    {
+      "owner": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "name": "@semio-tech/ui-react",
+      "role": "ui"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/📦️packages/🦀️rust",
+      "name": "@semio-tech/cad-cad-rs"
+    },
+    {
+      "owner": "✏️s/🔌️plugins/📐️cad/🧩️extensions/📐️spatial-shape/📦️packages/🟦️typescript",
+      "name": "@semio-tech/cad-js-module-spatial-shape"
+    },
+    {
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
+      "name": "@semio-tech/repo-lib"
     }
   ]
 }

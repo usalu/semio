@@ -2,7 +2,9 @@
 /** 🧭️ `@semio-tech/repo-test` router: `bun ./📜️script.ts <lint|test [level]>`. */
 import { join } from "node:path";
 import { repoTestArtifactEnvironment } from "../../../📚️library/🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runBunx, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runBunx, runTestBudgeted } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class LintScript extends BundleScript {
   run(): void {
@@ -25,4 +27,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("lint", LintScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

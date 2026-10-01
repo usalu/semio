@@ -169,6 +169,22 @@
                   "items": {
                     "$ref": "#/definitions/Supersession"
                   }
+                },
+                "head": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "lineId",
+                    "checkpointId"
+                  ],
+                  "properties": {
+                    "lineId": {
+                      "$ref": "#/definitions/Id"
+                    },
+                    "checkpointId": {
+                      "$ref": "#/definitions/OptionalString"
+                    }
+                  }
                 }
               }
             }

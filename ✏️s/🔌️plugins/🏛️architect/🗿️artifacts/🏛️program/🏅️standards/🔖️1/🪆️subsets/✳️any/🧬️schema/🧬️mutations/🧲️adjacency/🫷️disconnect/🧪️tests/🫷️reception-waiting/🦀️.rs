@@ -1,4 +1,4 @@
-//! 🧪️ `disconnect-adjacency` fixture — `🫷️reception-waiting`.
+//! 🧪️ `disconnect-adjacency` fixture — `🫷️reception`.
 //!
 //! Hand-authored source of truth is the JSON quintet beside this file (contract D1, ticket
 //! `26/08/20/COMPOSE-TO-PUZZLE5D-MIGRATION`). Every expectation below is transcribed from THIS
@@ -12,11 +12,11 @@
 use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
 use protocol::{Mutation, MutationDiff};
 
-const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception-waiting/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception-waiting/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception-waiting/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception-waiting/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception-waiting/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/🧲️adjacency/🫷️disconnect/🫷️reception/🎯️outcome/🔣️.json");
 
 fn before() -> ProgramSnapshot {
     dsl::json::from_json_str(BEFORE).expect("disconnect-adjacency/disconnects-reception-from-waiting: before snapshot decodes")

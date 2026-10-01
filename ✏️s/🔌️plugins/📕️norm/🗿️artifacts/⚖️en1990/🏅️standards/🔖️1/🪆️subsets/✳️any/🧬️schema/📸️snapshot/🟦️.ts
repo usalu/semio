@@ -10,3 +10,5 @@ export type {
   En1990Artifact as En1990Snapshot,
 } from "../🟦️.ts";
 export { parseEn1990Artifact as parseEn1990Snapshot, parseEn1990Fields } from "../🟦️.ts";
+
+export * from "./🪶️sqlite/🟦️.ts";

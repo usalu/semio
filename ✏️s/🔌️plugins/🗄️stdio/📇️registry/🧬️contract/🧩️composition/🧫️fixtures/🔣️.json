@@ -21,13 +21,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -38,10 +44,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -70,13 +78,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -87,10 +101,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "home",
@@ -110,10 +126,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -147,13 +165,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -164,10 +188,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "other",
@@ -193,13 +219,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -210,10 +242,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -239,13 +273,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -256,10 +296,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -285,13 +327,19 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         },
         {
           "schema": "semio.stdio.composition-contribution/v1",
@@ -302,10 +350,12 @@
             "full"
           ],
           "apps": [],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -331,14 +381,20 @@
               "role": "editor",
               "type": "neutral_alpha::editor::AlphaEditor",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "unknown": true,
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
@@ -364,17 +420,596 @@
               "role": "editor",
               "type": "neutral_alpha::Editor(); panic!()",
               "factory": "neutral_alpha::editor::create",
-              "mutationRoster": false
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
             }
           ],
-          "nativeReceipts": [],
           "openTargets": [],
           "catalogFeatures": [],
-          "playgrounds": []
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
         }
       ],
       "selection": "full",
       "error": true
+    },
+    {
+      "id": "editor-missing-law-authority",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false
+            }
+          ],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "viewer-claims-editor-laws",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "viewer",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
+            }
+          ],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "invalid-law-function",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false,
+              "laws": {
+                "editing": "not::a::function",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
+            }
+          ],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "duplicate-editor-law",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "alpha",
+          "package": "neutral-alpha",
+          "order": 2,
+          "selections": [
+            "full",
+            "home"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "AlphaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::AlphaEditor",
+              "factory": "neutral_alpha::editor::create",
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
+            },
+            {
+              "owner": "documents",
+              "order": 1,
+              "variant": "BetaEditor",
+              "role": "editor",
+              "type": "neutral_alpha::editor::BetaEditor",
+              "factory": "neutral_alpha::editor::beta",
+              "mutationRoster": false,
+              "laws": {
+                "editing": "alphaeditor_edit",
+                "sqliteSnapshot": "alphaeditor_sqlite"
+              }
+            }
+          ],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogFeatures": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    }
+  ],
+  "nativeExportCases": [
+    {
+      "id": "owned-export",
+      "selection": {
+        "factoryId": "neutral.alpha.native.v1",
+        "definitionPath": "alpha/definition.json",
+        "protocolPath": "alpha/protocol.semio"
+      },
+      "export": {
+        "descriptorCodecId": "neutral.alpha.codec.v1",
+        "factory": {
+          "factory_id": "neutral.alpha.native.v1",
+          "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+          "artifact_kind": "neutral.alpha",
+          "artifact_schema": "neutral.alpha.v1",
+          "extension": "alpha",
+          "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "sourceProof": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected": {
+        "artifact": "alpha",
+        "factory_id": "neutral.alpha.native.v1",
+        "descriptor_codec_id": "neutral.alpha.codec.v1",
+        "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+        "artifact_kind": "neutral.alpha",
+        "artifact_schema": "neutral.alpha.v1",
+        "extension": "alpha",
+        "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "protocol_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "protocol_path": "alpha/protocol.semio",
+        "definition_path": "alpha/definition.json"
+      }
+    },
+    {
+      "id": "extension-changed",
+      "selection": {
+        "factoryId": "neutral.alpha.native.v1",
+        "definitionPath": "alpha/definition.json",
+        "protocolPath": "alpha/protocol.semio"
+      },
+      "export": {
+        "descriptorCodecId": "neutral.alpha.codec.v1",
+        "factory": {
+          "factory_id": "neutral.alpha.native.v1",
+          "runtime_capability_id": "neutral.alpha.codec.semio.v1",
+          "artifact_kind": "neutral.alpha",
+          "artifact_schema": "neutral.alpha.v1",
+          "extension": "semio",
+          "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "sourceProof": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected": {
+        "artifact": "alpha",
+        "factory_id": "neutral.alpha.native.v1",
+        "descriptor_codec_id": "neutral.alpha.codec.v1",
+        "runtime_capability_id": "neutral.alpha.codec.semio.v1",
+        "artifact_kind": "neutral.alpha",
+        "artifact_schema": "neutral.alpha.v1",
+        "extension": "semio",
+        "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "protocol_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "protocol_path": "alpha/protocol.semio",
+        "definition_path": "alpha/definition.json"
+      }
+    },
+    {
+      "id": "opaque-identity-changed",
+      "selection": {
+        "factoryId": "neutral.alpha.native.v1",
+        "definitionPath": "alpha/definition.json",
+        "protocolPath": "alpha/protocol.semio"
+      },
+      "export": {
+        "descriptorCodecId": "neutral.alpha.codec.v1",
+        "factory": {
+          "factory_id": "neutral.alpha.native.v1",
+          "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+          "artifact_kind": "neutral.alpha",
+          "artifact_schema": "neutral.alpha.v1",
+          "extension": "alpha",
+          "pack_schema_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      },
+      "sourceProof": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "expected": {
+        "artifact": "alpha",
+        "factory_id": "neutral.alpha.native.v1",
+        "descriptor_codec_id": "neutral.alpha.codec.v1",
+        "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+        "artifact_kind": "neutral.alpha",
+        "artifact_schema": "neutral.alpha.v1",
+        "extension": "alpha",
+        "pack_schema_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "protocol_source_sha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "protocol_path": "alpha/protocol.semio",
+        "definition_path": "alpha/definition.json"
+      }
+    },
+    {
+      "id": "source-only-changed",
+      "selection": {
+        "factoryId": "neutral.alpha.native.v1",
+        "definitionPath": "alpha/definition.json",
+        "protocolPath": "alpha/protocol.semio"
+      },
+      "export": {
+        "descriptorCodecId": "neutral.alpha.codec.v1",
+        "factory": {
+          "factory_id": "neutral.alpha.native.v1",
+          "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+          "artifact_kind": "neutral.alpha",
+          "artifact_schema": "neutral.alpha.v1",
+          "extension": "alpha",
+          "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "sourceProof": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+      "expected": {
+        "artifact": "alpha",
+        "factory_id": "neutral.alpha.native.v1",
+        "descriptor_codec_id": "neutral.alpha.codec.v1",
+        "runtime_capability_id": "neutral.alpha.codec.alpha.v1",
+        "artifact_kind": "neutral.alpha",
+        "artifact_schema": "neutral.alpha.v1",
+        "extension": "alpha",
+        "pack_schema_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "protocol_source_sha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+        "protocol_path": "alpha/protocol.semio",
+        "definition_path": "alpha/definition.json"
+      }
+    }
+  ],
+  "parentRemovalCases": [
+    {
+      "id": "exact-retained",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "charlie",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": true
+    },
+    {
+      "id": "substitution-same-count",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "delta",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "missing-owner",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "misleading-symlink",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "charlie",
+            "kind": "symlink",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "partial-owner",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "charlie",
+            "kind": "directory",
+            "complete": false
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "absent-still-present",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "bravo",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "charlie",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "duplicate-owner",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "bravo",
+        "present": [
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "unowned-absence",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "alpha",
+          "bravo",
+          "charlie"
+        ],
+        "absent": "delta",
+        "present": [
+          {
+            "identity": "charlie",
+            "kind": "directory",
+            "complete": true
+          },
+          {
+            "identity": "alpha",
+            "kind": "directory",
+            "complete": true
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "empty-retained",
+      "input": {
+        "schema": "semio.stdio.parent-removal-admission/v1",
+        "expected": [
+          "bravo"
+        ],
+        "absent": "bravo",
+        "present": []
+      },
+      "admitted": true
     }
   ]
 }

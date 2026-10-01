@@ -29,6 +29,11 @@ message ReplaceNodeProperties { string id = 1; string new_properties_json = 2; }
 message ReorderNodes { repeated string order = 1; }
 message ConnectNodes { string id = 1; string source = 2; string target = 3; string route_style = 4; string properties_json = 5; }
 message DisconnectNodes { string id = 1; }
+message MoveNodes { repeated string ids = 1; double dx = 2; double dy = 3; }
+message DagNodePosition { string id = 1; double x = 2; double y = 3; }
+message SetNodePositions { repeated DagNodePosition positions = 1; }
+enum DagSliderField { DAG_SLIDER_FIELD_VALUE = 0; DAG_SLIDER_FIELD_MIN = 1; DAG_SLIDER_FIELD_MAX = 2; }
+message SetSlider { string id = 1; DagSliderField field = 2; double value = 3; }
 
 message DagMutation {
   oneof kind {
@@ -46,5 +51,8 @@ message DagMutation {
     ReorderNodes reorder_nodes = 12;
     ConnectNodes connect_nodes = 13;
     DisconnectNodes disconnect_nodes = 14;
+    MoveNodes move_nodes = 15;
+    SetNodePositions set_node_positions = 16;
+    SetSlider set_slider = 17;
   }
 }

@@ -1,21 +1,96 @@
-import { formatUiNumber, roundUiNumber } from "../🔢️number-format/🟦️.ts";
+import type { UiNumberBound, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
+import { formatUiNumber, formatUiNumberFixed, roundUiNumber } from "../🔢️number-format/🟦️.ts";
 
-/** 🧿️ Share of a slider's span within which a pointer value is pulled onto a detent — the twin of `SLIDER_SNAP_RADIUS`. */
+/** 🧿️ Share of a slider's axis within which a pointer value is pulled onto a detent — the twin of `SLIDER_SNAP_RADIUS`. */
 export const SLIDER_SNAP_RADIUS = 0.03;
+
+/** 📐️ Where `value` sits on a slider's axis, `0` at `min` to `1` at `max` (clamped), by span or log span; the twin of `slider_axis_position`. */
+export function sliderAxisPosition(value: number, min: number, max: number, scale: UiNumberScale = "linear"): number {
+  let low = min;
+  let high = max;
+  let at = value;
+  if (scale === "log") {
+    if (!(min > 0 && max > 0 && value > 0)) return min > 0 && value >= max ? 1 : 0;
+    low = Math.log(min);
+    high = Math.log(max);
+    at = Math.log(value);
+  }
+  const span = high - low;
+  return Number.isFinite(span) && span > 0 ? Math.min(1, Math.max(0, (at - low) / span)) : 0;
+}
+
+/** 🔭️ The value at `position` (clamped) of a slider's axis — `min`/`max` exactly at the ends, `min × (max / min)^position` on a log axis; the twin of `slider_axis_value`. */
+export function sliderAxisValue(position: number, min: number, max: number, scale: UiNumberScale = "linear"): number {
+  const at = Number.isFinite(position) ? Math.min(1, Math.max(0, position)) : 0;
+  if (at === 0) return min;
+  if (at === 1) return max;
+  if (scale === "log" && min > 0 && max > 0) return Math.min(Math.max(min, max), Math.max(Math.min(min, max), Math.exp(Math.log(min) + at * (Math.log(max) - Math.log(min)))));
+  return min + at * (max - min);
+}
+
+/** 🧭️ A dial's needle angle at axis `position`, radians counter-clockwise from three o'clock, the travel's centre at `0`; the twin of `dial_angle`. */
+export function dialAngle(position: number): number {
+  return (Math.min(1, Math.max(0, position)) - 0.5) * 2 * Math.PI;
+}
+
+/** 🌀️ The axis position a pointer at `angle` points at on a dial, the seam at nine o'clock; the twin of `dial_position`. */
+export function dialPosition(angle: number): number {
+  if (!Number.isFinite(angle)) return 0.5;
+  const turns = angle / (2 * Math.PI) + 0.5;
+  return turns - Math.floor(turns);
+}
+
+/** 🙅️ Whether `value` lies beyond `bound` on the side `below` names (an excluded limit refuses itself); the twin of `UiNumberBound::refuses`. */
+export function uiNumberBoundRefuses(bound: UiNumberBound, value: number, below: boolean): boolean {
+  if (below) return bound.exclusive ? value <= bound.value : value < bound.value;
+  return bound.exclusive ? value >= bound.value : value > bound.value;
+}
+
+/** 🪤️ The hard bound a typed `value` crosses — `limits` when declared, else the inclusive `min`/`max` (unlabelled) — the lower one first, `null` for an admitted or non-finite value; the twin of `ui_number_crossed_bound`. */
+export function uiNumberCrossedBound(value: number, min: number | null | undefined, max: number | null | undefined, limits: UiNumberLimits | null | undefined): UiNumberBound | null {
+  if (!Number.isFinite(value)) return null;
+  const lower = limits ? limits.min : min == null ? null : { value: min, exclusive: false, refusal: null };
+  const upper = limits ? limits.max : max == null ? null : { value: max, exclusive: false, refusal: null };
+  if (lower && uiNumberBoundRefuses(lower, value, true)) return lower;
+  if (upper && uiNumberBoundRefuses(upper, value, false)) return upper;
+  return null;
+}
+
+/** 🖥️ What a numeric control shows for a stored value: `stored × factor` (factor 1 when absent); the twin of `ui_number_display`. */
+export function uiNumberDisplay(stored: number, factor: number | null | undefined): number {
+  return factor == null ? stored : stored * factor;
+}
+
+/** 🔤️ The text a numeric control shows for a stored value, at `precision` or in the twelve-digit format; the twin of `ui_number_display_text`. */
+export function uiNumberDisplayText(stored: number, factor: number | null | undefined, precision: number | null | undefined): string {
+  const shown = uiNumberDisplay(stored, factor);
+  return precision == null ? formatUiNumber(shown) : formatUiNumberFixed(shown, precision);
+}
+
+/** ↩️ The stored value a typed display number means: a candidate whose display text equals the typed one keeps its exact stored value, any other is the typed number (rounded to `precision`) divided by the factor; the twin of `ui_number_typed_value`. */
+export function uiNumberTypedValue(typed: number, factor: number | null | undefined, precision: number | null | undefined, candidates: readonly number[]): number {
+  const shown = precision == null ? formatUiNumber(typed) : formatUiNumberFixed(typed, precision);
+  const rounded = precision == null ? typed : roundUiNumber(typed, precision);
+  const kept = candidates.find((candidate) => Number.isFinite(candidate) && uiNumberDisplayText(candidate, factor, precision) === shown);
+  return kept ?? (factor == null ? rounded : rounded / factor);
+}
 
 /** 🔬️ The largest precision a renderer honours — the twin of `UI_NUMBER_PRECISION_MAX`. */
 export const UI_NUMBER_PRECISION_MAX = 15;
 
-/** 👆️ Clamp, quantize onto the step ladder from `min`, then pull onto the nearest snap within the radius (first snap wins a tie); the twin of `slider_pointer_value`. */
-export function sliderPointerValue(value: number, min: number, max: number, step: number, snaps: readonly number[]): number {
+/** 👆️ Clamp, quantize onto the step ladder from `min` (cleaned to its decimals), then pull onto the nearest snap within the radius of the axis — the log axis for `log` — the first snap winning a tie; the twin of `slider_pointer_value`. */
+export function sliderPointerValue(value: number, min: number, max: number, step: number, snaps: readonly number[], scale: UiNumberScale = "linear"): number {
   const upper = Math.max(min, max);
   const clamped = Math.min(upper, Math.max(min, value));
-  const stepped = step > 0 ? Math.min(upper, Math.max(min, min + Math.round((clamped - min) / step) * step)) : clamped;
-  const radius = Math.abs(max - min) * SLIDER_SNAP_RADIUS;
+  const digits = Math.min(12, Math.max(decimalDigits(min), decimalDigits(step)));
+  const stepped = step > 0 ? Math.min(upper, Math.max(min, roundUiNumber(min + Math.round((clamped - min) / step) * step, digits))) : clamped;
+  const logarithmic = scale === "log" && min > 0 && max > 0;
+  const axis = (at: number): number => (logarithmic ? Math.log(at) : at);
+  const radius = Math.abs(axis(max) - axis(min)) * SLIDER_SNAP_RADIUS;
   let nearest: number | null = null;
   let distance = Number.POSITIVE_INFINITY;
   for (const snap of snaps) {
-    const gap = Math.abs(snap - clamped);
+    const gap = Math.abs(axis(snap) - axis(clamped));
     if (gap <= radius && gap < distance) {
       nearest = snap;
       distance = gap;
@@ -30,7 +105,7 @@ export function sliderAdjacentSnap(current: number, snaps: readonly number[], fo
   return candidates.length === 0 ? null : forward ? Math.min(...candidates) : Math.max(...candidates);
 }
 
-/** 📄️ How many ladder rungs a large arrow or a page key with no detent ahead moves a slider — the twin of `SLIDER_PAGE_STEPS`. */
+/** 📄️ How many ladder rungs a large arrow or a page key moves a slider — the twin of `SLIDER_PAGE_STEPS`. */
 export const SLIDER_PAGE_STEPS = 10;
 
 /** ⌨️ The keys a slider takes on its value axis — the twin of `SliderKey`. */
@@ -47,7 +122,7 @@ export function sliderKeyValue(current: number, min: number, max: number, step: 
   return uiNumberKeyValue(current, min, max, step, snaps, key, large);
 }
 
-/** ⌨️ The keyboard law of every numeric control: arrows walk the step ladder from `min` (from 0 without one; `large` walks {@link SLIDER_PAGE_STEPS} rungs) and never snap, page keys jump to the adjacent detent or walk ten rungs, Home/End go to the bounds (keeping the value without one), results clamp to the bounds; the twin of `ui_number_key_value`. */
+/** ⌨️ The keyboard law of every numeric control: arrows walk one rung of the step ladder from `min` (from 0 without one; `large` walks {@link SLIDER_PAGE_STEPS} rungs) and never stop on a detent off their path, page keys walk ten rungs and stop on the first detent they reach, a key landing within ladder tolerance of a detent lands on it exactly, Home/End go to the bounds (keeping the value without one), results clamp to the bounds; the twin of `ui_number_key_value`. */
 export function uiNumberKeyValue(current: number, min: number | null, max: number | null, step: number, snaps: readonly number[], key: SliderKey, large: boolean): number {
   const lower = min != null && Number.isFinite(min) ? min : null;
   const upper = max != null && Number.isFinite(max) ? (lower == null ? max : Math.max(lower, max)) : null;
@@ -61,11 +136,18 @@ export function uiNumberKeyValue(current: number, min: number | null, max: numbe
     const base = Math.abs(position - nearest) <= 1e-9 * Math.max(1, Math.abs(nearest)) ? nearest : forward ? Math.floor(position) : Math.ceil(position);
     return clamp(roundUiNumber(origin + (forward ? base + rungs : base - rungs) * rung, digits));
   };
+  const finite = snaps.filter((snap) => Number.isFinite(snap));
+  const settle = (value: number): number => finite.find((snap) => Math.abs(value - snap) <= 1e-9 * rung * Math.max(1, Math.abs((snap - origin) / rung))) ?? value;
+  const page = (forward: boolean): number => {
+    const target = walk(SLIDER_PAGE_STEPS, forward);
+    const reached = finite.filter((snap) => (forward ? snap > current && snap <= target : snap < current && snap >= target));
+    return reached.length === 0 ? settle(target) : forward ? Math.min(...reached) : Math.max(...reached);
+  };
   switch (key) {
-    case "increment": return walk(large ? SLIDER_PAGE_STEPS : 1, true);
-    case "decrement": return walk(large ? SLIDER_PAGE_STEPS : 1, false);
-    case "pageUp": return sliderAdjacentSnap(current, snaps, true) ?? walk(SLIDER_PAGE_STEPS, true);
-    case "pageDown": return sliderAdjacentSnap(current, snaps, false) ?? walk(SLIDER_PAGE_STEPS, false);
+    case "increment": return settle(walk(large ? SLIDER_PAGE_STEPS : 1, true));
+    case "decrement": return settle(walk(large ? SLIDER_PAGE_STEPS : 1, false));
+    case "pageUp": return page(true);
+    case "pageDown": return page(false);
     case "home": return lower ?? current;
     case "end": return upper ?? current;
   }

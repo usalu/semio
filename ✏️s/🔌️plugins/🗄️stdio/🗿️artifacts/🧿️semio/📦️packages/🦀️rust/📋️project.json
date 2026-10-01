@@ -148,6 +148,24 @@
         "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts canonical-architecture"
       }
+    },
+    "test-full": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      },
+      "inputs": [
+        "production",
+        "^production",
+        "{projectRoot}/../../🏅️standards/**/*",
+        "{projectRoot}/../../🟦️.ts",
+        "{projectRoot}/../../🦀️.rs",
+        "{workspaceRoot}/🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/**/*",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/**/*"
+      ],
+      "cache": true
     }
   }
 }

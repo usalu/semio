@@ -107,19 +107,19 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id              | dir               | fixture                           |
-    | create-node     | ⚪️create-node     | 📍️appends-the-column-head-node-n3 |
-    | delete-node     | 🕳️delete-node     | 🚫️removes-the-column-head-056295  |
-    | create-element  | 🧩️create-element  | ➖️appends-a-diagonal-bracing-bar  |
-    | delete-element  | 🗑️delete-element  | 🚫️removes-the-bracing-be89d2      |
-    | replace-element | ♻️replace-element | 🔄️rolls-the-column-50f732         |
-    | create-section  | 📐️create-section  | 🔳️appends-a-square-bd0e4e         |
-    | delete-section  | ✂️delete-section  | 🚫️removes-the-spare-30ecfb        |
-    | replace-section | 📏️replace-section | 🌀️raises-the-torsion-296ef0       |
-    | create-solid    | 🧊️create-solid    | 🏠️appends-an-extruded-roof-slab   |
-    | delete-solid    | 🚫️delete-solid    | 🚫️removes-the-roof-slab-f0fb64    |
-    | replace-solid   | 🔄️replace-solid   | 📚️thickens-the-slab-and-b51ef0    |
-    | replace-node    | 🔁️replace-node    | 📍️lifts-the-column-head-34351d    |
-    | move-selection  | 🧭️move-selection  | 🧭️lifts-the-column-head-b9d084    |
+    | create-node     | ⚪️create-node     | 📍️appends |
+    | delete-node     | 🕳️delete-node     | 🚫️removes  |
+    | create-element  | 🧩️create-element  | ➖️appends  |
+    | delete-element  | 🗑️delete-element  | 🚫️removes      |
+    | replace-element | ♻️replace-element | 🔄️rolls         |
+    | create-section  | 📐️create-section  | 🔳️appends         |
+    | delete-section  | ✂️delete-section  | 🚫️removes        |
+    | replace-section | 📏️replace-section | 🌀️raises       |
+    | create-solid    | 🧊️create-solid    | 🏠️appends   |
+    | delete-solid    | 🚫️delete-solid    | 🚫️removes    |
+    | replace-solid   | 🔄️replace-solid   | 📚️thickens    |
+    | replace-node    | 🔁️replace-node    | 📍️lifts    |
+    | move-selection  | 🧭️move-selection  | 🧭️lifts    |
 
   @id-hall-vector
   @level-exhaustive
@@ -135,7 +135,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | replace-element | ♻️replace-element | 🏗️hall-strut-d0e4b7               |
     | create-node     | ⚪️create-node     | 🏗️hall-new-node-b26700            |
     | delete-section  | ✂️delete-section  | 🏗️hall-cut-shs-d44b9e             |
-    | replace-section | 📏️replace-section | 🏗️hall-deep-purlin-176fd0         |
+    | replace-section | 📏️replace-section | 🏗️hall         |
     | create-section  | 📐️create-section  | 🏗️hall-new-beam-251a92            |
     | replace-solid   | 🔄️replace-solid   | 🏗️hall-thick-raft-cddc0f          |
     | delete-node     | 🕳️delete-node     | 🏗️hall-cut-node-8350fd            |
@@ -144,7 +144,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | create-solid    | 🧊️create-solid    | 🏗️hall-new-slab-d79da4            |
     | create-element  | 🧩️create-element  | 🏗️hall-new-tie-074a69             |
     | replace-node    | 🔁️replace-node    | 🏗️hall-lifts-ridge-746bae         |
-    | move-selection  | 🧭️move-selection  | 🏗️hall-stretches-the-apron-305c23 |
+    | move-selection  | 🧭️move-selection  | 🏗️hall |
 
   @id-reject
   @level-exhaustive
@@ -184,7 +184,7 @@ Feature: Apply every typed fem3d mesh mutation twice — once in Rust, once in P
     | no-such-node-166880        | 🔁️replace-node    | 🚨️no-such-node-166880        |
     | renames-node-4a2286        | 🔁️replace-node    | 🪪️renames-node-4a2286        |
     | moves-nothing-f724d6       | 🧭️move-selection  | ⏸️moves-nothing-f724d6       |
-    | turns-about-nothing-f2d529 | 🧭️move-selection  | 🌀️turns-about-nothing-f2d529 |
-    | names-a-node-twice-61d178  | 🧭️move-selection  | 🔁️names-a-node-twice-61d178  |
+    | turns-about-nothing-f2d529 | 🧭️move-selection  | 🌀️turns |
+    | names-a-node-twice-61d178  | 🧭️move-selection  | 🔁️names  |
     | no-such-targets-f9c98d     | 🧭️move-selection  | 🚨️no-such-targets-f9c98d     |
-    | flattens-the-raft-775486   | 🧭️move-selection  | 🫓️flattens-the-raft-775486   |
+    | flattens-the-raft-775486   | 🧭️move-selection  | 🫓️flattens   |

@@ -1,0 +1,8 @@
+{
+  "status": "rejected",
+  "code": "mutation.invariant",
+  "invariant": "axis-nonzero",
+  "path": [
+    "obj-plane"
+  ]
+}

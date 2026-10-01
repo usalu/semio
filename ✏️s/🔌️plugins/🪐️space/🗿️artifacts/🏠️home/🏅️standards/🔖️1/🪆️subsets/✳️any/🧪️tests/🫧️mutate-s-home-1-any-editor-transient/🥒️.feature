@@ -21,7 +21,7 @@ Feature: Fold every committed directory page vector of s.space.home's ✏️edit
   @level-exhaustive
   @mode-conformance
   Scenario Outline: Fold <id> and land on the committed after-snapshot, diff and outcome
-    Given the committed <id> vector under ✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page
+    Given the committed <id> vector under ✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory
     When its page is folded into that vector's before-snapshot through home_transient_mutation_report_json
     Then the folded snapshot, the produced diff and the diagnostics are exactly what the vector commits
     Examples:
@@ -34,7 +34,7 @@ Feature: Fold every committed directory page vector of s.space.home's ✏️edit
   @level-exhaustive
   @mode-property
   Scenario Outline: Undoing <id> leaves the committed before-snapshot
-    Given the committed <id> vector under ✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory-page
+    Given the committed <id> vector under ✏️editor/🫧️transient/🧫️fixtures/📬️apply-directory
     When its page is folded into that vector's before-snapshot through home_transient_mutation_report_json
     Then the kind computes no inverse step and the projection is exactly the committed before-snapshot
     Examples:

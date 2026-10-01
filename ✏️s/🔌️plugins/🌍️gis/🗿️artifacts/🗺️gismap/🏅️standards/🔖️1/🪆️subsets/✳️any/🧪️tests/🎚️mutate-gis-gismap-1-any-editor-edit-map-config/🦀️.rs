@@ -77,11 +77,11 @@ fn kept(kind: &str) -> Result<Vector, String> {
             observable: false,
         },
         "set-camera" => Vector {
-            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set-camera-no-op/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/🎚️config/🧫️fixtures/🎥️set-camera/🟰️set/🎯️outcome/🔣️.json"),
             observable: false,
         },
         "set-render-mode" => Vector {

@@ -19,7 +19,7 @@ export async function testDependencyBootstrap(workspace: string, output: string)
   mkdirSync(join(root, "dependency"));
   writeFileSync(join(root, "dependency/package.json"), JSON.stringify({ name: fixture.dependency.name, version: fixture.dependency.version, type: "module", main: "index.js" }));
   writeFileSync(join(root, "dependency/index.js"), fixture.dependency.content);
-  writeFileSync(join(root, "package.json"), JSON.stringify({ name: "bootstrap-fixture", private: true, dependencies: { [fixture.dependency.name]: "file:./dependency" } }));
+  writeFileSync(join(root, "package.json"), JSON.stringify({ name: "bootstrap-fixture", private: true, workspaces: ["dependency"], semio: {workspace: {schemaVersion: 1, members: ["dependency"], owners: []}}, dependencies: { [fixture.dependency.name]: "file:./dependency" } }));
   writeFileSync(join(root, "nx.json"), JSON.stringify({ useDaemonProcess: false }));
   writeFileSync(join(root, "project.json"), JSON.stringify({ name: "workspace", targets: { [fixture.target]: target } }));
   writeFileSync(join(root, "📜️script.ts"), "throw new Error('Application code must not run during dependency setup');");
@@ -100,6 +100,7 @@ export async function testNxTooling(workspace: string, output: string): Promise<
     assert.equal(readFileSync(join(root, "bun.lock"), "utf8"), lock);
   }
   for (const path of fixture.tooling.graphSources) { mkdirSync(dirname(join(root, path)), { recursive: true }); copyFileSync(join(workspace, path), join(root, path)); }
+  writeFileSync(join(root, "Cargo.toml"), '[workspace]\nresolver="2"\nmembers=[]\n[workspace.metadata.semio.repository]\nschema-version=1\nmember-manifests=["🧪️packages/**/Cargo.toml"]\nowner-manifests=[]\n');
   copyFileSync(join(root, "project.json"), join(root, "📋️project.json"));
   unlinkSync(join(root, "project.json"));
   const graphRun = Bun.spawn([process.execPath, join(root, bootstrap), "nx", "run", `workspace:${fixture.target}`, "--output-style=stream"], { cwd: root, env, stdout: "pipe", stderr: "pipe" });

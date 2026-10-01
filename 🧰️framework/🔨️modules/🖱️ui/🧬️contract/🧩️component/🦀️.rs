@@ -344,7 +344,7 @@ pub struct SeparatorProps {}
 
 /// ⌨️ Props for `Component::Input`. `on_change` moved to the record's `bindings`
 /// (`Trigger::Change`/`Trigger::Commit`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct InputProps {
@@ -381,12 +381,26 @@ pub struct InputProps {
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub snaps: crate::UiFixedList<f64>,
+    /// 🔁️ A `InputKind::Number` field's `value` is the stored number; it shows and reads `stored × display_factor`
+    /// ([`ui_number_display_text`]/[`ui_number_typed_value`]).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub display_factor: Option<f64>,
+    /// ⛔️ The hard range a typed number must keep (`min`/`max` themselves when absent), see [`UiNumberLimits`].
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub limits: Option<UiNumberLimits>,
 }
 
 impl InputProps {
     /// 🧷️ Whether `snaps` satisfies the detent law against the optional bounds.
     pub fn snaps_are_valid(&self) -> bool {
         crate::snaps_are_valid(self.snaps.iter().copied(), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY))
+    }
+
+    /// ⚖️ Whether the bounds, display factor and limits agree ([`crate::number_range_is_valid`]).
+    pub fn number_range_is_valid(&self) -> bool {
+        crate::number_range_is_valid(self.min, self.max, UiNumberScale::Linear, self.display_factor, self.limits.as_ref(), self.snaps.iter().copied())
     }
 }
 
@@ -448,11 +462,117 @@ pub struct KeyValueListProps {
     pub entries: crate::UiFixedList<KeyValueEntry>,
 }
 
-/// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `snaps` are the
-/// slider's detents: strictly ascending, finite, inside `min..=max`, at most
-/// [`crate::UI_FIXED_LIST_ITEMS`] of them — every renderer paints one tick per snap and resolves a
-/// pointer value through [`slider_pointer_value`] and a key through [`slider_key_value`].
+/// 📈️ How a slider's travel maps onto its track: evenly (`linear`), or by ratio (`log`, a strictly positive
+/// travel) — see [`slider_axis_position`]/[`slider_axis_value`].
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum UiNumberScale {
+    #[default]
+    Linear,
+    Log,
+}
+
+impl UiNumberScale {
+    pub fn is_linear(&self) -> bool {
+        matches!(self, Self::Linear)
+    }
+}
+
+/// 🎡️ How a slider draws its travel: a straight `track`, or a rotary `dial` sweeping one full counter-clockwise
+/// turn with the travel's centre at three o'clock — so a `-180°..180°` angle points where it turns
+/// ([`dial_angle`]/[`dial_position`]). Both take the same keys, pointer law and accessibility.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub enum SliderAppearance {
+    #[default]
+    Track,
+    Dial,
+}
+
+impl SliderAppearance {
+    pub fn is_track(&self) -> bool {
+        matches!(self, Self::Track)
+    }
+}
+
+// 🚫️async: U1 run-to-completion frame transaction — see ticket 26/08/20 📌️important.md
+fn is_inclusive(exclusive: &bool) -> bool {
+    !*exclusive
+}
+
+/// 🧱️ One hard bound of a numeric control's value: the limit, whether the limit itself is excluded, and the
+/// refusal a renderer shows when a typed value crosses it — already localized by the producer and naming the
+/// bound in display units (the contract carries no locale). A crossing value is never dispatched: the draft is
+/// kept and the refusal shown.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct UiNumberBound {
+    pub value: f64,
+    #[serde(default, skip_serializing_if = "is_inclusive")]
+    #[value(default, skip_serializing_if = "is_inclusive")]
+    pub exclusive: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub refusal: Option<Label>,
+}
+
+/// 🛤️ The hard range a numeric control's value must keep, each side open when absent. A slider's `min`/`max`
+/// are then only its travel (a soft range): a typed value may leave the travel while the limits admit it.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[serde(rename_all = "camelCase")]
+#[value(crate = "::protocol::value", rename_all = "camelCase")]
+pub struct UiNumberLimits {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub min: Option<UiNumberBound>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub max: Option<UiNumberBound>,
+}
+
+impl UiNumberBound {
+    /// 🙅️ Whether `value` lies beyond this bound on the side `below` names (an excluded limit refuses itself).
+    pub fn refuses(&self, value: f64, below: bool) -> bool {
+        match (below, self.exclusive) {
+            (true, false) => value < self.value,
+            (true, true) => value <= self.value,
+            (false, false) => value > self.value,
+            (false, true) => value >= self.value,
+        }
+    }
+}
+
+impl UiNumberLimits {
+    /// 🔎️ The bound `value` crosses, the lower one first; `None` when both admit it.
+    pub fn crossed(&self, value: f64) -> Option<&UiNumberBound> {
+        self.min.as_ref().filter(|bound| bound.refuses(value, true)).or_else(|| self.max.as_ref().filter(|bound| bound.refuses(value, false)))
+    }
+}
+
+/// 🪤️ The hard bound a typed `value` crosses: `limits` when the control declares them, else its inclusive
+/// `min`/`max` (unlabelled, so the renderer's refusal names no bound). A non-finite value crosses nothing — a
+/// renderer refuses it as unreadable before it gets here.
+pub fn ui_number_crossed_bound(value: f64, min: Option<f64>, max: Option<f64>, limits: Option<&UiNumberLimits>) -> Option<UiNumberBound> {
+    if !value.is_finite() {
+        return None;
+    }
+    match limits {
+        Some(limits) => limits.crossed(value).cloned(),
+        None => UiNumberLimits { min: min.map(|value| UiNumberBound { value, exclusive: false, refusal: None }), max: max.map(|value| UiNumberBound { value, exclusive: false, refusal: None }) }.crossed(value).cloned(),
+    }
+}
+
+/// 🎚️ Props for `Component::Slider`. `on_change` moved to the record's `bindings`. `min`/`max` are the travel;
+/// `snaps` are its detents: strictly ascending, finite, inside `min..=max`, at most [`crate::UI_FIXED_LIST_ITEMS`]
+/// of them — every renderer paints one tick per snap at its [`slider_axis_position`] and resolves a pointer value
+/// through [`slider_pointer_value`] and a key through [`slider_key_value`]. Values are stored values; the readout,
+/// the spoken value and a typed value are display values (`stored × display_factor`, at `precision`, beside
+/// `display_unit` else `unit`, read back by [`ui_number_typed_value`]). A typed value is refused by `limits` (the
+/// travel itself when absent).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct SliderProps {
@@ -466,18 +586,44 @@ pub struct SliderProps {
     #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
     pub snaps: crate::UiFixedList<f64>,
+    #[serde(default, skip_serializing_if = "SliderAppearance::is_track")]
+    #[value(default, skip_serializing_if = "SliderAppearance::is_track")]
+    pub appearance: SliderAppearance,
+    #[serde(default, skip_serializing_if = "UiNumberScale::is_linear")]
+    #[value(default, skip_serializing_if = "UiNumberScale::is_linear")]
+    pub scale: UiNumberScale,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub precision: Option<u16>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub display_unit: Option<crate::UiText>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub display_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub limits: Option<UiNumberLimits>,
 }
 
 impl SliderProps {
-    /// 🧲️ Whether `snaps` satisfies the detent law: finite, strictly ascending, inside the bounds.
+    /// 🧯️ Whether `snaps` satisfies the detent law: finite, strictly ascending, inside the bounds.
     pub fn snaps_are_valid(&self) -> bool {
         crate::snaps_are_valid(self.snaps.iter().copied(), self.min, self.max)
+    }
+
+    /// 🥽️ Whether the travel, scale, display factor and limits agree ([`crate::number_range_is_valid`]).
+    pub fn number_range_is_valid(&self) -> bool {
+        crate::number_range_is_valid(Some(self.min), Some(self.max), self.scale, self.display_factor, self.limits.as_ref(), self.snaps.iter().copied())
     }
 }
 
 /// 🔢️ Props for `Component::NumberStepper`. `on_absolute`/`on_delta` both moved to the record's
-/// `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+/// `bindings`, distinguished by `Trigger`. `precision` is the fraction digits it shows and commits (in display
+/// units); `snaps` are its detents under the slider's detent law against `min`/`max` (the page keys stop on them,
+/// [`ui_number_key_value`]); the display facets and `limits` read as on [`SliderProps`], `limits` refusing a typed
+/// value (`min`/`max` themselves when absent).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(crate = "::protocol::value", rename_all = "camelCase")]
 pub struct NumberStepperProps {
@@ -493,23 +639,103 @@ pub struct NumberStepperProps {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub precision: Option<u16>,
+    #[serde(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    #[value(default, skip_serializing_if = "crate::UiFixedList::is_empty")]
+    pub snaps: crate::UiFixedList<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub unit: Option<crate::UiText>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub display_unit: Option<crate::UiText>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub display_factor: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[value(default, skip_serializing_if = "Option::is_none")]
+    pub limits: Option<UiNumberLimits>,
 }
 
-/// 🧿️ Share of a slider's span within which a pointer value is pulled onto a detent. Keyboard steps
-/// never snap (a stuck arrow key is worse than a missed detent); page keys jump between detents.
+impl NumberStepperProps {
+    /// 🪝️ Whether `snaps` satisfies the detent law against the optional bounds.
+    pub fn snaps_are_valid(&self) -> bool {
+        crate::snaps_are_valid(self.snaps.iter().copied(), self.min.unwrap_or(f64::NEG_INFINITY), self.max.unwrap_or(f64::INFINITY))
+    }
+
+    /// 🪢️ Whether the bounds, display factor and limits agree ([`crate::number_range_is_valid`]).
+    pub fn number_range_is_valid(&self) -> bool {
+        crate::number_range_is_valid(self.min, self.max, UiNumberScale::Linear, self.display_factor, self.limits.as_ref(), self.snaps.iter().copied())
+    }
+}
+
+/// 🧿️ Share of a slider's axis within which a pointer value is pulled onto a detent. Arrow keys never snap
+/// (a stuck arrow key is worse than a missed detent); page keys stop on the detents they reach.
 pub const SLIDER_SNAP_RADIUS: f64 = 0.03;
+
+/// 🗺️ Where `value` sits on a slider's axis, `0` at `min` to `1` at `max` (clamped): its share of the span, or
+/// of the log span on a `log` axis. A degenerate or (for `log`) non-positive travel answers `0`.
+pub fn slider_axis_position(value: f64, min: f64, max: f64, scale: UiNumberScale) -> f64 {
+    let (low, high, at) = match scale {
+        UiNumberScale::Linear => (min, max, value),
+        UiNumberScale::Log if min > 0.0 && max > 0.0 && value > 0.0 => (min.ln(), max.ln(), value.ln()),
+        UiNumberScale::Log => return if min > 0.0 && value >= max { 1.0 } else { 0.0 },
+    };
+    let span = high - low;
+    if span.is_finite() && span > 0.0 {
+        ((at - low) / span).clamp(0.0, 1.0)
+    } else {
+        0.0
+    }
+}
+
+/// 🔭️ The value at `position` (`0..=1`, clamped) of a slider's axis — the inverse of [`slider_axis_position`]:
+/// `min` and `max` exactly at the ends, `min × (max / min)^position` between them on a `log` axis.
+pub fn slider_axis_value(position: f64, min: f64, max: f64, scale: UiNumberScale) -> f64 {
+    let position = if position.is_finite() { position.clamp(0.0, 1.0) } else { 0.0 };
+    if position == 0.0 {
+        return min;
+    }
+    if position == 1.0 {
+        return max;
+    }
+    match scale {
+        UiNumberScale::Log if min > 0.0 && max > 0.0 => (min.ln() + position * (max.ln() - min.ln())).exp().clamp(min.min(max), max.max(min)),
+        _ => min + position * (max - min),
+    }
+}
+
+/// 🧭️ The needle angle of a dial at axis `position`, in radians counter-clockwise from three o'clock: one full
+/// turn over the travel, its centre (`0.5`) at `0`, the ends at `±π`.
+pub fn dial_angle(position: f64) -> f64 {
+    (position.clamp(0.0, 1.0) - 0.5) * std::f64::consts::TAU
+}
+
+/// 🌀️ The axis position a pointer at `angle` (radians counter-clockwise from three o'clock, any turn) points at
+/// on a dial — the inverse of [`dial_angle`], the seam at nine o'clock.
+pub fn dial_position(angle: f64) -> f64 {
+    if !angle.is_finite() {
+        return 0.5;
+    }
+    let turns = angle / std::f64::consts::TAU + 0.5;
+    turns - turns.floor()
+}
 
 /// 🔬️ The largest [`InputProps::precision`]/[`NumberStepperProps::precision`] a renderer honours —
 /// the fraction digits an `f64` still carries meaningfully.
 pub const UI_NUMBER_PRECISION_MAX: u16 = 15;
 
-/// 👆️ Resolves a raw pointer value: clamped to the bounds, quantized onto the `step` ladder from
-/// `min`, then pulled onto the nearest snap when it lies within [`SLIDER_SNAP_RADIUS`] of the span.
-pub fn slider_pointer_value(value: f64, min: f64, max: f64, step: f64, snaps: impl IntoIterator<Item = f64>) -> f64 {
+/// 👆️ Resolves a raw pointer value (the [`slider_axis_value`] under the pointer): clamped to the bounds,
+/// quantized onto the `step` ladder from `min` (cleaned to the decimals of `min` and `step`), then pulled onto the
+/// nearest snap when it lies within [`SLIDER_SNAP_RADIUS`] of the axis — measured on the log axis for `log` — the
+/// first snap winning a tie.
+pub fn slider_pointer_value(value: f64, min: f64, max: f64, step: f64, snaps: impl IntoIterator<Item = f64>, scale: UiNumberScale) -> f64 {
     let clamped = value.clamp(min, max.max(min));
-    let stepped = if step > 0.0 { (min + ((clamped - min) / step).round() * step).clamp(min, max.max(min)) } else { clamped };
-    let radius = (max - min).abs() * SLIDER_SNAP_RADIUS;
-    snaps.into_iter().map(|snap| (snap, (snap - clamped).abs())).filter(|(_, distance)| *distance <= radius).min_by(|left, right| left.1.total_cmp(&right.1)).map_or(stepped, |(snap, _)| snap)
+    let digits = decimal_digits(min).max(decimal_digits(step)).min(12);
+    let stepped = if step > 0.0 { crate::round_ui_number(min + ((clamped - min) / step).round() * step, digits).clamp(min, max.max(min)) } else { clamped };
+    let logarithmic = scale == UiNumberScale::Log && min > 0.0 && max > 0.0;
+    let axis = |value: f64| if logarithmic { value.ln() } else { value };
+    let radius = (axis(max) - axis(min)).abs() * SLIDER_SNAP_RADIUS;
+    snaps.into_iter().map(|snap| (snap, (axis(snap) - axis(clamped)).abs())).filter(|(_, distance)| *distance <= radius).min_by(|left, right| left.1.total_cmp(&right.1)).map_or(stepped, |(snap, _)| snap)
 }
 
 /// ⏭️ The next detent strictly above (`forward`) or below `current` — what a page key jumps to.
@@ -522,7 +748,8 @@ pub fn slider_adjacent_snap(current: f64, snaps: impl IntoIterator<Item = f64>, 
     }
 }
 
-/// 📄️ How many ladder rungs a large arrow (`Shift`) or a page key with no detent ahead moves a slider.
+/// 📄️ How many ladder rungs a large arrow (`Shift`) or a page key moves a slider (a page key stopping on the first
+/// detent it reaches).
 pub const SLIDER_PAGE_STEPS: f64 = 10.0;
 
 /// 🎹️ The keys a slider takes, once a renderer has mapped its physical key (direction, `dir`, inversion) onto
@@ -542,12 +769,13 @@ pub fn slider_key_value(current: f64, min: f64, max: f64, step: f64, snaps: impl
     ui_number_key_value(current, Some(min), Some(max), step, snaps, key, large)
 }
 
-/// ⌨️ The keyboard law of every numeric control. Arrows walk the step ladder from `min` (from 0 without one;
-/// `large` walks [`SLIDER_PAGE_STEPS`] rungs) and never snap, so a detent never traps them; from an off-ladder
-/// value the first rung beyond it is one rung. Page keys jump to the adjacent detent, else walk
-/// [`SLIDER_PAGE_STEPS`] rungs. Home and End go to the bounds (and keep the value without one). An invalid step
-/// walks rungs of one. The result is clamped to the bounds and cleaned to the decimals of the ladder origin and
-/// `step`, so `0.2 + 0.1` lands on `0.3`.
+/// ⌨️ The keyboard law of every numeric control. Arrows walk one rung of the step ladder from `min` (from 0
+/// without one; `large` walks [`SLIDER_PAGE_STEPS`] rungs) and never stop on a detent off their path, so a detent
+/// never traps them; from an off-ladder value the first rung beyond it is one rung. Page keys walk
+/// [`SLIDER_PAGE_STEPS`] rungs and stop on the first detent they reach. A key landing within ladder tolerance of a
+/// detent lands on the detent exactly (a rung of a `π/180` ladder from `-π` becomes `π/2` itself). Home and End go
+/// to the bounds (and keep the value without one). An invalid step walks rungs of one. The result is clamped to the
+/// bounds and cleaned to the decimals of the ladder origin and `step`, so `0.2 + 0.1` lands on `0.3`.
 pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, step: f64, snaps: impl IntoIterator<Item = f64>, key: SliderKey, large: bool) -> f64 {
     let min = min.filter(|min| min.is_finite());
     let max = max.filter(|max| max.is_finite()).map(|max| min.map_or(max, |min| max.max(min)));
@@ -555,6 +783,7 @@ pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, ste
     let origin = min.unwrap_or(0.0);
     let step = if step.is_finite() && step > 0.0 { step } else { 1.0 };
     let digits = decimal_digits(origin).max(decimal_digits(step)).min(12);
+    let snaps: Vec<f64> = snaps.into_iter().filter(|snap| snap.is_finite()).collect();
     let walk = |rungs: f64, forward: bool| {
         let position = (current - origin) / step;
         let nearest = position.round();
@@ -567,15 +796,43 @@ pub fn ui_number_key_value(current: f64, min: Option<f64>, max: Option<f64>, ste
         };
         clamp(crate::round_ui_number(origin + (if forward { base + rungs } else { base - rungs }) * step, digits))
     };
+    let settle = |value: f64| snaps.iter().copied().find(|snap| (value - snap).abs() <= 1e-9 * step * ((snap - origin) / step).abs().max(1.0)).unwrap_or(value);
+    let page = |forward: bool| {
+        let target = walk(SLIDER_PAGE_STEPS, forward);
+        let reached = snaps.iter().copied().filter(|snap| if forward { *snap > current && *snap <= target } else { *snap < current && *snap >= target });
+        let first = if forward { reached.min_by(f64::total_cmp) } else { reached.max_by(f64::total_cmp) };
+        first.unwrap_or_else(|| settle(target))
+    };
     let rungs = if large { SLIDER_PAGE_STEPS } else { 1.0 };
     match key {
-        SliderKey::Increment => walk(rungs, true),
-        SliderKey::Decrement => walk(rungs, false),
-        SliderKey::PageUp => slider_adjacent_snap(current, snaps, true).unwrap_or_else(|| walk(SLIDER_PAGE_STEPS, true)),
-        SliderKey::PageDown => slider_adjacent_snap(current, snaps, false).unwrap_or_else(|| walk(SLIDER_PAGE_STEPS, false)),
+        SliderKey::Increment => settle(walk(rungs, true)),
+        SliderKey::Decrement => settle(walk(rungs, false)),
+        SliderKey::PageUp => page(true),
+        SliderKey::PageDown => page(false),
         SliderKey::Home => min.unwrap_or(current),
         SliderKey::End => max.unwrap_or(current),
     }
+}
+
+/// 🖥️ What a numeric control shows for a stored value: `stored × factor` (the factor `1` when absent).
+pub fn ui_number_display(stored: f64, factor: Option<f64>) -> f64 {
+    factor.map_or(stored, |factor| stored * factor)
+}
+
+/// 🔤️ The text a numeric control shows for a stored value: its [`ui_number_display`] at `precision` fraction
+/// digits ([`crate::format_ui_number_fixed`]) or, without one, in the twelve-digit format.
+pub fn ui_number_display_text(stored: f64, factor: Option<f64>, precision: Option<u16>) -> String {
+    let shown = ui_number_display(stored, factor);
+    precision.map_or_else(|| crate::format_ui_number(shown), |precision| crate::format_ui_number_fixed(shown, precision))
+}
+
+/// ↩️ The stored value a typed display number means: a candidate (the current value, a detent) whose display text
+/// equals the typed number's keeps its exact stored value — so retyping `90` on a degree dial keeps `π/2` — and any
+/// other is the typed number (rounded to `precision`) divided back by the factor.
+pub fn ui_number_typed_value(typed: f64, factor: Option<f64>, precision: Option<u16>, candidates: impl IntoIterator<Item = f64>) -> f64 {
+    let shown = precision.map_or_else(|| crate::format_ui_number(typed), |precision| crate::format_ui_number_fixed(typed, precision));
+    let rounded = precision.map_or(typed, |precision| crate::round_ui_number(typed, precision));
+    candidates.into_iter().find(|candidate| candidate.is_finite() && ui_number_display_text(*candidate, factor, precision) == shown).unwrap_or_else(|| factor.map_or(rounded, |factor| rounded / factor))
 }
 
 /// 🎨️ `rgba` — sRGB components in `0..=1` with straight alpha, a missing component 0 and a missing alpha 1, a

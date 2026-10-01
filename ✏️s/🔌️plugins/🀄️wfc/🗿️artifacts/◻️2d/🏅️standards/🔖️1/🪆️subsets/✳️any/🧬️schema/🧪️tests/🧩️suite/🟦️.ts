@@ -5,11 +5,11 @@
 import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
-import { applyWfc2dDiff, type Wfc2dDiff } from "../../🔺️diff/🟦️.ts";
-import type { Wfc2dSnapshot } from "../../📸️snapshot/🟦️.ts";
-import { applyWfc2dMutation, wfc2dDiff, wfc2dInverse, WFC_2D_MUTATION_KINDS, type Wfc2dMutation } from "../../🧬️mutations/🟦️.ts";
+import { applyWfc2dDiff } from "../../🔺️diff/🟦️.ts";
+import { fixtureSnapshot, fixtureDiff, fixtureMutation } from "./🧫️fixtures/🟦️.ts";
+import { applyWfc2dMutation, wfc2dDiff, wfc2dInverse, WFC_2D_MUTATION_KINDS, type Wfc2dMessage } from "../../🧬️mutations/🟦️.ts";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const fixtures = join(here, "..", "..", "..", "🧫️fixtures", "🧬️mutations");
@@ -32,11 +32,11 @@ describe("wfc2d mutation vectors", () => {
     const kind = kindOf(kindDirectory);
     for (const scenario of directories(kindDirectory)) {
       const base = [kindDirectory, scenario] as const;
-      const before = read<Wfc2dSnapshot>(...base, "📸️snapshot", "⬅️before", "🔣️.json");
-      const after = read<Wfc2dSnapshot>(...base, "📸️snapshot", "➡️after", "🔣️.json");
-      const mutation = read<Wfc2dMutation>(...base, "🦠️mutation", "🔣️.json");
-      const committed = read<Wfc2dDiff>(...base, "🔺️diff", "🔣️.json");
-      const outcome = read<{ status: string; messages?: readonly { level: string; code: string }[] }>(...base, "🎯️outcome", "🔣️.json");
+      const before = fixtureSnapshot(read<unknown>(...base, "📸️snapshot", "⬅️before", "🔣️.json"));
+      const after = fixtureSnapshot(read<unknown>(...base, "📸️snapshot", "➡️after", "🔣️.json"));
+      const mutation = fixtureMutation(read<unknown>(...base, "🦠️mutation", "🔣️.json"));
+      const committed = fixtureDiff(read<unknown>(...base, "🔺️diff", "🔣️.json"));
+      const outcome = read<{ status: string; messages?: readonly Wfc2dMessage[] }>(...base, "🎯️outcome", "🔣️.json");
 
       describe(`${kind}/${scenario}`, () => {
         it("produces the committed diff", () => {

@@ -310,6 +310,7 @@ where
                 self.owner.take();
                 envelope.owner = history_owner;
                 envelope.active_alternative_id = fold.alternative.clone();
+                envelope.viewer_checkpoint_id = history.viewer_checkpoint.clone();
                 envelope.cursor = Some(crate::os_store::ArtifactCursor::new(fold.applied.clone(), fold.redo.clone(), fold.checkpoint.clone()));
                 let supersessions = fold.supersessions.clone();
                 *self.fold = Some(fold);
@@ -346,7 +347,7 @@ where
                 {
                     return self.reject(MemberOpenDiagnostic::Capacity);
                 }
-                let edit = Edit {
+                let edit = Edit { line: source.line.clone(),
                     id: source.id.clone(),
                     actor: source.actor.clone(),
                     forwards,

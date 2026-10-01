@@ -1,0 +1,12 @@
+{
+  "messages": [
+    {
+      "code": "mutation.cascade",
+      "level": "info",
+      "target": [
+        "object-b"
+      ]
+    }
+  ],
+  "status": "applied"
+}

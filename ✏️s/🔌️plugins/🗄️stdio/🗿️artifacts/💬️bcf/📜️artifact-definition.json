@@ -50,7 +50,7 @@
     }
   ],
   "codecs": [
-    { "id": "s.stdio.bcf.standard.2-1.codec.native-document.v1", "status": "implemented", "from": "s.stdio.bcf.standard.2-1.dialect.source", "to": "s.stdio.bcf.standard.2-1.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.bcf.v1", "artifact_kind": "s.stdio.bcf", "artifact_schema": "stdio.bcf", "extension": "bcf", "pack_schema_hash": "a0a9aeb921b5347337f68c7544dc73b566d953851634683ca3102bd555664abc", "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1" } }
+    { "id": "s.stdio.bcf.standard.2-1.codec.native-document.v1", "status": "implemented", "from": "s.stdio.bcf.standard.2-1.dialect.source", "to": "s.stdio.bcf.standard.2-1.dialect.source", "executable_registration": true, "native_factory": { "factory_id": "stdio.native.bcf.v1", "artifact_kind": "s.stdio.bcf", "artifact_schema": "stdio.bcf", "extension": "semio", "pack_schema_hash": "3db82c280974ca9d731e2e307793fa20f8dec869248743cfc9c2e83c7b06c4d0", "runtime_capability_id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-semio.v1" } }
   ],
   "mutations": [],
   "inferences": [],
@@ -86,9 +86,9 @@
   ],
   "runtime_capabilities": [
     {
-      "id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-bcf.v1",
+      "id": "s.stdio.bcf.standard.2-1.codec.codec-stdio-bcf-extension-semio.v1",
       "category": "codec",
-      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.bcf:bcf|codec:stdio.bcf",
+      "descriptor": "runtime-capability:codec:codec-extension:9:stdio.bcf:semio|codec:stdio.bcf",
       "claims": [
         {
           "namespace": "codec",
@@ -96,7 +96,7 @@
         },
         {
           "namespace": "codec-extension",
-          "value": "9:stdio.bcf:bcf"
+          "value": "9:stdio.bcf:semio"
         }
       ]
     },

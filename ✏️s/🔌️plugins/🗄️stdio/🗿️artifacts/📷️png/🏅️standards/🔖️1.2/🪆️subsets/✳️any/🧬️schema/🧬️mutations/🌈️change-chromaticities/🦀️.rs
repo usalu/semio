@@ -47,8 +47,8 @@ pub fn contribute(base: &PngSnapshot, chrm: Option<PngChromaticities>) -> PngDif
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌈️change-chromaticities/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-chromaticities payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🌈️change-chromaticities/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-chromaticities payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

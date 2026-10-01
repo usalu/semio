@@ -29,7 +29,12 @@
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json",
       "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🟨️.mjs",
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs"
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/🕸️dependencies/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🎮️playground/🖥️native-host/🟨️.mjs",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟨️.mjs",
+      "🧰️framework/🔨️modules/🪪️identity/📁️installation/🟨️.mjs",
+      "🧰️framework/🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json",
+      "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/⚙️engine/🧭️selection/🟨️.mjs"
     ],
     "storage": {
       "data": ".nx/workspace-data",

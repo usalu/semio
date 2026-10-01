@@ -570,7 +570,7 @@ fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, description: Option<Strin
         },
         |stamp| (stamp.mutation_id.0.clone(), stamp.mutation_id, stamp.timestamp),
     );
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id,
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -668,11 +668,13 @@ where
                 Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint))
             }
             1 => {
-                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "GIS map retained preparation lost its semantic candidate".to_string())?;
                 let authority = self.authority.as_ref().ok_or_else(|| "GIS map retained preparation lost its Store authority".to_string())?;
+                let line_bytes = authority.line_id().map_or(0, str::len);
+                if grant.maximum_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+                let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| "GIS map retained preparation lost its semantic candidate".to_string())?;
                 let edit = gis2d_one_item_edit(mutation, inverse, self.description.take(), authority, self.stamp.take());
                 let prepared = authority.prepare_one_item(edit, std::sync::Arc::new(post))?;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1, digest: prepared.edit_digest() };
+                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
                 self.prepared = Some(prepared);
                 self.phase = 2;
                 Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint))

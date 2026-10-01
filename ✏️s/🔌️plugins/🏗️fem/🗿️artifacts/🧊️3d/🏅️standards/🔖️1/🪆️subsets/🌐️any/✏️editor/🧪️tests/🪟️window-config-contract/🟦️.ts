@@ -18,8 +18,8 @@ import closeGrants from "../../../../../../../../../🧫️fixtures/💳️visua
 import childOutcomes from "../../../../../../../../../🧫️fixtures/🧒️child-outcomes/🔣️.json" with { type: "json" };
 import childOutcomesSchema from "../../../../../../../../../🧫️fixtures/🧒️child-outcomes/📐️schema/🔣️.json" with { type: "json" };
 import closeGrantsSchema from "../../../../../../../../../🧫️fixtures/💳️visual-close-grants/📐️schema/🔣️.json" with { type: "json" };
-import { testFem3dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";
-import { testFem3dResultsWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧪️tests/🪪️document-contract/🟦️.ts";
+import { testFem3dModelWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/🧱️model/🎚️config/🧬️schema/🧪️tests/🪪️document/🟦️.ts";
+import { testFem3dResultsWindowConfigContract } from "../../🎭️modes/✏️edit/🪟️windows/📊️results/🎚️config/🧬️schema/🧪️tests/🪪️document/🟦️.ts";
 
 
 export function testFem3dWindowConfigContract(): void {

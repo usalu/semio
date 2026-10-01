@@ -1,6 +1,6 @@
 /** 📐️ Complete layer-transform mutation contracts with independent JSON patch application. */
 import {expect,test} from "bun:test";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import patch from "fast-json-patch";
 import schema from "../🧬️schema/🔣️.json";
 import documentSchema from "../../../🔣️.json";

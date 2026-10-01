@@ -175,7 +175,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds-the-solve-from-7-to-99/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎲️change-seed/🧪️tests/🎲️reseeds/🦀️.rs"]
                             mod tests_reseeds_the_solve_from_7_to_99;
                         }
                         #[path = "."]
@@ -188,7 +188,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-grid/🧪️tests/📐️shrinks-the-board-and-drops-the-outside-cells/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️resize-grid/🧪️tests/📐️shrinks/🦀️.rs"]
                             mod tests_shrinks_the_board_and_drops_the_outside_cells;
                         }
                         #[path = "."]
@@ -227,7 +227,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-tile/🧪️tests/🌱️inserts-the-corner-tile-in-sorted-order/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱️create-tile/🧪️tests/🌱️inserts/🦀️.rs"]
                             mod tests_inserts_the_corner_tile_in_sorted_order;
                         }
                         #[path = "."]
@@ -240,7 +240,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🗑️removes-the-straight-tile-and-cascades-its-rule-and-pin/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-tile/🧪️tests/🗑️removes/🦀️.rs"]
                             mod tests_removes_the_straight_tile_and_cascades_its_rule_and_pin;
                         }
                         #[path = "."]
@@ -253,7 +253,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️biases-the-solve-towards-empty/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️change-tile-weight/🧪️tests/⚖️biases/🦀️.rs"]
                             mod tests_biases_the_solve_towards_empty;
                         }
                         #[path = "."]
@@ -266,7 +266,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧪️tests/🎨️redraws-the-empty-tile-as-a-bitmap/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎨️change-tile-media/🧪️tests/🎨️redraws/🦀️.rs"]
                             mod tests_redraws_the_empty_tile_as_a_bitmap;
                         }
                         #[path = "."]
@@ -279,7 +279,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/🚦️lets-two-straights-stack-vertically/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚦️create-rule/🧪️tests/🚦️lets/🦀️.rs"]
                             mod tests_lets_two_straights_stack_vertically;
                         }
                         #[path = "."]
@@ -292,7 +292,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/❌️forbids-the-straight-pair-again/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/❌delete-rule/🧪️tests/❌️forbids/🦀️.rs"]
                             mod tests_forbids_the_straight_pair_again;
                         }
                         #[path = "."]
@@ -305,7 +305,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-cell/🧪️tests/📌️fixes-the-right-cell-to-the-straight-tile/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️pin-cell/🧪️tests/📌️fixes/🦀️.rs"]
                             mod tests_fixes_the_right_cell_to_the_straight_tile;
                         }
                         #[path = "."]
@@ -318,7 +318,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-cell/🧪️tests/📍️releases-the-pinned-straight-cell/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️unpin-cell/🧪️tests/📍️releases/🦀️.rs"]
                             mod tests_releases_the_pinned_straight_cell;
                         }
                         #[path = "."]
@@ -331,7 +331,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts-the-pinned-corner-out-of-the-problem/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️mask-cell/🧪️tests/🕳️cuts/🦀️.rs"]
                             mod tests_cuts_the_pinned_corner_out_of_the_problem;
                         }
                         #[path = "."]
@@ -344,7 +344,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️unmask-cell/🧪️tests/🔳️puts-the-hole-back-into-the-problem/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️unmask-cell/🧪️tests/🔳️puts/🦀️.rs"]
                             mod tests_puts_the_hole_back_into_the_problem;
                         }
                     }

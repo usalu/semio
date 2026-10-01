@@ -1,4 +1,25 @@
 use super::*;
+#[test]
+fn sqlite_snapshot_avi_authored_grammar_and_protocol_admit_complete_records() {
+    let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
+    let recognizer = dsl::Recognizer::compile(&grammar);
+    let demo = crate::standards::v1_0::subsets::any::io::decode_avi(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️.avi")).unwrap();
+    for snapshot in [fixture(), AviSnapshot::default(), demo] {
+        let text = <AviSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
+        assert!(recognizer.recognize(body).unwrap(), "{body}");
+    }
+    let protocol = dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
+    assert_eq!(protocol.schema, "stdio.avi");
+    assert_eq!(protocol.version, 1);
+    assert_eq!(protocol.blocks.iter().filter(|block| matches!(block, dsl::Block::Record { .. })).count(), 9);
+}
+#[test]
+fn sqlite_snapshot_avi_shipped_demo_assets_retain_the_owned_snapshot() {
+    let snapshot = crate::standards::v1_0::subsets::any::io::decode_avi(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️.avi")).unwrap();
+    assert_eq!(<AviSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio")).unwrap(), snapshot);
+    assert_eq!(<AviSnapshot as store::ArtifactPack>::decode_pack(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio")).unwrap(), snapshot);
+}
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 fn fixture()->AviSnapshot{store::json::from_json_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
 #[test]
@@ -21,4 +42,6 @@ async fn sqlite_snapshot_avi_actual_declaration_preserves_full_owned_intermediat
 fn sqlite_snapshot_avi_owned_encoding_preflight_checks_bounds_before_allocation(){use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut snapshot=fixture();snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits{max_file_bytes:1024,..SqliteDatabaseLimits::default()})).unwrap_err().contains("native encoding exceeds file byte limit"));snapshot.streams[0].chunks[0].data=vec![255;131073];let mut reached=false;assert!(snapshot.preflight_sqlite_snapshot_encoding(encoding,&mut SqliteSnapshotControl::new(&mut |event|{if event.phase==SqliteSnapshotPhase::EncodeNative&&event.completed>0{reached=true;false}else{true}},SqliteDatabaseLimits::default())).is_err());assert!(reached);}}
 
 #[test]
-fn sqlite_snapshot_avi_native_factory_declares_actual_structural_hash(){let value:serde_json::Value=serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();let codec=(crate::native_codecs()[0].codec)();let actual=store::ArtifactCodec::bare::<AviSnapshot,crate::AviMutation>(crate::STDIO_AVI_DOCUMENT_SCHEMA);assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),semio_framework_hash::hex_lower(&actual.pack_schema_hash));assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),value["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap());}
+fn sqlite_snapshot_avi_native_factory_declares_actual_structural_hash(){let value:serde_json::Value=serde_json::from_str(crate::ARTIFACT_DEFINITION_SCHEMA).unwrap();let codec=(crate::native_codecs()[0].codec)();let actual=store::ArtifactCodec::bare::<AviSnapshot,crate::AviMutation>(crate::STDIO_AVI_DOCUMENT_SCHEMA);
+
+assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),semio_framework_hash::hex_lower(&actual.pack_schema_hash));assert_eq!(semio_framework_hash::hex_lower(&codec.pack_schema_hash),value["codecs"][0]["native_factory"]["pack_schema_hash"].as_str().unwrap());}

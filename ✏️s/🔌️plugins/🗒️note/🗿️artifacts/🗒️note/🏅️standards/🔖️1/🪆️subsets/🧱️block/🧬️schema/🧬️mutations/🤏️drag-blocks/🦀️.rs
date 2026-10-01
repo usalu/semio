@@ -34,10 +34,23 @@ impl MutationKind<NoteSnapshot, NoteMutation> for DragBlocks {
         super::inverse::inverse(self, base)
     }
     fn label(&self) -> protocol::LocalizedLabel {
-        protocol::LocalizedLabel::native(&format!("Drag {} blocks", self.ids.len()), &format!("{} Blöcke ziehen", self.ids.len()))
+        let ((dx_en, dx_de), (dy_en, dy_de)) = (note_label_number(self.dx), note_label_number(self.dy));
+        let (en, de) = match self.ids.len() {
+            1 => ("1 block".to_string(), "1 Block".to_string()),
+            count => (format!("{count} blocks"), format!("{count} Blöcke")),
+        };
+        protocol::LocalizedLabel::native(&format!("Drag {en} by ({dx_en}, {dy_en})"), &format!("{de} um ({dx_de}; {dy_de}) ziehen"))
     }
     fn target(&self) -> Vec<String> {
         self.ids.clone()
     }
+}
+
+/// 🔢️ A drag label's offset, `(en, de)`: two decimals at most, trailing zeros trimmed, a German decimal comma.
+fn note_label_number(value: f64) -> (String, String) {
+    let rounded = (value * 100.0).round() / 100.0;
+    let en = format!("{:.2}", if rounded == 0.0 { 0.0 } else { rounded }).trim_end_matches('0').trim_end_matches('.').to_string();
+    let de = en.replace('.', ",");
+    (en, de)
 }
 //#endregion 🔖️Mutation

@@ -120,17 +120,10 @@ fn rolling_median(scores: &VecDeque<f32>) -> f32 {
     v[v.len() / 2]
 }
 
-/// 🏷️ Human-facing codec/dimension/duration summary of a [`remodeling_video::VideoProbe`], regardless of
-/// container family, for [`PushVideoReport`].
+/// 🏷️ Codec, dimensions and duration from the owned provider record.
 #[cfg(test)]
 fn describe_probe(probe: &remodeling_video::VideoProbe) -> (String, u32, u32, f64) {
-    match probe {
-        remodeling_video::VideoProbe::Mp4(info) => (format!("{:?}", info.codec), info.width, info.height, info.duration_ms),
-        remodeling_video::VideoProbe::Avi(info) => {
-            let duration_ms = if info.fps > 0.0 { f64::from(info.frame_count) / info.fps * 1000.0 } else { 0.0 };
-            (format!("{:?}", info.codec), info.width, info.height, duration_ms)
-        }
-    }
+    (format!("{:?}", probe.codec), probe.width, probe.height, probe.duration_ms)
 }
 
 /// 📥️ Accumulates accepted input frames for one reconstruction: the real ingestion point where

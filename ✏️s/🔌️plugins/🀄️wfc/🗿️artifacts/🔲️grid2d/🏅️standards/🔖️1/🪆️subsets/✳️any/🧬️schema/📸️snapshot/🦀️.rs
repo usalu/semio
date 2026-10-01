@@ -320,3 +320,10 @@ pub fn decode_palette_indices(pixels: &str) -> Vec<u8> {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

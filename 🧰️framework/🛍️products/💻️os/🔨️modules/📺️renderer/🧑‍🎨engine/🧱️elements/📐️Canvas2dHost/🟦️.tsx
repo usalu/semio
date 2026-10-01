@@ -16,7 +16,7 @@ import { WindowInstanceIdContext } from "../🌐️World3dHost/🟦️.tsx";
 import { useMapContextMenuSpecs } from "../🏛️ShellHost/🟦️.tsx";
 // 🐢️ Direct element-to-element import — `🟦️Interpreter` and `Canvas2dHost` landed in the same batch.
 import { useShellContextMenuFallback, openSurfaceContextMenu, type SurfaceContextMenuResult } from "../🗣️Interpreter/🟦️.tsx";
-import { Canvas2dGumballOverlay, parseCanvas2dGumballMeta } from "./🟦️GumballOverlay.tsx";
+import { Canvas2dGumballOverlay } from "./🟦️GumballOverlay.tsx";
 import { createGestureSampleLaneV1, type GestureSampleLaneV1 } from "../🏛️ShellHost/🎯️input-ledger/🟦️.ts";
 import { CanvasPresenceOverlayV1, useLocalPresenceActorIdV1 } from "../👕️canvas-presence/🟦️.tsx";
 import { PRESENCE_VIEW_PUBLISH_MIN_INTERVAL_MS, clearLocalPresenceWindowViewV1, publishLocalPresenceWindowViewV1 } from "../👕️canvas-presence/🟦️.ts";
@@ -241,12 +241,13 @@ function drawInfiniteCanvasGrid(ctx: CanvasRenderingContext2D, camera: CanvasCam
 }
 
 //#region CanvasPointerGestureLane
-/** 🖱️ One pointer sample in canvas (logical CSS-pixel) space. */
-export type CanvasPointerSample = readonly [number, number, CanvasInputModifiers];
+/** 🖱️ One pointer sample: its logical CSS-pixel position, the keys held, and the WORLD position it maps to under the
+ * camera at the moment it was sampled — a later camera move never re-maps a sample already taken. */
+export type CanvasPointerSample = readonly [number, number, CanvasInputModifiers, number, number];
 
-/** ⌨️ Copies keyboard state with the pointer position before dispatch is queued. */
-function pointerSample(x: number,y: number,modifiers?: CanvasInputModifiers): CanvasPointerSample {
-  return [x,y,{shift:modifiers?.shift??false,ctrl:modifiers?.ctrl??false,meta:modifiers?.meta??false,alt:modifiers?.alt??false}];
+/** ⌨️ Copies keyboard state and the sample's world position (`world`) with the pointer position before dispatch is queued. */
+function pointerSample(x: number,y: number,modifiers: CanvasInputModifiers|undefined,world: { readonly x: number; readonly y: number }): CanvasPointerSample {
+  return [x,y,{shift:modifiers?.shift??false,ctrl:modifiers?.ctrl??false,meta:modifiers?.meta??false,alt:modifiers?.alt??false},world.x,world.y];
 }
 
 /** ⌨️ What a discrete gesture phase (`begin`/`end`) carries besides its sample: the button that pressed,
@@ -278,7 +279,10 @@ export type CanvasPointerGestureLane = GestureSampleLaneV1<CanvasPointerSample, 
  *     so a guest that ignores `samples` keeps today's semantics with fewer calls;
  *   - `begin` / `end` are discrete and ordered behind every owed sample — an `end` never overtakes a move;
  *   - a cancel (pointer left the canvas, capture lost) is `canvasPointerUp { cancelled: true }`, never a
- *     forged release.
+ *     forged release;
+ *   - every command carries `worldX`/`worldY` (its sample's world position) and a move its `worldSamples`
+ *     (`[x, y][]` beside `samples`), exactly as the wgpu host sends them, so a guest maps a sample to its own
+ *     content without knowing the host's camera.
  * `width`/`height` are read at SEND time (`size()`), as the pre-lane commands read `logicalWidth/Height`. */
 export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, size: () => { readonly width: number; readonly height: number }): CanvasPointerGestureLane {
   return createGestureSampleLaneV1<CanvasPointerSample, CanvasPointerExtra>({
@@ -286,21 +290,21 @@ export function createCanvasPointerGestureLane(dispatch: CanvasPointerDispatch, 
       switch (item.phase) {
         case "begin": {
           const { sample, extra } = item;
-          return dispatch("canvasPointerDown", { x: sample[0], y: sample[1], button: extra.button, shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height });
+          return dispatch("canvasPointerDown", { x: sample[0], y: sample[1], worldX: sample[3], worldY: sample[4], button: extra.button, shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height });
         }
         case "live": {
           const last = item.samples[item.samples.length - 1];
           if (last === undefined) return undefined;
           const viewport = size();
-          return dispatch("canvasPointerMove", { x: last[0], y: last[1], ...last[2], width: viewport.width, height: viewport.height, samples: item.samples.map(([x, y]) => [x, y]) });
+          return dispatch("canvasPointerMove", { x: last[0], y: last[1], worldX: last[3], worldY: last[4], ...last[2], width: viewport.width, height: viewport.height, samples: item.samples.map(([x, y]) => [x, y]), worldSamples: item.samples.map((sample) => [sample[3], sample[4]]) });
         }
         case "end": {
           const { sample, extra } = item;
-          return dispatch("canvasPointerUp", { x: sample[0], y: sample[1], shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height, cancelled: false });
+          return dispatch("canvasPointerUp", { x: sample[0], y: sample[1], worldX: sample[3], worldY: sample[4], shift: extra.shift, ctrl: extra.ctrl, meta: extra.meta, alt: extra.alt, width: extra.width, height: extra.height, cancelled: false });
         }
         case "cancel": {
           const viewport = size();
-          return dispatch("canvasPointerUp", { x: item.sample?.[0] ?? 0, y: item.sample?.[1] ?? 0, shift: false, ctrl: false, meta: false, alt: false, width: viewport.width, height: viewport.height, cancelled: true });
+          return dispatch("canvasPointerUp", { x: item.sample?.[0] ?? 0, y: item.sample?.[1] ?? 0, worldX: item.sample?.[3] ?? 0, worldY: item.sample?.[4] ?? 0, shift: false, ctrl: false, meta: false, alt: false, width: viewport.width, height: viewport.height, cancelled: true });
         }
       }
     },
@@ -522,9 +526,14 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     ctx.restore();
   }
 
+  /** 🧭️ One sample at `(x, y)`, its world position read under the camera the session holds now. */
+  private sample(x: number, y: number, modifiers?: CanvasInputModifiers): CanvasPointerSample {
+    return pointerSample(x,y,modifiers,screenToWorldLogical(x,y,this.camera,this.logicalWidth,this.logicalHeight));
+  }
+
   pointerDown(x: number, y: number, button: number, _extend: boolean, modifiers?: CanvasInputModifiers): void {
     this.cancelledGestureAwaitingDown = false;
-    if (this.activeUtility === "transform") {
+    if (this.activeUtility === "transform" && button !== 1) {
       return;
     }
     if (button === 1 || this.activeUtility === "transformMove") {
@@ -533,7 +542,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       this.panCameraStart = { x: this.camera.x, y: this.camera.y };
       return;
     }
-    this.lastSample = pointerSample(x,y,modifiers);
+    this.lastSample = this.sample(x,y,modifiers);
     this.gestureCounter += 1;
     this.lane?.begin(this.gestureCounter, this.lastSample, {
       button,
@@ -562,7 +571,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
     if (this.cancelledGestureAwaitingDown) return;
     // 🖱️ Hover moves outside a gesture batch through the same lane (the guest's hover hit-test only
     // needs the last sample either way); `begin` is reserved for the presses above.
-    this.lastSample = pointerSample(x,y,modifiers);
+    this.lastSample = this.sample(x,y,modifiers);
     this.lane?.offer(this.lastSample);
   }
 
@@ -572,7 +581,7 @@ export class JsonLayersCanvasSession implements GraphWasmSession {
       return;
     }
     if (this.cancelledGestureAwaitingDown) return;
-    this.lastSample = pointerSample(x,y,modifiers);
+    this.lastSample = this.sample(x,y,modifiers);
     const extra: CanvasPointerExtra = {
       shift: modifiers?.shift ?? false,
       ctrl: modifiers?.ctrl ?? false,

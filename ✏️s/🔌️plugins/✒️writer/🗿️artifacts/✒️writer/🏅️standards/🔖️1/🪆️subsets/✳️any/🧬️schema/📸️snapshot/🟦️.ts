@@ -29,6 +29,6 @@ export function parseWriterSnapshot(value: unknown, at = "$"): WriterSnapshot {
     languageId: row.languageId as string,
     uri: row.uri as string,
     text: row.text as string,
-    document: parseArtifactChild(row.document, `${at}.document`),
+    document: parseArtifactChild(row.document),
   };
 }

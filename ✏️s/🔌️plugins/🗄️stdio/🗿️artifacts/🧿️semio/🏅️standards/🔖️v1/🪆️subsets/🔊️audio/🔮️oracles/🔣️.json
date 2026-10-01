@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "rerates-to-48-khz-and-rewrites-the-right-channel",
-              "directoryName": "🎧️rerates-to-48-khz-and-rewrites-the-right-channel"
+              "directoryName": "🎧️rerates"
             }
           ]
         }

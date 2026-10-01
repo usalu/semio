@@ -25,7 +25,7 @@
           "scenarios": [
             {
               "id": "thickens-the-sketch-stroke",
-              "directoryName": "🖊️thickens-the-sketch-stroke"
+              "directoryName": "🖊️thickens"
             }
           ]
         },
@@ -36,7 +36,7 @@
           "scenarios": [
             {
               "id": "enlarges-eraser",
-              "directoryName": "🧽️enlarges-eraser"
+              "directoryName": "🧽️enlarges"
             }
           ]
         },
@@ -58,7 +58,7 @@
           "scenarios": [
             {
               "id": "redraws-the-sketch-polyline",
-              "directoryName": "🎨️redraws-the-sketch-polyline"
+              "directoryName": "🎨️redraws"
             }
           ]
         }
@@ -183,14 +183,14 @@
       "files": [
         {
           "role": "before-svg",
-          "path": "../🧫️fixtures/🖊️thickens-the-sketch-stroke/⬅️before.svg",
+          "path": "../🧫️fixtures/🖊️thickens/⬅️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
           "bytes": 852
         },
         {
           "role": "after-svg",
-          "path": "../🧫️fixtures/🖊️thickens-the-sketch-stroke/➡️after.svg",
+          "path": "../🧫️fixtures/🖊️thickens/➡️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:dc8527dc53c09731b8a8b3844b8228f512393907ecf2fe7720e13e1e6db53808",
           "bytes": 852
@@ -237,28 +237,28 @@
       "files": [
         {
           "role": "before-dxf",
-          "path": "../🧫️fixtures/🎨️redraws-the-sketch-polyline/🖊️before.dxf",
+          "path": "../🧫️fixtures/🎨️redraws/🖊️before.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:01cfad4fe25311b21dd646e9451ac5dcb079a8ea2aae92fc68f7f3549317229f",
           "bytes": 7785
         },
         {
           "role": "after-dxf",
-          "path": "../🧫️fixtures/🎨️redraws-the-sketch-polyline/📐️after.dxf",
+          "path": "../🧫️fixtures/🎨️redraws/📐️after.dxf",
           "mediaType": "image/vnd.dxf",
           "sha256": "sha256:61625d26dc5253113d1c0175f71756c817b8e831073be53a8ad96ecacc037fa8",
           "bytes": 7785
         },
         {
           "role": "before-svg",
-          "path": "../🧫️fixtures/🎨️redraws-the-sketch-polyline/🖼️before.svg",
+          "path": "../🧫️fixtures/🎨️redraws/🖼️before.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:33c861c534b51d3768bd43db877996b6e2d1ad7b5f1b7c57f983a0e7660944a8",
           "bytes": 852
         },
         {
           "role": "after-svg",
-          "path": "../🧫️fixtures/🎨️redraws-the-sketch-polyline/🎨️after.svg",
+          "path": "../🧫️fixtures/🎨️redraws/🎨️after.svg",
           "mediaType": "image/svg+xml",
           "sha256": "sha256:55f5c9ab74dc39c3682e40d7a9debe5f79a017ac67dad2d5d014eae70cfef92f",
           "bytes": 852

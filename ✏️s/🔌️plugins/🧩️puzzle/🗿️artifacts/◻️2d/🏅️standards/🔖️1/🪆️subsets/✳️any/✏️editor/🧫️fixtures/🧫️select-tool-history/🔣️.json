@@ -1,0 +1,213 @@
+{
+  "schema": "s.puzzle2d.select-tool-history.v1",
+  "description": "🛠️⏪️ The select tool's leaves edited through time travel (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, design §8 and §16). One board; each scenario authors a log through the real tool entry points (board drag, pick, nudge, rotate, scale, ingested leaves), then edits it in a history session and finalizes it as an overwrite. `log` is every authored leaf in order, one edit each; `drafts` are the accepted replacements (a leaf, or withdrawn); `head` is the document the overwrite reaches, equal to a fresh fold of the edited log. Rust drives the steps through the app (`🧪️tests/🧪️select-tool-history/🦀️.rs`) and folds the edited log through a standalone store (`state_before` and `begin_report_replay`); the Python oracle (`🐍️.py` beside it) re-folds it with shapely and validates every leaf against its payload schema. The board doubles as the e2e content: import `board` with `importFixture` and follow a scenario's steps.",
+  "board": {
+    "schema": "puzzle.2d.fixture",
+    "meta": {
+      "kindCompatibility": [
+        { "source": "a", "target": "a", "bidirectional": true, "important": false, "specificity": "handle" }
+      ]
+    },
+    "nodes": [
+      { "id": "left", "shape": "circle", "x": -200.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "left:v0", "handleKind": "a", "angle": 0.0 }] },
+      { "id": "mid", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "handles": [{ "id": "mid:v0", "handleKind": "a", "angle": 3.141592653589793 }] },
+      { "id": "pin", "shape": "circle", "x": 200.0, "y": 0.0, "radius": 24.0, "locked": true, "handles": [] }
+    ],
+    "edges": []
+  },
+  "scenarios": [
+    {
+      "id": "drag-offset-and-targets",
+      "description": "The dev's example: a dragged selection is ONE row from `drag-selection` with its transaction; time travel exposes the offset as grid-snapped steppers and the targets as a reference list; editing the offset and replacing the targets with the board selection replays the downstream nudge onto the edited drag.",
+      "steps": [
+        {
+          "drag": { "selection": ["left", "mid"], "from": [-200.0, 0.0], "path": [[-150.0, 20.0]], "to": [-120.0, 40.0] },
+          "expect": { "rows": 1, "row": { "index": 0, "leaf": { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 80.0, "dy": 40.0 }, "label": { "en": "Drag 2 items by (80, 40)", "de": "2 Elemente um (80; 40) ziehen" }, "tool": "s.puzzle.puzzle2d@1/*#editor#select" } }
+        },
+        {
+          "translate": { "dx": 1.0, "dy": 0.0, "step": 10.0 },
+          "expect": { "rows": 2, "row": { "index": 1, "leaf": { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 10.0, "dy": 0.0 }, "tool": "s.puzzle.puzzle2d@1/*#editor#translateSelection" } }
+        },
+        { "gridFactor": 5.0 },
+        {
+          "begin": { "row": 0 },
+          "expect": {
+            "stage": "editing",
+            "inputs": [
+              { "path": "/targets", "control": "reference", "domain": "vortex", "granularity": "node", "many": true },
+              { "path": "/dx", "control": "stepper", "snapSource": "gridFactor", "step": 5.0 },
+              { "path": "/dy", "control": "stepper", "snapSource": "gridFactor", "step": 5.0 }
+            ],
+            "preview": { "left": [-120.0, 40.0], "mid": [80.0, 40.0], "pin": [200.0, 0.0] },
+            "highlighted": ["left", "mid"]
+          }
+        },
+        {
+          "input": { "path": "/dx", "value": 100.0 },
+          "expect": { "stage": "editing", "preview": { "left": [-100.0, 40.0], "mid": [100.0, 40.0] } }
+        },
+        { "pick": "mid" },
+        {
+          "useSelection": "/targets",
+          "expect": { "draft": { "/targets": ["mid"] }, "preview": { "left": [-200.0, 0.0], "mid": [100.0, 40.0] }, "highlighted": ["mid"] }
+        },
+        {
+          "accept": null,
+          "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "highlighted": [] }
+        },
+        { "finalize": "overwrite", "expect": { "stage": null } }
+      ],
+      "log": [
+        { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 80.0, "dy": 40.0 },
+        { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "drafts": [
+        { "index": 0, "leaf": { "mutation": "dragSelection", "targets": ["mid"], "dx": 100.0, "dy": 40.0 } }
+      ],
+      "head": {
+        "left": { "x": -190.0, "y": 0.0 },
+        "mid": { "x": 110.0, "y": 40.0 },
+        "pin": { "x": 200.0, "y": 0.0, "locked": true }
+      }
+    },
+    {
+      "id": "rotate-and-scale-replay",
+      "description": "A rotation and a scaling are each ONE row from their leaf; time travel shows the angle as a dial and the factor as a log slider with its snaps; turning the other way, then halving the factor, replays every downstream transform about its recorded pivot.",
+      "steps": [
+        { "select": ["left", "mid"] },
+        {
+          "rotate": { "angle": 90.0 },
+          "expect": { "rows": 1, "row": { "index": 0, "leaf": { "mutation": "rotateSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "angle": 1.5707963267948966 }, "label": { "en": "Rotate 2 items by 90°", "de": "2 Elemente um 90° drehen" }, "tool": "s.puzzle.puzzle2d@1/*#editor#rotateSelection" } }
+        },
+        {
+          "scale": { "factor": 2.0 },
+          "expect": { "rows": 2, "row": { "index": 1, "leaf": { "mutation": "scaleSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "factor": 2.0 }, "label": { "en": "Scale 2 items by a factor of 2", "de": "2 Elemente um den Faktor 2 skalieren" }, "tool": "s.puzzle.puzzle2d@1/*#editor#scaleSelection" } }
+        },
+        {
+          "translate": { "dx": 1.0, "dy": 0.0, "step": 10.0 },
+          "expect": { "rows": 3, "row": { "index": 2, "leaf": { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 10.0, "dy": 0.0 } } }
+        },
+        {
+          "begin": { "row": 0 },
+          "expect": {
+            "stage": "editing",
+            "inputs": [
+              { "path": "/targets", "control": "reference", "domain": "vortex", "granularity": "node", "many": true },
+              { "path": "/angle", "control": "dial" },
+              { "path": "/pivotX", "control": "stepper", "snapSource": "gridFactor" }
+            ],
+            "preview": { "left": [-100.0, -100.0], "mid": [-100.0, 100.0] },
+            "highlighted": ["left", "mid"]
+          }
+        },
+        {
+          "input": { "path": "/angle", "value": -1.5707963267948966 },
+          "expect": { "preview": { "left": [-100.0, 100.0], "mid": [-100.0, -100.0] } }
+        },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false } },
+        { "finalize": "overwrite", "expect": { "stage": null } },
+        {
+          "begin": { "row": 1 },
+          "expect": { "stage": "editing", "inputs": [{ "path": "/factor", "control": "slider", "scale": "log", "snaps": [0.25, 0.5, 1.0, 2.0, 4.0] }], "preview": { "left": [-100.0, 200.0], "mid": [-100.0, -200.0] } }
+        },
+        {
+          "input": { "path": "/factor", "value": 0.5 },
+          "expect": { "preview": { "left": [-100.0, 50.0], "mid": [-100.0, -50.0] } }
+        },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false } },
+        { "finalize": "overwrite", "expect": { "stage": null } }
+      ],
+      "log": [
+        { "mutation": "rotateSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "angle": 1.5707963267948966 },
+        { "mutation": "scaleSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "factor": 2.0 },
+        { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "drafts": [
+        { "index": 0, "leaf": { "mutation": "rotateSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "angle": -1.5707963267948966 } },
+        { "index": 1, "leaf": { "mutation": "scaleSelection", "targets": ["left", "mid"], "pivotX": -100.0, "pivotY": 0.0, "factor": 0.5 } }
+      ],
+      "head": {
+        "left": { "x": -90.0, "y": 50.0 },
+        "mid": { "x": -90.0, "y": -50.0 },
+        "pin": { "x": 200.0, "y": 0.0, "locked": true }
+      }
+    },
+    {
+      "id": "fatal-loop-by-editing-targets",
+      "description": "Design §16.4: withdrawing the node an upstream edit created makes the downstream drag an Error `mutation.target-missing` that blocks finalizing; the next problem opens that drag, its targets are replaced by the current selection, and the clean replay finalizes — editing resolves the fatal loop, not only withdrawing.",
+      "steps": [
+        {
+          "ingest": { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+          "expect": { "rows": 1 }
+        },
+        { "select": ["extra"] },
+        {
+          "translate": { "dx": 1.0, "dy": 0.0, "step": 10.0 },
+          "expect": { "rows": 2, "row": { "index": 1, "leaf": { "mutation": "dragSelection", "targets": ["extra"], "dx": 10.0, "dy": 0.0 } } }
+        },
+        { "begin": { "row": 0 }, "expect": { "stage": "editing" } },
+        { "withdraw": null },
+        {
+          "accept": null,
+          "expect": { "stage": "reviewing", "review": "blocked", "blocking": true, "worst": "error", "outcomes": [{ "row": 1, "worst": "error", "code": "mutation.target-missing", "target": ["extra"] }], "nextProblem": { "row": 1 } }
+        },
+        { "begin": "nextProblem", "expect": { "stage": "editing", "preview": { "left": [-200.0, 0.0], "mid": [0.0, 0.0] }, "absent": ["extra"], "highlighted": ["extra"] } },
+        { "select": ["left", "mid"] },
+        {
+          "useSelection": "/targets",
+          "expect": { "draft": { "/targets": ["left", "mid"] }, "preview": { "left": [-190.0, 0.0], "mid": [10.0, 0.0] }, "highlighted": ["left", "mid"] }
+        },
+        { "accept": null, "expect": { "stage": "reviewing", "review": "ready", "blocking": false } },
+        { "finalize": "overwrite", "expect": { "stage": null } }
+      ],
+      "log": [
+        { "mutation": "createNode", "index": null, "node": { "id": "extra", "shape": "circle", "x": 400.0, "y": 0.0, "radius": 24.0, "anchor": "fixed", "handles": [] } },
+        { "mutation": "dragSelection", "targets": ["extra"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "drafts": [
+        { "index": 0, "withdrawn": true },
+        { "index": 1, "leaf": { "mutation": "dragSelection", "targets": ["left", "mid"], "dx": 10.0, "dy": 0.0 } }
+      ],
+      "head": {
+        "left": { "x": -190.0, "y": 0.0 },
+        "mid": { "x": 10.0, "y": 0.0 },
+        "pin": { "x": 200.0, "y": 0.0, "locked": true }
+      }
+    },
+    {
+      "id": "warning-from-an-upstream-edit",
+      "description": "Design §16.5: withdrawing the upstream unlock makes the downstream drag skip the locked member — a Warning `mutation.partial` that never blocks finalizing and stays on the row after the overwrite.",
+      "steps": [
+        {
+          "ingest": { "mutation": "changeNodeLocked", "id": "pin", "newLocked": false },
+          "expect": { "rows": 1 }
+        },
+        { "select": ["left", "pin"] },
+        {
+          "translate": { "dx": 1.0, "dy": 0.0, "step": 10.0 },
+          "expect": { "rows": 2, "row": { "index": 1, "leaf": { "mutation": "dragSelection", "targets": ["left", "pin"], "dx": 10.0, "dy": 0.0 } } }
+        },
+        { "begin": { "row": 0 }, "expect": { "stage": "editing" } },
+        { "withdraw": null },
+        {
+          "accept": null,
+          "expect": { "stage": "reviewing", "review": "ready", "blocking": false, "worst": "warning", "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"] }] }
+        },
+        { "finalize": "overwrite", "expect": { "stage": null, "outcomes": [{ "row": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"] }] } }
+      ],
+      "log": [
+        { "mutation": "changeNodeLocked", "id": "pin", "newLocked": false },
+        { "mutation": "dragSelection", "targets": ["left", "pin"], "dx": 10.0, "dy": 0.0 }
+      ],
+      "drafts": [
+        { "index": 0, "withdrawn": true }
+      ],
+      "head": {
+        "left": { "x": -190.0, "y": 0.0 },
+        "mid": { "x": 0.0, "y": 0.0 },
+        "pin": { "x": 200.0, "y": 0.0, "locked": true }
+      },
+      "report": [{ "index": 1, "worst": "warning", "code": "mutation.partial", "target": ["pin"] }]
+    }
+  ]
+}

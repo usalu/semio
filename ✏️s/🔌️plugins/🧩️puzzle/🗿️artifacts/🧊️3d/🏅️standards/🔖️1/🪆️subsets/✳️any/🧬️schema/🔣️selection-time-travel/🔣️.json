@@ -1,0 +1,155 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/selection-time-travel.json",
+  "title": "Puzzle3dSelectionTimeTravel",
+  "description": "Language-agnostic time-travel corpus of the Puzzle 3d selection leaves: a base document, a log of selection gestures (one edit each) and ONE history edit of a gesture's inputs, with the expected preview (state before the edited gesture plus the draft, nothing downstream), the expected replay (fresh fold of the edited log) and the per-mutation outcomes of the Report replay from the edited gesture on.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "artifact",
+    "description",
+    "cases"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "artifact": {
+      "const": "puzzle.3d"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "base",
+          "log",
+          "edit",
+          "preview",
+          "replayed",
+          "outcomes",
+          "blocksFinalize"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "base": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/snapshot.json"
+          },
+          "log": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "mutation"
+              ],
+              "properties": {
+                "mutation": {
+                  "type": "string",
+                  "pattern": "^(drag|rotate|scale)Selection(2d|3d)?$"
+                }
+              },
+              "description": "One selection-leaf wire payload (`payload_value()` shape, internally tagged); each is additionally validated against its own leaf schema."
+            }
+          },
+          "edit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "at",
+              "replacement"
+            ],
+            "properties": {
+              "at": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "replacement": {
+                "type": "object",
+                "required": [
+                  "mutation"
+                ],
+                "properties": {
+                  "mutation": {
+                    "type": "string",
+                    "pattern": "^(drag|rotate|scale)Selection(2d|3d)?$"
+                  }
+                },
+                "description": "One selection-leaf wire payload (`payload_value()` shape, internally tagged); each is additionally validated against its own leaf schema."
+              }
+            }
+          },
+          "preview": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/snapshot.json"
+          },
+          "replayed": {
+            "$ref": "https://json.schemas.assets.semio-tech.com/s/puzzle/puzzle3d/snapshot.json"
+          },
+          "outcomes": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "at",
+                "worst",
+                "codes"
+              ],
+              "properties": {
+                "at": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "worst": {
+                  "enum": [
+                    null,
+                    "info",
+                    "warning",
+                    "error",
+                    "fatal"
+                  ]
+                },
+                "codes": {
+                  "type": "array",
+                  "items": {
+                    "enum": [
+                      "mutation.cascade",
+                      "mutation.partial",
+                      "mutation.no-op",
+                      "mutation.target-missing",
+                      "mutation.target-referenced",
+                      "mutation.target-mismatch",
+                      "mutation.duplicate-id",
+                      "mutation.invariant",
+                      "mutation.clamped"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "blocksFinalize": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -302,7 +302,7 @@ async fn mutation_law_add_load_inverse_and_diff_absorb() {
 async fn every_mutation_registers_a_semantic_descriptor() {
     register_fem2d_mutation_descriptors(::semio_framework_os_kernel::StateClass::Artifact).expect("mutation descriptor registration");
     let kinds = <Fem2dMutation as SemanticMutation<Fem2dSnapshot>>::kinds();
-    assert_eq!(kinds.len(), 29, "every semantic mutation kind must be registered exactly once");
+    assert_eq!(kinds.len(), 30, "every semantic mutation kind must be registered exactly once");
     for descriptor in kinds {
         assert!(protocol::is_approved_verb(descriptor.verb), "verb '{}' must be in APPROVED_VERBS", descriptor.verb);
     }

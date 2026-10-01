@@ -112,7 +112,7 @@ fn the_brush_verb_and_utility_are_declared_and_answered() {
     let action = window.actions.iter().find(|action| action.id == "paint-stroke").expect("'paint-stroke' is catalogued");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated, "'paint-stroke' would be dispatch-dead");
     assert!(action.args.iter().any(|arg| arg.id == "points" && arg.required && matches!(arg.schema, semio_framework_plugin::ArgSchema::Array { .. })));
-    assert!(window.utilities.iter().any(|utility| utility.id == input::utilities::brush::UTILITY_ID));
+    assert!(window.utilities.iter().any(|utility| utility.as_str() == input::utilities::brush::UTILITY_ID));
     for retired in ["stroke-begin", "stroke-extend", "stroke-commit"] {
         assert!(!BITMAP_TOOL_IDS.contains(&retired), "'{retired}' was replaced by the brush tool");
     }

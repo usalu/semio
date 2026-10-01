@@ -3,7 +3,9 @@
 import Ajv from "ajv";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargo, runCargoTestBudgeted, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 
 /** 🪶️ Headroom this plugin holds under `FRESH_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
@@ -228,7 +230,7 @@ class ResultsWindowConfigSourceScript extends BundleScript {
     if (inspections.length !== 15 || inspections.some((path) => !readFileSync(path, "utf8").includes("render_inspection(host.report(), selected_check_index)"))) {
       throw new Error("all fifteen Inspection panels must consume the exact Results-window selection supplied by the editor");
     }
-    const test = join(configRoot, "🧪️tests", "🔬️window-ownership", "🟦️.ts");
+    const test = join(configRoot, "🧪️tests", "🔬️window", "🟦️.ts");
     runCmd(process.execPath, ["test", test], { cwd: this.repoRoot });
     runCmd(process.execPath, ["x", "tsc", test, "--noEmit", "--module", "ESNext", "--moduleResolution", "Bundler", "--allowImportingTsExtensions", "--allowSyntheticDefaultImports", "--strict", "--skipLibCheck", "--target", "ES2022"], { cwd: this.repoRoot });
     console.log(`Norm Results-window config schema oracle passed: ${fixture.cases.length} codec cases, ${fixture.invalid.length} hostile payloads, ${fixture.text.length} text vectors, ${fixture.binary.length} binary vectors, 5 state + 5 mutation facets, 15 exact owners/commands/Inspection consumers, 30 empty app surfaces, strict TypeScript`);
@@ -422,4 +424,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);
 registerPlaygroundSiteBuildCommands(router);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

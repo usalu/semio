@@ -604,7 +604,7 @@ pub async fn home_space_rows<'a>(hub_spaces: impl IntoIterator<Item = &'a store:
 /// serves every lane of all three apps.
 fn space_retained_edit<M>(prefix: &'static str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

@@ -4,6 +4,7 @@ cargo-features = ["trim-paths"]
 resolver = "2"
 members = [
     "📦️packages/🦀️rust",
+    "🔐️auth/🔌️client/📦️packages/🦀️rust",
     "🧩️compositions/✒️writer/📦️packages/🦀️rust",
     "🧩️compositions/➗️mathematical/📦️packages/🦀️rust",
     "🧩️compositions/🀄️wfc/📦️packages/🦀️rust",
@@ -60,6 +61,7 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-framework-os-mcp = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 semio-framework-plugin-host = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
 semio-hub-stdio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust", default-features = false }
@@ -429,4 +431,3 @@ strip = "symbols"
 
 [profile.wasm-dev.package.semio-hub-demonstrator]
 strip = "symbols"
-

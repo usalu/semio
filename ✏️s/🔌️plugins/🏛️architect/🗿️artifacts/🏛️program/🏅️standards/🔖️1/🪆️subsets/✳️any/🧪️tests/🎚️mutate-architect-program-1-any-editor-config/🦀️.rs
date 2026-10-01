@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "replace-config" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/✅️replace/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),
@@ -29,11 +29,11 @@ fn vector(kind: &str) -> Result<Vector, String> {
 fn kept(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "replace-config" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace-config/🟰️replace-config-no-op/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/📸️replace/🟰️replace/🎯️outcome/🔣️.json"),
             observable: false,
         },
         other => return Err(format!("no committed no-op vector for {other:?}")),

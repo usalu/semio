@@ -30,10 +30,10 @@ Feature: Apply every typed note document table mutation twice — once in Rust, 
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id                  | vector                                                      |
-      | insert-table-row    | ⬇️insert-table-row/⬇️appends-a-blank-third-row        |
-      | remove-table-row    | ⬆️remove-table-row/⬆️drops-the-trailing-blank-row     |
-      | insert-table-column | ➡️insert-table-column/➡️appends-the-lettered-column-c |
-      | remove-table-column | ⬅️remove-table-column/⬅️drops-the-trailing-column-b   |
+      | insert-table-row    | ⬇️insert-table-row/⬇️appends        |
+      | remove-table-row    | ⬆️remove-table-row/⬆️drops     |
+      | insert-table-column | ➡️insert-table-column/➡️appends |
+      | remove-table-column | ⬅️remove-table-column/⬅️drops   |
 
   @id-inverse
   @level-exhaustive
@@ -48,7 +48,7 @@ Feature: Apply every typed note document table mutation twice — once in Rust, 
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id                  | vector                                                      |
-      | insert-table-row    | ⬇️insert-table-row/⬇️appends-a-blank-third-row        |
-      | remove-table-row    | ⬆️remove-table-row/⬆️drops-the-trailing-blank-row     |
-      | insert-table-column | ➡️insert-table-column/➡️appends-the-lettered-column-c |
-      | remove-table-column | ⬅️remove-table-column/⬅️drops-the-trailing-column-b   |
+      | insert-table-row    | ⬇️insert-table-row/⬇️appends        |
+      | remove-table-row    | ⬆️remove-table-row/⬆️drops     |
+      | insert-table-column | ➡️insert-table-column/➡️appends |
+      | remove-table-column | ⬅️remove-table-column/⬅️drops   |

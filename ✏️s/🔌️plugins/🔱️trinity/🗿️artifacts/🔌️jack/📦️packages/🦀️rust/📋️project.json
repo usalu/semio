@@ -105,7 +105,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "trinity-jack-graph"
           ]
         }
       }
@@ -124,7 +125,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "trinity-jack-graph-wire"
           ]
         }
       }

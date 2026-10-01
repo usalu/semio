@@ -2,25 +2,182 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://json.schemas.assets.semio-tech.com/framework/ui/contract/number-controls.fixture.json",
   "title": "NumberControlsFixture",
-  "description": "The shared number-control laws: slider detent validity, pointer resolution, page-key detent jumps, the keyboard law, fixed-precision formatting and rounding, and the validator's verdict on documents carrying them.",
+  "description": "The shared number-control laws: slider detent validity, the linear and log axis, pointer resolution, page-key detent stops, the keyboard law, the display factor and its exact read-back, hard bounds, fixed-precision formatting and rounding, spoken values, and the validator's verdict on documents carrying them.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["$schema", "note", "validity", "pointer", "adjacent", "keys", "fixed", "valueTexts", "documents"],
+  "required": [
+    "$schema",
+    "note",
+    "validity",
+    "axis",
+    "dial",
+    "pointer",
+    "adjacent",
+    "keys",
+    "display",
+    "typed",
+    "limits",
+    "fixed",
+    "valueTexts",
+    "documents"
+  ],
   "$defs": {
-    "case": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
-    "snaps": { "type": "array", "maxItems": 32, "items": { "type": "number" } }
+    "case": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "snaps": {
+      "type": "array",
+      "maxItems": 32,
+      "items": {
+        "type": "number"
+      }
+    },
+    "scale": {
+      "enum": [
+        "linear",
+        "log"
+      ]
+    },
+    "bound": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value"
+      ],
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "exclusive": {
+          "type": "boolean"
+        },
+        "refusal": {
+          "type": "string"
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "$ref": "#/$defs/bound"
+        },
+        "max": {
+          "$ref": "#/$defs/bound"
+        }
+      }
+    }
   },
   "properties": {
-    "$schema": { "const": "./🧬️schema/🔣️.json" },
-    "note": { "type": "string", "minLength": 1 },
+    "$schema": {
+      "const": "./🧬️schema/🔣️.json"
+    },
+    "note": {
+      "type": "string",
+      "minLength": 1
+    },
     "validity": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "min", "max", "snaps", "valid"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "min": { "type": "number" }, "max": { "type": "number" }, "snaps": { "$ref": "#/$defs/snaps" }, "valid": { "type": "boolean" } }
+        "required": [
+          "case",
+          "min",
+          "max",
+          "snaps",
+          "valid"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "snaps": {
+            "$ref": "#/$defs/snaps"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "axis": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "value",
+          "min",
+          "max",
+          "scale",
+          "position"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "value": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "scale": {
+            "$ref": "#/$defs/scale"
+          },
+          "position": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
+      }
+    },
+    "dial": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "position",
+          "angle",
+          "back"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "position": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "angle": {
+            "type": "number"
+          },
+          "back": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        }
       }
     },
     "pointer": {
@@ -29,8 +186,42 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "value", "min", "max", "step", "snaps", "expected"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "value": { "type": "number" }, "min": { "type": "number" }, "max": { "type": "number" }, "step": { "type": "number", "minimum": 0 }, "snaps": { "$ref": "#/$defs/snaps" }, "expected": { "type": "number" } }
+        "required": [
+          "case",
+          "value",
+          "min",
+          "max",
+          "step",
+          "snaps",
+          "expected"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "value": {
+            "type": "number"
+          },
+          "min": {
+            "type": "number"
+          },
+          "max": {
+            "type": "number"
+          },
+          "step": {
+            "type": "number",
+            "minimum": 0
+          },
+          "snaps": {
+            "$ref": "#/$defs/snaps"
+          },
+          "expected": {
+            "type": "number"
+          },
+          "scale": {
+            "$ref": "#/$defs/scale"
+          }
+        }
       }
     },
     "adjacent": {
@@ -39,8 +230,33 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "current", "snaps", "forward", "expected"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "current": { "type": "number" }, "snaps": { "$ref": "#/$defs/snaps" }, "forward": { "type": "boolean" }, "expected": { "type": ["number", "null"] } }
+        "required": [
+          "case",
+          "current",
+          "snaps",
+          "forward",
+          "expected"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "current": {
+            "type": "number"
+          },
+          "snaps": {
+            "$ref": "#/$defs/snaps"
+          },
+          "forward": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
       }
     },
     "keys": {
@@ -49,8 +265,196 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "current", "min", "max", "step", "snaps", "key", "large", "expected"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "current": { "type": "number" }, "min": { "type": ["number", "null"] }, "max": { "type": ["number", "null"] }, "step": { "type": "number" }, "snaps": { "$ref": "#/$defs/snaps" }, "key": { "enum": ["decrement", "increment", "pageDown", "pageUp", "home", "end"] }, "large": { "type": "boolean" }, "expected": { "type": "number" } }
+        "required": [
+          "case",
+          "current",
+          "min",
+          "max",
+          "step",
+          "snaps",
+          "key",
+          "large",
+          "expected"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "current": {
+            "type": "number"
+          },
+          "min": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "step": {
+            "type": "number"
+          },
+          "snaps": {
+            "$ref": "#/$defs/snaps"
+          },
+          "key": {
+            "enum": [
+              "decrement",
+              "increment",
+              "pageDown",
+              "pageUp",
+              "home",
+              "end"
+            ]
+          },
+          "large": {
+            "type": "boolean"
+          },
+          "expected": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "display": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "stored",
+          "factor",
+          "precision",
+          "text"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "stored": {
+            "type": "number"
+          },
+          "factor": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "precision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 15
+          },
+          "text": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "typed": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "typed",
+          "factor",
+          "precision",
+          "candidates",
+          "expected"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "typed": {
+            "type": "number"
+          },
+          "factor": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "precision": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 15
+          },
+          "candidates": {
+            "$ref": "#/$defs/snaps"
+          },
+          "expected": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case",
+          "value",
+          "min",
+          "max",
+          "limits",
+          "crossed"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "value": {
+            "type": "number"
+          },
+          "min": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "max": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "limits": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/limits"
+              }
+            ]
+          },
+          "crossed": {
+            "enum": [
+              null,
+              "min",
+              "max"
+            ]
+          }
+        }
       }
     },
     "fixed": {
@@ -59,8 +463,32 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "value", "precision", "expected", "rounded"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "value": { "type": "number" }, "precision": { "type": "integer", "minimum": 0, "maximum": 65535 }, "expected": { "type": "string" }, "rounded": { "type": "number" } }
+        "required": [
+          "case",
+          "value",
+          "precision",
+          "expected",
+          "rounded"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "value": {
+            "type": "number"
+          },
+          "precision": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65535
+          },
+          "expected": {
+            "type": "string"
+          },
+          "rounded": {
+            "type": "number"
+          }
+        }
       }
     },
     "valueTexts": {
@@ -69,8 +497,52 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "component", "valueText"],
-        "properties": { "case": { "$ref": "#/$defs/case" }, "component": { "type": "object", "required": ["type"], "properties": { "type": { "enum": ["input", "numberStepper"] } } }, "valueText": { "type": "string" } }
+        "required": [
+          "case",
+          "component",
+          "valueText"
+        ],
+        "properties": {
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "component": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "input",
+                  "numberStepper",
+                  "slider"
+                ]
+              }
+            }
+          },
+          "valueText": {
+            "type": "string"
+          },
+          "valueNow": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "valueMin": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "valueMax": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
       }
     },
     "documents": {
@@ -79,11 +551,37 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case", "component", "violation"],
+        "required": [
+          "case",
+          "component",
+          "violation"
+        ],
         "properties": {
-          "case": { "$ref": "#/$defs/case" },
-          "component": { "type": "object", "required": ["type"], "properties": { "type": { "enum": ["slider", "input", "numberStepper"] } } },
-          "violation": { "enum": [null, "invalidSnaps"] }
+          "case": {
+            "$ref": "#/$defs/case"
+          },
+          "component": {
+            "type": "object",
+            "required": [
+              "type"
+            ],
+            "properties": {
+              "type": {
+                "enum": [
+                  "slider",
+                  "input",
+                  "numberStepper"
+                ]
+              }
+            }
+          },
+          "violation": {
+            "enum": [
+              null,
+              "invalidSnaps",
+              "invalidNumberRange"
+            ]
+          }
         }
       }
     }

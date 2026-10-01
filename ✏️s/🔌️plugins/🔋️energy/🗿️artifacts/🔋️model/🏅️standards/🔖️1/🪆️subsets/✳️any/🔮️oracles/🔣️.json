@@ -174,7 +174,7 @@
             },
             {
               "id": "rename-model-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -185,11 +185,11 @@
           "scenarios": [
             {
               "id": "change-model-version-bumps-the-version",
-              "directoryName": "✅️bumps-the-version"
+              "directoryName": "✅️bumps"
             },
             {
               "id": "change-model-version-refuses-a-blank-version",
-              "directoryName": "⛔️refuses-a-blank-version"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -215,11 +215,11 @@
           "scenarios": [
             {
               "id": "update-ground-temperature-sets-denver-ground",
-              "directoryName": "✅️sets-denver-ground"
+              "directoryName": "✅️sets"
             },
             {
               "id": "update-ground-temperature-refuses-a-short-year",
-              "directoryName": "⛔️refuses-a-short-year"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -230,7 +230,7 @@
           "scenarios": [
             {
               "id": "update-run-period-shortens-to-january",
-              "directoryName": "✅️shortens-to-january"
+              "directoryName": "✅️shortens"
             },
             {
               "id": "update-run-period-refuses-month-13",
@@ -245,11 +245,11 @@
           "scenarios": [
             {
               "id": "replace-airflow-network-attaches-a-network",
-              "directoryName": "✅️attaches-a-network"
+              "directoryName": "✅️attaches"
             },
             {
               "id": "replace-airflow-network-refuses-unpaired-nodes",
-              "directoryName": "⛔️refuses-unpaired-nodes"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -260,11 +260,11 @@
           "scenarios": [
             {
               "id": "add-output-variable-adds-zone-air-temp",
-              "directoryName": "✅️adds-zone-air-temp"
+              "directoryName": "✅️adds"
             },
             {
               "id": "add-output-variable-refuses-a-duplicate",
-              "directoryName": "⛔️refuses-a-duplicate"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -275,11 +275,11 @@
           "scenarios": [
             {
               "id": "remove-output-variable-drops-zone-air-temp",
-              "directoryName": "✅️drops-zone-air-temp"
+              "directoryName": "✅️drops"
             },
             {
               "id": "remove-output-variable-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -290,11 +290,11 @@
           "scenarios": [
             {
               "id": "bind-weather-file-binds-hannover-epw",
-              "directoryName": "✅️binds-hannover-epw"
+              "directoryName": "✅️binds"
             },
             {
               "id": "bind-weather-file-refuses-a-bad-uri",
-              "directoryName": "⛔️refuses-a-bad-uri"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -305,11 +305,11 @@
           "scenarios": [
             {
               "id": "unbind-weather-file-unbinds-the-weather",
-              "directoryName": "✅️unbinds-the-weather"
+              "directoryName": "✅️unbinds"
             },
             {
               "id": "unbind-weather-file-refuses-when-unbound",
-              "directoryName": "⛔️refuses-when-unbound"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -320,26 +320,26 @@
           "scenarios": [
             {
               "id": "connect-referenced-model-connects-the-geometry",
-              "directoryName": "✅️connects-the-geometry"
+              "directoryName": "✅️connects"
             },
             {
               "id": "connect-referenced-model-refuses-a-bad-uri",
-              "directoryName": "⛔️refuses-a-bad-uri"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "disconnect-referenced-model",
-          "sourceMutationDirectoryName": "✂️disconnect-referenced-model",
-          "mutationDirectoryName": "✂️disconnect-referenced-model",
+          "sourceMutationDirectoryName": "✂️disconnect-referenced",
+          "mutationDirectoryName": "✂️disconnect-referenced",
           "scenarios": [
             {
               "id": "disconnect-referenced-model-disconnects-the-geometry",
-              "directoryName": "✅️disconnects-the-geometry"
+              "directoryName": "✅️disconnects"
             },
             {
               "id": "disconnect-referenced-model-refuses-when-absent",
-              "directoryName": "⛔️refuses-when-absent"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -354,7 +354,7 @@
             },
             {
               "id": "rename-zone-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -365,11 +365,11 @@
           "scenarios": [
             {
               "id": "change-zone-volume-resizes-zone-one",
-              "directoryName": "✅️resizes-zone-one"
+              "directoryName": "✅️resizes"
             },
             {
               "id": "change-zone-volume-refuses-zero-volume",
-              "directoryName": "⛔️refuses-zero-volume"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -380,11 +380,11 @@
           "scenarios": [
             {
               "id": "change-zone-multiplier-stacks-four-storeys",
-              "directoryName": "✅️stacks-four-storeys"
+              "directoryName": "✅️stacks"
             },
             {
               "id": "change-zone-multiplier-refuses-zero-instances",
-              "directoryName": "⛔️refuses-zero-instances"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -395,26 +395,26 @@
           "scenarios": [
             {
               "id": "change-zone-conditioned-frees-the-zone",
-              "directoryName": "✅️frees-the-zone"
+              "directoryName": "✅️frees"
             },
             {
               "id": "change-zone-conditioned-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-zone-floor-area-participation",
-          "sourceMutationDirectoryName": "📐️change-zone-floor-area-participation",
-          "mutationDirectoryName": "📐️change-zone-floor-area-participation",
+          "sourceMutationDirectoryName": "📐️change-zone-floor-area",
+          "mutationDirectoryName": "📐️change-zone-floor-area",
           "scenarios": [
             {
               "id": "change-zone-floor-area-participation-excludes-the-zone",
-              "directoryName": "✅️excludes-the-zone"
+              "directoryName": "✅️excludes"
             },
             {
               "id": "change-zone-floor-area-participation-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -459,7 +459,7 @@
             },
             {
               "id": "create-space-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -474,7 +474,7 @@
             },
             {
               "id": "delete-space-refuses-a-missing-space",
-              "directoryName": "⛔️refuses-a-missing-space"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -489,7 +489,7 @@
             },
             {
               "id": "rename-space-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -500,11 +500,11 @@
           "scenarios": [
             {
               "id": "change-space-floor-area-resizes-a-space",
-              "directoryName": "✅️resizes-a-space"
+              "directoryName": "✅️resizes"
             },
             {
               "id": "change-space-floor-area-refuses-negative-area",
-              "directoryName": "⛔️refuses-negative-area"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -519,7 +519,7 @@
             },
             {
               "id": "change-space-zone-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -534,7 +534,7 @@
             },
             {
               "id": "create-surface-refuses-two-vertices",
-              "directoryName": "⛔️refuses-two-vertices"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -564,7 +564,7 @@
             },
             {
               "id": "rename-surface-refuses-a-taken-name",
-              "directoryName": "⛔️refuses-a-taken-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -579,7 +579,7 @@
             },
             {
               "id": "change-surface-zone-refuses-a-missing-zone",
-              "directoryName": "⛔️refuses-a-missing-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -590,11 +590,11 @@
           "scenarios": [
             {
               "id": "change-surface-class-turns-a-wall-to-roof",
-              "directoryName": "✅️turns-a-wall-to-roof"
+              "directoryName": "✅️turns"
             },
             {
               "id": "change-surface-class-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -605,41 +605,41 @@
           "scenarios": [
             {
               "id": "replace-surface-vertices-narrows-a-wall",
-              "directoryName": "✅️narrows-a-wall"
+              "directoryName": "✅️narrows"
             },
             {
               "id": "replace-surface-vertices-refuses-a-line",
-              "directoryName": "⛔️refuses-a-line"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-surface-construction",
-          "sourceMutationDirectoryName": "🧰️change-surface-construction",
-          "mutationDirectoryName": "🧰️change-surface-construction",
+          "sourceMutationDirectoryName": "🧰️change-surface",
+          "mutationDirectoryName": "🧰️change-surface",
           "scenarios": [
             {
               "id": "change-surface-construction-swaps-the-wall-stack",
-              "directoryName": "✅️swaps-the-wall-stack"
+              "directoryName": "✅️swaps"
             },
             {
               "id": "change-surface-construction-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-surface-boundary-condition",
-          "sourceMutationDirectoryName": "🚧️change-surface-boundary-condition",
-          "mutationDirectoryName": "🚧️change-surface-boundary-condition",
+          "sourceMutationDirectoryName": "🚧️change-surface-boundary",
+          "mutationDirectoryName": "🚧️change-surface-boundary",
           "scenarios": [
             {
               "id": "change-surface-boundary-condition-grounds-a-floor",
-              "directoryName": "✅️grounds-a-floor"
+              "directoryName": "✅️grounds"
             },
             {
               "id": "change-surface-boundary-condition-refuses-half-a-union",
-              "directoryName": "⛔️refuses-half-a-union"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -650,26 +650,26 @@
           "scenarios": [
             {
               "id": "change-surface-sun-exposed-shades-a-wall",
-              "directoryName": "✅️shades-a-wall"
+              "directoryName": "✅️shades"
             },
             {
               "id": "change-surface-sun-exposed-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-surface-wind-exposed",
-          "sourceMutationDirectoryName": "🍃️change-surface-wind-exposed",
-          "mutationDirectoryName": "🍃️change-surface-wind-exposed",
+          "sourceMutationDirectoryName": "🍃️change-surface-wind",
+          "mutationDirectoryName": "🍃️change-surface-wind",
           "scenarios": [
             {
               "id": "change-surface-wind-exposed-shelters-a-wall",
-              "directoryName": "✅️shelters-a-wall"
+              "directoryName": "✅️shelters"
             },
             {
               "id": "change-surface-wind-exposed-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -680,11 +680,11 @@
           "scenarios": [
             {
               "id": "change-surface-multiplier-repeats-a-wall",
-              "directoryName": "✅️repeats-a-wall"
+              "directoryName": "✅️repeats"
             },
             {
               "id": "change-surface-multiplier-refuses-zero",
-              "directoryName": "⛔️refuses-zero"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -695,11 +695,11 @@
           "scenarios": [
             {
               "id": "create-fenestration-adds-a-south-window",
-              "directoryName": "✅️adds-a-south-window"
+              "directoryName": "✅️adds"
             },
             {
               "id": "create-fenestration-refuses-a-missing-host",
-              "directoryName": "⛔️refuses-a-missing-host"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -710,11 +710,11 @@
           "scenarios": [
             {
               "id": "delete-fenestration-removes-a-window",
-              "directoryName": "✅️removes-a-window"
+              "directoryName": "✅️removes"
             },
             {
               "id": "delete-fenestration-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -725,41 +725,41 @@
           "scenarios": [
             {
               "id": "rename-fenestration-renames-a-window",
-              "directoryName": "✅️renames-a-window"
+              "directoryName": "✅️renames"
             },
             {
               "id": "rename-fenestration-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-surface",
-          "sourceMutationDirectoryName": "🧲️change-fenestration-surface",
-          "mutationDirectoryName": "🧲️change-fenestration-surface",
+          "sourceMutationDirectoryName": "🧲️change-fenestration",
+          "mutationDirectoryName": "🧲️change-fenestration",
           "scenarios": [
             {
               "id": "change-fenestration-surface-rehosts-a-window",
-              "directoryName": "✅️rehosts-a-window"
+              "directoryName": "✅️rehosts"
             },
             {
               "id": "change-fenestration-surface-refuses-a-missing-host",
-              "directoryName": "⛔️refuses-a-missing-host"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-u-value",
-          "sourceMutationDirectoryName": "🌐️change-fenestration-u-value",
-          "mutationDirectoryName": "🌐️change-fenestration-u-value",
+          "sourceMutationDirectoryName": "🌐️change-fenestration-u",
+          "mutationDirectoryName": "🌐️change-fenestration-u",
           "scenarios": [
             {
               "id": "change-fenestration-u-value-swaps-the-glazing",
-              "directoryName": "✅️swaps-the-glazing"
+              "directoryName": "✅️swaps"
             },
             {
               "id": "change-fenestration-u-value-refuses-zero-u",
-              "directoryName": "⛔️refuses-zero-u"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -770,11 +770,11 @@
           "scenarios": [
             {
               "id": "change-fenestration-shgc-dims-the-solar-gain",
-              "directoryName": "✅️dims-the-solar-gain"
+              "directoryName": "✅️dims"
             },
             {
               "id": "change-fenestration-shgc-refuses-shgc-above-one",
-              "directoryName": "⛔️refuses-shgc-above-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -785,11 +785,11 @@
           "scenarios": [
             {
               "id": "change-fenestration-vlt-dims-the-daylight",
-              "directoryName": "✅️dims-the-daylight"
+              "directoryName": "✅️dims"
             },
             {
               "id": "change-fenestration-vlt-refuses-negative-vlt",
-              "directoryName": "⛔️refuses-negative-vlt"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -800,41 +800,41 @@
           "scenarios": [
             {
               "id": "change-fenestration-area-doubles-the-glazing",
-              "directoryName": "✅️doubles-the-glazing"
+              "directoryName": "✅️doubles"
             },
             {
               "id": "change-fenestration-area-refuses-zero-area",
-              "directoryName": "⛔️refuses-zero-area"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-frame-conductance",
-          "sourceMutationDirectoryName": "🖼️change-fenestration-frame-conductance",
-          "mutationDirectoryName": "🖼️change-fenestration-frame-conductance",
+          "sourceMutationDirectoryName": "🖼️change-fenestration-frame",
+          "mutationDirectoryName": "🖼️change-fenestration-frame",
           "scenarios": [
             {
               "id": "change-fenestration-frame-conductance-adds-a-frame",
-              "directoryName": "✅️adds-a-frame"
+              "directoryName": "✅️adds-a"
             },
             {
               "id": "change-fenestration-frame-conductance-refuses-negative-frame",
-              "directoryName": "⛔️refuses-negative-frame"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-divider-conductance",
-          "sourceMutationDirectoryName": "🧷️change-fenestration-divider-conductance",
-          "mutationDirectoryName": "🧷️change-fenestration-divider-conductance",
+          "sourceMutationDirectoryName": "🧷️change-fenestration",
+          "mutationDirectoryName": "🧷️change-fenestration",
           "scenarios": [
             {
               "id": "change-fenestration-divider-conductance-adds-dividers",
-              "directoryName": "✅️adds-dividers"
+              "directoryName": "✅️adds"
             },
             {
               "id": "change-fenestration-divider-conductance-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -845,11 +845,11 @@
           "scenarios": [
             {
               "id": "create-shading-surface-adds-an-awning",
-              "directoryName": "✅️adds-an-awning"
+              "directoryName": "✅️adds"
             },
             {
               "id": "create-shading-surface-refuses-a-line",
-              "directoryName": "⛔️refuses-a-line"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -860,11 +860,11 @@
           "scenarios": [
             {
               "id": "delete-shading-surface-removes-an-awning",
-              "directoryName": "✅️removes-an-awning"
+              "directoryName": "✅️removes"
             },
             {
               "id": "delete-shading-surface-refuses-a-missing-one",
-              "directoryName": "⛔️refuses-a-missing-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -875,41 +875,41 @@
           "scenarios": [
             {
               "id": "rename-shading-surface-renames-an-awning",
-              "directoryName": "✅️renames-an-awning"
+              "directoryName": "✅️renames"
             },
             {
               "id": "rename-shading-surface-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "replace-shading-surface-vertices",
-          "sourceMutationDirectoryName": "🗺️replace-shading-surface-vertices",
-          "mutationDirectoryName": "🗺️replace-shading-surface-vertices",
+          "sourceMutationDirectoryName": "🗺️replace-shading-surface",
+          "mutationDirectoryName": "🗺️replace-shading-surface",
           "scenarios": [
             {
               "id": "replace-shading-surface-vertices-deepens-an-awning",
-              "directoryName": "✅️deepens-an-awning"
+              "directoryName": "✅️deepens"
             },
             {
               "id": "replace-shading-surface-vertices-refuses-a-line",
-              "directoryName": "⛔️refuses-a-line"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-shading-surface-transmittance-schedule",
-          "sourceMutationDirectoryName": "⛱️change-shading-surface-transmittance-schedule",
-          "mutationDirectoryName": "⛱️change-shading-surface-transmittance-schedule",
+          "sourceMutationDirectoryName": "⛱️change-shading-surface",
+          "mutationDirectoryName": "⛱️change-shading-surface",
           "scenarios": [
             {
               "id": "change-shading-surface-transmittance-schedule-lets-light-in",
-              "directoryName": "✅️lets-light-in"
+              "directoryName": "✅️lets"
             },
             {
               "id": "change-shading-surface-transmittance-schedule-refuses-a-ghost",
-              "directoryName": "⛔️refuses-a-ghost"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -924,7 +924,7 @@
             },
             {
               "id": "connect-surfaces-refuses-a-self-pair",
-              "directoryName": "⛔️refuses-a-self-pair"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -935,41 +935,41 @@
           "scenarios": [
             {
               "id": "disconnect-surfaces-parts-two-walls",
-              "directoryName": "✅️parts-two-walls"
+              "directoryName": "✅️parts"
             },
             {
               "id": "disconnect-surfaces-refuses-a-missing-pair",
-              "directoryName": "⛔️refuses-a-missing-pair"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "bind-fenestration-glazing-construction",
-          "sourceMutationDirectoryName": "🧊️bind-fenestration-glazing-construction",
-          "mutationDirectoryName": "🧊️bind-fenestration-glazing-construction",
+          "sourceMutationDirectoryName": "🧊️bind-fenestration-glazing",
+          "mutationDirectoryName": "🧊️bind-fenestration-glazing",
           "scenarios": [
             {
               "id": "bind-fenestration-glazing-construction-glazes-a-window",
-              "directoryName": "✅️glazes-a-window"
+              "directoryName": "✅️glazes"
             },
             {
               "id": "bind-fenestration-glazing-construction-refuses-no-stack",
-              "directoryName": "⛔️refuses-no-stack"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "clear-fenestration-glazing-construction",
-          "sourceMutationDirectoryName": "🫗️clear-fenestration-glazing-construction",
-          "mutationDirectoryName": "🫗️clear-fenestration-glazing-construction",
+          "sourceMutationDirectoryName": "🫗️clear-fenestration-glazing",
+          "mutationDirectoryName": "🫗️clear-fenestration-glazing",
           "scenarios": [
             {
               "id": "clear-fenestration-glazing-construction-ungazes-a-window",
-              "directoryName": "✅️ungazes-a-window"
+              "directoryName": "✅️ungazes"
             },
             {
               "id": "clear-fenestration-glazing-construction-refuses-empty",
-              "directoryName": "⛔️refuses-empty"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -980,86 +980,86 @@
           "scenarios": [
             {
               "id": "change-fenestration-height-raises-the-head",
-              "directoryName": "✅️raises-the-head"
+              "directoryName": "✅️raises"
             },
             {
               "id": "change-fenestration-height-refuses-zero-height",
-              "directoryName": "⛔️refuses-zero-height"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-sill-height",
-          "sourceMutationDirectoryName": "⬇️change-fenestration-sill-height",
-          "mutationDirectoryName": "⬇️change-fenestration-sill-height",
+          "sourceMutationDirectoryName": "⬇️change-fenestration-sill",
+          "mutationDirectoryName": "⬇️change-fenestration-sill",
           "scenarios": [
             {
               "id": "change-fenestration-sill-height-raises-the-sill",
-              "directoryName": "✅️raises-the-sill"
+              "directoryName": "✅️raises"
             },
             {
               "id": "change-fenestration-sill-height-refuses-negative-sill",
-              "directoryName": "⛔️refuses-negative-sill"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-overhang-depth",
-          "sourceMutationDirectoryName": "🧢️change-fenestration-overhang-depth",
-          "mutationDirectoryName": "🧢️change-fenestration-overhang-depth",
+          "sourceMutationDirectoryName": "🧢️change-fenestration",
+          "mutationDirectoryName": "🧢️change-fenestration",
           "scenarios": [
             {
               "id": "change-fenestration-overhang-depth-adds-case-610-shade",
-              "directoryName": "✅️adds-case-610-shade"
+              "directoryName": "✅️adds"
             },
             {
               "id": "change-fenestration-overhang-depth-refuses-negative-depth",
-              "directoryName": "⛔️refuses-negative-depth"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-overhang-offset",
-          "sourceMutationDirectoryName": "🎩️change-fenestration-overhang-offset",
-          "mutationDirectoryName": "🎩️change-fenestration-overhang-offset",
+          "sourceMutationDirectoryName": "🎩️change-fenestration",
+          "mutationDirectoryName": "🎩️change-fenestration",
           "scenarios": [
             {
               "id": "change-fenestration-overhang-offset-lifts-the-overhang",
-              "directoryName": "✅️lifts-the-overhang"
+              "directoryName": "✅️lifts"
             },
             {
               "id": "change-fenestration-overhang-offset-refuses-negative-offset",
-              "directoryName": "⛔️refuses-negative-offset"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-fin-depth",
-          "sourceMutationDirectoryName": "🐬️change-fenestration-fin-depth",
-          "mutationDirectoryName": "🐬️change-fenestration-fin-depth",
+          "sourceMutationDirectoryName": "🐬️change-fenestration-fin",
+          "mutationDirectoryName": "🐬️change-fenestration-fin",
           "scenarios": [
             {
               "id": "change-fenestration-fin-depth-adds-case-630-fins",
-              "directoryName": "✅️adds-case-630-fins"
+              "directoryName": "✅️adds"
             },
             {
               "id": "change-fenestration-fin-depth-refuses-negative-fin",
-              "directoryName": "⛔️refuses-negative-fin"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-fenestration-fin-offset",
-          "sourceMutationDirectoryName": "🐋️change-fenestration-fin-offset",
-          "mutationDirectoryName": "🐋️change-fenestration-fin-offset",
+          "sourceMutationDirectoryName": "🐋️change-fenestration-fin",
+          "mutationDirectoryName": "🐋️change-fenestration-fin",
           "scenarios": [
             {
               "id": "change-fenestration-fin-offset-spreads-the-fins",
-              "directoryName": "✅️spreads-the-fins"
+              "directoryName": "✅️spreads"
             },
             {
               "id": "change-fenestration-fin-offset-refuses-negative-offset",
-              "directoryName": "⛔️refuses-negative-offset"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -1125,8 +1125,8 @@
         },
         {
           "mutationId": "change-material-conductivity",
-          "sourceMutationDirectoryName": "🔥️change-material-conductivity",
-          "mutationDirectoryName": "🔥️change-material-conductivity",
+          "sourceMutationDirectoryName": "🔥️change-material",
+          "mutationDirectoryName": "🔥️change-material",
           "scenarios": [
             {
               "id": "change-material-conductivity-applies",
@@ -1155,8 +1155,8 @@
         },
         {
           "mutationId": "change-material-specific-heat",
-          "sourceMutationDirectoryName": "♨️change-material-specific-heat",
-          "mutationDirectoryName": "♨️change-material-specific-heat",
+          "sourceMutationDirectoryName": "♨️change-material-specific",
+          "mutationDirectoryName": "♨️change-material-specific",
           "scenarios": [
             {
               "id": "change-material-specific-heat-applies",
@@ -1170,8 +1170,8 @@
         },
         {
           "mutationId": "change-material-thermal-absorptance",
-          "sourceMutationDirectoryName": "🔆️change-material-thermal-absorptance",
-          "mutationDirectoryName": "🔆️change-material-thermal-absorptance",
+          "sourceMutationDirectoryName": "🔆️change-material-thermal",
+          "mutationDirectoryName": "🔆️change-material-thermal",
           "scenarios": [
             {
               "id": "change-material-thermal-absorptance-applies",
@@ -1185,8 +1185,8 @@
         },
         {
           "mutationId": "change-material-solar-absorptance",
-          "sourceMutationDirectoryName": "☀️change-material-solar-absorptance",
-          "mutationDirectoryName": "☀️change-material-solar-absorptance",
+          "sourceMutationDirectoryName": "☀️change-material-solar",
+          "mutationDirectoryName": "☀️change-material-solar",
           "scenarios": [
             {
               "id": "change-material-solar-absorptance-applies",
@@ -1200,8 +1200,8 @@
         },
         {
           "mutationId": "change-material-visible-absorptance",
-          "sourceMutationDirectoryName": "👁️change-material-visible-absorptance",
-          "mutationDirectoryName": "👁️change-material-visible-absorptance",
+          "sourceMutationDirectoryName": "👁️change-material-visible",
+          "mutationDirectoryName": "👁️change-material-visible",
           "scenarios": [
             {
               "id": "change-material-visible-absorptance-applies",
@@ -1290,8 +1290,8 @@
         },
         {
           "mutationId": "reorder-construction-layers",
-          "sourceMutationDirectoryName": "🔀️reorder-construction-layers",
-          "mutationDirectoryName": "🔀️reorder-construction-layers",
+          "sourceMutationDirectoryName": "🔀️reorder-construction",
+          "mutationDirectoryName": "🔀️reorder-construction",
           "scenarios": [
             {
               "id": "reorder-construction-layers-applies",
@@ -1365,8 +1365,8 @@
         },
         {
           "mutationId": "change-people-gain-activity-schedule",
-          "sourceMutationDirectoryName": "🏃️change-people-gain-activity-schedule",
-          "mutationDirectoryName": "🏃️change-people-gain-activity-schedule",
+          "sourceMutationDirectoryName": "🏃️change-people-gain",
+          "mutationDirectoryName": "🏃️change-people-gain",
           "scenarios": [
             {
               "id": "change-people-gain-activity-schedule-applies",
@@ -1380,8 +1380,8 @@
         },
         {
           "mutationId": "change-people-gain-people-per-area",
-          "sourceMutationDirectoryName": "👥️change-people-gain-people-per-area",
-          "mutationDirectoryName": "👥️change-people-gain-people-per-area",
+          "sourceMutationDirectoryName": "👥️change-people-gain-people",
+          "mutationDirectoryName": "👥️change-people-gain-people",
           "scenarios": [
             {
               "id": "change-people-gain-people-per-area-applies",
@@ -1395,8 +1395,8 @@
         },
         {
           "mutationId": "change-people-gain-sensible-fraction",
-          "sourceMutationDirectoryName": "🌞️change-people-gain-sensible-fraction",
-          "mutationDirectoryName": "🌞️change-people-gain-sensible-fraction",
+          "sourceMutationDirectoryName": "🌞️change-people-gain",
+          "mutationDirectoryName": "🌞️change-people-gain",
           "scenarios": [
             {
               "id": "change-people-gain-sensible-fraction-applies",
@@ -1410,8 +1410,8 @@
         },
         {
           "mutationId": "change-people-gain-latent-fraction",
-          "sourceMutationDirectoryName": "💧️change-people-gain-latent-fraction",
-          "mutationDirectoryName": "💧️change-people-gain-latent-fraction",
+          "sourceMutationDirectoryName": "💧️change-people-gain-latent",
+          "mutationDirectoryName": "💧️change-people-gain-latent",
           "scenarios": [
             {
               "id": "change-people-gain-latent-fraction-applies",
@@ -1425,8 +1425,8 @@
         },
         {
           "mutationId": "change-people-gain-radiant-fraction",
-          "sourceMutationDirectoryName": "📡️change-people-gain-radiant-fraction",
-          "mutationDirectoryName": "📡️change-people-gain-radiant-fraction",
+          "sourceMutationDirectoryName": "📡️change-people-gain-radiant",
+          "mutationDirectoryName": "📡️change-people-gain-radiant",
           "scenarios": [
             {
               "id": "change-people-gain-radiant-fraction-applies",
@@ -1485,8 +1485,8 @@
         },
         {
           "mutationId": "change-lighting-gain-schedule",
-          "sourceMutationDirectoryName": "⏱️change-lighting-gain-schedule",
-          "mutationDirectoryName": "⏱️change-lighting-gain-schedule",
+          "sourceMutationDirectoryName": "⏱️change-lighting-gain",
+          "mutationDirectoryName": "⏱️change-lighting-gain",
           "scenarios": [
             {
               "id": "change-lighting-gain-schedule-applies",
@@ -1500,8 +1500,8 @@
         },
         {
           "mutationId": "change-lighting-gain-watts-per-area",
-          "sourceMutationDirectoryName": "🔌️change-lighting-gain-watts-per-area",
-          "mutationDirectoryName": "🔌️change-lighting-gain-watts-per-area",
+          "sourceMutationDirectoryName": "🔌️change-lighting-gain-watts",
+          "mutationDirectoryName": "🔌️change-lighting-gain-watts",
           "scenarios": [
             {
               "id": "change-lighting-gain-watts-per-area-applies",
@@ -1515,8 +1515,8 @@
         },
         {
           "mutationId": "change-lighting-gain-radiant-fraction",
-          "sourceMutationDirectoryName": "🌟️change-lighting-gain-radiant-fraction",
-          "mutationDirectoryName": "🌟️change-lighting-gain-radiant-fraction",
+          "sourceMutationDirectoryName": "🌟️change-lighting-gain",
+          "mutationDirectoryName": "🌟️change-lighting-gain",
           "scenarios": [
             {
               "id": "change-lighting-gain-radiant-fraction-applies",
@@ -1530,8 +1530,8 @@
         },
         {
           "mutationId": "change-lighting-gain-visible-fraction",
-          "sourceMutationDirectoryName": "🔅️change-lighting-gain-visible-fraction",
-          "mutationDirectoryName": "🔅️change-lighting-gain-visible-fraction",
+          "sourceMutationDirectoryName": "🔅️change-lighting-gain",
+          "mutationDirectoryName": "🔅️change-lighting-gain",
           "scenarios": [
             {
               "id": "change-lighting-gain-visible-fraction-applies",
@@ -1545,8 +1545,8 @@
         },
         {
           "mutationId": "change-lighting-gain-return-air-fraction",
-          "sourceMutationDirectoryName": "🎐️change-lighting-gain-return-air-fraction",
-          "mutationDirectoryName": "🎐️change-lighting-gain-return-air-fraction",
+          "sourceMutationDirectoryName": "🎐️change-lighting-gain",
+          "mutationDirectoryName": "🎐️change-lighting-gain",
           "scenarios": [
             {
               "id": "change-lighting-gain-return-air-fraction-applies",
@@ -1605,8 +1605,8 @@
         },
         {
           "mutationId": "change-equipment-gain-schedule",
-          "sourceMutationDirectoryName": "⌛️change-equipment-gain-schedule",
-          "mutationDirectoryName": "⌛️change-equipment-gain-schedule",
+          "sourceMutationDirectoryName": "⌛️change-equipment-gain",
+          "mutationDirectoryName": "⌛️change-equipment-gain",
           "scenarios": [
             {
               "id": "change-equipment-gain-schedule-applies",
@@ -1620,8 +1620,8 @@
         },
         {
           "mutationId": "change-equipment-gain-watts-per-area",
-          "sourceMutationDirectoryName": "⚡️change-equipment-gain-watts-per-area",
-          "mutationDirectoryName": "⚡️change-equipment-gain-watts-per-area",
+          "sourceMutationDirectoryName": "⚡️change-equipment-gain-watts",
+          "mutationDirectoryName": "⚡️change-equipment-gain-watts",
           "scenarios": [
             {
               "id": "change-equipment-gain-watts-per-area-applies",
@@ -1635,8 +1635,8 @@
         },
         {
           "mutationId": "change-equipment-gain-radiant-fraction",
-          "sourceMutationDirectoryName": "🌠️change-equipment-gain-radiant-fraction",
-          "mutationDirectoryName": "🌠️change-equipment-gain-radiant-fraction",
+          "sourceMutationDirectoryName": "🌠️change-equipment-gain",
+          "mutationDirectoryName": "🌠️change-equipment-gain",
           "scenarios": [
             {
               "id": "change-equipment-gain-radiant-fraction-applies",
@@ -1650,8 +1650,8 @@
         },
         {
           "mutationId": "change-equipment-gain-latent-fraction",
-          "sourceMutationDirectoryName": "💦️change-equipment-gain-latent-fraction",
-          "mutationDirectoryName": "💦️change-equipment-gain-latent-fraction",
+          "sourceMutationDirectoryName": "💦️change-equipment-gain",
+          "mutationDirectoryName": "💦️change-equipment-gain",
           "scenarios": [
             {
               "id": "change-equipment-gain-latent-fraction-applies",
@@ -1710,8 +1710,8 @@
         },
         {
           "mutationId": "change-infiltration-schedule",
-          "sourceMutationDirectoryName": "⏳️change-infiltration-schedule",
-          "mutationDirectoryName": "⏳️change-infiltration-schedule",
+          "sourceMutationDirectoryName": "⏳️change-infiltration",
+          "mutationDirectoryName": "⏳️change-infiltration",
           "scenarios": [
             {
               "id": "change-infiltration-schedule-applies",
@@ -1725,8 +1725,8 @@
         },
         {
           "mutationId": "change-infiltration-flow-per-exterior-area",
-          "sourceMutationDirectoryName": "🌫️change-infiltration-flow-per-exterior-area",
-          "mutationDirectoryName": "🌫️change-infiltration-flow-per-exterior-area",
+          "sourceMutationDirectoryName": "🌫️change-infiltration-flow",
+          "mutationDirectoryName": "🌫️change-infiltration-flow",
           "scenarios": [
             {
               "id": "change-infiltration-flow-per-exterior-area-applies",
@@ -1740,8 +1740,8 @@
         },
         {
           "mutationId": "change-infiltration-constant-term-coefficient",
-          "sourceMutationDirectoryName": "🅰️change-infiltration-constant-term-coefficient",
-          "mutationDirectoryName": "🅰️change-infiltration-constant-term-coefficient",
+          "sourceMutationDirectoryName": "🅰️change-infiltration",
+          "mutationDirectoryName": "🅰️change-infiltration",
           "scenarios": [
             {
               "id": "change-infiltration-constant-term-coefficient-applies",
@@ -1770,8 +1770,8 @@
         },
         {
           "mutationId": "change-infiltration-velocity-term-coefficient",
-          "sourceMutationDirectoryName": "🆎️change-infiltration-velocity-term-coefficient",
-          "mutationDirectoryName": "🆎️change-infiltration-velocity-term-coefficient",
+          "sourceMutationDirectoryName": "🆎️change-infiltration",
+          "mutationDirectoryName": "🆎️change-infiltration",
           "scenarios": [
             {
               "id": "change-infiltration-velocity-term-coefficient-applies",
@@ -1800,8 +1800,8 @@
         },
         {
           "mutationId": "create-mechanical-ventilation",
-          "sourceMutationDirectoryName": "🌪️create-mechanical-ventilation",
-          "mutationDirectoryName": "🌪️create-mechanical-ventilation",
+          "sourceMutationDirectoryName": "🌪️create-mechanical",
+          "mutationDirectoryName": "🌪️create-mechanical",
           "scenarios": [
             {
               "id": "create-mechanical-ventilation-applies",
@@ -1815,8 +1815,8 @@
         },
         {
           "mutationId": "delete-mechanical-ventilation",
-          "sourceMutationDirectoryName": "🚫️delete-mechanical-ventilation",
-          "mutationDirectoryName": "🚫️delete-mechanical-ventilation",
+          "sourceMutationDirectoryName": "🚫️delete-mechanical",
+          "mutationDirectoryName": "🚫️delete-mechanical",
           "scenarios": [
             {
               "id": "delete-mechanical-ventilation-applies",
@@ -1830,8 +1830,8 @@
         },
         {
           "mutationId": "change-mechanical-ventilation-zone",
-          "sourceMutationDirectoryName": "🧭️change-mechanical-ventilation-zone",
-          "mutationDirectoryName": "🧭️change-mechanical-ventilation-zone",
+          "sourceMutationDirectoryName": "🧭️change-mechanical",
+          "mutationDirectoryName": "🧭️change-mechanical",
           "scenarios": [
             {
               "id": "change-mechanical-ventilation-zone-applies",
@@ -1845,8 +1845,8 @@
         },
         {
           "mutationId": "change-mechanical-ventilation-schedule",
-          "sourceMutationDirectoryName": "📆️change-mechanical-ventilation-schedule",
-          "mutationDirectoryName": "📆️change-mechanical-ventilation-schedule",
+          "sourceMutationDirectoryName": "📆️change-mechanical",
+          "mutationDirectoryName": "📆️change-mechanical",
           "scenarios": [
             {
               "id": "change-mechanical-ventilation-schedule-applies",
@@ -1860,8 +1860,8 @@
         },
         {
           "mutationId": "change-mechanical-ventilation-design-flow",
-          "sourceMutationDirectoryName": "🚿️change-mechanical-ventilation-design-flow",
-          "mutationDirectoryName": "🚿️change-mechanical-ventilation-design-flow",
+          "sourceMutationDirectoryName": "🚿️change-mechanical",
+          "mutationDirectoryName": "🚿️change-mechanical",
           "scenarios": [
             {
               "id": "change-mechanical-ventilation-design-flow-applies",
@@ -1920,8 +1920,8 @@
         },
         {
           "mutationId": "change-infiltration-design-flow-ach",
-          "sourceMutationDirectoryName": "🔄️change-infiltration-design-flow-ach",
-          "mutationDirectoryName": "🔄️change-infiltration-design-flow-ach",
+          "sourceMutationDirectoryName": "🔄️change-infiltration-design",
+          "mutationDirectoryName": "🔄️change-infiltration-design",
           "scenarios": [
             {
               "id": "change-infiltration-design-flow-ach-applies",
@@ -1935,8 +1935,8 @@
         },
         {
           "mutationId": "change-infiltration-effective-leakage-area",
-          "sourceMutationDirectoryName": "🕳️change-infiltration-effective-leakage-area",
-          "mutationDirectoryName": "🕳️change-infiltration-effective-leakage-area",
+          "sourceMutationDirectoryName": "🕳️change-infiltration",
+          "mutationDirectoryName": "🕳️change-infiltration",
           "scenarios": [
             {
               "id": "change-infiltration-effective-leakage-area-applies",
@@ -1950,8 +1950,8 @@
         },
         {
           "mutationId": "change-infiltration-discharge-coefficient",
-          "sourceMutationDirectoryName": "🚰️change-infiltration-discharge-coefficient",
-          "mutationDirectoryName": "🚰️change-infiltration-discharge-coefficient",
+          "sourceMutationDirectoryName": "🚰️change-infiltration",
+          "mutationDirectoryName": "🚰️change-infiltration",
           "scenarios": [
             {
               "id": "change-infiltration-discharge-coefficient-applies",
@@ -1965,8 +1965,8 @@
         },
         {
           "mutationId": "change-infiltration-stack-height",
-          "sourceMutationDirectoryName": "🏭️change-infiltration-stack-height",
-          "mutationDirectoryName": "🏭️change-infiltration-stack-height",
+          "sourceMutationDirectoryName": "🏭️change-infiltration-stack",
+          "mutationDirectoryName": "🏭️change-infiltration-stack",
           "scenarios": [
             {
               "id": "change-infiltration-stack-height-applies",
@@ -1985,11 +1985,11 @@
           "scenarios": [
             {
               "id": "create-thermostat-controls-zone-one",
-              "directoryName": "✅️controls-zone-one"
+              "directoryName": "✅️controls"
             },
             {
               "id": "create-thermostat-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2004,7 +2004,7 @@
             },
             {
               "id": "delete-thermostat-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2015,71 +2015,71 @@
           "scenarios": [
             {
               "id": "change-thermostat-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-thermostat-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-thermostat-heating-setpoint-schedule",
-          "sourceMutationDirectoryName": "🥵️change-thermostat-heating-setpoint-schedule",
-          "mutationDirectoryName": "🥵️change-thermostat-heating-setpoint-schedule",
+          "sourceMutationDirectoryName": "🥵️change-thermostat-heating",
+          "mutationDirectoryName": "🥵️change-thermostat-heating",
           "scenarios": [
             {
               "id": "change-thermostat-heating-setpoint-schedule-repoints-heating",
-              "directoryName": "✅️repoints-heating"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-thermostat-heating-setpoint-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-thermostat-cooling-setpoint-schedule",
-          "sourceMutationDirectoryName": "🐧️change-thermostat-cooling-setpoint-schedule",
-          "mutationDirectoryName": "🐧️change-thermostat-cooling-setpoint-schedule",
+          "sourceMutationDirectoryName": "🐧️change-thermostat-cooling",
+          "mutationDirectoryName": "🐧️change-thermostat-cooling",
           "scenarios": [
             {
               "id": "change-thermostat-cooling-setpoint-schedule-repoints-cooling",
-              "directoryName": "✅️repoints-cooling"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-thermostat-cooling-setpoint-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-thermostat-heating-throttle-range",
-          "sourceMutationDirectoryName": "🎚️change-thermostat-heating-throttle-range",
-          "mutationDirectoryName": "🎚️change-thermostat-heating-throttle-range",
+          "sourceMutationDirectoryName": "🎚️change-thermostat-heating",
+          "mutationDirectoryName": "🎚️change-thermostat-heating",
           "scenarios": [
             {
               "id": "change-thermostat-heating-throttle-range-widens-heating-band",
-              "directoryName": "✅️widens-heating-band"
+              "directoryName": "✅️widens"
             },
             {
               "id": "change-thermostat-heating-throttle-range-refuses-a-zero-band",
-              "directoryName": "⛔️refuses-a-zero-band"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-thermostat-cooling-throttle-range",
-          "sourceMutationDirectoryName": "🎛️change-thermostat-cooling-throttle-range",
-          "mutationDirectoryName": "🎛️change-thermostat-cooling-throttle-range",
+          "sourceMutationDirectoryName": "🎛️change-thermostat-cooling",
+          "mutationDirectoryName": "🎛️change-thermostat-cooling",
           "scenarios": [
             {
               "id": "change-thermostat-cooling-throttle-range-widens-cooling-band",
-              "directoryName": "✅️widens-cooling-band"
+              "directoryName": "✅️widens"
             },
             {
               "id": "change-thermostat-cooling-throttle-range-refuses-a-negative-band",
-              "directoryName": "⛔️refuses-a-negative-band"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2090,11 +2090,11 @@
           "scenarios": [
             {
               "id": "create-humidistat-controls-zone-one",
-              "directoryName": "✅️controls-zone-one"
+              "directoryName": "✅️controls"
             },
             {
               "id": "create-humidistat-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2105,11 +2105,11 @@
           "scenarios": [
             {
               "id": "delete-humidistat-drops-the-control",
-              "directoryName": "✅️drops-the-control"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-humidistat-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2120,11 +2120,11 @@
           "scenarios": [
             {
               "id": "change-humidistat-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-humidistat-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2135,56 +2135,56 @@
           "scenarios": [
             {
               "id": "change-humidistat-humidifying-setpoint-schedule-repoints-humidifying",
-              "directoryName": "✅️repoints-humidifying"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-humidistat-humidifying-setpoint-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-humidistat-dehumidifying-setpoint-schedule",
-          "sourceMutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint",
-          "mutationDirectoryName": "🏝️change-humidistat-dehumidifying-setpoint",
+          "sourceMutationDirectoryName": "🏝️change-humidistat",
+          "mutationDirectoryName": "🏝️change-humidistat",
           "scenarios": [
             {
               "id": "change-humidistat-dehumidifying-setpoint-schedule-repoints-drying",
-              "directoryName": "✅️repoints-drying"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-humidistat-dehumidifying-setpoint-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-humidistat-humidifying-throttle-range",
-          "sourceMutationDirectoryName": "🌧️change-humidistat-humidifying-throttle-range",
-          "mutationDirectoryName": "🌧️change-humidistat-humidifying-throttle-range",
+          "sourceMutationDirectoryName": "🌧️change-humidistat",
+          "mutationDirectoryName": "🌧️change-humidistat",
           "scenarios": [
             {
               "id": "change-humidistat-humidifying-throttle-range-widens-the-band",
-              "directoryName": "✅️widens-the-band"
+              "directoryName": "✅️widens"
             },
             {
               "id": "change-humidistat-humidifying-throttle-range-refuses-a-zero-band",
-              "directoryName": "⛔️refuses-a-zero-band"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-humidistat-dehumidifying-throttle-range",
-          "sourceMutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle",
-          "mutationDirectoryName": "🧻️change-humidistat-dehumidifying-throttle",
+          "sourceMutationDirectoryName": "🧻️change-humidistat",
+          "mutationDirectoryName": "🧻️change-humidistat",
           "scenarios": [
             {
               "id": "change-humidistat-dehumidifying-throttle-range-widens-the-band",
-              "directoryName": "✅️widens-the-band"
+              "directoryName": "✅️widens"
             },
             {
               "id": "change-humidistat-dehumidifying-throttle-range-refuses-a-negative-band",
-              "directoryName": "⛔️refuses-a-negative-band"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2195,11 +2195,11 @@
           "scenarios": [
             {
               "id": "create-ideal-loads-system-serves-zone-one",
-              "directoryName": "✅️serves-zone-one"
+              "directoryName": "✅️serves"
             },
             {
               "id": "create-ideal-loads-system-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2210,86 +2210,86 @@
           "scenarios": [
             {
               "id": "delete-ideal-loads-system-drops-the-system",
-              "directoryName": "✅️drops-the-system"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-ideal-loads-system-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-ideal-loads-system-zone",
-          "sourceMutationDirectoryName": "🏢️change-ideal-loads-system-zone",
-          "mutationDirectoryName": "🏢️change-ideal-loads-system-zone",
+          "sourceMutationDirectoryName": "🏢️change-ideal-loads-system",
+          "mutationDirectoryName": "🏢️change-ideal-loads-system",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-ideal-loads-system-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-ideal-loads-system-max-heating-supply-air-temp",
-          "sourceMutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply",
-          "mutationDirectoryName": "🔴️change-ideal-loads-system-max-heating-supply",
+          "sourceMutationDirectoryName": "🔴️change-ideal-loads-system",
+          "mutationDirectoryName": "🔴️change-ideal-loads-system",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-max-heating-supply-air-temp-cools-the-supply",
-              "directoryName": "✅️cools-the-supply"
+              "directoryName": "✅️cools"
             },
             {
               "id": "change-ideal-loads-system-max-heating-supply-air-temp-refuses-a-hot-supply",
-              "directoryName": "⛔️refuses-a-hot-supply"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-ideal-loads-system-min-cooling-supply-air-temp",
-          "sourceMutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply",
-          "mutationDirectoryName": "🔵️change-ideal-loads-system-min-cooling-supply",
+          "sourceMutationDirectoryName": "🔵️change-ideal-loads-system",
+          "mutationDirectoryName": "🔵️change-ideal-loads-system",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-min-cooling-supply-air-temp-lowers-the-supply",
-              "directoryName": "✅️lowers-the-supply"
+              "directoryName": "✅️lowers"
             },
             {
               "id": "change-ideal-loads-system-min-cooling-supply-air-temp-refuses-a-cold-supply",
-              "directoryName": "⛔️refuses-a-cold-supply"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-ideal-loads-system-max-heating-capacity",
-          "sourceMutationDirectoryName": "⛽️change-ideal-loads-system-max-heating-capacity",
-          "mutationDirectoryName": "⛽️change-ideal-loads-system-max-heating-capacity",
+          "sourceMutationDirectoryName": "⛽️change-ideal-loads-system",
+          "mutationDirectoryName": "⛽️change-ideal-loads-system",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-max-heating-capacity-caps-the-heating",
-              "directoryName": "✅️caps-the-heating"
+              "directoryName": "✅️caps"
             },
             {
               "id": "change-ideal-loads-system-max-heating-capacity-refuses-a-stray-value",
-              "directoryName": "⛔️refuses-a-stray-value"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-ideal-loads-system-max-cooling-capacity",
-          "sourceMutationDirectoryName": "🟧️change-ideal-loads-system-max-cooling-capacity",
-          "mutationDirectoryName": "🟧️change-ideal-loads-system-max-cooling-capacity",
+          "sourceMutationDirectoryName": "🟧️change-ideal-loads-system",
+          "mutationDirectoryName": "🟧️change-ideal-loads-system",
           "scenarios": [
             {
               "id": "change-ideal-loads-system-max-cooling-capacity-caps-the-cooling",
-              "directoryName": "✅️caps-the-cooling"
+              "directoryName": "✅️caps"
             },
             {
               "id": "change-ideal-loads-system-max-cooling-capacity-refuses-a-stray-value",
-              "directoryName": "⛔️refuses-a-stray-value"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2300,11 +2300,11 @@
           "scenarios": [
             {
               "id": "change-ideal-loads-system-outdoor-air-per-person-ventilates-per-head",
-              "directoryName": "✅️ventilates-per-head"
+              "directoryName": "✅️ventilates"
             },
             {
               "id": "change-ideal-loads-system-outdoor-air-per-person-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2315,11 +2315,11 @@
           "scenarios": [
             {
               "id": "change-ideal-loads-system-outdoor-air-per-area-ventilates-per-area",
-              "directoryName": "✅️ventilates-per-area"
+              "directoryName": "✅️ventilates"
             },
             {
               "id": "change-ideal-loads-system-outdoor-air-per-area-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2330,11 +2330,11 @@
           "scenarios": [
             {
               "id": "create-zone-equipment-adds-a-baseboard",
-              "directoryName": "✅️adds-a-baseboard"
+              "directoryName": "✅️adds"
             },
             {
               "id": "create-zone-equipment-refuses-rank-zero",
-              "directoryName": "⛔️refuses-rank-zero"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2345,11 +2345,11 @@
           "scenarios": [
             {
               "id": "delete-zone-equipment-drops-the-baseboard",
-              "directoryName": "✅️drops-the-baseboard"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-zone-equipment-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2360,11 +2360,11 @@
           "scenarios": [
             {
               "id": "change-zone-equipment-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-zone-equipment-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2375,18 +2375,18 @@
           "scenarios": [
             {
               "id": "change-zone-equipment-type-swaps-to-a-fan-coil",
-              "directoryName": "✅️swaps-to-a-fan-coil"
+              "directoryName": "✅️swaps"
             },
             {
               "id": "change-zone-equipment-type-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-zone-equipment-priority",
-          "sourceMutationDirectoryName": "🎗️change-zone-equipment-priority",
-          "mutationDirectoryName": "🎗️change-zone-equipment-priority",
+          "sourceMutationDirectoryName": "🎗️change-zone-equipment",
+          "mutationDirectoryName": "🎗️change-zone-equipment",
           "scenarios": [
             {
               "id": "change-zone-equipment-priority-demotes-it",
@@ -2394,37 +2394,37 @@
             },
             {
               "id": "change-zone-equipment-priority-refuses-rank-zero",
-              "directoryName": "⛔️refuses-rank-zero"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-zone-equipment-heating-capacity",
-          "sourceMutationDirectoryName": "🧇️change-zone-equipment-heating-capacity",
-          "mutationDirectoryName": "🧇️change-zone-equipment-heating-capacity",
+          "sourceMutationDirectoryName": "🧇️change-zone-equipment",
+          "mutationDirectoryName": "🧇️change-zone-equipment",
           "scenarios": [
             {
               "id": "change-zone-equipment-heating-capacity-uprates-heating",
-              "directoryName": "✅️uprates-heating"
+              "directoryName": "✅️uprates"
             },
             {
               "id": "change-zone-equipment-heating-capacity-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-zone-equipment-cooling-capacity",
-          "sourceMutationDirectoryName": "🍧️change-zone-equipment-cooling-capacity",
-          "mutationDirectoryName": "🍧️change-zone-equipment-cooling-capacity",
+          "sourceMutationDirectoryName": "🍧️change-zone-equipment",
+          "mutationDirectoryName": "🍧️change-zone-equipment",
           "scenarios": [
             {
               "id": "change-zone-equipment-cooling-capacity-uprates-cooling",
-              "directoryName": "✅️uprates-cooling"
+              "directoryName": "✅️uprates"
             },
             {
               "id": "change-zone-equipment-cooling-capacity-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2435,11 +2435,11 @@
           "scenarios": [
             {
               "id": "create-daylight-zone-lights-zone-one",
-              "directoryName": "✅️lights-zone-one"
+              "directoryName": "✅️lights"
             },
             {
               "id": "create-daylight-zone-refuses-a-bad-tau",
-              "directoryName": "⛔️refuses-a-bad-tau"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2450,11 +2450,11 @@
           "scenarios": [
             {
               "id": "delete-daylight-zone-darkens-the-zone",
-              "directoryName": "✅️darkens-the-zone"
+              "directoryName": "✅️darkens"
             },
             {
               "id": "delete-daylight-zone-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2465,56 +2465,56 @@
           "scenarios": [
             {
               "id": "change-daylight-zone-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-daylight-zone-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-daylight-zone-illuminance-target",
-          "sourceMutationDirectoryName": "🪔️change-daylight-zone-illuminance-target",
-          "mutationDirectoryName": "🪔️change-daylight-zone-illuminance-target",
+          "sourceMutationDirectoryName": "🪔️change-daylight-zone",
+          "mutationDirectoryName": "🪔️change-daylight-zone",
           "scenarios": [
             {
               "id": "change-daylight-zone-illuminance-target-dims-the-target",
-              "directoryName": "✅️dims-the-target"
+              "directoryName": "✅️dims"
             },
             {
               "id": "change-daylight-zone-illuminance-target-refuses-a-dark-target",
-              "directoryName": "⛔️refuses-a-dark-target"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-daylight-zone-glare-limit",
-          "sourceMutationDirectoryName": "🕶️change-daylight-zone-glare-limit",
-          "mutationDirectoryName": "🕶️change-daylight-zone-glare-limit",
+          "sourceMutationDirectoryName": "🕶️change-daylight-zone",
+          "mutationDirectoryName": "🕶️change-daylight-zone",
           "scenarios": [
             {
               "id": "change-daylight-zone-glare-limit-tightens-glare",
-              "directoryName": "✅️tightens-glare"
+              "directoryName": "✅️tightens"
             },
             {
               "id": "change-daylight-zone-glare-limit-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-daylight-zone-window-transmittance",
-          "sourceMutationDirectoryName": "🥃️change-daylight-zone-window-transmittance",
-          "mutationDirectoryName": "🥃️change-daylight-zone-window-transmittance",
+          "sourceMutationDirectoryName": "🥃️change-daylight-zone",
+          "mutationDirectoryName": "🥃️change-daylight-zone",
           "scenarios": [
             {
               "id": "change-daylight-zone-window-transmittance-darkens-the-glass",
-              "directoryName": "✅️darkens-the-glass"
+              "directoryName": "✅️darkens"
             },
             {
               "id": "change-daylight-zone-window-transmittance-refuses-a-bad-tau",
-              "directoryName": "⛔️refuses-a-bad-tau"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2525,11 +2525,11 @@
           "scenarios": [
             {
               "id": "create-sizing-object-sizes-zone-one",
-              "directoryName": "✅️sizes-zone-one"
+              "directoryName": "✅️sizes"
             },
             {
               "id": "create-sizing-object-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2540,11 +2540,11 @@
           "scenarios": [
             {
               "id": "delete-sizing-object-drops-the-sizing",
-              "directoryName": "✅️drops-the-sizing"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-sizing-object-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2555,63 +2555,63 @@
           "scenarios": [
             {
               "id": "change-sizing-object-zone-moves-to-zone-two",
-              "directoryName": "✅️moves-to-zone-two"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-sizing-object-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-sizing-object-sizing-type",
-          "sourceMutationDirectoryName": "🧾️change-sizing-object-sizing-type",
-          "mutationDirectoryName": "🧾️change-sizing-object-sizing-type",
+          "sourceMutationDirectoryName": "🧾️change-sizing-object",
+          "mutationDirectoryName": "🧾️change-sizing-object",
           "scenarios": [
             {
               "id": "change-sizing-object-sizing-type-sizes-for-cooling",
-              "directoryName": "✅️sizes-for-cooling"
+              "directoryName": "✅️sizes"
             },
             {
               "id": "change-sizing-object-sizing-type-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-sizing-object-design-day-type",
-          "sourceMutationDirectoryName": "🌥️change-sizing-object-design-day-type",
-          "mutationDirectoryName": "🌥️change-sizing-object-design-day-type",
+          "sourceMutationDirectoryName": "🌥️change-sizing-object",
+          "mutationDirectoryName": "🌥️change-sizing-object",
           "scenarios": [
             {
               "id": "change-sizing-object-design-day-type-reads-a-hot-day",
-              "directoryName": "✅️reads-a-hot-day"
+              "directoryName": "✅️reads"
             },
             {
               "id": "change-sizing-object-design-day-type-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "create-room-air-model-assignment",
-          "sourceMutationDirectoryName": "🛏️create-room-air-model-assignment",
-          "mutationDirectoryName": "🛏️create-room-air-model-assignment",
+          "sourceMutationDirectoryName": "🛏️create-room-air-model",
+          "mutationDirectoryName": "🛏️create-room-air-model",
           "scenarios": [
             {
               "id": "create-room-air-model-assignment-stratifies-zone-two",
-              "directoryName": "✅️stratifies-zone-two"
+              "directoryName": "✅️stratifies"
             },
             {
               "id": "create-room-air-model-assignment-refuses-a-second-one",
-              "directoryName": "⛔️refuses-a-second-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "delete-room-air-model-assignment",
-          "sourceMutationDirectoryName": "🧺️delete-room-air-model-assignment",
-          "mutationDirectoryName": "🧺️delete-room-air-model-assignment",
+          "sourceMutationDirectoryName": "🧺️delete-room-air-model",
+          "mutationDirectoryName": "🧺️delete-room-air-model",
           "scenarios": [
             {
               "id": "delete-room-air-model-assignment-falls-back",
@@ -2619,7 +2619,7 @@
             },
             {
               "id": "delete-room-air-model-assignment-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2630,11 +2630,11 @@
           "scenarios": [
             {
               "id": "change-room-air-model-stratifies-the-air",
-              "directoryName": "✅️stratifies-the-air"
+              "directoryName": "✅️stratifies"
             },
             {
               "id": "change-room-air-model-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2645,11 +2645,11 @@
           "scenarios": [
             {
               "id": "create-setpoint-manager-adds-a-scheduled-spm",
-              "directoryName": "✅️adds-a-scheduled-spm"
+              "directoryName": "✅️adds"
             },
             {
               "id": "create-setpoint-manager-refuses-a-bad-kind",
-              "directoryName": "⛔️refuses-a-bad-kind"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2660,11 +2660,11 @@
           "scenarios": [
             {
               "id": "delete-setpoint-manager-drops-the-spm",
-              "directoryName": "✅️drops-the-spm"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-setpoint-manager-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2675,41 +2675,41 @@
           "scenarios": [
             {
               "id": "rename-setpoint-manager-renames-the-spm",
-              "directoryName": "✅️renames-the-spm"
+              "directoryName": "✅️renames"
             },
             {
               "id": "rename-setpoint-manager-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "replace-setpoint-manager-kind",
-          "sourceMutationDirectoryName": "🔃️replace-setpoint-manager-kind",
-          "mutationDirectoryName": "🔃️replace-setpoint-manager-kind",
+          "sourceMutationDirectoryName": "🔃️replace-setpoint-manager",
+          "mutationDirectoryName": "🔃️replace-setpoint-manager",
           "scenarios": [
             {
               "id": "replace-setpoint-manager-kind-resets-on-outdoor-air",
-              "directoryName": "✅️resets-on-outdoor-air"
+              "directoryName": "✅️resets"
             },
             {
               "id": "replace-setpoint-manager-kind-refuses-stray-limits",
-              "directoryName": "⛔️refuses-stray-limits"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-setpoint-manager-schedule",
-          "sourceMutationDirectoryName": "🎼️change-setpoint-manager-schedule",
-          "mutationDirectoryName": "🎼️change-setpoint-manager-schedule",
+          "sourceMutationDirectoryName": "🎼️change-setpoint-manager",
+          "mutationDirectoryName": "🎼️change-setpoint-manager",
           "scenarios": [
             {
               "id": "change-setpoint-manager-schedule-repoints-the-spm",
-              "directoryName": "✅️repoints-the-spm"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-setpoint-manager-schedule-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2724,7 +2724,7 @@
             },
             {
               "id": "create-air-loop-refuses-a-jumbled-list",
-              "directoryName": "⛔️refuses-a-jumbled-list"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2739,7 +2739,7 @@
             },
             {
               "id": "delete-air-loop-refuses-a-served-loop",
-              "directoryName": "⛔️refuses-a-served-loop"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2754,52 +2754,52 @@
             },
             {
               "id": "rename-air-loop-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-air-loop-supply-node",
-          "sourceMutationDirectoryName": "↗️change-air-loop-supply-node",
-          "mutationDirectoryName": "↗️change-air-loop-supply-node",
+          "sourceMutationDirectoryName": "↗️change-air-loop-supply",
+          "mutationDirectoryName": "↗️change-air-loop-supply",
           "scenarios": [
             {
               "id": "change-air-loop-supply-node-repoints-supply",
-              "directoryName": "✅️repoints-supply"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-air-loop-supply-node-refuses-node-zero",
-              "directoryName": "⛔️refuses-node-zero"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-air-loop-return-node",
-          "sourceMutationDirectoryName": "↘️change-air-loop-return-node",
-          "mutationDirectoryName": "↘️change-air-loop-return-node",
+          "sourceMutationDirectoryName": "↘️change-air-loop-return",
+          "mutationDirectoryName": "↘️change-air-loop-return",
           "scenarios": [
             {
               "id": "change-air-loop-return-node-repoints-return",
-              "directoryName": "✅️repoints-return"
+              "directoryName": "✅️repoints"
             },
             {
               "id": "change-air-loop-return-node-refuses-node-zero",
-              "directoryName": "⛔️refuses-node-zero"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-air-loop-design-supply-air-flow",
-          "sourceMutationDirectoryName": "🍥️change-air-loop-design-supply-air-flow",
-          "mutationDirectoryName": "🍥️change-air-loop-design-supply-air-flow",
+          "sourceMutationDirectoryName": "🍥️change-air-loop-design",
+          "mutationDirectoryName": "🍥️change-air-loop-design",
           "scenarios": [
             {
               "id": "change-air-loop-design-supply-air-flow-uprates-the-flow",
-              "directoryName": "✅️uprates-the-flow"
+              "directoryName": "✅️uprates"
             },
             {
               "id": "change-air-loop-design-supply-air-flow-refuses-no-flow",
-              "directoryName": "⛔️refuses-no-flow"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2810,26 +2810,26 @@
           "scenarios": [
             {
               "id": "add-air-loop-terminal-zone-serves-zone-two",
-              "directoryName": "✅️serves-zone-two"
+              "directoryName": "✅️serves"
             },
             {
               "id": "add-air-loop-terminal-zone-refuses-an-absent-zone",
-              "directoryName": "⛔️refuses-an-absent-zone"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "remove-air-loop-terminal-zone",
-          "sourceMutationDirectoryName": "🪹️remove-air-loop-terminal-zone",
-          "mutationDirectoryName": "🪹️remove-air-loop-terminal-zone",
+          "sourceMutationDirectoryName": "🪹️remove-air-loop-terminal",
+          "mutationDirectoryName": "🪹️remove-air-loop-terminal",
           "scenarios": [
             {
               "id": "remove-air-loop-terminal-zone-stops-serving-one",
-              "directoryName": "✅️stops-serving-one"
+              "directoryName": "✅️stops"
             },
             {
               "id": "remove-air-loop-terminal-zone-refuses-an-unserved",
-              "directoryName": "⛔️refuses-an-unserved"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2844,7 +2844,7 @@
             },
             {
               "id": "create-plant-loop-refuses-a-jumbled-list",
-              "directoryName": "⛔️refuses-a-jumbled-list"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2859,7 +2859,7 @@
             },
             {
               "id": "delete-plant-loop-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2874,7 +2874,7 @@
             },
             {
               "id": "rename-plant-loop-refuses-a-blank-name",
-              "directoryName": "⛔️refuses-a-blank-name"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2885,56 +2885,56 @@
           "scenarios": [
             {
               "id": "change-plant-loop-type-turns-it-chilled",
-              "directoryName": "✅️turns-it-chilled"
+              "directoryName": "✅️turns"
             },
             {
               "id": "change-plant-loop-type-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-plant-loop-supply-temperature",
-          "sourceMutationDirectoryName": "☕️change-plant-loop-supply-temperature",
-          "mutationDirectoryName": "☕️change-plant-loop-supply-temperature",
+          "sourceMutationDirectoryName": "☕️change-plant-loop-supply",
+          "mutationDirectoryName": "☕️change-plant-loop-supply",
           "scenarios": [
             {
               "id": "change-plant-loop-supply-temperature-cools-the-supply",
-              "directoryName": "✅️cools-the-supply"
+              "directoryName": "✅️cools"
             },
             {
               "id": "change-plant-loop-supply-temperature-refuses-a-hot-supply",
-              "directoryName": "⛔️refuses-a-hot-supply"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-plant-loop-return-temperature",
-          "sourceMutationDirectoryName": "🫖️change-plant-loop-return-temperature",
-          "mutationDirectoryName": "🫖️change-plant-loop-return-temperature",
+          "sourceMutationDirectoryName": "🫖️change-plant-loop-return",
+          "mutationDirectoryName": "🫖️change-plant-loop-return",
           "scenarios": [
             {
               "id": "change-plant-loop-return-temperature-cools-the-return",
-              "directoryName": "✅️cools-the-return"
+              "directoryName": "✅️cools"
             },
             {
               "id": "change-plant-loop-return-temperature-refuses-a-cold-return",
-              "directoryName": "⛔️refuses-a-cold-return"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-plant-loop-design-flow",
-          "sourceMutationDirectoryName": "🚤️change-plant-loop-design-flow",
-          "mutationDirectoryName": "🚤️change-plant-loop-design-flow",
+          "sourceMutationDirectoryName": "🚤️change-plant-loop-design",
+          "mutationDirectoryName": "🚤️change-plant-loop-design",
           "scenarios": [
             {
               "id": "change-plant-loop-design-flow-uprates-the-flow",
-              "directoryName": "✅️uprates-the-flow"
+              "directoryName": "✅️uprates"
             },
             {
               "id": "change-plant-loop-design-flow-refuses-no-flow",
-              "directoryName": "⛔️refuses-no-flow"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2945,11 +2945,11 @@
           "scenarios": [
             {
               "id": "add-plant-loop-equipment-names-equipment",
-              "directoryName": "✅️names-equipment"
+              "directoryName": "✅️names"
             },
             {
               "id": "add-plant-loop-equipment-refuses-the-unset-id",
-              "directoryName": "⛔️refuses-the-unset-id"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2960,26 +2960,26 @@
           "scenarios": [
             {
               "id": "remove-plant-loop-equipment-drops-equipment",
-              "directoryName": "✅️drops-equipment"
+              "directoryName": "✅️drops"
             },
             {
               "id": "remove-plant-loop-equipment-refuses-an-unlisted",
-              "directoryName": "⛔️refuses-an-unlisted"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "create-outdoor-air-system",
-          "sourceMutationDirectoryName": "🌲️create-outdoor-air-system",
-          "mutationDirectoryName": "🌲️create-outdoor-air-system",
+          "sourceMutationDirectoryName": "🌲️create-outdoor-air",
+          "mutationDirectoryName": "🌲️create-outdoor-air",
           "scenarios": [
             {
               "id": "create-outdoor-air-system-ventilates-the-loop",
-              "directoryName": "✅️ventilates-the-loop"
+              "directoryName": "✅️ventilates"
             },
             {
               "id": "create-outdoor-air-system-refuses-an-absent-loop",
-              "directoryName": "⛔️refuses-an-absent-loop"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
@@ -2990,63 +2990,63 @@
           "scenarios": [
             {
               "id": "delete-outdoor-air-system-drops-the-system",
-              "directoryName": "✅️drops-the-system"
+              "directoryName": "✅️drops"
             },
             {
               "id": "delete-outdoor-air-system-refuses-an-absent-one",
-              "directoryName": "⛔️refuses-an-absent-one"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-outdoor-air-system-air-loop",
-          "sourceMutationDirectoryName": "⛓️change-outdoor-air-system-air-loop",
-          "mutationDirectoryName": "⛓️change-outdoor-air-system-air-loop",
+          "sourceMutationDirectoryName": "⛓️change-outdoor-air-system",
+          "mutationDirectoryName": "⛓️change-outdoor-air-system",
           "scenarios": [
             {
               "id": "change-outdoor-air-system-air-loop-moves-to-the-spare",
-              "directoryName": "✅️moves-to-the-spare"
+              "directoryName": "✅️moves"
             },
             {
               "id": "change-outdoor-air-system-air-loop-refuses-an-absent-loop",
-              "directoryName": "⛔️refuses-an-absent-loop"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-outdoor-air-system-min-oa-flow",
-          "sourceMutationDirectoryName": "🦋️change-outdoor-air-system-min-oa-flow",
-          "mutationDirectoryName": "🦋️change-outdoor-air-system-min-oa-flow",
+          "sourceMutationDirectoryName": "🦋️change-outdoor-air-system",
+          "mutationDirectoryName": "🦋️change-outdoor-air-system",
           "scenarios": [
             {
               "id": "change-outdoor-air-system-min-oa-flow-raises-the-minimum",
-              "directoryName": "✅️raises-the-minimum"
+              "directoryName": "✅️raises"
             },
             {
               "id": "change-outdoor-air-system-min-oa-flow-refuses-a-negative",
-              "directoryName": "⛔️refuses-a-negative"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-outdoor-air-system-economizer-enabled",
-          "sourceMutationDirectoryName": "💰️change-outdoor-air-system-economizer-enabled",
-          "mutationDirectoryName": "💰️change-outdoor-air-system-economizer-enabled",
+          "sourceMutationDirectoryName": "💰️change-outdoor-air-system",
+          "mutationDirectoryName": "💰️change-outdoor-air-system",
           "scenarios": [
             {
               "id": "change-outdoor-air-system-economizer-enabled-frees-the-cooling",
-              "directoryName": "✅️frees-the-cooling"
+              "directoryName": "✅️frees"
             },
             {
               "id": "change-outdoor-air-system-economizer-enabled-refuses-an-absent-row",
-              "directoryName": "⛔️refuses-an-absent-row"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "create-electrical-load-center",
-          "sourceMutationDirectoryName": "🏦️create-electrical-load-center",
-          "mutationDirectoryName": "🏦️create-electrical-load-center",
+          "sourceMutationDirectoryName": "🏦️create-electrical-load",
+          "mutationDirectoryName": "🏦️create-electrical-load",
           "scenarios": [
             {
               "id": "create-electrical-load-center-applies",
@@ -3060,8 +3060,8 @@
         },
         {
           "mutationId": "delete-electrical-load-center",
-          "sourceMutationDirectoryName": "🔻️delete-electrical-load-center",
-          "mutationDirectoryName": "🔻️delete-electrical-load-center",
+          "sourceMutationDirectoryName": "🔻️delete-electrical-load",
+          "mutationDirectoryName": "🔻️delete-electrical-load",
           "scenarios": [
             {
               "id": "delete-electrical-load-center-applies",
@@ -3075,8 +3075,8 @@
         },
         {
           "mutationId": "rename-electrical-load-center",
-          "sourceMutationDirectoryName": "🖊️rename-electrical-load-center",
-          "mutationDirectoryName": "🖊️rename-electrical-load-center",
+          "sourceMutationDirectoryName": "🖊️rename-electrical-load",
+          "mutationDirectoryName": "🖊️rename-electrical-load",
           "scenarios": [
             {
               "id": "rename-electrical-load-center-applies",
@@ -3090,8 +3090,8 @@
         },
         {
           "mutationId": "add-electrical-load-center-pv",
-          "sourceMutationDirectoryName": "☄️add-electrical-load-center-pv",
-          "mutationDirectoryName": "☄️add-electrical-load-center-pv",
+          "sourceMutationDirectoryName": "☄️add-electrical-load-center",
+          "mutationDirectoryName": "☄️add-electrical-load-center",
           "scenarios": [
             {
               "id": "add-electrical-load-center-pv-applies",
@@ -3105,8 +3105,8 @@
         },
         {
           "mutationId": "remove-electrical-load-center-pv",
-          "sourceMutationDirectoryName": "🌘️remove-electrical-load-center-pv",
-          "mutationDirectoryName": "🌘️remove-electrical-load-center-pv",
+          "sourceMutationDirectoryName": "🌘️remove-electrical-load",
+          "mutationDirectoryName": "🌘️remove-electrical-load",
           "scenarios": [
             {
               "id": "remove-electrical-load-center-pv-applies",
@@ -3120,8 +3120,8 @@
         },
         {
           "mutationId": "add-electrical-load-center-battery",
-          "sourceMutationDirectoryName": "🔋️add-electrical-load-center-battery",
-          "mutationDirectoryName": "🔋️add-electrical-load-center-battery",
+          "sourceMutationDirectoryName": "🔋️add-electrical-load-center",
+          "mutationDirectoryName": "🔋️add-electrical-load-center",
           "scenarios": [
             {
               "id": "add-electrical-load-center-battery-applies",
@@ -3135,8 +3135,8 @@
         },
         {
           "mutationId": "remove-electrical-load-center-battery",
-          "sourceMutationDirectoryName": "🪝️remove-electrical-load-center-battery",
-          "mutationDirectoryName": "🪝️remove-electrical-load-center-battery",
+          "sourceMutationDirectoryName": "🪝️remove-electrical-load",
+          "mutationDirectoryName": "🪝️remove-electrical-load",
           "scenarios": [
             {
               "id": "remove-electrical-load-center-battery-applies",
@@ -3180,8 +3180,8 @@
         },
         {
           "mutationId": "change-pv-system-dc-capacity",
-          "sourceMutationDirectoryName": "⚛️change-pv-system-dc-capacity",
-          "mutationDirectoryName": "⚛️change-pv-system-dc-capacity",
+          "sourceMutationDirectoryName": "⚛️change-pv-system-dc",
+          "mutationDirectoryName": "⚛️change-pv-system-dc",
           "scenarios": [
             {
               "id": "change-pv-system-dc-capacity-applies",
@@ -3240,8 +3240,8 @@
         },
         {
           "mutationId": "change-pv-system-module-efficiency",
-          "sourceMutationDirectoryName": "🎖️change-pv-system-module-efficiency",
-          "mutationDirectoryName": "🎖️change-pv-system-module-efficiency",
+          "sourceMutationDirectoryName": "🎖️change-pv-system-module",
+          "mutationDirectoryName": "🎖️change-pv-system-module",
           "scenarios": [
             {
               "id": "change-pv-system-module-efficiency-applies",
@@ -3255,8 +3255,8 @@
         },
         {
           "mutationId": "change-pv-system-inverter-efficiency",
-          "sourceMutationDirectoryName": "♌️change-pv-system-inverter-efficiency",
-          "mutationDirectoryName": "♌️change-pv-system-inverter-efficiency",
+          "sourceMutationDirectoryName": "♌️change-pv-system-inverter",
+          "mutationDirectoryName": "♌️change-pv-system-inverter",
           "scenarios": [
             {
               "id": "change-pv-system-inverter-efficiency-applies",
@@ -3330,8 +3330,8 @@
         },
         {
           "mutationId": "change-battery-max-discharge",
-          "sourceMutationDirectoryName": "⏬️change-battery-max-discharge",
-          "mutationDirectoryName": "⏬️change-battery-max-discharge",
+          "sourceMutationDirectoryName": "⏬️change-battery-max",
+          "mutationDirectoryName": "⏬️change-battery-max",
           "scenarios": [
             {
               "id": "change-battery-max-discharge-applies",
@@ -3345,8 +3345,8 @@
         },
         {
           "mutationId": "change-battery-round-trip-efficiency",
-          "sourceMutationDirectoryName": "🥉️change-battery-round-trip-efficiency",
-          "mutationDirectoryName": "🥉️change-battery-round-trip-efficiency",
+          "sourceMutationDirectoryName": "🥉️change-battery-round-trip",
+          "mutationDirectoryName": "🥉️change-battery-round-trip",
           "scenarios": [
             {
               "id": "change-battery-round-trip-efficiency-applies",
@@ -3390,8 +3390,8 @@
         },
         {
           "mutationId": "change-shw-system-heater-capacity",
-          "sourceMutationDirectoryName": "🍵️change-shw-system-heater-capacity",
-          "mutationDirectoryName": "🍵️change-shw-system-heater-capacity",
+          "sourceMutationDirectoryName": "🍵️change-shw-system-heater",
+          "mutationDirectoryName": "🍵️change-shw-system-heater",
           "scenarios": [
             {
               "id": "change-shw-system-heater-capacity-applies",
@@ -3405,8 +3405,8 @@
         },
         {
           "mutationId": "change-shw-system-storage-volume",
-          "sourceMutationDirectoryName": "🛢️change-shw-system-storage-volume",
-          "mutationDirectoryName": "🛢️change-shw-system-storage-volume",
+          "sourceMutationDirectoryName": "🛢️change-shw-system-storage",
+          "mutationDirectoryName": "🛢️change-shw-system-storage",
           "scenarios": [
             {
               "id": "change-shw-system-storage-volume-applies",
@@ -3450,8 +3450,8 @@
         },
         {
           "mutationId": "create-solar-thermal-system",
-          "sourceMutationDirectoryName": "🌄️create-solar-thermal-system",
-          "mutationDirectoryName": "🌄️create-solar-thermal-system",
+          "sourceMutationDirectoryName": "🌄️create-solar-thermal",
+          "mutationDirectoryName": "🌄️create-solar-thermal",
           "scenarios": [
             {
               "id": "create-solar-thermal-system-applies",
@@ -3465,8 +3465,8 @@
         },
         {
           "mutationId": "delete-solar-thermal-system",
-          "sourceMutationDirectoryName": "🌆️delete-solar-thermal-system",
-          "mutationDirectoryName": "🌆️delete-solar-thermal-system",
+          "sourceMutationDirectoryName": "🌆️delete-solar-thermal",
+          "mutationDirectoryName": "🌆️delete-solar-thermal",
           "scenarios": [
             {
               "id": "delete-solar-thermal-system-applies",
@@ -3480,8 +3480,8 @@
         },
         {
           "mutationId": "change-solar-thermal-system-collector-area",
-          "sourceMutationDirectoryName": "🟩️change-solar-thermal-system-collector-area",
-          "mutationDirectoryName": "🟩️change-solar-thermal-system-collector-area",
+          "sourceMutationDirectoryName": "🟩️change-solar-thermal",
+          "mutationDirectoryName": "🟩️change-solar-thermal",
           "scenarios": [
             {
               "id": "change-solar-thermal-system-collector-area-applies",
@@ -3495,8 +3495,8 @@
         },
         {
           "mutationId": "change-solar-thermal-system-efficiency",
-          "sourceMutationDirectoryName": "🏅️change-solar-thermal-system-efficiency",
-          "mutationDirectoryName": "🏅️change-solar-thermal-system-efficiency",
+          "sourceMutationDirectoryName": "🏅️change-solar-thermal",
+          "mutationDirectoryName": "🏅️change-solar-thermal",
           "scenarios": [
             {
               "id": "change-solar-thermal-system-efficiency-applies",
@@ -3510,8 +3510,8 @@
         },
         {
           "mutationId": "change-solar-thermal-system-storage-volume",
-          "sourceMutationDirectoryName": "🧃️change-solar-thermal-system-storage-volume",
-          "mutationDirectoryName": "🧃️change-solar-thermal-system-storage-volume",
+          "sourceMutationDirectoryName": "🧃️change-solar-thermal",
+          "mutationDirectoryName": "🧃️change-solar-thermal",
           "scenarios": [
             {
               "id": "change-solar-thermal-system-storage-volume-applies",
@@ -3525,8 +3525,8 @@
         },
         {
           "mutationId": "change-solar-thermal-system-tilt",
-          "sourceMutationDirectoryName": "🔼️change-solar-thermal-system-tilt",
-          "mutationDirectoryName": "🔼️change-solar-thermal-system-tilt",
+          "sourceMutationDirectoryName": "🔼️change-solar-thermal",
+          "mutationDirectoryName": "🔼️change-solar-thermal",
           "scenarios": [
             {
               "id": "change-solar-thermal-system-tilt-applies",
@@ -3540,8 +3540,8 @@
         },
         {
           "mutationId": "change-solar-thermal-system-azimuth",
-          "sourceMutationDirectoryName": "⛵️change-solar-thermal-system-azimuth",
-          "mutationDirectoryName": "⛵️change-solar-thermal-system-azimuth",
+          "sourceMutationDirectoryName": "⛵️change-solar-thermal-system",
+          "mutationDirectoryName": "⛵️change-solar-thermal-system",
           "scenarios": [
             {
               "id": "change-solar-thermal-system-azimuth-applies",
@@ -3570,8 +3570,8 @@
         },
         {
           "mutationId": "delete-refrigeration-system",
-          "sourceMutationDirectoryName": "🫠️delete-refrigeration-system",
-          "mutationDirectoryName": "🫠️delete-refrigeration-system",
+          "sourceMutationDirectoryName": "🫠️delete-refrigeration",
+          "mutationDirectoryName": "🫠️delete-refrigeration",
           "scenarios": [
             {
               "id": "delete-refrigeration-system-applies",
@@ -3585,8 +3585,8 @@
         },
         {
           "mutationId": "change-refrigeration-system-case-count",
-          "sourceMutationDirectoryName": "🗄️change-refrigeration-system-case-count",
-          "mutationDirectoryName": "🗄️change-refrigeration-system-case-count",
+          "sourceMutationDirectoryName": "🗄️change-refrigeration",
+          "mutationDirectoryName": "🗄️change-refrigeration",
           "scenarios": [
             {
               "id": "change-refrigeration-system-case-count-applies",
@@ -3600,8 +3600,8 @@
         },
         {
           "mutationId": "change-refrigeration-system-design-load",
-          "sourceMutationDirectoryName": "🏋️change-refrigeration-system-design-load",
-          "mutationDirectoryName": "🏋️change-refrigeration-system-design-load",
+          "sourceMutationDirectoryName": "🏋️change-refrigeration",
+          "mutationDirectoryName": "🏋️change-refrigeration",
           "scenarios": [
             {
               "id": "change-refrigeration-system-design-load-applies",
@@ -3615,8 +3615,8 @@
         },
         {
           "mutationId": "change-refrigeration-system-defrost-schedule",
-          "sourceMutationDirectoryName": "🕑️change-refrigeration-system-defrost-schedule",
-          "mutationDirectoryName": "🕑️change-refrigeration-system-defrost-schedule",
+          "sourceMutationDirectoryName": "🕑️change-refrigeration",
+          "mutationDirectoryName": "🕑️change-refrigeration",
           "scenarios": [
             {
               "id": "change-refrigeration-system-defrost-schedule-applies",
@@ -3660,8 +3660,8 @@
         },
         {
           "mutationId": "change-water-system-fixture-count",
-          "sourceMutationDirectoryName": "🪣️change-water-system-fixture-count",
-          "mutationDirectoryName": "🪣️change-water-system-fixture-count",
+          "sourceMutationDirectoryName": "🪣️change-water-system",
+          "mutationDirectoryName": "🪣️change-water-system",
           "scenarios": [
             {
               "id": "change-water-system-fixture-count-applies",
@@ -3675,8 +3675,8 @@
         },
         {
           "mutationId": "change-water-system-peak-flow",
-          "sourceMutationDirectoryName": "🚾️change-water-system-peak-flow",
-          "mutationDirectoryName": "🚾️change-water-system-peak-flow",
+          "sourceMutationDirectoryName": "🚾️change-water-system-peak",
+          "mutationDirectoryName": "🚾️change-water-system-peak",
           "scenarios": [
             {
               "id": "change-water-system-peak-flow-applies",
@@ -3690,8 +3690,8 @@
         },
         {
           "mutationId": "change-water-system-schedule",
-          "sourceMutationDirectoryName": "🕒️change-water-system-schedule",
-          "mutationDirectoryName": "🕒️change-water-system-schedule",
+          "sourceMutationDirectoryName": "🕒️change-water-system",
+          "mutationDirectoryName": "🕒️change-water-system",
           "scenarios": [
             {
               "id": "change-water-system-schedule-applies",
@@ -3735,8 +3735,8 @@
         },
         {
           "mutationId": "change-fault-target-equipment",
-          "sourceMutationDirectoryName": "🎣️change-fault-target-equipment",
-          "mutationDirectoryName": "🎣️change-fault-target-equipment",
+          "sourceMutationDirectoryName": "🎣️change-fault-target",
+          "mutationDirectoryName": "🎣️change-fault-target",
           "scenarios": [
             {
               "id": "change-fault-target-equipment-applies",
@@ -3780,8 +3780,8 @@
         },
         {
           "mutationId": "change-fault-start-schedule",
-          "sourceMutationDirectoryName": "🕓️change-fault-start-schedule",
-          "mutationDirectoryName": "🕓️change-fault-start-schedule",
+          "sourceMutationDirectoryName": "🕓️change-fault-start",
+          "mutationDirectoryName": "🕓️change-fault-start",
           "scenarios": [
             {
               "id": "change-fault-start-schedule-applies",
@@ -3930,8 +3930,8 @@
         },
         {
           "mutationId": "remove-thermal-enclosure-zone",
-          "sourceMutationDirectoryName": "🔓️remove-thermal-enclosure-zone",
-          "mutationDirectoryName": "🔓️remove-thermal-enclosure-zone",
+          "sourceMutationDirectoryName": "🔓️remove-thermal-enclosure",
+          "mutationDirectoryName": "🔓️remove-thermal-enclosure",
           "scenarios": [
             {
               "id": "remove-thermal-enclosure-zone-applies",
@@ -3975,8 +3975,8 @@
         },
         {
           "mutationId": "change-constant-schedule-value",
-          "sourceMutationDirectoryName": "🕝️change-constant-schedule-value",
-          "mutationDirectoryName": "🕝️change-constant-schedule-value",
+          "sourceMutationDirectoryName": "🕝️change-constant-schedule",
+          "mutationDirectoryName": "🕝️change-constant-schedule",
           "scenarios": [
             {
               "id": "change-constant-schedule-value-applies",
@@ -4020,8 +4020,8 @@
         },
         {
           "mutationId": "replace-daily-schedule-hourly-values",
-          "sourceMutationDirectoryName": "🕔️replace-daily-schedule-hourly-values",
-          "mutationDirectoryName": "🕔️replace-daily-schedule-hourly-values",
+          "sourceMutationDirectoryName": "🕔️replace-daily-schedule",
+          "mutationDirectoryName": "🕔️replace-daily-schedule",
           "scenarios": [
             {
               "id": "replace-daily-schedule-hourly-values-applies",
@@ -4035,8 +4035,8 @@
         },
         {
           "mutationId": "change-daily-schedule-interpolation",
-          "sourceMutationDirectoryName": "🕕️change-daily-schedule-interpolation",
-          "mutationDirectoryName": "🕕️change-daily-schedule-interpolation",
+          "sourceMutationDirectoryName": "🕕️change-daily-schedule",
+          "mutationDirectoryName": "🕕️change-daily-schedule",
           "scenarios": [
             {
               "id": "change-daily-schedule-interpolation-applies",
@@ -4050,8 +4050,8 @@
         },
         {
           "mutationId": "change-daily-schedule-limits",
-          "sourceMutationDirectoryName": "🕟️change-daily-schedule-limits",
-          "mutationDirectoryName": "🕟️change-daily-schedule-limits",
+          "sourceMutationDirectoryName": "🕟️change-daily-schedule",
+          "mutationDirectoryName": "🕟️change-daily-schedule",
           "scenarios": [
             {
               "id": "change-daily-schedule-limits-applies",
@@ -4140,8 +4140,8 @@
         },
         {
           "mutationId": "insert-annual-schedule-rule",
-          "sourceMutationDirectoryName": "📗️insert-annual-schedule-rule",
-          "mutationDirectoryName": "📗️insert-annual-schedule-rule",
+          "sourceMutationDirectoryName": "📗️insert-annual-schedule",
+          "mutationDirectoryName": "📗️insert-annual-schedule",
           "scenarios": [
             {
               "id": "insert-annual-schedule-rule-applies",
@@ -4155,8 +4155,8 @@
         },
         {
           "mutationId": "remove-annual-schedule-rule",
-          "sourceMutationDirectoryName": "📙️remove-annual-schedule-rule",
-          "mutationDirectoryName": "📙️remove-annual-schedule-rule",
+          "sourceMutationDirectoryName": "📙️remove-annual-schedule",
+          "mutationDirectoryName": "📙️remove-annual-schedule",
           "scenarios": [
             {
               "id": "remove-annual-schedule-rule-applies",
@@ -4170,8 +4170,8 @@
         },
         {
           "mutationId": "reorder-annual-schedule-rules",
-          "sourceMutationDirectoryName": "🗂️reorder-annual-schedule-rules",
-          "mutationDirectoryName": "🗂️reorder-annual-schedule-rules",
+          "sourceMutationDirectoryName": "🗂️reorder-annual-schedule",
+          "mutationDirectoryName": "🗂️reorder-annual-schedule",
           "scenarios": [
             {
               "id": "reorder-annual-schedule-rules-applies",
@@ -4185,8 +4185,8 @@
         },
         {
           "mutationId": "change-annual-schedule-default-daily-schedule",
-          "sourceMutationDirectoryName": "🎌️change-annual-schedule-default-daily-schedule",
-          "mutationDirectoryName": "🎌️change-annual-schedule-default-daily-schedule",
+          "sourceMutationDirectoryName": "🎌️change-annual-schedule",
+          "mutationDirectoryName": "🎌️change-annual-schedule",
           "scenarios": [
             {
               "id": "change-annual-schedule-default-daily-schedule-applies",
@@ -4200,8 +4200,8 @@
         },
         {
           "mutationId": "change-annual-schedule-holiday-daily-schedule",
-          "sourceMutationDirectoryName": "🎄️change-annual-schedule-holiday-daily-schedule",
-          "mutationDirectoryName": "🎄️change-annual-schedule-holiday-daily-schedule",
+          "sourceMutationDirectoryName": "🎄️change-annual-schedule",
+          "mutationDirectoryName": "🎄️change-annual-schedule",
           "scenarios": [
             {
               "id": "change-annual-schedule-holiday-daily-schedule-applies",
@@ -4215,8 +4215,8 @@
         },
         {
           "mutationId": "add-annual-schedule-holiday",
-          "sourceMutationDirectoryName": "🎉️add-annual-schedule-holiday",
-          "mutationDirectoryName": "🎉️add-annual-schedule-holiday",
+          "sourceMutationDirectoryName": "🎉️add-annual-schedule",
+          "mutationDirectoryName": "🎉️add-annual-schedule",
           "scenarios": [
             {
               "id": "add-annual-schedule-holiday-applies",
@@ -4230,8 +4230,8 @@
         },
         {
           "mutationId": "remove-annual-schedule-holiday",
-          "sourceMutationDirectoryName": "🎊️remove-annual-schedule-holiday",
-          "mutationDirectoryName": "🎊️remove-annual-schedule-holiday",
+          "sourceMutationDirectoryName": "🎊️remove-annual-schedule",
+          "mutationDirectoryName": "🎊️remove-annual-schedule",
           "scenarios": [
             {
               "id": "remove-annual-schedule-holiday-applies",
@@ -4245,8 +4245,8 @@
         },
         {
           "mutationId": "create-time-series-schedule",
-          "sourceMutationDirectoryName": "🪗️create-time-series-schedule",
-          "mutationDirectoryName": "🪗️create-time-series-schedule",
+          "sourceMutationDirectoryName": "🪗️create-time-series",
+          "mutationDirectoryName": "🪗️create-time-series",
           "scenarios": [
             {
               "id": "create-time-series-schedule-applies",
@@ -4260,8 +4260,8 @@
         },
         {
           "mutationId": "delete-time-series-schedule",
-          "sourceMutationDirectoryName": "🎞️delete-time-series-schedule",
-          "mutationDirectoryName": "🎞️delete-time-series-schedule",
+          "sourceMutationDirectoryName": "🎞️delete-time-series",
+          "mutationDirectoryName": "🎞️delete-time-series",
           "scenarios": [
             {
               "id": "delete-time-series-schedule-applies",
@@ -4275,8 +4275,8 @@
         },
         {
           "mutationId": "replace-time-series-schedule-values",
-          "sourceMutationDirectoryName": "🕘️replace-time-series-schedule-values",
-          "mutationDirectoryName": "🕘️replace-time-series-schedule-values",
+          "sourceMutationDirectoryName": "🕘️replace-time-series",
+          "mutationDirectoryName": "🕘️replace-time-series",
           "scenarios": [
             {
               "id": "replace-time-series-schedule-values-applies",
@@ -4290,8 +4290,8 @@
         },
         {
           "mutationId": "change-time-series-schedule-timestep",
-          "sourceMutationDirectoryName": "🕙️change-time-series-schedule-timestep",
-          "mutationDirectoryName": "🕙️change-time-series-schedule-timestep",
+          "sourceMutationDirectoryName": "🕙️change-time-series",
+          "mutationDirectoryName": "🕙️change-time-series",
           "scenarios": [
             {
               "id": "change-time-series-schedule-timestep-applies",
@@ -4305,23 +4305,23 @@
         },
         {
           "mutationId": "replace-fenestration-vertices",
-          "sourceMutationDirectoryName": "🔶️replace-fenestration-vertices",
-          "mutationDirectoryName": "🔶️replace-fenestration-vertices",
+          "sourceMutationDirectoryName": "🔶️replace-fenestration",
+          "mutationDirectoryName": "🔶️replace-fenestration",
           "scenarios": [
             {
               "id": "replace-fenestration-vertices-shapes-a-gable",
-              "directoryName": "✅️shapes-a-gable"
+              "directoryName": "✅️shapes"
             },
             {
               "id": "replace-fenestration-vertices-refuses-a-line",
-              "directoryName": "⛔️refuses-a-line"
+              "directoryName": "⛔️refuses"
             }
           ]
         },
         {
           "mutationId": "change-glazing-material-thickness",
-          "sourceMutationDirectoryName": "🔷️change-glazing-material-thickness",
-          "mutationDirectoryName": "🔷️change-glazing-material-thickness",
+          "sourceMutationDirectoryName": "🔷️change-glazing-material",
+          "mutationDirectoryName": "🔷️change-glazing-material",
           "scenarios": [
             {
               "id": "change-glazing-material-thickness-applies",
@@ -4335,8 +4335,8 @@
         },
         {
           "mutationId": "change-glazing-material-conductivity",
-          "sourceMutationDirectoryName": "🟠️change-glazing-material-conductivity",
-          "mutationDirectoryName": "🟠️change-glazing-material-conductivity",
+          "sourceMutationDirectoryName": "🟠️change-glazing-material",
+          "mutationDirectoryName": "🟠️change-glazing-material",
           "scenarios": [
             {
               "id": "change-glazing-material-conductivity-applies",
@@ -4350,8 +4350,8 @@
         },
         {
           "mutationId": "change-glazing-material-solar-transmittance",
-          "sourceMutationDirectoryName": "🟡️change-glazing-material-solar-transmittance",
-          "mutationDirectoryName": "🟡️change-glazing-material-solar-transmittance",
+          "sourceMutationDirectoryName": "🟡️change-glazing-material",
+          "mutationDirectoryName": "🟡️change-glazing-material",
           "scenarios": [
             {
               "id": "change-glazing-material-solar-transmittance-applies",
@@ -4365,8 +4365,8 @@
         },
         {
           "mutationId": "change-glazing-material-visible-transmittance",
-          "sourceMutationDirectoryName": "🥽️change-glazing-material-visible-transmittance",
-          "mutationDirectoryName": "🥽️change-glazing-material-visible-transmittance",
+          "sourceMutationDirectoryName": "🥽️change-glazing-material",
+          "mutationDirectoryName": "🥽️change-glazing-material",
           "scenarios": [
             {
               "id": "change-glazing-material-visible-transmittance-applies",
@@ -4380,8 +4380,8 @@
         },
         {
           "mutationId": "change-glazing-material-infrared-emissivity",
-          "sourceMutationDirectoryName": "🩻️change-glazing-material-infrared-emissivity",
-          "mutationDirectoryName": "🩻️change-glazing-material-infrared-emissivity",
+          "sourceMutationDirectoryName": "🩻️change-glazing-material",
+          "mutationDirectoryName": "🩻️change-glazing-material",
           "scenarios": [
             {
               "id": "change-glazing-material-infrared-emissivity-applies",
@@ -4410,8 +4410,8 @@
         },
         {
           "mutationId": "change-gas-material-thickness",
-          "sourceMutationDirectoryName": "🟣️change-gas-material-thickness",
-          "mutationDirectoryName": "🟣️change-gas-material-thickness",
+          "sourceMutationDirectoryName": "🟣️change-gas-material",
+          "mutationDirectoryName": "🟣️change-gas-material",
           "scenarios": [
             {
               "id": "change-gas-material-thickness-applies",

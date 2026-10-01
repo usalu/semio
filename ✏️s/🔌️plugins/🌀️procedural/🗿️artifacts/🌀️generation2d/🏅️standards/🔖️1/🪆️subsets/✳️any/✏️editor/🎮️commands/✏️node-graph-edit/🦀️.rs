@@ -81,10 +81,20 @@ fn apply_operations(doc: &ArtifactView<'_, Generation2dSnapshot>, sub_operations
         return Emit { artifact_mutations: leaves, ui_scope, ..Default::default() };
     }
     leaves.extend(generation2d_node_drag_leaves(host_snapshot, &records));
+    let gesture = records.first().map_or(NODE_GRAPH_EDIT_VERB, |record| record.gesture_id.as_str());
+    generation2d_node_drag_emit(doc, NODE_GRAPH_EDIT_VERB, gesture, leaves)
+}
+
+/// 🪪️ The verb a node-graph tool transaction is scoped by: `<appId>#nodeGraphEdit`.
+pub const NODE_GRAPH_EDIT_VERB: &str = "nodeGraphEdit";
+
+/// 🛠️ ONE tool transaction of `leaves` through the ONE node-drag machine of `🛠️tool-machine` (design §13.3): the ref
+/// minted from the admission's authoring seed, the host clock and `<appId>#<verb>`, for the press `gesture`. A view
+/// without command authority publishes the leaves plainly; nothing yielded is the empty emit (zero trace).
+pub(crate) fn generation2d_node_drag_emit(doc: &ArtifactView<'_, Generation2dSnapshot>, verb: &str, gesture: &str, leaves: Vec<Generation2dMutation>) -> Emit<Generation2dMutation, Generation2dConfigMutation> {
     let authoring_seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
-    let gesture = records.first().map_or("nodeGraphEdit", |record| record.gesture_id.as_str());
     let clock = protocol::HybridLogicalTimestamp { actor: 0, physical_ms: semio_framework_job::default_now_ms().unwrap_or(0), logical: 0 };
-    match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation2d::GENERATION2D_PLAY_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, clock) {
+    match node_drag_commit(format!("{}#{verb}", crate::editor::generation2d::GENERATION2D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, clock) {
         Some((transaction, leaves)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
         Some((_, leaves)) => Emit::mutations(leaves),
         None => Emit::default(),

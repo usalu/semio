@@ -60,35 +60,35 @@ Feature: Apply every typed layout-document mutation to its committed specificati
     Then the resulting document is the committed after-document, the mutation moved it, and the two implementations agree
     Examples:
       | id                     | dir                     | fixture                                         |
-      | rename-layout          | ✏️rename-layout          | 🏷️renames-the-document                            |
-      | change-print-target    | 🖨️change-print-target    | 🖨️sets-a-cmyk-print-target                        |
-      | change-data-fields     | 🧾change-data-fields     | 🧾️attaches-a-data-fields-payload                  |
+      | rename-layout          | ✏️rename-layout          | 🏷️renames                            |
+      | change-print-target    | 🖨️change-print-target    | 🖨️sets                        |
+      | change-data-fields     | 🧾change-data-fields     | 🧾️attaches                  |
       | create-page            | 🌱create-page            | ➕️appends-page-3                                  |
       | delete-page            | 🗑️delete-page            | 🚫️removes-page-2                                  |
       | rename-page            | 🏷️rename-page            | 🏷️renames-page-1                                  |
       | change-page-width      | ↔️change-page-width      | ↔️widens-page-1                                   |
-      | change-page-height     | ↕️change-page-height     | ↕️lengthens-page-1                                |
-      | update-page-margins    | 📐update-page-margins    | 📐️sets-asymmetric-margins-on-page-1               |
-      | update-page-columns    | 🏛️update-page-columns    | 🏛️splits-page-1-into-three-columns                |
-      | reorder-pages          | 🔀reorder-pages          | 🔀️moves-page-1-behind-page-2                      |
+      | change-page-height     | ↕️change-page-height     | ↕️lengthens                                |
+      | update-page-margins    | 📐update-page-margins    | 📐️sets               |
+      | update-page-columns    | 🏛️update-page-columns    | 🏛️splits                |
+      | reorder-pages          | 🔀reorder-pages          | 🔀️moves                      |
       | create-story           | 📖create-story           | 📖️appends-story-3                                 |
       | delete-story           | 📕delete-story           | 🚫️removes-story-2                                 |
       | edit-story             | ✍️edit-story             | 📝️rewrites-story-1-body                           |
       | create-link            | 🖇️create-link            | 🔗️appends-link-3                                  |
       | delete-link            | ✂️delete-link            | 🔗️removes-link-2                                  |
-      | change-link-path       | 🛤️change-link-path       | 🔗️relinks-link-1-to-a-new-file                    |
-      | create-frame           | ➕create-frame           | 🔲️inserts-a-rect-frame-at-index-1                 |
-      | delete-frame           | ➖delete-frame           | 🚫️removes-the-text-frame-and-its-layer-membership |
+      | change-link-path       | 🛤️change-link-path       | 🔗️relinks                    |
+      | create-frame           | ➕create-frame           | 🔲️inserts                 |
+      | delete-frame           | ➖delete-frame           | 🚫️removes |
       | move-frame             | 🕹️move-frame             | 📍️moves-the-rect-frame                            |
-      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates-the-rect-frame                          |
+      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates                          |
       | resize-frame           | 📏resize-frame           | 📐️resizes-the-rect-frame                          |
-      | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints-the-rect-frame-fill                    |
-      | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |
-      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches-the-text-frame-to-column-wrap          |
-      | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits-the-text-frame-into-two-columns          |
+      | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints                    |
+      | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds                 |
+      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches          |
+      | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits          |
       | drag-frames            | ✋️drag-frames          | ✋️drags-both-frames                             |
-      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits-both-frames-a-quarter-turn             |
-      | scale-frames           | 🗜️scale-frames         | 🗜️doubles-both-frames-about-their-centroid      |
+      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits             |
+      | scale-frames           | 🗜️scale-frames         | 🗜️doubles      |
 
   @id-inverse
   @level-exhaustive
@@ -100,35 +100,35 @@ Feature: Apply every typed layout-document mutation to its committed specificati
     Then the document is the committed before-document again, member positions included, and the two implementations agree
     Examples:
       | id                     | dir                     | fixture                                         |
-      | rename-layout          | ✏️rename-layout          | 🏷️renames-the-document                            |
-      | change-print-target    | 🖨️change-print-target    | 🖨️sets-a-cmyk-print-target                        |
-      | change-data-fields     | 🧾change-data-fields     | 🧾️attaches-a-data-fields-payload                  |
+      | rename-layout          | ✏️rename-layout          | 🏷️renames                            |
+      | change-print-target    | 🖨️change-print-target    | 🖨️sets                        |
+      | change-data-fields     | 🧾change-data-fields     | 🧾️attaches                  |
       | create-page            | 🌱create-page            | ➕️appends-page-3                                  |
       | delete-page            | 🗑️delete-page            | 🚫️removes-page-2                                  |
       | rename-page            | 🏷️rename-page            | 🏷️renames-page-1                                  |
       | change-page-width      | ↔️change-page-width      | ↔️widens-page-1                                   |
-      | change-page-height     | ↕️change-page-height     | ↕️lengthens-page-1                                |
-      | update-page-margins    | 📐update-page-margins    | 📐️sets-asymmetric-margins-on-page-1               |
-      | update-page-columns    | 🏛️update-page-columns    | 🏛️splits-page-1-into-three-columns                |
-      | reorder-pages          | 🔀reorder-pages          | 🔀️moves-page-1-behind-page-2                      |
+      | change-page-height     | ↕️change-page-height     | ↕️lengthens                                |
+      | update-page-margins    | 📐update-page-margins    | 📐️sets               |
+      | update-page-columns    | 🏛️update-page-columns    | 🏛️splits                |
+      | reorder-pages          | 🔀reorder-pages          | 🔀️moves                      |
       | create-story           | 📖create-story           | 📖️appends-story-3                                 |
       | delete-story           | 📕delete-story           | 🚫️removes-story-2                                 |
       | edit-story             | ✍️edit-story             | 📝️rewrites-story-1-body                           |
       | create-link            | 🖇️create-link            | 🔗️appends-link-3                                  |
       | delete-link            | ✂️delete-link            | 🔗️removes-link-2                                  |
-      | change-link-path       | 🛤️change-link-path       | 🔗️relinks-link-1-to-a-new-file                    |
-      | create-frame           | ➕create-frame           | 🔲️inserts-a-rect-frame-at-index-1                 |
-      | delete-frame           | ➖delete-frame           | 🚫️removes-the-text-frame-and-its-layer-membership |
+      | change-link-path       | 🛤️change-link-path       | 🔗️relinks                    |
+      | create-frame           | ➕create-frame           | 🔲️inserts                 |
+      | delete-frame           | ➖delete-frame           | 🚫️removes |
       | move-frame             | 🕹️move-frame             | 📍️moves-the-rect-frame                            |
-      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates-the-rect-frame                          |
+      | rotate-frame           | 🔄️rotate-frame           | 🌀️rotates                          |
       | resize-frame           | 📏resize-frame           | 📐️resizes-the-rect-frame                          |
-      | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints-the-rect-frame-fill                    |
-      | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds-a-stroke-to-the-rect-frame                 |
-      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches-the-text-frame-to-column-wrap          |
-      | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits-the-text-frame-into-two-columns          |
+      | change-frame-fill      | 🎨change-frame-fill      | 🎨️repaints                    |
+      | change-frame-stroke    | 🖊️change-frame-stroke    | 🖊️adds                 |
+      | change-frame-wrap-mode | 🔤change-frame-wrap-mode | 🔤️switches          |
+      | change-frame-columns   | 🔢change-frame-columns   | 🔤️splits          |
       | drag-frames            | ✋️drag-frames          | ✋️drags-both-frames                             |
-      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits-both-frames-a-quarter-turn             |
-      | scale-frames           | 🗜️scale-frames         | 🗜️doubles-both-frames-about-their-centroid      |
+      | rotate-frames          | 🔃️rotate-frames        | 🔃️orbits             |
+      | scale-frames           | 🗜️scale-frames         | 🗜️doubles      |
 
   @id-identity-round-trip
   @level-long

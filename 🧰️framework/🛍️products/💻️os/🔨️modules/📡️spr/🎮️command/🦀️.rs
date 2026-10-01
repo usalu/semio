@@ -923,10 +923,48 @@ pub fn mutation_payload_round_trip_failures<P, M: Mutation<P>>(ops: Vec<M>) -> V
             if !breaches.is_empty() {
                 failures.push(breaches.join("; "));
             }
+        } else if let Ok(rebuilt) = op.with_payload_value(op.payload_value()) {
+            Mutation::<P>::retire_cold(rebuilt);
+            failures.push(format!("op {index} ({}): declares no input schema yet rebuilds from its payload — an editable leaf publishes its schema, an inert one refuses", op.descriptor().semantic_kind));
         }
         Mutation::<P>::retire_cold(op);
     }
     failures
+}
+
+/// 🧬️ The static editability roster of an aggregate (design §16.3): exactly one payload JSON Schema per leaf descriptor, each a
+/// JSON object, so every leaf publishes the inputs the history editor reads before any operation exists. One line per breach.
+pub fn mutation_input_schema_failures<P, M: Mutation<P>>() -> Vec<String> {
+    let mut failures = Vec::new();
+    if M::INPUT_SCHEMAS.len() != M::DESCRIPTORS.len() {
+        failures.push(format!("{} payload schema(s) for {} leaf descriptor(s)", M::INPUT_SCHEMAS.len(), M::DESCRIPTORS.len()));
+    }
+    for (descriptor, schema) in M::DESCRIPTORS.iter().zip(M::INPUT_SCHEMAS) {
+        let object = crate::os_pack::json::parse(schema).ok().is_some_and(|json| crate::os_pack::json::to_dsl_value(&json).as_object().is_some());
+        if !object {
+            failures.push(format!("{}: its payload schema is no JSON object", descriptor.semantic_kind));
+        }
+    }
+    failures
+}
+
+/// 🏷️ The localized-label law of an aggregate (design §16.2): every operation's `SemanticMutation::label` names it in every
+/// shell locale and terminology — no empty cell, so no history row lacks its German (or any other locale's) label. The
+/// static `schema mutation-labels` gate refuses a leaf whose label is locale-invariant data. One line per breach.
+pub fn mutation_label_failures<P, M: SemanticMutation<P>>(ops: &[M]) -> Vec<String> {
+    ops.iter()
+        .enumerate()
+        .filter_map(|(index, op)| {
+            let label = op.label();
+            let cells: Vec<String> = crate::Terminology::ALL
+                .into_iter()
+                .flat_map(|terminology| crate::Locale::ALL.into_iter().map(move |locale| (terminology, locale)))
+                .filter(|(terminology, locale)| label.resolve(*terminology, *locale).trim().is_empty())
+                .map(|(terminology, locale)| format!("{}/{}", terminology.as_str(), locale.as_str()))
+                .collect();
+            (!cells.is_empty()).then(|| format!("op {index} ({}): empty label cell(s) {}", op.semantics().kind, cells.join(", ")))
+        })
+        .collect()
 }
 
 /// 🧫️ Every committed mutation fixture under `root` that decodes as `M` — a `…/🦠️mutation/🔣️.json` document, or the

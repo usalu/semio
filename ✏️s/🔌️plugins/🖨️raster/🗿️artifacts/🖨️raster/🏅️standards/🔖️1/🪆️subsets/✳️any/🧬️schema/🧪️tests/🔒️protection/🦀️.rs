@@ -46,10 +46,10 @@ fn combined_patches_keep_the_last_protection_change() {
 #[test]
 fn lock_mutation_matches_the_committed_snapshot_and_canonical_diff() {
     use protocol::{Mutation,MutationDiff};
-    let before:RasterSnapshot=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/📸️snapshot/⬅️before/🔣️.json")).unwrap();
-    let expected:RasterSnapshot=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/📸️snapshot/➡️after/🔣️.json")).unwrap();
-    let operation:crate::RasterMutation=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/🦠️mutation/🔣️.json")).unwrap();
-    let diff_json=include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects-layer-content/🔺️diff/🔣️.json");
+    let before:RasterSnapshot=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/⬅️before/🔣️.json")).unwrap();
+    let expected:RasterSnapshot=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/📸️snapshot/➡️after/🔣️.json")).unwrap();
+    let operation:crate::RasterMutation=dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/🦠️mutation/🔣️.json")).unwrap();
+    let diff_json=include_str!("../../../🧫️fixtures/🧬️mutations/🔒️change-layer-locked/🔒️protects/🔺️diff/🔣️.json");
     let (diff,messages)=operation.diff(&before).into_parts();assert!(messages.is_empty());
     let encoded=dsl::json::from_dsl_value(&dsl::ToValue::to_value(&diff));let committed=dsl::json::parse(diff_json).unwrap();assert!(dsl::json::value_eq_ignoring_object_order(&encoded,&committed));
     let after=diff.apply(&before).unwrap();assert_eq!(after,expected);

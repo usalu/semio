@@ -40,7 +40,7 @@ const subset = join(here, "..");
 const fixtures = join(subset, "🧫️fixtures");
 const engine = join(here, "🔁️codec", "📦️packages", "🦀️rust");
 const FIXTURES = [
-  { kind: "change-stroke-color", directory: "🖌️change-stroke-color" },
+  { kind: "change-stroke-color", directory: "🖌️change-stroke" },
   { kind: "change-stroke-width", directory: "📐️change-stroke-width" },
   { kind: "create-layer", directory: "🌱️create-layer" },
   { kind: "create-node", directory: "➕️create-node" },

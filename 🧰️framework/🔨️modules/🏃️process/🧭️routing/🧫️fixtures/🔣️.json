@@ -1,0 +1,419 @@
+{
+  "cases": [
+    {
+      "id": "selected-owner-loads",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        }
+      ],
+      "requests": [
+        [
+          "future",
+          "one",
+          "two"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "load:future",
+          "run:future:one,two"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "absent-unselected-owner-is-independent",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        },
+        {
+          "id": "absent",
+          "mode": "lazy",
+          "refuse": true
+        }
+      ],
+      "requests": [
+        [
+          "future"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "load:future",
+          "run:future:"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "deleting-specific-owner-keeps-general-command",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        }
+      ],
+      "requests": [
+        [
+          "future"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "load:future",
+          "run:future:"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "selected-load-refusal-propagates",
+      "commands": [
+        {
+          "id": "absent",
+          "mode": "lazy",
+          "refuse": true
+        }
+      ],
+      "requests": [
+        [
+          "absent"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "load:absent"
+        ],
+        "rejected": true
+      }
+    },
+    {
+      "id": "unselected-owner-does-not-load",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        }
+      ],
+      "requests": [],
+      "parallel": false,
+      "expected": {
+        "trace": [],
+        "rejected": false
+      }
+    },
+    {
+      "id": "repeated-dispatch-loads-once",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        }
+      ],
+      "requests": [
+        [
+          "future",
+          "one"
+        ],
+        [
+          "future",
+          "two"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "load:future",
+          "run:future:one",
+          "run:future:two"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "concurrent-dispatch-coalesces-owner-load",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "lazy",
+          "refuse": false
+        }
+      ],
+      "requests": [
+        [
+          "future",
+          "one"
+        ],
+        [
+          "future",
+          "two"
+        ]
+      ],
+      "parallel": true,
+      "expected": {
+        "trace": [
+          "load:future",
+          "run:future:one",
+          "run:future:two"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "direct-command-keeps-owned-arguments",
+      "commands": [
+        {
+          "id": "future",
+          "mode": "eager",
+          "refuse": false
+        },
+        {
+          "id": "absent",
+          "mode": "lazy",
+          "refuse": true
+        }
+      ],
+      "requests": [
+        [
+          "future",
+          "one"
+        ]
+      ],
+      "parallel": false,
+      "expected": {
+        "trace": [
+          "run:future:one"
+        ],
+        "rejected": false
+      }
+    }
+  ],
+  "mainCases": [
+    {
+      "id": "default-command-selects-owned-handler",
+      "commands": [
+        "future"
+      ],
+      "argv": [],
+      "defaultCommand": "future",
+      "interception": "none",
+      "expected": {
+        "trace": [
+          "run:future:"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "explicit-command-precedes-default",
+      "commands": [
+        "future",
+        "another"
+      ],
+      "argv": [
+        "another",
+        "one"
+      ],
+      "defaultCommand": "future",
+      "interception": "none",
+      "expected": {
+        "trace": [
+          "run:another:one"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "contribution-consumes-before-command-resolution",
+      "commands": [],
+      "argv": [
+        "contribution",
+        "one"
+      ],
+      "defaultCommand": null,
+      "interception": "consume",
+      "expected": {
+        "trace": [
+          "intercept:contribution,one"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "contribution-passes-owned-arguments",
+      "commands": [
+        "future"
+      ],
+      "argv": [
+        "future",
+        "one"
+      ],
+      "defaultCommand": null,
+      "interception": "continue",
+      "expected": {
+        "trace": [
+          "intercept:future,one",
+          "run:future:one"
+        ],
+        "rejected": false
+      }
+    },
+    {
+      "id": "contribution-refusal-propagates",
+      "commands": [
+        "future"
+      ],
+      "argv": [
+        "future"
+      ],
+      "defaultCommand": null,
+      "interception": "refuse",
+      "expected": {
+        "trace": [
+          "intercept:future"
+        ],
+        "rejected": true
+      }
+    },
+    {
+      "id": "empty-registry-refuses",
+      "commands": [],
+      "argv": [],
+      "defaultCommand": null,
+      "interception": "none",
+      "expected": {
+        "trace": [],
+        "rejected": true
+      }
+    },
+    {
+      "id": "missing-command-refuses",
+      "commands": [
+        "future"
+      ],
+      "argv": [],
+      "defaultCommand": null,
+      "interception": "none",
+      "expected": {
+        "trace": [],
+        "rejected": true
+      }
+    },
+    {
+      "id": "unknown-command-refuses",
+      "commands": [
+        "future"
+      ],
+      "argv": [
+        "absent"
+      ],
+      "defaultCommand": null,
+      "interception": "none",
+      "expected": {
+        "trace": [],
+        "rejected": true
+      }
+    }
+  ],
+  "workspaceCases": [
+    {
+      "id": "paired-workspace-is-general",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "nx.json",
+            "package.json"
+          ]
+        }
+      ],
+      "expected": "root"
+    },
+    {
+      "id": "nearest-workspace-owns-command",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "nx.json",
+            "package.json"
+          ]
+        },
+        {
+          "directory": "root/package",
+          "files": [
+            "nx.json",
+            "package.json"
+          ]
+        }
+      ],
+      "expected": "root/package"
+    },
+    {
+      "id": "unpaired-nx-marker-is-insufficient",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "nx.json"
+          ]
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "unpaired-package-marker-is-insufficient",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "package.json"
+          ]
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "separate-marker-owners-cannot-compose",
+      "start": "root/package/topic",
+      "markers": [
+        {
+          "directory": "root",
+          "files": [
+            "nx.json"
+          ]
+        },
+        {
+          "directory": "root/package",
+          "files": [
+            "package.json"
+          ]
+        }
+      ],
+      "expected": null
+    },
+    {
+      "id": "absent-workspace-is-refused",
+      "start": "root/package/topic",
+      "markers": [],
+      "expected": null
+    }
+  ]
+}

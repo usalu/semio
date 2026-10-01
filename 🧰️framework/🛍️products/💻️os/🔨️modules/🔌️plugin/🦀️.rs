@@ -7287,6 +7287,10 @@ pub mod app {
     #[path = "🧪️tests/🧪️history-label-reload/🦀️.rs"]
     mod history_label_reload_tests;
 
+    #[cfg(test)]
+    #[path = "🧪️tests/🧪️composed-child-history/🦀️.rs"]
+    mod composed_child_history_tests;
+
     //#region 🔖️ArtifactAppLaws
     #[cfg(any(test, feature = "artifact-app-testing"))]
     pub mod artifact_app_laws {
@@ -9186,7 +9190,7 @@ pub mod app {
                 command,
                 &super::ArtifactView::new(snapshot, &history),
                 &super::ConfigView { snapshot: &config, window: None },
-                &super::InteractionView { state: &state, hover: &hover, peers: &peers },
+                &super::InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: super::empty_draft_references() },
                 None,
                 &super::DraftView { snapshot: &draft },
                 &store::EngineHandles::empty(),
@@ -9219,7 +9223,7 @@ pub mod app {
                 let state = protocol::InteractionState::default();
                 let hover = InteractionHoverState::new();
                 let peers = PeerPresenceRoot::empty();
-                let interaction = InteractionView { state: &state, hover: &hover, peers: &peers };
+                let interaction = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: super::empty_draft_references() };
                 ViewerApp::<V>::handle(&V::Command::default(), &doc, &cfg, &interaction, None, &draft, &store::EngineHandles::empty()).await.map(|emit| (emit.artifact_mutations.is_empty(), emit.draft_mutations.is_empty()))
             };
             close_registered_fixture_app(&mut app);
@@ -11392,6 +11396,12 @@ pub mod app {
         EMPTY.get_or_init(protocol::DomainHover::default)
     }
 
+    /// 🈳️ The draft references of a view no time-travel draft feeds — a dispatch, presence stamping, a viewer law.
+    pub(crate) fn empty_draft_references() -> &'static std::collections::BTreeMap<String, Vec<String>> {
+        static EMPTY: std::collections::BTreeMap<String, Vec<String>> = std::collections::BTreeMap::new();
+        &EMPTY
+    }
+
     /// 🧮️ The ONE flat projection of an `InteractionState`'s selection half: every domain's ids as a
     /// SET — each topology id at most once, in first-seen domain order. A selection is a set of
     /// topology ids, so the flattened publication must be one too: `overlay_leftover_ids_into_vortex`
@@ -11438,9 +11448,18 @@ pub mod app {
         /// `VcsArtifactApp::peer_presence`'s own doc comment. Sourced from `BTreeMap` iteration
         /// order, which is already sorted by actor.
         pub(crate) peers: &'a PeerPresenceRoot,
+        /// ⏪️ What the open time-travel draft references, per selection domain
+        /// ([`crate::time_travel::TimeTravelLedger::draft_references`]) — empty while no draft editor is open.
+        pub(crate) draft_references: &'a std::collections::BTreeMap<String, Vec<String>>,
     }
 
     impl<'a> InteractionView<'a> {
+        /// 🔗️ `domain`'s ids the open time-travel draft references — every id its `Reference` inputs of that domain
+        /// hold, so a render highlights what the edited mutation acts on; empty while no draft editor is open.
+        pub fn draft_references(&self, domain: &str) -> &[String] {
+            self.draft_references.get(domain).map_or(&[], Vec::as_slice)
+        }
+
         /// 🖱️ `domain`'s current selection — an empty `DomainSelection` (not `None`) for an undeclared
         /// or never-selected domain, so call sites never have to unwrap.
         pub fn selection(&self, domain: &str) -> &protocol::DomainSelection {
@@ -11594,6 +11613,22 @@ pub mod app {
         }
 
         fn inverse(&self, _base: &NoConfig) -> Vec<Self> {
+            match *self {}
+        }
+    }
+
+    /// 🕳️ The uninhabited lane has no kinds, so no operation of it is ever labelled.
+    impl protocol::SemanticMutation<NoConfig> for NoConfigMutation {
+        fn kinds() -> &'static [protocol::SemanticDescriptor] {
+            &[]
+        }
+        fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+            match *self {}
+        }
+        fn label(&self) -> LocalizedLabel {
+            match *self {}
+        }
+        fn target(&self) -> Vec<String> {
             match *self {}
         }
     }
@@ -11889,9 +11924,10 @@ pub mod app {
     }
 
     /// 🏷️ A backfilled edit row's label: the registry label of the verb that authored it, else the app's description,
-    /// else its first operation's text — the rule a live row records (see `authored_row_label`).
-    fn backfilled_edit_label<Mu: protocol::OpText>(edit: &protocol::Edit<Mu>, verb_label: Option<LocalizedLabel>) -> LocalizedLabel {
-        verb_label.or_else(|| edit.description.clone().map(LocalizedLabel::data)).unwrap_or_else(|| LocalizedLabel::data(edit.forwards.first().map_or_else(|| edit.id.clone(), |op| op.print_op())))
+    /// else its first operation's label `first` (a document leaf's localized `SemanticMutation::label`) — the rule a live
+    /// row records (see `authored_row_label`); an edit without operations is named by its id.
+    fn backfilled_edit_label<Mu>(edit: &protocol::Edit<Mu>, verb_label: Option<LocalizedLabel>, first: impl FnOnce(&Mu) -> LocalizedLabel) -> LocalizedLabel {
+        verb_label.or_else(|| edit.description.clone().map(LocalizedLabel::data)).unwrap_or_else(|| edit.forwards.first().map_or_else(|| LocalizedLabel::data(edit.id.clone()), first))
     }
 
     /// 🧾️ Inputs for one appended session command before its sequence and timestamp are assigned.
@@ -12041,17 +12077,20 @@ pub mod app {
         }
     }
 
-    /// 📜️ Checkpoint/alternative history summary exposed to apps — the swimlane columns, the
-    /// undo/redo availability, the current checkout position, and the merged command+operation timeline.
-    /// Built once per store generation.
+    /// 📜️ Checkpoint/alternative history summary for this viewer — the swimlane columns, the
+    /// undo/redo availability, this viewer's head, and the merged command+operation timeline.
+    /// `active_alternative_id` and `current_checkpoint_id` are this replica's head. `alternatives`
+    /// stays the shared registration. Built once per store generation.
     #[derive(Clone, Debug, PartialEq)]
     pub struct HistoryView {
         pub columns: Vec<HistoryColumn>,
         pub can_undo: bool,
         pub can_redo: bool,
+        /// 👁 The alternative this viewer is on. `None` is the canonical trunk.
         pub active_alternative_id: Option<String>,
         /// 🌿️ Every alternative of the artifact's history, in declaration order ([`history_alternative_views`]).
         pub alternatives: Vec<AlternativeView>,
+        /// 👁 The checkpoint this viewer is looking at: the tip of the active line, or an explicit checkout.
         pub current_checkpoint_id: Option<String>,
         /// 📜️ The session command log merged with live VCS op-text, newest first. Every edit in
         /// `envelope.vcs.edits` is referenced by exactly one entry (see `VcsArtifactApp::backfill_command_log`).
@@ -12412,11 +12451,15 @@ pub mod app {
         pub draft_mutations: Vec<DraftMutation>,
         pub description: Option<String>,
         pub coalesce_key: Option<String>,
-        /// 🛠️ The committed `ToolTransaction` that authored `artifact_mutations`: stamped on every published op as
+        /// 🛠️ The `ToolTransaction` that authored `artifact_mutations`: stamped on every published op as
         /// `MutationMeta.transaction`, so history lists the gesture as one row and edits its yielded mutations.
-        /// `None` outside a tool transaction; refused together with a `coalesce_key` or `child_emits` (one commit is
-        /// one plain edit). Build it with [`Emit::commit_transaction`].
+        /// `None` outside a tool transaction; refused together with a `coalesce_key`, and streamed or aborted only on the
+        /// app's own document ([`Self::transaction_phase`]). Build it with [`Emit::commit_transaction`],
+        /// [`Emit::stream_transaction`] or [`Emit::abort_transaction`].
         pub transaction: Option<protocol::TransactionRef>,
+        /// 🎞️ How `artifact_mutations` join `transaction` (design §15): committed as its one edit, streamed into its open
+        /// edit, or its open edit aborted.
+        pub transaction_phase: TransactionPhase,
         pub effects: Vec<Effect>,
         /// 🔁️ Zero-or-more extension capability invocations whose OUTCOME must come back to this app
         /// — see [`ExtensionInvocation`]. Deliberately NOT expressible through `effects`: the
@@ -12454,6 +12497,19 @@ pub mod app {
         pub tasks: Vec<AsyncTask<Mutation, ConfigMutation, DraftMutation>>,
     }
 
+    /// 🎞️ How an emission's artifact mutations join its tool transaction (design §15, transaction-scoped amend). `Commit`
+    /// records them as the transaction's one edit — closing the transaction's open edit when earlier ticks streamed into it.
+    /// `Stream` appends them to the transaction's open edit (the first tick opens it) and keeps it open: the store folds it
+    /// as its applied tail, but nothing is announced or persisted before the commit. `Abort` reverts the open edit with zero
+    /// trace.
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+    pub enum TransactionPhase {
+        #[default]
+        Commit,
+        Stream,
+        Abort,
+    }
+
     impl<Mutation, ConfigMutation, DraftMutation> Default for Emit<Mutation, ConfigMutation, DraftMutation> {
         fn default() -> Self {
             Self {
@@ -12464,6 +12520,7 @@ pub mod app {
                 description: None,
                 coalesce_key: None,
                 transaction: None,
+                transaction_phase: TransactionPhase::Commit,
                 effects: Vec::new(),
                 extension_invocations: Vec::new(),
                 events: Vec::new(),
@@ -12824,10 +12881,25 @@ pub mod app {
 
         /// 🛠️ A committed `ToolTransaction` (`ToolMachineRunner`'s `ToolStep::Committed(transaction, mutations)`)
         /// published as ONE document edit whose every op carries `transaction`; with no description the history row
-        /// is labelled from the mutations' own `MutationKind` labels. An empty transaction is an empty emission.
+        /// is labelled from the mutations' own `MutationKind` labels. When earlier ticks streamed into the transaction
+        /// ([`Self::stream_transaction`]) the mutations join its open edit and the commit closes it; with nothing open and
+        /// nothing to record it is an empty emission.
         pub fn commit_transaction(transaction: protocol::TransactionRef, artifact_mutations: Vec<Mutation>) -> Self {
-            let transaction = (!artifact_mutations.is_empty()).then_some(transaction);
-            Self { artifact_mutations, transaction, ..Default::default() }
+            Self { artifact_mutations, transaction: Some(transaction), ..Default::default() }
+        }
+
+        /// 🌊️ One tick of a streamed `ToolTransaction` (design §15): `artifact_mutations` join the transaction's open edit
+        /// (the first tick opens it), every op stamped with `transaction`. The document shows them at once, but nothing is
+        /// announced or persisted until [`Self::commit_transaction`] with the same ref closes the edit; [`Self::abort_transaction`]
+        /// reverts it with zero trace. For tools whose yield cannot wait for the commit (streamed imports).
+        pub fn stream_transaction(transaction: protocol::TransactionRef, artifact_mutations: Vec<Mutation>) -> Self {
+            Self { artifact_mutations, transaction: Some(transaction), transaction_phase: TransactionPhase::Stream, ..Default::default() }
+        }
+
+        /// 🧨️ Reverts the open edit of the streamed `ToolTransaction` `transaction` with zero trace: no edit, no history row,
+        /// nothing announced. With nothing open it is an empty emission.
+        pub fn abort_transaction(transaction: protocol::TransactionRef) -> Self {
+            Self { transaction: Some(transaction), transaction_phase: TransactionPhase::Abort, ..Default::default() }
         }
 
         /// 🪆️ `commit_transaction`'s composed-children twin (design §12): a committed `ToolTransaction` whose leaves
@@ -13665,7 +13737,11 @@ pub mod app {
         /// KNOW that until now: `⚛️reactor::spawn_task`'s `AsyncTask<M, C, D>` future must outlive
         /// the synchronous `dispatch_emit` call that spawns it, which needs `M/C/D: 'static` provable
         /// from `A: ArtifactApp` alone — the associated type itself, not merely `A`.
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        ///
+        /// 🏷️ `SemanticMutation` (design §16.2): every document operation labels itself in every shell locale through its
+        /// leaf (`MutationKind::label`), so a history row, the history-edit editor and a tool-transaction row are never the
+        /// operation's text line — `#[derive(Mutations)]` is the one way an aggregate answers it.
+        type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         /// 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
@@ -13714,19 +13790,17 @@ pub mod app {
         fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             Ok(None)
         }
-        /// 🏷️ The history label of one applied document operation in every shell locale — for a
-        /// `#[derive(Mutations)]` aggregate `Some(protocol::SemanticMutation::label(op))`. `None` shows the
-        /// operation's text line, which is locale-invariant data. History rows, the history-edit editor and
-        /// tool-transaction rows without a description read it.
-        fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
-            None
-        }
         /// ⌨️ This app's typing algebra: how the leaves `next` of one live typing delivery join the open run's net leaves
         /// `net` (design §13.2). The default is a single buffer — every delivery's leaves are the whole buffer, so the latest
         /// replaces the net; an app whose typing verb yields relative leaves (a text splice) composes them, and answers
         /// `Split` where the edit does not continue the run (a caret that jumped away).
         fn typing_fold(_net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
             semio_framework_tool_machine::TypingFold::Net(next.to_vec())
+        }
+        /// 🪧️ The label, in every shell locale, of the entity `id` (one of `kinds`, the reference's declared entity kinds)
+        /// in `snapshot` — what a history-edit reference chip reads instead of the raw id. `None` shows the id as data.
+        fn entity_label(_snapshot: &Self::Snapshot, _kinds: &[String], _id: &str) -> Option<LocalizedLabel> {
+            None
         }
         async fn initial_draft() -> Self::Draft {
             Self::Draft::default()
@@ -16803,7 +16877,7 @@ pub mod app {
 
     fn bounded_config_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
         let id = format!("{prefix}-{}", authority.next_sequence_number());
-        protocol::Edit {
+        protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![forward],
@@ -24047,12 +24121,55 @@ pub mod app {
         }
     }
 
-    /// 🛠️ A committed tool transaction is one plain edit per touched member (the parent and every owned child it
-    /// carries, all stamped with the same ref — design §12): a transaction riding a coalesced amend is refused instead
-    /// of silently losing its stamp.
-    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, coalesced: bool) -> Option<Fault> {
-        let transaction = transaction.filter(|_| coalesced)?;
-        Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), format!("verb {verb:?} published tool transaction {:?} with a coalesced amend; a committed transaction is one plain edit per member", transaction.id)))
+    /// 🛠️ A committed tool transaction is one plain edit per touched member (the parent and every owned child it carries,
+    /// all stamped with the same ref — design §12); a streamed one is one open edit of the app's own document that its ticks
+    /// grow (design §15). Refused instead of silently losing a stamp or a trace: a transaction riding a coalesced amend, a
+    /// stream or abort naming no transaction, a stream or abort across owned children, a stream carrying operations with
+    /// foreign steps, and an abort carrying operations.
+    #[allow(clippy::too_many_arguments)]
+    fn tool_transaction_shape_fault(verb: &str, transaction: Option<&protocol::TransactionRef>, phase: TransactionPhase, coalesced: bool, children: bool, carried: bool, foreign: bool) -> Option<Fault> {
+        let refuse = |detail: String| Some(Fault::new(FaultOrigin::Framework, FaultCode::new("toolTransaction.shape"), detail));
+        let streamed = matches!(phase, TransactionPhase::Stream | TransactionPhase::Abort);
+        match transaction {
+            Some(transaction) if coalesced => refuse(format!("verb {verb:?} published tool transaction {:?} with a coalesced amend; a transaction is one plain edit per member or one open edit its ticks grow", transaction.id)),
+            None if streamed => refuse(format!("verb {verb:?} streamed or aborted no tool transaction")),
+            Some(transaction) if streamed && children => refuse(format!("verb {verb:?} streamed or aborted tool transaction {:?} across owned children; a streamed transaction grows the app's own document", transaction.id)),
+            Some(transaction) if phase == TransactionPhase::Stream && foreign => refuse(format!("verb {verb:?} streamed operations with foreign steps into tool transaction {:?}; a streamed transaction grows the app's own document", transaction.id)),
+            Some(transaction) if phase == TransactionPhase::Abort && carried => refuse(format!("verb {verb:?} aborted tool transaction {:?} with mutations; an abort carries none", transaction.id)),
+            _ => None,
+        }
+    }
+
+    /// 🎞️ The document-store commands an emission's artifact lane dispatches (design §15): a streamed tick appends to its
+    /// transaction's open edit (opening it), a commit closes the open edit of its transaction (appending its last operations
+    /// first) or, with none open, records its operations as one edit carrying the ref, an abort reverts the open edit, and an
+    /// emission outside a transaction applies or coalesces. An empty list publishes nothing.
+    fn artifact_lane_commands<M>(mutations: Vec<M>, description: Option<String>, coalesce_key: Option<String>, transaction: Option<protocol::TransactionRef>, phase: TransactionPhase, open: Option<&store::OpenToolTransaction>) -> Vec<ArtifactCommand<M>> {
+        let open = open.zip(transaction.as_ref()).is_some_and(|(open, transaction)| open.transaction.id == transaction.id);
+        let append = |mutations: Vec<M>, transaction: protocol::TransactionRef| (!mutations.is_empty()).then(|| ArtifactCommand::AppendTransaction { mutations, transaction });
+        match (transaction, phase) {
+            (Some(transaction), TransactionPhase::Stream) => append(mutations, transaction).into_iter().collect(),
+            (Some(transaction), TransactionPhase::Commit) if open => {
+                let transaction_id = transaction.id.clone();
+                append(mutations, transaction).into_iter().chain([ArtifactCommand::CommitTransaction { transaction_id }]).collect()
+            }
+            (Some(transaction), TransactionPhase::Abort) => open.then(|| ArtifactCommand::AbortTransaction { transaction_id: transaction.id }).into_iter().collect(),
+            (_, _) if mutations.is_empty() => Vec::new(),
+            (transaction, _) => vec![match coalesce_key {
+                Some(key) => ArtifactCommand::AmendLast { mutations, coalesce_key: Some(key) },
+                None => ArtifactCommand::Apply { mutations, description, transaction },
+            }],
+        }
+    }
+
+    /// 🧯️ A batched store publication's refusal: the history and tool-transaction refusals keep their own fault codes
+    /// (`history.full`, `toolTransaction.open`, `toolTransaction.unknown` — the shells show them as notices); every other one is
+    /// the SDK's publication fault.
+    fn store_publication_fault(error: vcs::VcsError) -> Fault {
+        match error {
+            vcs::VcsError::TransactionOpen { .. } | vcs::VcsError::UnknownTransaction(_) | vcs::VcsError::HistoryFull { .. } => error.into_fault(),
+            error => plugin_sdk_fault(error.to_string()),
+        }
     }
 
     fn typed_operation_document_is_fresh(operation: &semio_framework_job::Operation, canonical_revision: [u8; 32], live_revision: [u8; 32], live_generation: u64) -> bool {
@@ -27202,7 +27319,7 @@ pub mod app {
                         (None, None) => break,
                     }
                 }
-                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)));
+                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)), |op| protocol::SemanticMutation::<A::Snapshot>::label(op));
                 missing.push((CommandLogAppendKey::Edit { edit_id: edit.id.clone(), verb: edit.verb.clone(), child_edit_ids: attached.remove(&edit.id).unwrap_or_default() }, label, edit.started_at.clone()));
             }
             for (index, _) in transitions {
@@ -27230,7 +27347,7 @@ pub mod app {
             let logged_config: HashSet<&str> = self.command_log.iter().flat_map(|entry| entry.config_edit_ids.iter().map(String::as_str)).collect();
             let mut missing_config: Vec<(String, LocalizedLabel, String)> = Vec::new();
             for edit in self.config_store.envelope().vcs.edits.iter().filter(|edit| !logged_config.contains(edit.id.as_str())) {
-                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)));
+                let label = backfilled_edit_label(edit, edit.verb.as_deref().and_then(|verb| self.verb_label(verb)), |_| LocalizedLabel::native("Change settings", "Einstellungen ändern"));
                 missing_config.push((edit.id.clone(), label, edit.started_at.clone()));
             }
             for (config_edit_id, label, timestamp) in missing_config {
@@ -27428,7 +27545,7 @@ pub mod app {
                 mutations.extend(child_edits.iter().flat_map(|child| child.mutations.iter().cloned()));
                 let transaction = edit.and_then(|edit| edit.mutation_meta.first()).and_then(|meta| meta.transaction.clone()).or_else(|| child_edits.iter().find_map(|child| child.transaction.clone()));
                 let tool_run_label = transaction.as_ref().and_then(|transaction| self.tool_run_transaction_label(app_id, transaction));
-                let leaf_label = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).and_then(|ops| ops.first()).and_then(|op| A::mutation_label(op.operation));
+                let leaf_label = entry.edit_id.as_deref().and_then(|edit_id| ops_by_edit.get(edit_id)).and_then(|ops| ops.first()).map(|op| op.operation).or_else(|| edit.and_then(|edit| edit.forwards.first())).map(|op| protocol::SemanticMutation::<A::Snapshot>::label(op));
                 let verb_label = edit.and_then(|edit| edit.verb.as_deref()).and_then(|verb| self.verb_label(verb));
                 let label = match (edit, mutations.first()) {
                     (Some(edit), _) if edit.description.is_none() && tool_run_label.is_some() => tool_run_label.expect("tool run label checked above"),
@@ -27909,8 +28026,8 @@ pub mod app {
         /// is already the real inverse, and `revertToCommand`'s edit_id branch replays that.
         async fn dispatch_emit_inner(&mut self, verb: &str, mut emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
             Self::mint_extension_invocations(meta.instance_id, &mut emit)?;
-            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, transaction, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
-            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), coalesce_key.is_some()) {
+            let Emit { artifact_mutations, config_mutations, window_config_mutations, draft_mutations, description, coalesce_key, transaction, transaction_phase, effects, extension_invocations, events, ui_scope, child_emits, interaction_writes, tasks } = emit;
+            if let Some(fault) = tool_transaction_shape_fault(verb, transaction.as_ref(), transaction_phase, coalesce_key.is_some(), !child_emits.is_empty(), !artifact_mutations.is_empty(), artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
                 return Err(fault);
             }
             let effects = self.stamp_load_document_effects(effects)?;
@@ -28026,7 +28143,10 @@ pub mod app {
                 return Ok(result);
             }
 
-            if artifact_mutations.is_empty() {
+            let in_transaction = transaction.is_some();
+            let log_label = self.authored_row_label(verb, description.as_deref());
+            let vcs_commands = artifact_lane_commands(artifact_mutations, description, coalesce_key, transaction, transaction_phase, self.store.open_transaction());
+            if vcs_commands.is_empty() {
                 let kind = match self.invocation_kind {
                     Some(kind) => kind,
                     None => match self.registry.get(verb).map(|definition| definition.kind) {
@@ -28038,31 +28158,32 @@ pub mod app {
                     },
                 };
                 self.apply_interaction_writes(&interaction_writes, meta).await?;
-                if !(published_window_config && config_edit_id.is_none() && matches!(kind, ActionKind::View)) {
-                    let label = self.authored_row_label(verb, description.as_deref());
-                    self.record_command(verb, kind, label, None, config_edit_id, None);
+                if !in_transaction && !(published_window_config && config_edit_id.is_none() && matches!(kind, ActionKind::View)) {
+                    self.record_command(verb, kind, log_label, None, config_edit_id, None);
                 }
                 return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
             }
+            let aborting = matches!(vcs_commands.as_slice(), [ArtifactCommand::AbortTransaction { .. }]);
             self.store.set_local_actor_id(Some(meta.actor.clone())).map_err(|error| error.into_fault())?;
             let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
             let (before_forwards_len, before_backwards_len) = self.store.edit_mutations().map_or((0, 0), |(f, b, _)| (f.len(), b.len()));
-            let log_label = self.authored_row_label(verb, description.as_deref());
-            let vcs_command = match coalesce_key {
-                Some(key) => ArtifactCommand::AmendLast { mutations: artifact_mutations, coalesce_key: Some(key) },
-                None => ArtifactCommand::Apply { mutations: artifact_mutations, description, transaction },
-            };
-            self.store.set_authoring_verb(Some(verb.to_string()));
-            let dispatched = self.store.dispatch(vcs_command).await;
-            self.store.set_authoring_verb(None);
-            match dispatched {
-                Ok(receipt) => self.record_dispatch_receipt(receipt),
-                Err(vcs::VcsError::Rejected { policy, messages }) => return Err(self.record_rejected_dispatch(policy, messages).await),
-                Err(error) => return Err(error.into_fault()),
+            for vcs_command in vcs_commands {
+                self.store.set_authoring_verb(Some(verb.to_string()));
+                let dispatched = self.store.dispatch(vcs_command).await;
+                self.store.set_authoring_verb(None);
+                match dispatched {
+                    Ok(receipt) => self.record_dispatch_receipt(receipt),
+                    Err(vcs::VcsError::Rejected { policy, messages }) => return Err(self.record_rejected_dispatch(policy, messages).await),
+                    Err(error) => return Err(error.into_fault()),
+                }
+                .await;
             }
-            .await;
             self.revalidate_interaction_state_after_document_change(meta).await?;
             self.apply_interaction_writes(&interaction_writes, meta).await?;
+            if aborting {
+                self.retire_displaced_document_rows();
+                return Ok(Self::empty_result(verb, meta, effects, events, ui_scope).await);
+            }
             let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
             if !amended_same_edit {
                 if let Some(edit_id) = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone()) {
@@ -28081,6 +28202,41 @@ pub mod app {
             }
             let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
             Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset).await)
+        }
+
+        /// 🎗️ The store half of a migrated emission that closes a streamed tool transaction without new operations (design
+        /// §15): an abort reverts the transaction's open edit and retires its history row, a commit with no last operations
+        /// closes the edit. Either is consumed, so the publication continues with the emission's other lanes; a closing commit
+        /// with operations and every stream are left to the batched route.
+        async fn close_streamed_transaction_unit(&mut self, verb: &str, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
+            let Some(transaction) = emit.transaction.as_ref() else { return Ok(()) };
+            let abort = emit.transaction_phase == TransactionPhase::Abort;
+            if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {
+                return Ok(());
+            }
+            let open = self.store.open_transaction().is_some_and(|open| open.transaction.id == transaction.id);
+            let transaction_id = transaction.id.clone();
+            emit.transaction = None;
+            emit.transaction_phase = TransactionPhase::Commit;
+            if !open {
+                return Ok(());
+            }
+            let command = if abort { ArtifactCommand::AbortTransaction { transaction_id } } else { ArtifactCommand::CommitTransaction { transaction_id } };
+            self.store.set_authoring_verb(Some(verb.to_string()));
+            let dispatched = self.store.dispatch(command).await;
+            self.store.set_authoring_verb(None);
+            dispatched.map_err(|error| error.into_fault())?;
+            if abort {
+                self.retire_displaced_document_rows();
+            }
+            Ok(())
+        }
+
+        /// 🚧️ The typed refusal of a batched artifact publication while a tool transaction it does not carry is open on the
+        /// document store (the store refuses its admission too, untyped).
+        fn open_transaction_admission_fault(&self, transaction: Option<&protocol::TransactionRef>) -> Option<Fault> {
+            let open = self.store.open_transaction()?;
+            transaction.is_none_or(|transaction| transaction.id != open.transaction.id).then(|| vcs::VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() }.into_fault())
         }
         //#endregion 🔖️Emit
 
@@ -29084,7 +29240,7 @@ pub mod app {
             let hover = self.interaction_hover.clone();
             let peers = std::sync::Arc::clone(&self.peer_presence);
             let own_color = self.own_color;
-            let interaction = InteractionView { state, hover: &hover, peers: peers.as_ref() };
+            let interaction = InteractionView { state, hover: &hover, peers: peers.as_ref(), draft_references: empty_draft_references() };
             struct Frame<'a> {
                 node: &'a TreeNode,
                 next: usize,
@@ -31379,7 +31535,7 @@ pub mod app {
                 }
                 let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
                 let advance = match pending {
-                    PendingArtifactStorePublication::Artifact(publication) => self.store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                    PendingArtifactStorePublication::Artifact(publication) => self.store.advance_apply_batch(publication, grant).map_err(store_publication_fault)?,
                     PendingArtifactStorePublication::Config(publication) => self.config_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                     PendingArtifactStorePublication::Draft(publication) => self.draft_store.advance_apply_batch(publication, grant).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                     PendingArtifactStorePublication::Presence(publication) => self.presence_store.advance_publish_one(publication, grant).map_err(plugin_sdk_fault)?,
@@ -31547,13 +31703,18 @@ pub mod app {
                             }
                         }
                     }
-                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.coalesce_key.is_some()) {
+                    if let Some(fault) = tool_transaction_shape_fault(&mounted.verb, emit.transaction.as_ref(), emit.transaction_phase, emit.coalesce_key.is_some(), !emit.child_emits.is_empty(), !emit.artifact_mutations.is_empty(), emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps)) {
                         return Err(fault);
                     }
                     if (!emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty()) && self.time_travel.freezes_local_emits() {
                         return Err(time_travel_frozen_fault(&mounted.verb));
                     }
+                    self.close_streamed_transaction_unit(&mounted.verb, emit).await?;
                     if emit.child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
+                        if let Some(fault) = self.open_transaction_admission_fault(emit.transaction.as_ref()) {
+                            return Err(fault);
+                        }
+                        let streams = emit.transaction_phase == TransactionPhase::Stream;
                         let mutations = std::mem::take(&mut emit.artifact_mutations);
                         let description = emit.description.take();
                         let transaction = emit.transaction.take();
@@ -31575,6 +31736,7 @@ pub mod app {
                         match publication_result {
                             Ok(mut publication) => {
                                 publication.set_coalesce_key(emit.coalesce_key.take());
+                                publication.set_transaction_open(streams);
                                 publication.set_verb(Some(mounted.verb.clone()));
                                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(publication));
                                 return Ok(());
@@ -34870,6 +35032,7 @@ pub mod app {
                 let mut time_travel = self.time_travel.panel();
                 if let Some(panel) = time_travel.as_mut() {
                     self.resolve_time_travel_snaps(panel, view_state);
+                    self.resolve_time_travel_reference_labels(panel);
                 }
                 let root = ui_history_panel(history, time_travel.as_ref(), &self.registry.controller_id, view_state.locale, A::ROLE == AppRole::Viewer, view_state).await.map_err(|error| plugin_sdk_fault(error.to_string()))?;
                 return Ok(built_to_component_tree(root));
@@ -34886,7 +35049,8 @@ pub mod app {
             let interaction_state = self.interaction_state().await;
             let interaction_hover = self.interaction_hover.clone();
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
-            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let draft_references = self.time_travel.draft_references();
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
             let window_config = self.window_config_store.capture(Some(view_state)).await?;
             let window_transient = self.window_transient_store.capture(Some(view_state))?;
             if let Some(json) = snapshot_override_json {
@@ -34933,7 +35097,8 @@ pub mod app {
             let interaction_state = self.interaction_state().await;
             let interaction_hover = self.interaction_hover.clone();
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
-            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let draft_references = self.time_travel.draft_references();
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { window_config_store, window_transient_store, cache, child_content_root, transient_store, tool_runs, time_travel, tool_machines, .. } = self;
@@ -34970,7 +35135,8 @@ pub mod app {
             let interaction_state = self.interaction_state().await;
             let interaction_hover = self.interaction_hover.clone();
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
-            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let draft_references = self.time_travel.draft_references();
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
             let render_operation = self.live_render_operation();
             let parent_document_id = self.store.envelope().id.clone();
             let VcsArtifactApp { window_config_store, cache, child_content_root, tool_runs, time_travel, tool_machines, .. } = self;
@@ -35075,7 +35241,8 @@ pub mod app {
             let interaction_state = self.interaction_state().await;
             let interaction_hover = self.interaction_hover.clone();
             let interaction_peers = std::sync::Arc::clone(&self.peer_presence);
-            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref() };
+            let draft_references = self.time_travel.draft_references();
+            let interaction = InteractionView { state: &interaction_state, hover: &interaction_hover, peers: interaction_peers.as_ref(), draft_references: &draft_references };
             let window_config = match self.window_config_store.capture(Some(view_state)).await {
                 Ok(snapshot) => snapshot,
                 Err(_) => return Vec::new(),
@@ -36749,7 +36916,7 @@ pub mod app {
             Vec::new()
         }
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Draft: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
@@ -36794,15 +36961,15 @@ pub mod app {
         fn build_retargetable_tool_run_job(_request: ToolRunJobRequest<'_, EditorApp<Self>>) -> Result<Option<Box<dyn ToolRunRetargetableJob<Self::Config>>>, Fault> {
             Ok(None)
         }
-        /// 🏷️ This editor's localized history label of one document operation — forwarded verbatim to
-        /// `ArtifactApp::mutation_label` by `EditorApp<Self>`, where the contract lives.
-        fn mutation_label(_op: &Self::Mutation) -> Option<LocalizedLabel> {
-            None
-        }
         /// ⌨️ This editor's typing algebra — forwarded verbatim to `ArtifactApp::typing_fold` by `EditorApp<Self>`, where the
         /// contract lives (default: a single buffer, the latest delivery replaces the net).
         fn typing_fold(_net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
             semio_framework_tool_machine::TypingFold::Net(next.to_vec())
+        }
+        /// 🔰️ This editor's entity label for a history-edit reference chip — forwarded verbatim to
+        /// `ArtifactApp::entity_label` by `EditorApp<Self>`, where the contract lives.
+        fn entity_label(_snapshot: &Self::Snapshot, _kinds: &[String], _id: &str) -> Option<LocalizedLabel> {
+            None
         }
         fn register_window_transient_owners(_registry: &mut WindowTransientOwnerRegistry) -> Result<(), Fault> {
             Ok(())
@@ -37267,7 +37434,7 @@ pub mod app {
         let mut envelope = parsed.into_envelope();
         let (applied, redo) = match &envelope.cursor {
             Some(cursor) => (cursor.applied_edit_ids.clone(), cursor.redo_edit_ids.clone()),
-            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), Vec::new()),
+            None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), crate::dsl::HistoryPageStack::new()),
         };
         envelope.cursor = Some(store::ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
         let mutations: Vec<A::Mutation> = if ops.is_empty() {
@@ -37472,8 +37639,8 @@ pub mod app {
         const DOCUMENT_SCHEMA: &'static str;
         type Snapshot: Clone + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + semio_framework_schema::ArtifactCompositionFields + 'static;
         /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
-        /// past edits made by an `ArtifactEditor` sharing this dialect.
-        type Mutation: ::protocol::Mutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+        /// past edits made by an `ArtifactEditor` sharing this dialect, and labels them in every locale like it.
+        type Mutation: protocol::SemanticMutation<Self::Snapshot> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Config: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ConfigRecord + ArtifactPack + 'static;
         type ConfigMutation: ::protocol::Mutation<Self::Config> + PartialEq + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
         type Presence: Clone + Default + PartialEq + protocol::ToValue + protocol::FromValue + Send + Sync + store::ArtifactDsl + ArtifactPack + 'static;
@@ -37975,11 +38142,11 @@ pub mod app {
         fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
             E::host_configuration_mutation(action, args)
         }
-        fn mutation_label(op: &Self::Mutation) -> Option<LocalizedLabel> {
-            E::mutation_label(op)
-        }
         fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
             E::typing_fold(net, next)
+        }
+        fn entity_label(snapshot: &Self::Snapshot, kinds: &[String], id: &str) -> Option<LocalizedLabel> {
+            E::entity_label(snapshot, kinds, id)
         }
         async fn initial_draft() -> Self::Draft {
             E::initial_draft()

@@ -5,7 +5,7 @@
 //! `RasterMutationDsl` enum flattens every real variant into its own keyworded record, converted at
 //! the `OpText`/`OpBinary` boundary only — `RasterMutation` itself is untouched.
 
-use crate::mutations::{change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
+use crate::mutations::{paint_stroke,change_layer_transform,change_layer_locked,change_layer_adjustment_parameter, change_layer_mask, change_layer_pixels, add_layer_asset, change_layer_adjustment_kind, change_layer_blend_mode, change_layer_opacity, change_layer_visible, create_layer, delete_layer, move_layer, remove_layer_asset, rename_layer, reorder_layers, resize_layer};
 pub use crate::mutations::{apply_raster_mutation, inverse_raster_mutation, RasterEnvelope, RasterMutation, RasterStore};
 use crate::{RasterImageAsset, RasterLayerNode};
 use protocol::OpText;
@@ -126,6 +126,19 @@ enum RasterMutationDsl {
         #[dsl(key = "id")]
         asset_id: String,
     },
+    PaintStroke {
+        #[dsl(key = "id")]
+        layer_id: String,
+        target: String,
+        tool: String,
+        size: f64,
+        hardness: f64,
+        opacity: f64,
+        color: Vec<f64>,
+        xs: Vec<f64>,
+        ys: Vec<f64>,
+        selection: Option<String>,
+    },
 }
 
 //#region 🔖️HandcraftedOpCodecs
@@ -179,6 +192,18 @@ fn raster_mutation_to_dsl(mutation: &RasterMutation) -> RasterMutationDsl {
         RasterMutation::ChangeLayerMask(payload) => RasterMutationDsl::ChangeLayerMask { layer_id: payload.layer_id.clone(), expected: payload.expected.clone(), mask: payload.mask.clone() },
         RasterMutation::ChangeLayerPixels(payload) => RasterMutationDsl::ChangeLayerPixels { layer_id: payload.layer_id.clone(), expected_image_key: payload.expected_image_key.clone(), content: payload.content.clone(), transform: payload.transform.clone() },
         RasterMutation::RemoveLayerAsset(payload) => RasterMutationDsl::RemoveLayerAsset { asset_id: payload.asset_id.clone() },
+        RasterMutation::PaintStroke(payload) => RasterMutationDsl::PaintStroke {
+            layer_id: payload.layer_id.clone(),
+            target: payload.target.clone(),
+            tool: payload.tool.clone(),
+            size: payload.brush.size,
+            hardness: payload.brush.hardness,
+            opacity: payload.brush.opacity,
+            color: payload.brush.color.clone(),
+            xs: payload.points.iter().map(|point| point.x).collect(),
+            ys: payload.points.iter().map(|point| point.y).collect(),
+            selection: payload.selection.as_ref().map(dsl::json::to_json_string),
+        },
     }
 }
 
@@ -201,6 +226,14 @@ fn raster_mutation_from_dsl(mutation: RasterMutationDsl) -> RasterMutation {
         RasterMutationDsl::ChangeLayerMask { layer_id, expected, mask } => RasterMutation::ChangeLayerMask(change_layer_mask::ChangeLayerMask { layer_id, expected, mask }),
         RasterMutationDsl::ChangeLayerPixels { layer_id, expected_image_key, content, transform } => RasterMutation::ChangeLayerPixels(change_layer_pixels::ChangeLayerPixels { layer_id, expected_image_key, content, transform }),
         RasterMutationDsl::RemoveLayerAsset { asset_id } => RasterMutation::RemoveLayerAsset(remove_layer_asset::mutation::RemoveLayerAsset { asset_id }),
+        RasterMutationDsl::PaintStroke { layer_id, target, tool, size, hardness, opacity, color, xs, ys, selection } => RasterMutation::PaintStroke(paint_stroke::PaintStroke {
+            layer_id,
+            target,
+            tool,
+            brush: paint_stroke::RasterBrush { size, hardness, opacity, color },
+            points: xs.into_iter().zip(ys).map(|(x, y)| paint_stroke::RasterStrokePoint { x, y }).collect(),
+            selection: selection.and_then(|spans| dsl::json::from_json_str(&spans).ok()),
+        }),
     }
 }
 

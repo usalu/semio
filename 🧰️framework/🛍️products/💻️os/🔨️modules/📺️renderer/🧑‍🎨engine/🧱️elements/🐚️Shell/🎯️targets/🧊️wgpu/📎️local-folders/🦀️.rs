@@ -5,9 +5,11 @@
 //! (`semio.os.config` → `preferences["os.config.local-folders"]`, React's `OsShellConfig.setPreference`): never shared, never
 //! in a URL. A folder attach of a program's document records `attachLocalFolder`, keyed by the document's own identity
 //! (the id its store stamps on every envelope); a detach records `detachLocalFolder`. When a program boots holding a
-//! document this device once attached, the native shell reattaches the folder directly and restores its archive like a
-//! fresh load; the browser shell, whose folder access needs the person's gesture, offers the accessible "Reconnect folder"
-//! band React shows — and so does the native shell when its direct reattach failed.
+//! document this device once attached, the native shell — which owns a folder transport and needs no gesture to open a
+//! folder — reattaches it directly, once per document, and restores its archive like a fresh load; when that reattach
+//! fails it offers the accessible "Reconnect folder" / "Forget folder" band React's browser shell always offers (the
+//! browser needs the person's gesture). The browser wgpu build serves no folder transport, so it neither attaches nor
+//! remembers nor offers a folder.
 //!
 //! The event log, the reconnect offer, the folder name and the band's copy are pinned for both shells by
 //! `🧑‍🎨engine/🧫️fixtures/📎️local-folder-bindings/🔣️.json`.
@@ -120,19 +122,6 @@ pub(crate) struct LocalFolderIdentity {
     pub app_id: String,
 }
 
-/// 🚪️ How a remembered folder comes back: the native shell opens it itself, the browser waits for the person's gesture.
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum LocalFolderReattach {
-    Direct,
-    Gesture,
-}
-
-/// 🚪️ This build's reattach.
-#[cfg(not(target_arch = "wasm32"))]
-pub(crate) const LOCAL_FOLDER_REATTACH: LocalFolderReattach = LocalFolderReattach::Direct;
-#[cfg(target_arch = "wasm32")]
-pub(crate) const LOCAL_FOLDER_REATTACH: LocalFolderReattach = LocalFolderReattach::Gesture;
-
 /// 📎️ The binding to bring back: the one remembered for this document in this program, unless the document is attached
 /// already — React's `localFolderReconnectOfferV1`.
 pub(crate) fn local_folder_reconnect_offer(bindings: &LocalFolderBindings, identity: Option<&LocalFolderIdentity>, attached_document_id: Option<&str>) -> Option<LocalFolderBinding> {
@@ -160,7 +149,6 @@ pub(crate) enum LocalFolderText {
     Attach,
     Forget,
     Unidentified,
-    Unavailable,
 }
 
 /// 🗣️ One line of the band (or of a reconnect refusal) in `locale`; `folder` fills the message.
@@ -176,8 +164,6 @@ pub(crate) fn local_folder_text(text: LocalFolderText, folder: &str, locale: Loc
         (LocalFolderText::Forget, Locale::De) => "Ordner vergessen".into(),
         (LocalFolderText::Unidentified, Locale::En) => "This program has no document to attach".into(),
         (LocalFolderText::Unidentified, Locale::De) => "Dieses Programm hat kein Dokument zum Verbinden".into(),
-        (LocalFolderText::Unavailable, Locale::En) => "Folders cannot be opened in this browser renderer".into(),
-        (LocalFolderText::Unavailable, Locale::De) => "In diesem Browser-Renderer können keine Ordner geöffnet werden".into(),
     }
 }
 
@@ -190,46 +176,29 @@ pub(crate) const FOLDER_FORGET_CONTROL_ID: &str = "s-folder-forget";
 pub(crate) const FOLDER_RECONNECT_ACTION: &str = "reconnectFolder";
 pub(crate) const FOLDER_FORGET_ACTION: &str = "forgetFolder";
 
-/// 🆔️ The notice codes a reconnect is refused under.
+/// 🆔️ The notice code a folder attach of a program holding no document is told under.
 pub(crate) const SYNC_DOCUMENT_UNIDENTIFIED_CODE: &str = "sync.attach.document-unidentified";
-pub(crate) const DOCUMENT_BINDING_FOLDER_UNAVAILABLE: &str = "document-binding.folder-unavailable";
 
-/// 📐️ Gap between the band and the band or footer below it.
-const FOLDER_BAND_GAP: f32 = 8.0;
-
-/// 📐️ The band's widest extent before its message is clipped.
+/// 📐️ The band's widest extent on one row; wider, it wraps compact.
 const FOLDER_BAND_MAX_WIDTH: f32 = 720.0;
 
-/// 📐️ One laid-out reconnect band: the strip, the message's run and the two buttons.
+/// 📐️ One laid-out reconnect band: the strip, the message's lines and the two buttons.
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) struct FolderReconnectBandPlan {
     pub band: Rect,
-    pub message: String,
-    pub message_x: f32,
-    pub message_w: f32,
+    pub lines: Vec<time_travel::ChromeBandLine>,
     pub buttons: [(&'static str, &'static str, String, Rect); 2],
 }
 
-/// 📐️ Lays the band out bottom-centre, stacked above the time-travel band when one shows (React stacks the folder offer
-/// first), else just above the footer; the buttons sit right-aligned after the message.
+/// 📐️ Lays the band out bottom-centre through the time-travel band's [`time_travel::chrome_band_layout`], stacked above
+/// the time-travel band when one shows (React stacks the folder offer first), else just above the footer: one row with
+/// the buttons right-aligned after the message, or on a phone-width viewport the message wrapped at its words with the
+/// buttons below it.
 pub(crate) fn folder_reconnect_band_plan(message: String, reconnect: String, forget: String, below: Option<Rect>, width: f32, height: f32, theme: &Theme) -> FolderReconnectBandPlan {
-    let (pad, gap, small) = (theme.padding_standard, theme.gap_standard, theme.font_size_small);
-    let glyph_w = |text: &str| text.chars().count() as f32 * small * 0.6;
-    let button_w = |label: &str| glyph_w(label) + pad * 2.0;
-    let band_w = (pad * 2.0 + glyph_w(&message) + gap * 2.0 + button_w(&reconnect) + button_w(&forget)).min(FOLDER_BAND_MAX_WIDTH).min((width - pad * 2.0).max(1.0));
-    let band_h = small * 1.6 + pad * 2.0;
     let floor = below.map_or(height - theme.footer_height, |rect| rect.y);
-    let band = Rect::new(((width - band_w) * 0.5).max(0.0), (floor - FOLDER_BAND_GAP - band_h).max(0.0), band_w, band_h);
-    let forget_rect = Rect::new(band.x + band.w - pad - button_w(&forget), band.y + pad * 0.5, button_w(&forget), band.h - pad);
-    let reconnect_rect = Rect::new(forget_rect.x - gap - button_w(&reconnect), band.y + pad * 0.5, button_w(&reconnect), band.h - pad);
-    let message_x = band.x + pad;
-    FolderReconnectBandPlan {
-        band,
-        message,
-        message_x,
-        message_w: (reconnect_rect.x - gap - message_x).max(1.0),
-        buttons: [(FOLDER_RECONNECT_CONTROL_ID, FOLDER_RECONNECT_ACTION, reconnect, reconnect_rect), (FOLDER_FORGET_CONTROL_ID, FOLDER_FORGET_ACTION, forget, forget_rect)],
-    }
+    let layout = time_travel::chrome_band_layout(&message, " ", &[reconnect.as_str(), forget.as_str()], floor, width, FOLDER_BAND_MAX_WIDTH, theme);
+    let (reconnect_rect, forget_rect) = (layout.buttons[0], layout.buttons[1]);
+    FolderReconnectBandPlan { band: layout.band, lines: layout.lines, buttons: [(FOLDER_RECONNECT_CONTROL_ID, FOLDER_RECONNECT_ACTION, reconnect, reconnect_rect), (FOLDER_FORGET_CONTROL_ID, FOLDER_FORGET_ACTION, forget, forget_rect)] }
 }
 //#endregion 🔖️Reconnect
 
@@ -273,15 +242,19 @@ impl ShellState {
         Some(LocalFolderIdentity { document_id: document_id.to_string(), plugin_id: session.plugin_id.clone(), app_id: session.app.id.clone() })
     }
 
-    /// 📎️ The remembered folder for the session's document, while that document is not attached.
+    /// 📎️ The remembered folder for the session's document, while that document is not attached — never on a build
+    /// without a folder transport. Asked every frame, so a device remembering no folder answers before reading the
+    /// session's identity.
     pub(crate) fn folder_reconnect_offer(&self) -> Option<LocalFolderBinding> {
+        let bindings = self.local_folder_bindings.as_ref().filter(|bindings| SHELL_DOCUMENT_TRANSPORTS.folder && !bindings.bindings.is_empty())?;
         let attached = self.sync_channel.as_ref().map(|channel| channel.document_id.as_str());
-        local_folder_reconnect_offer(self.local_folder_bindings.as_ref()?, self.sync_program_identity().as_ref(), attached)
+        local_folder_reconnect_offer(bindings, self.sync_program_identity().as_ref(), attached)
     }
 
-    /// 📎️ The offer the band shows: always on a gesture build, and on a direct build once its own reattach failed.
+    /// 📎️ The offer the band shows: the remembered folder whose direct reattach already ran and left the document
+    /// unattached.
     pub(crate) fn folder_reconnect_band_offer(&self) -> Option<LocalFolderBinding> {
-        self.folder_reconnect_offer().filter(|offer| self.local_folder_reattach == LocalFolderReattach::Gesture || self.local_folder_reattach_tried.as_deref() == Some(offer.document_id.as_str()))
+        self.folder_reconnect_offer().filter(|offer| self.local_folder_reattach_tried.as_deref() == Some(offer.document_id.as_str()))
     }
 
     /// 🔗️ Reattaches a remembered folder through the same folder attach a person makes, which re-records it and restores
@@ -290,35 +263,21 @@ impl ShellState {
         self.attach_sync_backbone(format!("folder://{}", local_folder_path(binding))).await
     }
 
-    /// 🔁️ The folder a direct build reopens now: the offer for the session's document, once per document.
+    /// 🔁️ The folder the shell reopens by itself now: the offer for the session's document, once per document.
     pub(crate) fn direct_reattach_candidate(&self) -> Option<LocalFolderBinding> {
-        if self.local_folder_reattach != LocalFolderReattach::Direct {
-            return None;
-        }
         self.folder_reconnect_offer().filter(|offer| self.local_folder_reattach_tried.as_deref() != Some(offer.document_id.as_str()))
     }
 
-    /// 🔁️ The native boot reattach: once per document, the remembered folder of the session's document is reopened
-    /// without a gesture. A failure is told and leaves the band offering it. `true` when it ran.
+    /// 🔁️ The boot reattach: once per document, the remembered folder of the session's document is reopened without a
+    /// gesture. A failure is told through the dispatch-fault funnel and leaves the band offering it. `true` when it ran.
     pub(crate) async fn reattach_remembered_local_folder(&mut self) -> bool {
         self.ensure_local_folder_bindings();
         let Some(offer) = self.direct_reattach_candidate() else { return false };
         self.local_folder_reattach_tried = Some(offer.document_id.clone());
         if let Err(error) = self.reattach_local_folder(&offer).await {
-            self.note_folder_reconnect_fault(&error);
+            self.note_dispatch_fault(&error);
         }
         true
-    }
-
-    /// 🧯️ Tells why a reconnect did not happen: an unserved folder transport by its own line, anything else through the
-    /// dispatch-fault funnel.
-    pub(crate) fn note_folder_reconnect_fault(&mut self, error: &str) {
-        if error.contains(DOCUMENT_BINDING_FOLDER_UNAVAILABLE) {
-            let text = local_folder_text(LocalFolderText::Unavailable, "", self.active_locale());
-            self.show_transient_notice(text, semio_framework::Severity::Warning, Some(DOCUMENT_BINDING_FOLDER_UNAVAILABLE));
-        } else {
-            self.note_dispatch_fault(error);
-        }
     }
 
     /// 🗃️ Restores the archive a native folder holds for `document_id` into the session's program like a fresh load —
@@ -344,15 +303,17 @@ impl ShellState {
         folder_reconnect_band_plan(message, local_folder_text(LocalFolderText::Attach, "", locale), local_folder_text(LocalFolderText::Forget, "", locale), below, self.screen_w, self.screen_h, theme)
     }
 
-    /// 📎️ Paints the reconnect band, one scalar, glyph run or hit per opportunity: fill, edges, the message, then per
-    /// button its fill, caption and hit. Each button dispatches its verb on the shell's sync controller, so a click, the
-    /// keyboard ring and an assistive technology reconnect or forget the same way; none registers under a modal dialog.
+    /// 📎️ Paints the reconnect band, one scalar, glyph run or hit per opportunity: fill, edges, each line of the message,
+    /// then per button its fill, caption and hit. Each button dispatches its verb on the shell's sync controller, so a
+    /// click, the keyboard ring and an assistive technology reconnect or forget the same way; none registers under a modal
+    /// dialog.
     pub(super) fn render_folder_reconnect_band_step(&mut self, cursor: &mut ShellChromeChildCursor, overlay: &mut DrawList, atlas: &mut FontAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme) -> bool {
         let Some(offer) = self.folder_reconnect_band_offer() else { return true };
         let plan = self.folder_reconnect_band_plan_for(&offer, theme);
         let band = plan.band;
         let hair = theme.stroke_hairline;
         let baseline = |rect: Rect| rect.y + (rect.h + theme.font_size_small) * 0.5 - 1.0;
+        let buttons_from = 5 + plan.lines.len();
         match cursor.scalar {
             0 => overlay.push_rounded([band.x, band.y, band.w, band.h], theme.level_bg[Level::Menu.index()], theme.border_radius),
             1..=4 => {
@@ -364,17 +325,20 @@ impl ShellState {
                 };
                 overlay.push_solid(edge, theme.border_normal);
             }
-            5 => match chrome_text_complete_step(overlay, atlas, &plan.message, plan.message_x, baseline(band), plan.message_w, theme.font_size_small, theme.text, &mut cursor.glyph) {
-                Ok(false) => return false,
-                Ok(true) => {}
-                Err(()) => {
-                    self.error = Some("Shell folder reconnect band text exceeded the retained glyph boundary".to_string());
-                    cursor.glyph.reset();
+            scalar if scalar < buttons_from => {
+                let line = &plan.lines[scalar - 5];
+                match chrome_text_complete_step(overlay, atlas, &line.text, line.rect.x, baseline(line.rect), line.rect.w, theme.font_size_small, theme.text, &mut cursor.glyph) {
+                    Ok(false) => return false,
+                    Ok(true) => {}
+                    Err(()) => {
+                        self.error = Some("Shell folder reconnect band text exceeded the retained glyph boundary".to_string());
+                        cursor.glyph.reset();
+                    }
                 }
-            },
+            }
             scalar => {
-                let Some((control_id, action, label, rect)) = plan.buttons.get((scalar - 6) / 3).cloned() else { return true };
-                match (scalar - 6) % 3 {
+                let Some((control_id, action, label, rect)) = plan.buttons.get((scalar - buttons_from) / 3).cloned() else { return true };
+                match (scalar - buttons_from) % 3 {
                     0 => overlay.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.button, theme.border_radius),
                     1 => match chrome_text_complete_step(overlay, atlas, &label, rect.x + theme.padding_standard, baseline(rect), (rect.w - theme.padding_standard).max(1.0), theme.font_size_small, theme.text, &mut cursor.glyph) {
                         Ok(false) => return false,

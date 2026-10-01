@@ -13,11 +13,11 @@
 use crate::standards::v_ac1018::subsets::any::schema::mutations::{apply_dwg_mutation, DwgMutation};
 use crate::{DwgDiff, DwgSnapshot};
 
-const BEFORE: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps-the-auxiliary-save-counter/📸️snapshot/⬅️before/🔣️.json");
-const AFTER: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps-the-auxiliary-save-counter/📸️snapshot/➡️after/🔣️.json");
-const MUTATION: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps-the-auxiliary-save-counter/🦠️mutation/🔣️.json");
-const DIFF: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps-the-auxiliary-save-counter/🔺️diff/🔣️.json");
-const OUTCOME: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps-the-auxiliary-save-counter/🎯️outcome/🔣️.json");
+const BEFORE: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps/📸️snapshot/⬅️before/🔣️.json");
+const AFTER: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps/📸️snapshot/➡️after/🔣️.json");
+const MUTATION: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps/🦠️mutation/🔣️.json");
+const DIFF: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps/🔺️diff/🔣️.json");
+const OUTCOME: &str = include_str!("../../../../🧫️fixtures/🧬️mutations/📸️set-snapshot/🔢️bumps/🎯️outcome/🔣️.json");
 
 fn before() -> DwgSnapshot {
     dsl::json::from_json_str(BEFORE).expect("before AC1018 snapshot decodes")

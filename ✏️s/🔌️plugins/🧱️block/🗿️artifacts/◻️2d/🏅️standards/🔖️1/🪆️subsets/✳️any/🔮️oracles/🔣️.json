@@ -86,7 +86,7 @@
           "scenarios": [
             {
               "id": "allows-signal-to-power",
-              "directoryName": "🧪️allows-signal-to-power"
+              "directoryName": "🧪️allows"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "rekinds-in-handle-as-power",
-              "directoryName": "🧪️rekinds-in-handle-as-power"
+              "directoryName": "🧪️rekinds"
             }
           ]
         },
@@ -108,18 +108,18 @@
           "scenarios": [
             {
               "id": "recolors-power-handle-kind",
-              "directoryName": "🧪️recolors-power-handle-kind"
+              "directoryName": "🧪️recolors"
             }
           ]
         },
         {
           "mutationId": "change-handle-kind-default-wire-kind",
-          "sourceMutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
-          "mutationDirectoryName": "🔌️change-handle-kind-default-wire-kind",
+          "sourceMutationDirectoryName": "🔌️change-handle-kind-default-wire",
+          "mutationDirectoryName": "🔌️change-handle-kind-default-wire",
           "scenarios": [
             {
               "id": "swaps-power-default-wire-kind",
-              "directoryName": "🧪️swaps-power-default-wire-kind"
+              "directoryName": "🧪️swaps"
             }
           ]
         },
@@ -130,7 +130,7 @@
           "scenarios": [
             {
               "id": "relabels-power-handle-kind",
-              "directoryName": "🧪️relabels-power-handle-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -141,7 +141,7 @@
           "scenarios": [
             {
               "id": "rewrites-session-notes",
-              "directoryName": "🧪️rewrites-session-notes"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -152,7 +152,7 @@
           "scenarios": [
             {
               "id": "rewrites-node-kind-description",
-              "directoryName": "🧪️rewrites-node-kind-description"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -163,7 +163,7 @@
           "scenarios": [
             {
               "id": "repoints-node-kind-icon",
-              "directoryName": "🧪️repoints-node-kind-icon"
+              "directoryName": "🧪️repoints"
             }
           ]
         },
@@ -174,7 +174,7 @@
           "scenarios": [
             {
               "id": "relabels-node-kind",
-              "directoryName": "🧪️relabels-node-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -185,7 +185,7 @@
           "scenarios": [
             {
               "id": "switches-unit-to-metre",
-              "directoryName": "🧪️switches-unit-to-metre"
+              "directoryName": "🧪️switches"
             }
           ]
         },
@@ -196,7 +196,7 @@
           "scenarios": [
             {
               "id": "switches-variant-to-b",
-              "directoryName": "🧪️switches-variant-to-b"
+              "directoryName": "🧪️switches"
             }
           ]
         },
@@ -218,7 +218,7 @@
           "scenarios": [
             {
               "id": "appends-ground-handle-kind",
-              "directoryName": "🧪️appends-ground-handle-kind"
+              "directoryName": "🧪️appends"
             }
           ]
         },
@@ -240,7 +240,7 @@
           "scenarios": [
             {
               "id": "removes-power-handle-kind",
-              "directoryName": "🧪️removes-power-handle-kind"
+              "directoryName": "🧪️removes"
             }
           ]
         },
@@ -262,7 +262,7 @@
           "scenarios": [
             {
               "id": "swings-in-handle-along-the-rim",
-              "directoryName": "🧪️swings-in-handle-along-the-rim"
+              "directoryName": "🧪️swings"
             }
           ]
         },
@@ -273,7 +273,7 @@
           "scenarios": [
             {
               "id": "drops-material-attribute",
-              "directoryName": "🧪️drops-material-attribute"
+              "directoryName": "🧪️drops"
             }
           ]
         },
@@ -295,7 +295,7 @@
           "scenarios": [
             {
               "id": "revokes-signal-to-signal",
-              "directoryName": "🧪️revokes-signal-to-signal"
+              "directoryName": "🧪️revokes"
             }
           ]
         },
@@ -306,7 +306,7 @@
           "scenarios": [
             {
               "id": "renames-power-to-mains",
-              "directoryName": "🧪️renames-power-to-mains"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -317,7 +317,7 @@
           "scenarios": [
             {
               "id": "renames-node-kind-to-gate",
-              "directoryName": "🧪️renames-node-kind-to-gate"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -339,7 +339,7 @@
           "scenarios": [
             {
               "id": "circle-to-rectangle",
-              "directoryName": "🧪️circle-to-rectangle"
+              "directoryName": "🧪️circle"
             }
           ]
         }

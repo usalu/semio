@@ -65,7 +65,7 @@ fn generation3d_view_preview_windows(view: Option<&semio_framework_plugin::ViewM
 /// `No example` show the opened document, and the opened document in the playground IS a bundled
 /// example — so the row that promises no example painted the hexagonal mushroom column's three
 /// meshes (measured on the served viewer 2026-09-13, `meshesLen 3641`). The sibling surface clears
-/// on the same row (`✏️editor/🎮️commands/🎨️set-active-example`); both surfaces now agree.
+/// on the same row (`✏️editor/🎮️commands/🎨️set`); both surfaces now agree.
 ///
 /// 🧹️ `Example` and `Empty` own a real `Generation3dSnapshot` whose neural `Dictionary` roots abort
 /// the process on a bare drop, so every caller MUST finish with [`Self::retire`] (ticket

@@ -32,7 +32,7 @@ where
 
 #[test]
 fn remodel_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let model_base: RemodelingModelWindowConfig = dsl::json::from_json_str(&fixture["base"]["model"].to_string()).unwrap();
     let frames_base: RemodelingFramesWindowConfig = dsl::json::from_json_str(&fixture["base"]["frames"].to_string()).unwrap();
     let report_base: RemodelingReportWindowConfig = dsl::json::from_json_str(&fixture["base"]["report"].to_string()).unwrap();

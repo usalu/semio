@@ -1,6 +1,16 @@
 use super::*;
 
 #[test]
+fn intrinsic_bytes_are_refused_by_the_directory_json_event_mirror() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../🔨️modules/🌱️value/🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap() {
+        let bytes: Vec<u8> = serde_json::from_value(row["octets"].clone()).unwrap();
+        assert!(directory_event_page_has_control(&crate::DslValue::Bytes(bytes.clone())));
+        assert!(!directory_event_page_has_control(&crate::ToValue::to_value(&bytes)));
+    }
+}
+
+#[test]
 fn directory_session_authority_v1_matches_neutral_corpus_and_binding_goldens() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🪪️session-authority-v1/🔣️.json")).expect("session authority fixture");
     for row in fixture["rows"].as_array().expect("rows") {

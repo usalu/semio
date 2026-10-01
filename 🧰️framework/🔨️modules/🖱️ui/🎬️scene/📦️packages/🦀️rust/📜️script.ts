@@ -7,7 +7,9 @@
  * header for why native `cargo check` cannot see that on its own. */
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const packageRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 
@@ -33,5 +35,5 @@ class CheckWasmScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

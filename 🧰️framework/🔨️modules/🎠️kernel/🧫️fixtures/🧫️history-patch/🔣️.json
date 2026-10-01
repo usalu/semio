@@ -95,6 +95,19 @@
       "keys": []
     },
     {
+      "id": "reviewing-session-marks-an-introduced-warning",
+      "patch": {
+        "cursor": 9,
+        "upserts": [
+          { "seq": 4, "editId": "e-4", "actionId": "setLabel", "label": { "native": { "en": "Set label to b", "de": "Beschriftung auf b setzen" }, "reuse": { "en": "Set label to b", "de": "Beschriftung auf b setzen" } }, "kind": "mutation", "timestamp": "2026-10-01T10:00:04Z", "applied": true, "revertible": true, "count": 1, "worst": "warning", "mutations": [{ "mutationId": "e-4#0", "position": 3, "opIndex": 0, "label": { "native": { "en": "Set label to b", "de": "Beschriftung auf b setzen" }, "reuse": { "en": "Set label to b", "de": "Beschriftung auf b setzen" } }, "worst": "warning", "messages": [{ "level": "warning", "code": "mutation.no-op", "message": "the label already reads b", "opIndex": 0 }], "editable": true, "introduced": true }] }
+        ],
+        "canUndo": true,
+        "commandFilter": "all",
+        "timeTravel": { "sessionId": "2", "generation": 4, "stage": "reviewing", "worst": "warning", "blocking": false, "acceptedCount": 1, "review": "ready", "rerunnable": false }
+      },
+      "keys": ["edit:e-4"]
+    },
+    {
       "id": "a-cancelled-replay-needs-a-rerun",
       "patch": {
         "cursor": 8,
@@ -113,6 +126,7 @@
     }
   ],
   "invalid": [
+    { "id": "introduced-not-a-boolean", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "mutationId": "e-1#0", "position": 0, "opIndex": 0, "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "introduced": "yes" }] }] }, "reason": "introduced is a boolean" },
     { "id": "unknown-severity", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "reviewing", "worst": "catastrophic" } }, "reason": "worst is one of info, warning, error, fatal" },
     { "id": "unknown-stage", "patch": { "cursor": 1, "timeTravel": { "sessionId": "1", "generation": 0, "stage": "inactive" } }, "reason": "an inactive session is an absent timeTravel, never a stage" },
     { "id": "mutation-row-without-id", "patch": { "cursor": 1, "upserts": [{ "seq": 1, "editId": "e-1", "actionId": "apply", "label": { "native": { "en": "Apply", "de": "Anwenden" }, "reuse": { "en": "Apply", "de": "Anwenden" } }, "kind": "mutation", "timestamp": "t", "mutations": [{ "position": 0, "opIndex": 0, "label": { "native": { "en": "x", "de": "x" }, "reuse": { "en": "x", "de": "x" } } }] }] }, "reason": "a mutation row carries its mutationId" },

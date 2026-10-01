@@ -116,7 +116,8 @@ export function testCanonicalEditFixtures(): void {
       u64(inverse.length), chain("edit-inverse", inverse),
       u64(meta.length), chain("edit-meta", meta),
     ]);
-    return "verb" in edit ? record("edit-verb", [chained, Buffer.from(String(edit.verb))]) : chained;
+    const authored = "verb" in edit ? record("edit-verb", [chained, Buffer.from(String(edit.verb))]) : chained;
+    return record("edit-line", [authored, Buffer.from([edit.line === null ? 0 : 1]), Buffer.from(String(edit.line ?? ""))]);
   };
   for (const row of chains.cases) {
     const edit = row.edit ?? {

@@ -187,6 +187,7 @@ pub fn puzzle2d_board_scene(document_json: &str, envelope: &Puzzle2dScene, pane:
         camera_json,
         glyph_catalogs_json,
         selection_json,
+        highlighted_ids_json: envelope.interaction.referenced_json(),
         interactive: pane == overview::WINDOW_KIND_ID,
         // 🐁️ The framework-owned `vortex` hover, echoed into every pane: the interactive overview
         // publishes it from its own pointer raycast, the detail/selection panes and the outliner

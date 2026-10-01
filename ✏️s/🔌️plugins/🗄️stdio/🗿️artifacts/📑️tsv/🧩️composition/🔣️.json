@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_tsv::editor::tsv::TsvEditor",
       "factory": "semio_s_artifact_stdio_tsv::editor::tsv::create_tsv_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "tsv_editor",
+        "sqliteSnapshot": "sqlite_snapshot_tsv_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -23,22 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_tsv::viewer::tsv::TsvViewer",
       "factory": "semio_s_artifact_stdio_tsv::viewer::tsv::create_tsv_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "tsv",
-      "factory_id": "stdio.native.tsv.v1",
-      "descriptor_codec_id": "s.stdio.tsv.standard.iana.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.tsv.standard.iana.codec.codec-stdio-tsv-extension-tsv.v1",
-      "artifact_kind": "s.stdio.tsv",
-      "artifact_schema": "stdio.tsv",
-      "extension": "tsv",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
-      "protocol_source_sha256": "8c65ab63508c1db68d9b9d67dd8482a604a71b5f8966fb4046967e5ec3a4f989",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -55,6 +45,30 @@
         "react": 6213,
         "wgpu": 6313
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "TsvMutation",
+      "snapshot": "semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot::TsvSnapshot",
+      "mutation": "semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::mutations::TsvMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.tsv",
+      "standard": "iana",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.tsv.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📑️tsv/🏅️standards/🔖️iana/🪆️subsets/✳️any/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

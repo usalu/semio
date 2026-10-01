@@ -16,7 +16,7 @@
           "scenarios": [
             {
               "id": "appends-a-member-udl-to-the-dead-case",
-              "directoryName": "📏️appends-a-member-udl-to-the-dead-case"
+              "directoryName": "📏️appends"
             },
             {
               "id": "pushes-a-wind-load-5c3f1e",
@@ -39,15 +39,15 @@
           "scenarios": [
             {
               "id": "switches-self-abbff2",
-              "directoryName": "⚖️switches-self-abbff2"
+              "directoryName": "⚖️switches"
             },
             {
               "id": "keeps-self-weight-ff696b",
-              "directoryName": "🔁️keeps-self-weight-ff696b"
+              "directoryName": "🔁️keeps"
             },
             {
               "id": "switches-self-5977a5",
-              "directoryName": "🏋️switches-self-5977a5"
+              "directoryName": "🏋️switches"
             }
           ]
         },
@@ -58,15 +58,15 @@
           "scenarios": [
             {
               "id": "appends-an-uls-0c18bb",
-              "directoryName": "🔗️appends-an-uls-0c18bb"
+              "directoryName": "🔗️appends"
             },
             {
               "id": "appends-the-6-10a-eefe01",
-              "directoryName": "➕️appends-the-6-10a-eefe01"
+              "directoryName": "➕️appends"
             },
             {
               "id": "rejects-a-dangling-2aa3ea",
-              "directoryName": "🚫️rejects-a-dangling-2aa3ea"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -77,15 +77,15 @@
           "scenarios": [
             {
               "id": "appends-a-live-case-59118a",
-              "directoryName": "📍️appends-a-live-case-59118a"
+              "directoryName": "📍️appends"
             },
             {
               "id": "appends-the-snow-4c007c",
-              "directoryName": "❄️appends-the-snow-4c007c"
+              "directoryName": "❄️appends"
             },
             {
               "id": "rejects-a-dangling-4904f4",
-              "directoryName": "🚫️rejects-a-dangling-4904f4"
+              "directoryName": "🚫️rejects"
             }
           ]
         },
@@ -96,15 +96,15 @@
           "scenarios": [
             {
               "id": "removes-the-uls-438c0c",
-              "directoryName": "✂️removes-the-uls-438c0c"
+              "directoryName": "✂️removes"
             },
             {
               "id": "drops-the-spare-60fda7",
-              "directoryName": "🗑️drops-the-spare-60fda7"
+              "directoryName": "🗑️drops"
             },
             {
               "id": "rejects-a-missing-d4bc03",
-              "directoryName": "⛔️rejects-a-missing-d4bc03"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "blocks-in-use-0b898b",
@@ -119,15 +119,15 @@
           "scenarios": [
             {
               "id": "removes-the-live-06415d",
-              "directoryName": "🚫️removes-the-live-06415d"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "drops-the-spare-49435f",
-              "directoryName": "🗑️drops-the-spare-49435f"
+              "directoryName": "🗑️drops"
             },
             {
               "id": "rejects-a-missing-79ed15",
-              "directoryName": "⛔️rejects-a-missing-79ed15"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "blocks-in-use-7cdc5f",
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "strips-the-trailing-member-133914",
-              "directoryName": "➖️strips-the-trailing-member-133914"
+              "directoryName": "➖️strips"
             },
             {
               "id": "rejects-a-missing-1a8a80",
@@ -165,7 +165,7 @@
             },
             {
               "id": "strengthens-the-wind-21b88a",
-              "directoryName": "💨️strengthens-the-wind-21b88a"
+              "directoryName": "💨️strengthens"
             },
             {
               "id": "rejects-a-missing-7a1e1f",
@@ -188,19 +188,19 @@
           "scenarios": [
             {
               "id": "renames-the-live-7dce39",
-              "directoryName": "🏷️renames-the-live-7dce39"
+              "directoryName": "🏷️renames"
             },
             {
               "id": "renames-the-wind-61757b",
-              "directoryName": "✏️renames-the-wind-61757b"
+              "directoryName": "✏️renames"
             },
             {
               "id": "rejects-a-missing-fc0343",
-              "directoryName": "⛔️rejects-a-missing-fc0343"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "keeps-the-name-4fa89f",
-              "directoryName": "🔁️keeps-the-name-4fa89f"
+              "directoryName": "🔁️keeps"
             }
           ]
         },
@@ -211,23 +211,23 @@
           "scenarios": [
             {
               "id": "reweights-the-uls-8b17b7",
-              "directoryName": "⚖️reweights-the-uls-8b17b7"
+              "directoryName": "⚖️reweights"
             },
             {
               "id": "adds-a-wind-term-6525d5",
-              "directoryName": "🔗️adds-a-wind-term-6525d5"
+              "directoryName": "🔗️adds"
             },
             {
               "id": "rejects-a-missing-b32308",
-              "directoryName": "⛔️rejects-a-missing-b32308"
+              "directoryName": "⛔️rejects"
             },
             {
               "id": "denies-rename-a96d3c",
-              "directoryName": "🪪️denies-rename-a96d3c"
+              "directoryName": "🪪️denies"
             },
             {
               "id": "dangling-case-65b8a8",
-              "directoryName": "👻️dangling-case-65b8a8"
+              "directoryName": "👻️dangling"
             },
             {
               "id": "self-term-0f54d1",

@@ -3,7 +3,9 @@ import { buildCargoArtifacts } from "../../../📚️library/⚡️caching/📦�
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 /** ⚙️ Builds/tests the `repo_cli` crate and execs the `semio` binary (nx bridge for `repo/cli/rs`). */
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, devToolingEnv, runBundleScriptMain, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, runCargoTestBudgeted, runCmd, runCmdStatus, resolveTestLevel } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class BuildScript extends BundleScript {
   async run(): Promise<void> {
@@ -81,5 +83,5 @@ class McpScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("run", RunScript).register("daemon", DaemonScript).register("workflow", WorkflowScript).register("mcp", McpScript).register("repo", RepoScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

@@ -93,7 +93,7 @@
           "scenarios": [
             {
               "id": "reseeds-the-solve-from-7-to-99",
-              "directoryName": "🎲️reseeds-the-solve-from-7-to-99"
+              "directoryName": "🎲️reseeds"
             }
           ]
         },
@@ -104,7 +104,7 @@
           "scenarios": [
             {
               "id": "inserts-slot-d-in-canonical-order",
-              "directoryName": "🧩️inserts-slot-d-in-canonical-order"
+              "directoryName": "🧩️inserts"
             }
           ]
         },
@@ -115,7 +115,7 @@
           "scenarios": [
             {
               "id": "removes-slot-a-and-cascades-edge-ab",
-              "directoryName": "🚫️removes-slot-a-and-cascades-edge-ab"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -203,7 +203,7 @@
           "scenarios": [
             {
               "id": "removes-the-wall-tile-and-cascades-rules-and-pins",
-              "directoryName": "🚫️removes-the-wall-tile-and-cascades-rules-and-pins"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -214,7 +214,7 @@
           "scenarios": [
             {
               "id": "raises-the-wall-tile-bias",
-              "directoryName": "⚖️raises-the-wall-tile-bias"
+              "directoryName": "⚖️raises"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "repaints-the-roof-tile-as-a-raster",
-              "directoryName": "🎨️repaints-the-roof-tile-as-a-raster"
+              "directoryName": "🎨️repaints"
             }
           ]
         },

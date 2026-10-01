@@ -1515,6 +1515,8 @@ fn suggestion_and_precompute_hostile_static_law_rejects_one_grant_reducers_and_m
 fn selection_transforms_run_the_transform_tool(source: &str) -> bool {
     source.contains(r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(Puzzle3dTransformWork::new(tool_id, request.authoring_seed.clone()))"#)
         && source.contains("Puzzle3dTransformStage::Read")
+        && source.contains("Puzzle3dTransformStage::Scan")
+        && source.contains("Puzzle3dRelocateScan::begin(document")
         && source.contains("Puzzle3dTransformStage::Commit")
         && source.contains("puzzle3d_transform_tool_commit(self.tool_id")
         && !source.contains(r#""translateSelection" => Box::new(crate::retained_command::BoundedFirstStepCommandWork"#)
@@ -1533,7 +1535,7 @@ fn selection_transform_hostile_static_law_rejects_one_grant_reducers_and_bypasse
         r#""translateSelection" | "rotateSelection" | "scaleSelection" | "worldRelocate" | "relocateTargetVolume" => Box::new(crate::retained_command::BoundedFirstStepCommandWork::new(tool_id, puzzle3d_retained_reduce, puzzle3d_retained_extent))"#,
     );
     assert!(!selection_transforms_run_the_transform_tool(&direct), "hostile old-reducer replacement must fail closed");
-    for marker in ["Puzzle3dTransformStage::Read", "Puzzle3dTransformStage::Commit", "puzzle3d_transform_tool_commit(self.tool_id"] {
+    for marker in ["Puzzle3dTransformStage::Read", "Puzzle3dTransformStage::Scan", "Puzzle3dRelocateScan::begin(document", "Puzzle3dTransformStage::Commit", "puzzle3d_transform_tool_commit(self.tool_id"] {
         assert!(!selection_transforms_run_the_transform_tool(&source.replace(marker, "stage-removed")), "missing transform stage was falsely accepted: {marker}");
     }
 }
@@ -1658,9 +1660,9 @@ fn set_active_example_hostile_static_law_rejects_whole_document_reset() {
     }
 }
 
-/// 🧮️ The Relocate utility's retained work is two bounded steps whatever the document: it states the drop as
-/// ONE selection record and commits it through the transform tool — the proximity scan is the record, not a
-/// cursor walk — so even Nakagin's 180 objects admit it.
+/// 🧮️ The Relocate utility's retained work reads the drop, pages its proximity scan — one step per
+/// `PUZZLE3D_RELOCATE_SCAN_PAGE` objects — and commits ONE selection record through the transform tool, so even
+/// Nakagin's 180 objects admit it far inside the fixed work cap.
 #[test]
 fn world_relocate_extent_fits_within_cap_for_nakagin() {
     use crate::retained_command::PuzzleCommandWork;
@@ -1668,7 +1670,40 @@ fn world_relocate_extent_fits_within_cap_for_nakagin() {
     let interaction = protocol::InteractionState::default();
     let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "nonexistent", "position": [0.0, 0.0, 0.0] })), None).expect("worldRelocate command decodes");
     let work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
-    assert_eq!(work.extent(&command, &snapshot, &interaction), Some(2), "a relocate reads its gesture, then commits it");
+    let pages = NAKAGIN_EXAMPLE_FIXTURE.objects.len().div_ceil(utilities::transform::PUZZLE3D_RELOCATE_SCAN_PAGE);
+    assert_eq!(work.extent(&command, &snapshot, &interaction), Some(2 + pages), "a relocate reads its gesture, scans one page per step, then commits it");
+    assert!(2 + pages <= crate::retained_command::PUZZLE_COMMAND_WORK_ITEMS);
+}
+
+/// ⏹️ A Nakagin drop's proximity scan is paged and cancellable: every page is its own `Progress` step, and a work
+/// closed in the middle of the scan retires to its terminal-empty shell without ever having published a mutation.
+#[test]
+fn world_relocate_scan_pages_progress_and_cancels_with_zero_trace() {
+    use crate::retained_command::{PuzzleCommandWork, PuzzleCommandWorkStep};
+    let snapshot = Puzzle3dPlaySnapshot::new((&dsl::ToValue::to_value(&NAKAGIN_EXAMPLE_FIXTURE.clone())).into());
+    let config = Puzzle3dConfig::default();
+    let interaction = protocol::InteractionState::default();
+    let hover = semio_framework_plugin::app::InteractionHoverState::default();
+    let command = Puzzle3dCommand::from_action("worldRelocate", Some(json!({ "objectId": "25b0dba0-8f81-423a-94a1-b911a6031010", "position": [-8.84, -2.8499999999999996, 7.7] })), None).expect("worldRelocate command decodes");
+    let mut work = Puzzle3dTransformWork::new("worldRelocate", "seed".into());
+    let mut stages = Vec::new();
+    for _ in 0..3 {
+        match work.step(&command, &snapshot, &config, &interaction, &hover).expect("bounded step") {
+            PuzzleCommandWorkStep::Progress { stage, en, de } => {
+                assert!(!en.is_empty() && !de.is_empty() && en != de, "every progress step is localized in both languages");
+                stages.push(stage);
+            }
+            other => panic!("a 180-object scan cannot finish in three steps: {}", matches!(other, PuzzleCommandWorkStep::Complete(_))),
+        }
+    }
+    assert_eq!(stages, ["puzzle3d-transform-read", "puzzle3d-transform-scan", "puzzle3d-transform-scan"], "the scan reports one progress per page");
+    work.begin_close();
+    let mut turns = 0;
+    while !matches!(work.close_step(1, 0), semio_framework_job::InteractiveJobCloseStep::Complete) {
+        turns += 1;
+        assert!(turns < 8, "closing a scanning relocate retires in a bounded number of turns");
+    }
+    assert!(work.terminal_is_empty(), "a relocate cancelled mid-scan leaves zero trace");
 }
 
 /// 🔁️ A real Nakagin drop: object `25b0dba0-8f81-423a-94a1-b911a6031010` ("Capsule With Balcony
@@ -5186,6 +5221,32 @@ async fn gumball_rotate_and_scale_are_one_transaction_each() {
     assert!(rows.len() == 1 && rows[0].op_lines[0].starts_with("scale-selection") && rows[0].transaction.is_some(), "one scaling, one transaction: {rows:?}");
     dispatch(&mut app, "undo", None, None).await.expect("undo scaling");
     assert_eq!(object_scale(&app, &object_id), scale, "one undo restores the scale");
+}
+
+/// 🧲️ A gumball drag of an attracting object re-solves the attraction graph inside the SAME transaction: on
+/// Nakagin the object an attraction hangs off the dragged one is re-placed from it — one row, one
+/// `drag-selection` op whose leaf carries the follower — and one undo restores both poses exactly.
+#[semio_framework_async_macros::async_test]
+async fn a_gumball_drag_carries_its_attracted_objects_in_the_same_transaction() {
+    let mut app = app().await;
+    dispatch(&mut app, "setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).await.expect("nakagin");
+    let fixture = puzzle3d_fixture_from_projection(&projection_of(&app));
+    let owner = |full_id: &str| full_id.split(':').next().unwrap_or_default().to_string();
+    let (parent, child) = fixture
+        .attractions
+        .iter()
+        .map(|attraction| (owner(&attraction.attracting), owner(&attraction.attracted)))
+        .find(|(parent, child)| parent != child && fixture.objects.iter().any(|object| &object.id == child && !object.locked) && fixture.objects.iter().any(|object| &object.id == parent && !object.locked))
+        .expect("Nakagin carries an attraction between two unlocked objects");
+    let (parent_start, child_start) = (object_origin(&app, &parent), object_origin(&app, &child));
+    let (result, settled) = dispatch_reporting(&mut app, "translateSelection", Some(&json!({ "ids": [parent.as_str()], "dx": 0.0, "dy": 0.0, "dz": 2.0 })), None).await;
+    result.expect("the release delta commits");
+    let rows = edit_rows(&settled);
+    assert!(rows.len() == 1 && rows[0].transaction.is_some() && rows[0].op_lines.len() == 1 && rows[0].op_lines[0].starts_with("drag-selection"), "one gesture, one row, one parametric op: {rows:?}");
+    assert!((object_origin(&app, &parent)[2] - parent_start[2] - 2.0).abs() < 1e-9, "the dragged object lifts by the offset");
+    assert_ne!(object_origin(&app, &child), child_start, "the attracted object follows its moved parent");
+    dispatch(&mut app, "undo", None, None).await.expect("undo");
+    assert_eq!((object_origin(&app, &parent), object_origin(&app, &child)), (parent_start, child_start), "one undo restores the dragged object AND its follower");
 }
 
 /// 🧯️ A motionless release — the drag that went nowhere — leaves zero trace: no edit, no row, no notice.

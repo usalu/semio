@@ -366,7 +366,7 @@ fn space_bounded_reduce(
         return Ok(crate::engine::space::engine::resolve_future(delete_selection::delete_selected(config, &selected())));
     }
     match command {
-        SpaceCommand::NodeGraphEdit(payload) => return Ok(crate::engine::space::engine::resolve_future(node_graph_edit::edit_with_selection(payload, snapshot, &selected()))),
+        SpaceCommand::NodeGraphEdit(payload) => return Ok(crate::engine::space::engine::resolve_future(node_graph_edit::edit_with_selection(payload, &doc, &selected()))),
         SpaceCommand::ReorganizeWorkflow(_) => return Ok(crate::engine::space::engine::resolve_future(reorganize_workflow::reorganize_selected(&doc, &selected()))),
         SpaceCommand::CopyAppInstance(_) => return Ok(Emit::config(vec![SpaceConfigMutation::SetClipboard { node_ids: selected() }])),
         SpaceCommand::DuplicateAppInstance(_) => return Ok(crate::engine::space::engine::resolve_future(duplicate_app_instance::duplicate_nodes(selected(), snapshot))),
@@ -603,7 +603,7 @@ fn prepare_space_config(base: &SpaceConfig, mutation: SpaceConfigMutation) -> Re
 
 fn space_config_edit(forward: SpaceConfigMutation, inverse: SpaceConfigMutation, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<SpaceConfigMutation> {
     let id = format!("space-config-retained-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],

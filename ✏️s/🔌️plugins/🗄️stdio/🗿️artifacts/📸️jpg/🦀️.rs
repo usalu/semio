@@ -296,25 +296,25 @@ pub mod standards {
                         pub mod patch_snapshot;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/💾️binary/🦀️.rs"]
                         pub mod binary;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🦀️.rs"]
                         pub mod change_jfif_header;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re/🦀️.rs"]
                         pub mod change_re_encode_quality;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart-interval/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart/🦀️.rs"]
                         pub mod change_restart_interval;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other-segment/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other/🦀️.rs"]
                         pub mod insert_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman/🦀️.rs"]
                         pub mod remove_huffman_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other-segment/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other/🦀️.rs"]
                         pub mod remove_other_segment;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant/🦀️.rs"]
                         pub mod remove_quant_table;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman/🦀️.rs"]
                         pub mod replace_huffman_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔲️replace-pixels/🦀️.rs"]
                         pub mod replace_pixels;
-                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🦀️.rs"]
+                        #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant/🦀️.rs"]
                         pub mod replace_quant_table;
                         #[path = "🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📝️text/🦀️.rs"]
                         pub mod text;

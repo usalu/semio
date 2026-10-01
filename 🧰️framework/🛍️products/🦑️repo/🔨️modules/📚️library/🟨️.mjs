@@ -569,6 +569,7 @@ function generatorOutputCouplingInputs(name, target, targets, root, workspaceRoo
 /** 🛡️ Side effects and live processes cannot be replayed as completed task results. */
 function targetPolicy(name, target, policy = POLICY) {
   if (matchesCommand(name, policy.continuous)) return { ...target, cache: false, continuous: true };
+  if (target.cache === false) return { inputs: ["default", "^default"], outputs: [], ...target, cache: false };
   if (matchesUncached(name, policy)) return { ...target, cache: false };
   if (policy.cachedExact.includes(name)) return { inputs: ["default", "^default"], outputs: [], ...target, cache: true };
   if (mutatingName(name) || liveName(name)) return { ...target, cache: false };
@@ -924,7 +925,7 @@ function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = 
     const check = contract.checkTarget.slice(contract.checkTarget.lastIndexOf(":") + 1), target = normalized[check];
     if (!target) continue;
     const discovery = generatorContractInputs(contract);
-    normalized[check] = { ...target, cache: true, inputs: [...target.inputs, ...discovery.inputs, ...contract.outputRoots.map((output) => outputRootInputs(output, workspaceRoot))], ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}) };
+    normalized[check] = { ...target, cache: target.cache !== false, inputs: [...(target.inputs ?? ["default", "^default"]), ...discovery.inputs, ...contract.outputRoots.map((output) => outputRootInputs(output, workspaceRoot))], ...(discovery.dependsOn.length ? { dependsOn: [...new Set([...(target.dependsOn ?? []), ...discovery.dependsOn])] } : {}) };
   }
   for (const [name, target] of Object.entries(normalized)) {
     if (target.cache !== true) continue;

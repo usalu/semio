@@ -133,6 +133,7 @@ fn operation_meta_value_round_trip_matches_serde_oracle() {
 #[test]
 fn edit_value_round_trip_matches_serde_oracle() {
     let edit = Edit::<CounterMutation> {
+        line: None,
         id: "edit-1".into(),
         actor: Some("actor-1".into()),
         forwards: vec![CounterMutation::AddCounter(AddCounter { delta: 1 }), CounterMutation::AddCounter(AddCounter { delta: 2 })],

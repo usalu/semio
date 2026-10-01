@@ -29,6 +29,21 @@ fn the_engine_offset_form_replays_the_shared_f32_decimal_corpus() {
     }
 }
 
+/// ✂️ Law: the wgpu board maps a pointer exactly as React's Board2dHost maps a DOM pointer — every corpus coordinate,
+/// read through f32, reaches the engine as the shortest decimal `board2dFloat32Decimal` gives it, also off a fractional
+/// surface origin — so a drag records the same offset on both hosts.
+#[test]
+fn the_wgpu_board_pointer_replays_the_shared_f32_decimal_corpus() {
+    let corpus: Value = serde_json::from_str(BOARD_FLOAT32_DECIMAL_CORPUS).expect("corpus parses");
+    let origin = Rect { x: 0.0, y: 0.0, w: 800.0, h: 600.0 };
+    let fractional = Rect { x: 0.5, y: 12.25, ..origin };
+    for case in corpus["cases"].as_array().expect("cases") {
+        let (value, expected) = (case["value"].as_f64().expect("value"), case["expect"].as_f64().expect("expect"));
+        assert_eq!(board_local_pointer(origin, value as f32, value as f32), (expected, expected), "{}", case["name"]);
+        assert_eq!(board_local_pointer(fractional, value as f32, value as f32), (expected - 0.5, expected - 12.25), "{} off a fractional origin", case["name"]);
+    }
+}
+
 /// ⚖️ Law: every corpus case coalesces here exactly as React coalesces it — same dispatched rows in the same
 /// order, same flush verdict — so one drag reaches the guest as ONE batch on both hosts.
 #[test]

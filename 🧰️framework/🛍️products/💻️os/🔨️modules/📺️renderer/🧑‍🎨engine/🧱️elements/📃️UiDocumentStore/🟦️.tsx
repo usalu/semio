@@ -19,7 +19,7 @@
 
 // #region 🔌️Adapters
 import { useCallback, useSyncExternalStore } from "react";
-import { DEFAULT_UI_DOCUMENT_LIMITS, snapsAreValid } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
+import { DEFAULT_UI_DOCUMENT_LIMITS, numberLimitValues, numberRangeIsValid, snapsAreValid } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 export { DEFAULT_UI_DOCUMENT_LIMITS } from "../../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/🟦️.ts";
 import { RetainedUiPatchCursor, RetainedUiSnapshotCursor, RetainedUiSurfaceOwner, type RetainedUiTransaction, type RetainedUiState } from "@semio-tech/framework";
 import {
@@ -152,24 +152,31 @@ function isFiniteOrUndefined(value: number | null | undefined): boolean {
 function componentIsFinite(component: Component): boolean {
   switch (component.type) {
     case "slider":
-      return [component.value, component.min, component.max, component.step, ...(component.snaps ?? [])].every(Number.isFinite);
+      return [component.value, component.min, component.max, component.step, ...(component.snaps ?? []), ...(component.displayFactor == null ? [] : [component.displayFactor]), ...numberLimitValues(component.limits)].every(Number.isFinite);
     case "numberStepper":
-      return [component.value, component.step].every(Number.isFinite);
+      return [component.value, component.step, ...(component.snaps ?? []), ...(component.displayFactor == null ? [] : [component.displayFactor]), ...numberLimitValues(component.limits)].every(Number.isFinite);
     case "ring":
       return Number.isFinite(component.t);
     case "progress":
       return isFiniteOrUndefined(component.completed) && isFiniteOrUndefined(component.total);
     case "input":
-      return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step) && (component.snaps ?? []).every(Number.isFinite);
+      return isFiniteOrUndefined(component.min) && isFiniteOrUndefined(component.max) && isFiniteOrUndefined(component.step) && (component.snaps ?? []).every(Number.isFinite) && isFiniteOrUndefined(component.displayFactor) && numberLimitValues(component.limits).every(Number.isFinite);
     default:
       return true;
   }
 }
 
+/** 📏️ Mirrors `🦀️limits.rs`'s `component_number_range_is_valid`: travel, scale, display factor and limits agree. */
+function componentNumberRangeIsValid(component: Component): boolean {
+  if (component.type === "slider") return numberRangeIsValid(component.min, component.max, component.scale ?? "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps ?? []);
+  if (component.type === "numberStepper" || component.type === "input") return numberRangeIsValid(component.min ?? null, component.max ?? null, "linear", component.displayFactor ?? null, component.limits ?? null, component.snaps ?? []);
+  return true;
+}
+
 /** 🧲️ Mirrors `🦀️limits.rs`'s `component_snaps_are_valid`: a slider's and a number field's detents obey the detent law. */
 function componentSnapsAreValid(component: Component): boolean {
   if (component.type === "slider") return snapsAreValid(component.snaps ?? [], component.min, component.max);
-  return component.type !== "input" || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
+  return (component.type !== "input" && component.type !== "numberStepper") || snapsAreValid(component.snaps ?? [], component.min ?? Number.NEGATIVE_INFINITY, component.max ?? Number.POSITIVE_INFINITY);
 }
 
 function isSection(component: Component): boolean {
@@ -216,6 +223,7 @@ export function validateUiDocumentCore(root: UiNodeId | null, nodes: ReadonlyMap
       if (parentInSection && isSection(record.component)) violations.push({ type: "sectionNested", node: id });
       if (!componentIsFinite(record.component)) violations.push({ type: "nonFiniteNumber", node: id });
       else if (!componentSnapsAreValid(record.component)) violations.push({ type: "invalidSnaps", node: id });
+      else if (!componentNumberRangeIsValid(record.component)) violations.push({ type: "invalidNumberRange", node: id });
       if (depth > limits.maxDepth) {
         violations.push({ type: "depthQuota", node: id, depth, max: limits.maxDepth });
         continue;

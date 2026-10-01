@@ -39,6 +39,10 @@ serde.workspace = true
 serde_json.workspace = true
 base64_codec = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust", package = "semio-framework-io-base64" }
 semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
+# 🛠️ The gumball and paint tools are `🔄️machine` statecharts folded by the tool-machine runner; `statechart!` expands to
+# `machine::…`, so the dependency carries that name.
+machine = { path = "../../../../../../../🧰️framework/🔨️modules/🔄️machine/📦️packages/🦀️rust", package = "semio-framework-machine", default-features = false, features = ["macros"] }
+semio-framework-tool-machine = { workspace = true }
 
 [features]
 # 🧪️ Optional: CAD fixture round-trip tests in `⚙️engine/🧵️media` (Wave 4 must keep CAD compilable).

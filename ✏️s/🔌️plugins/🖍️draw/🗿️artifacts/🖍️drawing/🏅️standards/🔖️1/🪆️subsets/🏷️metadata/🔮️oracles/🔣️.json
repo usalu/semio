@@ -23,7 +23,7 @@
           "scenarios": [
             {
               "id": "renames-shape-a-without-touching-its-id",
-              "directoryName": "✏️renames-shape-a-without-touching-its-id"
+              "directoryName": "✏️renames"
             }
           ]
         },
@@ -34,7 +34,7 @@
           "scenarios": [
             {
               "id": "locks-shape-a",
-              "directoryName": "🔒️locks-shape-a"
+              "directoryName": "🔒️locks"
             }
           ]
         },
@@ -45,7 +45,7 @@
           "scenarios": [
             {
               "id": "hides-shape-a",
-              "directoryName": "🙈️hides-shape-a"
+              "directoryName": "🙈️hides"
             }
           ]
         }

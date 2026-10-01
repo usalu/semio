@@ -87,7 +87,7 @@
           "scenarios": [
             {
               "id": "allows-door-to-hatch",
-              "directoryName": "🧪️allows-door-to-hatch"
+              "directoryName": "🧪️allows"
             }
           ]
         },
@@ -98,7 +98,7 @@
           "scenarios": [
             {
               "id": "adds-color-attribute-to-shell",
-              "directoryName": "🧪️adds-color-attribute-to-shell"
+              "directoryName": "🧪️adds"
             }
           ]
         },
@@ -109,7 +109,7 @@
           "scenarios": [
             {
               "id": "tags-shell-as-structural",
-              "directoryName": "🧪️tags-shell-as-structural"
+              "directoryName": "🧪️tags"
             }
           ]
         },
@@ -120,18 +120,18 @@
           "scenarios": [
             {
               "id": "rewrites-session-notes",
-              "directoryName": "🧪️rewrites-session-notes"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
         {
           "mutationId": "change-object-kind-description",
-          "sourceMutationDirectoryName": "📃️change-object-kind-description",
-          "mutationDirectoryName": "📃️change-object-kind-description",
+          "sourceMutationDirectoryName": "📃️change-object-kind",
+          "mutationDirectoryName": "📃️change-object-kind",
           "scenarios": [
             {
               "id": "rewrites-object-kind-description",
-              "directoryName": "🧪️rewrites-object-kind-description"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -142,7 +142,7 @@
           "scenarios": [
             {
               "id": "repoints-object-kind-icon",
-              "directoryName": "🧪️repoints-object-kind-icon"
+              "directoryName": "🧪️repoints"
             }
           ]
         },
@@ -153,7 +153,7 @@
           "scenarios": [
             {
               "id": "relabels-object-kind",
-              "directoryName": "🧪️relabels-object-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -164,7 +164,7 @@
           "scenarios": [
             {
               "id": "switches-unit-to-centimeter",
-              "directoryName": "🧪️switches-unit-to-centimeter"
+              "directoryName": "🧪️switches"
             }
           ]
         },
@@ -175,18 +175,18 @@
           "scenarios": [
             {
               "id": "switches-variant-to-b",
-              "directoryName": "🧪️switches-variant-to-b"
+              "directoryName": "🧪️switches"
             }
           ]
         },
         {
           "mutationId": "change-representation-description",
-          "sourceMutationDirectoryName": "📜change-representation-description",
-          "mutationDirectoryName": "📜change-representation-description",
+          "sourceMutationDirectoryName": "📜change-representation",
+          "mutationDirectoryName": "📜change-representation",
           "scenarios": [
             {
               "id": "rewrites-shell-description",
-              "directoryName": "🧪️rewrites-shell-description"
+              "directoryName": "🧪️rewrites"
             }
           ]
         },
@@ -197,7 +197,7 @@
           "scenarios": [
             {
               "id": "promotes-shell-to-lod2",
-              "directoryName": "🧪️promotes-shell-to-lod2"
+              "directoryName": "🧪️promotes"
             }
           ]
         },
@@ -208,7 +208,7 @@
           "scenarios": [
             {
               "id": "repoints-shell-mesh-url",
-              "directoryName": "🧪️repoints-shell-mesh-url"
+              "directoryName": "🧪️repoints"
             }
           ]
         },
@@ -219,18 +219,18 @@
           "scenarios": [
             {
               "id": "recolors-door-vortex-kind",
-              "directoryName": "🧪️recolors-door-vortex-kind"
+              "directoryName": "🧪️recolors"
             }
           ]
         },
         {
           "mutationId": "change-vortex-kind-default-cable-kind",
-          "sourceMutationDirectoryName": "🔌change-vortex-kind-default-cable-kind",
-          "mutationDirectoryName": "🔌change-vortex-kind-default-cable-kind",
+          "sourceMutationDirectoryName": "🔌change-vortex-kind-default-cable",
+          "mutationDirectoryName": "🔌change-vortex-kind-default-cable",
           "scenarios": [
             {
               "id": "swaps-door-default-cable-kind",
-              "directoryName": "🧪️swaps-door-default-cable-kind"
+              "directoryName": "🧪️swaps"
             }
           ]
         },
@@ -241,7 +241,7 @@
           "scenarios": [
             {
               "id": "relabels-door-vortex-kind",
-              "directoryName": "🧪️relabels-door-vortex-kind"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -252,7 +252,7 @@
           "scenarios": [
             {
               "id": "relabels-front-vortex",
-              "directoryName": "🧪️relabels-front-vortex"
+              "directoryName": "🧪️relabels"
             }
           ]
         },
@@ -263,7 +263,7 @@
           "scenarios": [
             {
               "id": "rekinds-front-vortex-as-hatch",
-              "directoryName": "🧪️rekinds-front-vortex-as-hatch"
+              "directoryName": "🧪️rekinds"
             }
           ]
         },
@@ -274,7 +274,7 @@
           "scenarios": [
             {
               "id": "appends-frame-representation",
-              "directoryName": "🧪️appends-frame-representation"
+              "directoryName": "🧪️appends"
             }
           ]
         },
@@ -296,7 +296,7 @@
           "scenarios": [
             {
               "id": "appends-vent-vortex-kind",
-              "directoryName": "🧪️appends-vent-vortex-kind"
+              "directoryName": "🧪️appends"
             }
           ]
         },
@@ -307,7 +307,7 @@
           "scenarios": [
             {
               "id": "removes-shell-representation",
-              "directoryName": "🧪️removes-shell-representation"
+              "directoryName": "🧪️removes"
             }
           ]
         },
@@ -329,7 +329,7 @@
           "scenarios": [
             {
               "id": "removes-hatch-vortex-kind",
-              "directoryName": "🧪️removes-hatch-vortex-kind"
+              "directoryName": "🧪️removes"
             }
           ]
         },
@@ -362,7 +362,7 @@
           "scenarios": [
             {
               "id": "drops-material-attribute",
-              "directoryName": "🧪️drops-material-attribute"
+              "directoryName": "🧪️drops"
             }
           ]
         },
@@ -384,7 +384,7 @@
           "scenarios": [
             {
               "id": "revokes-door-to-door",
-              "directoryName": "🧪️revokes-door-to-door"
+              "directoryName": "🧪️revokes"
             }
           ]
         },
@@ -395,7 +395,7 @@
           "scenarios": [
             {
               "id": "drops-finish-attribute-from-shell",
-              "directoryName": "🧪️drops-finish-attribute-from-shell"
+              "directoryName": "🧪️drops"
             }
           ]
         },
@@ -406,7 +406,7 @@
           "scenarios": [
             {
               "id": "untags-shell-printable",
-              "directoryName": "🧪️untags-shell-printable"
+              "directoryName": "🧪️untags"
             }
           ]
         },
@@ -417,7 +417,7 @@
           "scenarios": [
             {
               "id": "renames-object-kind-to-pod",
-              "directoryName": "🧪️renames-object-kind-to-pod"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -428,7 +428,7 @@
           "scenarios": [
             {
               "id": "renames-shell-to-hull",
-              "directoryName": "🧪️renames-shell-to-hull"
+              "directoryName": "🧪️renames"
             }
           ]
         },
@@ -439,7 +439,7 @@
           "scenarios": [
             {
               "id": "renames-door-to-portal",
-              "directoryName": "🧪️renames-door-to-portal"
+              "directoryName": "🧪️renames"
             }
           ]
         },

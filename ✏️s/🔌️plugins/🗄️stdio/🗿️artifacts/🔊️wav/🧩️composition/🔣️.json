@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_wav::editor::wav::WavEditor",
       "factory": "semio_s_artifact_stdio_wav::editor::wav::create_wav_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "wav_editor",
+        "sqliteSnapshot": "sqlite_snapshot_wav_editor"
+      }
     },
     {
       "owner": "stdio-media",
@@ -23,10 +27,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_wav::viewer::wav::WavViewer",
       "factory": "semio_s_artifact_stdio_wav::viewer::wav::create_wav_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -42,5 +46,23 @@
         "wgpu": 6333
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "WavMutation",
+      "snapshot": "semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::snapshot::WavSnapshot",
+      "mutation": "semio_s_artifact_stdio_wav::standards::riff_pcm::subsets::any::schema::mutations::WavMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.wav",
+      "standard": "riff-pcm",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🔊️wav/🏅️standards/🔖️riff-pcm/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

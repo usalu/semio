@@ -8,7 +8,7 @@
 //! Physical directory layout note: `🦀️.rs` (outside this facet's package boundary) `#[path]`-wires
 //! one triad dir per semantic verb (`🌱create-step`, `🗑️delete-step`, `🔀reorder-step`,
 //! `✏️rename-step`, `📝change-step-description`, `➕create-block`, `➖delete-block`,
-//! `📦move-block-to-step`, `🔁replace-block`, `🏷️change-form-title`) — the SEMANTIC-MUTATIONS-OVERHAUL
+//! `📦move-block-to-step`, `🔁replace-block`, `🎛️change-block-field`, `🏷️change-form-title`) — the SEMANTIC-MUTATIONS-OVERHAUL
 //! rename already landed here (see `git log -- 🦀️.rs`), one-triad-dir-per-verb is the current
 //! shape, not a future one.
 //!
@@ -41,6 +41,7 @@ pub enum FormMutation {
     DeleteBlock(super::delete_block::mutation::DeleteBlock),
     MoveBlockToStep(super::move_block_to_step::mutation::MoveBlockToStep),
     ReplaceBlock(super::replace_block::mutation::ReplaceBlock),
+    ChangeBlockField(super::change_block_field::mutation::ChangeBlockField),
     ChangeFormTitle(super::change_form_title::mutation::ChangeFormTitle),
     CommitResponse(commit_response::mutation::CommitResponse),
     DiscardResponse(discard_response::mutation::DiscardResponse),
@@ -72,10 +73,10 @@ pub fn as_playbook_spec(snapshot: &FormsSnapshot) -> semio_framework_artifact_pl
 //#region 🔖️Kinds
 /// 🏷️ Kebab-case spelling of every [`FormMutation`] variant, in declaration order — the vocabulary the
 /// `forms-1-any` mutation catalog (`../../🔣️oracle.json`) declares and the
-/// exhaustive `mutate-*` case measures itself against (5 step kinds, 4 block kinds and the document title). The framework never
+/// exhaustive `mutate-*` case measures itself against (5 step kinds, 5 block kinds and the document title). The framework never
 /// parses Rust, so `kinds_match_the_enum_and_the_catalog` below is what keeps this list honest
 /// against both the enum and the committed catalog.
-pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-form-title", "commit-response", "discard-response"];
+pub const KINDS: &[&str] = &["create-step", "delete-step", "reorder-step", "rename-step", "change-step-description", "create-block", "delete-block", "move-block-to-step", "replace-block", "change-block-field", "change-form-title", "commit-response", "discard-response"];
 
 /// 🧮️ Applies `mutation` to `base` and hands back the whole `protocol::MutationOutcome`, the
 /// diagnostics included — the shape an external conformance host needs, since a committed

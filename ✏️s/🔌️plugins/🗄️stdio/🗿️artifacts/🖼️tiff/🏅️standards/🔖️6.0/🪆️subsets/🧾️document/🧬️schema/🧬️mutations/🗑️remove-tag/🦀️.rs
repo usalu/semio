@@ -59,8 +59,8 @@ pub fn contribute(base: &TiffSnapshot, ifd_index: usize, tag: u16) -> TiffDiff {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> TiffMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed remove-tag payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🗑️remove-tag/🎯️direct/🦠️mutation/🔣️.json")).expect("committed remove-tag payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

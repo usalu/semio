@@ -1,5 +1,5 @@
 //! 📏️ Main-window option — the proximity-select distance slider.
-//! Its command handler lives in `🎮️commands/🔬️set-lod-mode`.
+//! Its command handler lives in `🎮️commands/🔬️set-lod`.
 
 use crate::editor::flow::modes::edit::windows::main::config::FlowMainWindowConfig;
 use crate::editor::flow::terminology::FlowPlayLabels;

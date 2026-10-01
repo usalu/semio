@@ -8,7 +8,7 @@ export type Wfc2dUpsert<T> = readonly [number, T];
 /** 🔺️ A sparse, id-keyed structural delta over `Wfc2dSnapshot` — never a whole-snapshot capture. */
 export type Wfc2dDiff = {
   readonly schema: string | null;
-  readonly seed: number | null;
+  readonly seed: bigint | null;
   readonly slotsRemoved: readonly string[];
   readonly slotsUpserted: readonly Wfc2dUpsert<Wfc2dSlot>[];
   readonly edgesRemoved: readonly string[];

@@ -3,7 +3,7 @@ use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 
 #[test]
 fn fem2d_window_config_results_matches_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document-contract/🔣️.json")).expect("FEM window fixture");
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧬️schema/🧫️fixtures/🪪️document/🔣️.json")).expect("FEM window fixture");
     for candidate in fixture["valid"].as_array().expect("neutral valid cases") {
         let base: Fem2dResultsWindowConfig = dsl::json::from_json_str(&candidate.to_string()).expect("neutral FEM window config");
         let mutation = Fem2dResultsWindowConfigMutation::Snapshot { config: Box::new(base.clone()) };

@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🔮️ Energy oracle package command router. */
-import { ScriptRouter, runBundleScriptMain } from "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { ScriptRouter } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { DepsScript, EmitScript, EpJsonScript, NativeScript, RunScript, SetupScript, StatusScript, TestScript } from "../../🏃️execution/🟦️.ts";
 
 const router = new ScriptRouter(import.meta.dir)
@@ -12,4 +13,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("epjson", EpJsonScript)
   .register("emit", EmitScript)
   .register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "status" });
+await runScriptMain(router, { defaultCommand: "status" });

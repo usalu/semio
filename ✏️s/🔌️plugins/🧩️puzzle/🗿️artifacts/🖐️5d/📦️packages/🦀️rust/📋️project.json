@@ -71,7 +71,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "puzzle-5d-graph"
           ]
         }
       }
@@ -90,7 +91,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "puzzle-5d-graph-wire"
           ]
         }
       }

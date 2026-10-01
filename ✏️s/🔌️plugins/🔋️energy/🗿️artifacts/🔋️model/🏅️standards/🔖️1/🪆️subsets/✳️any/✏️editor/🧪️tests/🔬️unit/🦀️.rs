@@ -401,6 +401,63 @@ async fn a_site_slider_press_is_one_transaction_and_a_cancel_leaves_zero_trace()
     assert_eq!(latitude(&app), 45.0);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
 }
+
+async fn history_edit(app: &mut EnergyEditorApp, verb: &str, args: Vec<(&str, semio_framework_plugin::DslValue)>) {
+    use semio_framework_plugin::PluginApp as _;
+    let args = semio_framework_plugin::DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect());
+    let result = app.handle_action(verb, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.unwrap_or_else(|fault| panic!("{verb}: {fault:?}"));
+    assert!(result.output.get("rejected").is_none(), "{verb} was refused: {:?}", result.output);
+}
+
+async fn pump_time_travel(app: &mut EnergyEditorApp, done: impl Fn(Option<semio_framework::kernel::HistoryTimeTravelStage>) -> bool) {
+    use semio_framework_plugin::PluginApp as _;
+    for _ in 0..10_000 {
+        let stage = app.history_snapshot().await.expect("history").time_travel.map(|status| status.stage);
+        if done(stage) {
+            return;
+        }
+        app.advance_typed_operation_publication().await.expect("a driver turn");
+        while app.take_typed_operation_ui_progress().is_some() {}
+    }
+    panic!("the history edit never settled");
+}
+
+async fn rename(app: &mut EnergyEditorApp, name: &str) {
+    use semio_framework_plugin::{DslValue, PluginApp as _};
+    let args = DslValue::Object(vec![("id".to_string(), DslValue::String("name".to_string())), ("value".to_string(), DslValue::String(name.to_string()))]);
+    app.handle_action(SET_NODE_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local")).await.expect("the rename is admitted");
+    semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, semio_framework_plugin::artifact_app_laws::meta("local").instance_id).await.expect("the rename settles");
+}
+
+/// ⚖️ LAW (W3-T2-CONTROLS, design §13.1): time travel edits the slider press's committed VALUE — the absolute
+/// `update-site` leaf superseded with another latitude replays the downstream rename, and the overwrite leaves exactly
+/// the head a fresh run of the edited press and the rename reaches.
+#[semio_framework_async_macros::async_test]
+async fn a_committed_site_press_edited_in_history_replays_downstream() {
+    use semio_framework_plugin::{DslValue, PluginApp as _};
+    let mut app = dispatchable_app().await;
+    slide_site(&mut app, press(30.0, "site.latitude:4", true)).await;
+    let edited = transaction_rows(&mut app).await.into_iter().max_by_key(|entry| entry.seq).and_then(|row| row.mutations.first().map(|mutation| mutation.mutation_id.clone())).expect("the press's mutation");
+    rename(&mut app, "Edited downstream").await;
+    history_edit(&mut app, "historyEditBegin", vec![("mutationId", DslValue::String(edited))]).await;
+    history_edit(&mut app, "historyEditInput", vec![("path", DslValue::String("/latitudeDeg".into())), ("value", DslValue::float(15.0))]).await;
+    history_edit(&mut app, "historyEditAccept", Vec::new()).await;
+    pump_time_travel(&mut app, |stage| stage != Some(semio_framework::kernel::HistoryTimeTravelStage::Replaying)).await;
+    let status = app.history_snapshot().await.expect("history").time_travel.expect("a live session");
+    assert_eq!((status.stage, status.blocking), (semio_framework::kernel::HistoryTimeTravelStage::Reviewing, false), "{status:?}");
+    assert_eq!(latitude(&app), 30.0, "reviewing never touches the committed model");
+    history_edit(&mut app, "historyEditFinalize", Vec::new()).await;
+    history_edit(&mut app, "historyEditCommit", vec![("choice", DslValue::String("overwrite".into()))]).await;
+    pump_time_travel(&mut app, |stage| stage.is_none()).await;
+    let edited = app.snapshot().expect("edited head").model;
+    assert_eq!((edited.site.latitude_deg, edited.name.as_str()), (15.0, "Edited downstream"), "the overwrite folds the edited latitude under the replayed rename");
+    let mut fresh = dispatchable_app().await;
+    slide_site(&mut fresh, press(15.0, "site.latitude:5", true)).await;
+    rename(&mut fresh, "Edited downstream").await;
+    assert_eq!(edited, fresh.snapshot().expect("fresh head").model, "the edited log equals a fresh run of the edited press");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut fresh);
+}
 //#endregion 🎚️ScrubLaws
 
 //#region ⏯️SimulationToolRun

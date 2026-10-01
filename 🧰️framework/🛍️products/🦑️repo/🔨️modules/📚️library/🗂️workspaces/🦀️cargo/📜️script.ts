@@ -4,8 +4,9 @@ import { acquireQueuedResourceLease } from "../../⚡️caching/🔒️leases/�
 import { join, relative, isAbsolute } from "node:path";
 import { existsSync, lstatSync, readFileSync } from "node:fs";
 import { runtimeInputAdmissionV1 } from "../../🕸️dependencies/🧩️runtime/🟨️.mjs";
-import { Script, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runOwnedCommand } from "../../🏃️process/🎛️owned-execution/🟦️.ts";
+import { repoTestArtifactEnvironment } from "../../🏃️process/🌿️environment/🧪️test-output/🟦️.ts";
 import { getWorkspaceRoot } from "../🟦️.ts";
 import { discoverCargoWorkspaces, publishCargoWorkspaceMembership, cargoWorkspaceForManifest, cargoRepositoryPackages, prepareCargoOwners } from "./🟦️.ts";
 
@@ -26,7 +27,7 @@ class PreparationScript extends Script {
     if(args.length!==2 || args[0]!=="--manifest")throw new Error("prepare --manifest <selected-scope>");
     const controller=new AbortController(), stop=():void=>controller.abort();process.once("SIGINT",stop);process.once("SIGTERM",stop);
     let lease: Awaited<ReturnType<typeof acquireQueuedResourceLease>> | undefined;
-    try { lease=await acquireQueuedResourceLease({directory:join(this.root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${this.root}`,mode:"exclusive",owner:randomUUID(),signal:controller.signal,timeoutMs:30_000});
+    try { lease=await acquireQueuedResourceLease({directory:join(this.root,".🧬semio/🦑️repo/⚡️cache/agents/resource-leases"),resource:`cargo-preparation:${this.root}`,mode:"exclusive",owner:randomUUID(),signal:controller.signal});
     const scope=cargoWorkspaceForManifest(this.root,args[1]!);prepareCargoOwners(this.root,scope);publishCargoWorkspaceMembership(this.root,cargoWorkspaceForManifest(this.root,scope.manifest),"write"); }
     finally { lease?.release();process.off("SIGINT",stop);process.off("SIGTERM",stop); }
   }
@@ -60,7 +61,21 @@ class ContractScript extends Script {
     await runOwnedCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000);
   }
 }
+/** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */
+class QueuedContractScript extends Script {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("queued-contract-check accepts no overrides");
+    await runOwnedCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")], this.root, "cargo-queued-preparation-contract", 45_000, { env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract") });
+  }
+}
 class BunContractScript extends Script {
   async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runOwnedCommand("bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",15_000); }
 }
-if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("prepare",PreparationScript).register("contract-check", ContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2));
+class CapabilityContractScript extends Script {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw new Error("capability-contract-check accepts no overrides");
+    const { runCargoCapabilityContributionChecks, runCargoCapabilityPhysicalChecks } = await import("./🧩️capabilities/🧪️tests/🟦️.ts");
+    console.log(`cargo capability contract: ${runCargoCapabilityContributionChecks() + runCargoCapabilityPhysicalChecks()} laws`);
+  }
+}
+if (import.meta.main) await new ScriptRouter(getWorkspaceRoot()).register("capability-contract-check", CapabilityContractScript).register("runtime-contract-check",RuntimeContractScript).register("runtime-input-check",RuntimeInputScript).register("bun-contract-check",BunContractScript).register("members", MembersScript).register("prepare",PreparationScript).register("contract-check", ContractScript).register("queued-contract-check", QueuedContractScript).register("native-input-check", NativeInputScript).run(process.argv.slice(2));

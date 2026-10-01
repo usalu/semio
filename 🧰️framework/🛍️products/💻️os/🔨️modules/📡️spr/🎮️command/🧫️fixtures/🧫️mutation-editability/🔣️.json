@@ -1,0 +1,11 @@
+{
+  "description": "Editability verdict of every counter fixture leaf, read twice: by the Rust law over each wire witness at runtime (editable: an input schema and no foreign-step capability; inert: no input schema; foreign: a composite that may emit foreign steps) and by the static `schema mutation-editability` gate over the aggregate source. Both must reach exactly these verdicts.",
+  "aggregate": "🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/🧫️fixtures/🧬️mutation-laws/🧬️mutations",
+  "cases": [
+    { "kind": "add-counter", "wire": { "operation": "addCounter", "delta": 3 }, "verdict": "editable" },
+    { "kind": "add-counter-twice", "wire": { "operation": "addCounterTwice", "delta": 3 }, "verdict": "foreign" },
+    { "kind": "add-counter-four-times", "wire": { "operation": "addCounterFourTimes", "delta": 3 }, "verdict": "foreign" },
+    { "kind": "add-counter-then-notify-foreign", "wire": { "operation": "addCounterThenNotifyForeign", "delta": 3, "foreignCount": 2 }, "verdict": "foreign" },
+    { "kind": "add-counter-sequence", "wire": { "operation": "addCounterSequence", "deltas": [2, 3] }, "verdict": "foreign" }
+  ]
+}

@@ -168,7 +168,7 @@ pub fn addressed_from_context(ctx: &crate::editor::cad::CadDispatchCtx, config: 
 }
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod tests;
 
 //#region 🪢️TaxonomyMounts

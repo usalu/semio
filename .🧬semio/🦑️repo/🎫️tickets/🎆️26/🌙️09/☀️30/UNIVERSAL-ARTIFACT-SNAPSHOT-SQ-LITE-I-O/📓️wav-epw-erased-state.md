@@ -21,3 +21,19 @@ Actual new independent source law rejected the stale WAV JSON boundary and Graph
 Fresh source6laws/48assertions pass, and the full public WAV package gate passes8outputs/12exports,6snapshot laws48assertions plus10existing mutation/editor laws34assertions (52.3s). The neutral index fixture now uses canonical decimal strings, with explicit test-only native unsigned parsing and independently normalized JSON output; a briefly concurrent native compile captured the intermediate fixture before its test helper update and is tracked as a harness failure, not a semantic regression.
 
 Both complete native grammar/protocol laws admit fixture/default/native-demo logical documents. Ticket-only temporary emission completed for demo Text/Pack; these branches are removed and the permanent comparison laws will run fresh against their authored retained assets. The emission runs are not counted as shipped-example verification. EPW full public package is independently green8outputs/9exports,5laws31assertions (21.0s). Full native owner regressions remain in progress.
+
+## Full Native Regression Follow-Up
+
+The WAV full invocation caught stale owned typed-chunk fixtures before Rust: auxiliary references still used JSON numbers and the Float32 fixture still used ordinary JSON numbers, contrary to the authored complete unsigned64 and binary32 facets. The affected fixtures now use canonical decimal strings and explicit binary32 words. The native value mapping must become coherent with those facets; its actual native regression is queued. Existing fixture-only index normalization will be removed when that owned mapping is implemented.
+
+EPW's full invocation reached one stale assertion that expected no relational codec. The definition law now checks its real structural Pack schema hash and relational capability together. Its fresh full native regression is queued. Neither family is declared fully verified while these runs are outstanding.
+
+## Canonical WAV Value Mapping
+
+The owned Rust value mapping now explicitly writes and reads binary32 word objects and canonical unsigned64 decimal indices, with closed tagged branches and rejection of duplicate, unknown and malformed fields. The old test-only index normalization is removed. A permanent native law checks every neutral binary32 payload and full unsigned64 range directly against independently authored JSON. Its current native invocation remains a production compiler prerequisite failure; it has not reached that assertion.
+
+The proper fresh registered public route, `@semio-tech/stdio-wav:test`, passed uncached in 35.5 seconds: eight outputs, twelve exports, six SQLite laws with 48 assertions, and ten existing mutation/editor laws with 34 assertions. An earlier invocation used a nonexistent `stdio-wav-ts` project and is retained only as a harness error. It is not counted as a regression or verification.
+
+The fresh four-owner public invocation also passed EPW. WAV's full registered native suite is now running against the explicit raw-word/unsigned64 value mapping and authored fixtures. EPW's full native suite was relaunched with the corrected structural-capability assertion. One earlier EPW launch had a mistyped private Nx output-directory path; only that verified launch and its own accidental cache directory were removed, its captured output was retained as harness evidence, and the corrected invocation uses this ticket's generated workspace data. That launch is not counted as a feature result.
+
+Final WAV complete native owner gate is GREEN: all fifty tests passed (Nextest74ee71ba-0f3d-41d1-92f7-6c06b1fdc412,2.877seconds execution,66minutes17seconds including compilation/queue). This includes the full canonical JSON words/unsigned64 law and erased Binary/Text relational laws. EPW’s current queued build was deliberately cancelled before runtime while reducing overlapping root builds; its full native verification will be relaunched.

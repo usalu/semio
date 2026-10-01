@@ -1,0 +1,102 @@
+# Current Styling Source Inventory
+
+The full current first-party source-port scan recorded 239 findings in 217.480 seconds. This is a read-only inventory, not a gate pass. The separate registered whole-source gate independently reported the same 239 findings. Source changed concurrently, so this count applies only to the observed source view.
+
+## Current File Counts
+
+| Findings | Source |
+| ---: | --- |
+| 20 | ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/🦀️.rs |
+| 11 | ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🔬️probes/📖️reader/🦀️.rs |
+| 11 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🌐️World3dHost/🟦️.tsx |
+| 7 | 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🦀️.rs |
+| 6 | ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🏭️generator/🔁️codec/🦀️.rs |
+| 6 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🧭️coordination/🟦️.tsx |
+| 5 | ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react/🎨️.css |
+| 5 | ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🔬️probes/📖️reader/🦀️.rs |
+| 5 | 🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️mode/🧪️.story.tsx |
+| 5 | 🧰️framework/🛍️products/🎤️presentation/📦️packages/🟦️typescript/🎯️targets/⚛️react/🎨️.css |
+| 5 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️.tsx |
+| 5 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/🎯️targets/🧊️wgpu/📤️export/📐️svg/🦀️.rs |
+| 4 | ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/👁️preview/🦀️.rs |
+| 4 | ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🔤️text/🦀️.rs |
+| 4 | ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs |
+| 4 | ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/📊️results/🦀️.rs |
+| 4 | ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️main/🦀️.rs |
+| 4 | ✏️s/🧑‍💻dev/🏗️fem/📖️stories/🧭️coordination/🟦️.ts |
+| 4 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts |
+| 4 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️theme-roundtrip/🧪️.story.tsx |
+| 4 | 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔝️Navbar/🟦️.tsx |
+| 4 | 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/📖️stories/🧪️.story.tsx |
+| 4 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗺️WorldTerrainLayer/🟦️.tsx |
+| 4 | 🧰️framework/🛍️products/📓️print/🔨️modules/📊️viz-kernel/🖼️render/🟦️.ts |
+| 3 | ✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs |
+| 3 | ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🔲️grid/🦀️.rs |
+| 3 | ✏️s/🔌️plugins/🀄️wfc/🗿️artifacts/🔲️grid2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/👁️preview/🦀️.rs |
+| 3 | ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🦀️.rs |
+| 3 | ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧊️3d/🦀️.rs |
+| 3 | ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs |
+| 3 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🟦️.ts |
+| 3 | 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️graph-wasm-canvas/🧪️.story.tsx |
+| 3 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/📖️stories/🧪️.story.tsx |
+| 3 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖼️IconRenderHost/📖️stories/🧪️.story.tsx |
+| 3 | 🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs |
+| 2 | ✏️s/🔌️plugins/🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🧱️model/🦀️.rs |
+| 2 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️glass/🧪️.story.tsx |
+| 2 | 🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🟦️.tsx |
+| 2 | 🧰️framework/🔨️modules/🖼️assets/🪧️logos/🏗️builder/🎞️animation/🟦️.ts |
+| 2 | 🧰️framework/🛍️products/💻️os/📖️stories/🎭️wgpu/🧪️.story.tsx |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️world-r3f/🧪️.story.tsx |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🌐️browser-host/🟦️.ts |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/🎯️targets/🧊️wgpu/🦀️.rs |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🟦️GumballOverlay.tsx |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/✍️editing/🟦️.tsx |
+| 2 | 🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs |
+| 2 | 🧰️framework/🛍️products/📓️print/🔨️modules/📊️viz-kernel/📦️packages/🟦️typescript/🔬️probes/🟦️.ts |
+| 1 | ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🌍️gis/🗿️artifacts/🏔️gisterrain/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🏔️terrain/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🎥️scene/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🎥️scene/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts |
+| 1 | ✏️s/🔌️plugins/🏗️fem/⚙️engine/🖥️app-surface/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-model/🧪️.story.tsx |
+| 1 | ✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-results/🧪️.story.tsx |
+| 1 | ✏️s/🔌️plugins/🏗️fem/📖️stories/🎭️2d-viewer/🧪️.story.tsx |
+| 1 | ✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🟦️.ts |
+| 1 | ✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/❓️questions/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📖️stories/🎭️renderer/🧪️.story.tsx |
+| 1 | ✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📊️results/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🌍️world/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🔍️properties/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🖼️composite/☑️options/🖌️brush/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🏅️standards/4️⃣1.4/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/🏭️generator/🔁️codec/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🖐️5d/📖️stories/🎭️5d-timeline/🧪️.story.tsx |
+| 1 | ✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-handle-kind/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-grip-kind/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔘️add-vortex-kind/🦀️.rs |
+| 1 | ✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🌐️world/🦀️.rs |
+| 1 | 🧰️framework/🔨️modules/🕸️graph/🛂️manifest/📽️projection/🟦️.ts |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌓️theme/🏛️model/🟦️.ts |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📖️stories/🎭️tokens/🧪️.story.tsx |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/📖️stories/🎭️unified-gumball/🧪️.story.tsx |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🌳️Tree/📖️stories/🧪️.story.tsx |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🎬️Scene/📖️stories/🧪️.story.tsx |
+| 1 | 🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔣️Icons/🟦️.tsx |
+| 1 | 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🌍️world/🎨️r3f/🟦️.tsx |
+| 1 | 🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📖️stories/🎭️reference-media/🧪️.story.tsx |
+| 1 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs |
+| 1 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📐️Canvas2dHost/🎨️paint/🟦️.ts |
+| 1 | 🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🖌️Paint2dHost/📖️stories/🧪️.story.tsx |
+| 1 | 🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts |
+
+## Confirmed Classification Defect
+
+The plugin runtime format_args string `{:#010b}` is Rust numeric formatting, not a literal UI color. Root authored three portable ordinary/raw/escaped format vectors before the correction. The registered independent Node route reproduced semantic REDs on the two interpolation vectors; the escaped literal color vector remained admitted. The source reader now separates standard Rust formatting fields from literal color data. Current full-source color enforcement remains RED pending all genuine source repairs; no owner-name exemption or widened schema is introduced.

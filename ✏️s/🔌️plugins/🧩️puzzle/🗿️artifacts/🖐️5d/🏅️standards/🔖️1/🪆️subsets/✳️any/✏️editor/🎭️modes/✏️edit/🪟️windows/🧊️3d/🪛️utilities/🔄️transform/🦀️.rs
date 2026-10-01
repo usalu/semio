@@ -147,23 +147,71 @@ impl Puzzle5dSelectionRecord {
 
 /// 🚚️ The record one world drop states: `part_id` dragged from its BASE origin to `position`, and every grip its
 /// first grip lands within `radius` of — on another part, not yet fastened to it — as a `(source, target)` pair,
-/// the moved grip the source. `None` for an unknown part.
+/// the moved grip the source. `None` for an unknown part. The whole scan in one call; the retained work pages it
+/// through [`Puzzle5dRelocateScan`].
 pub fn puzzle5d_relocate_record(base: &Puzzle5dSnapshot, part_id: &str, position: [f64; 3], radius: f64) -> Option<Puzzle5dSelectionRecord> {
-    let part = base.parts.iter().find(|part| part.id == part_id)?;
-    let offset = [position[0] - part.part_3d.origin[0], position[1] - part.part_3d.origin[1], position[2] - part.part_3d.origin[2]];
-    let fastenings = part.grips.first().map_or_else(Vec::new, |grip| {
-        let source = puzzle5d_grip_full_id(&part.id, &grip.id);
-        let from = puzzle5d_world_point(position, part.part_3d.orientation, grip.grip_3d.position);
-        let fastened = |target: &str| base.fasteners.iter().any(|entry| (entry.source == source && entry.target == target) || (entry.source == target && entry.target == source));
-        base.parts
-            .iter()
-            .filter(|other| other.id != part.id)
-            .flat_map(|other| other.grips.iter().map(move |candidate| (puzzle5d_grip_full_id(&other.id, &candidate.id), puzzle5d_world_point(other.part_3d.origin, other.part_3d.orientation, candidate.grip_3d.position))))
-            .filter(|(target, at)| *target != source && !fastened(target) && ((from[0] - at[0]).powi(2) + (from[1] - at[1]).powi(2) + (from[2] - at[2]).powi(2)).sqrt() <= radius.max(0.0))
-            .map(|(target, _)| (source.clone(), target))
-            .collect()
-    });
-    Some(Puzzle5dSelectionRecord { targets: vec![part.id.clone()], motion: Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset }), fastenings })
+    let mut scan = Puzzle5dRelocateScan::begin(base, part_id, position, radius)?;
+    while !scan.step(base, usize::MAX) {}
+    Some(scan.finish())
+}
+
+/// 📄️ Parts one page of a world-drop proximity scan measures — the retained work's per-step share.
+pub const PUZZLE5D_RELOCATE_SCAN_PAGE: usize = 16;
+
+/// 🔭️ The paged proximity scan of one world drop: [`Self::begin`] states the drag and indexes the grips already
+/// fastened to the moved one, every [`Self::step`] measures the grips of one page of parts, and [`Self::finish`]
+/// hands over the record — so a drop on a large puzzle reports progress page by page and stays cancellable between
+/// pages, with exactly the pairs (and order) the one-call scan finds.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Puzzle5dRelocateScan {
+    record: Puzzle5dSelectionRecord,
+    source: Option<(String, [f64; 3])>,
+    fastened: std::collections::HashSet<String>,
+    radius: f64,
+    cursor: usize,
+}
+
+impl Puzzle5dRelocateScan {
+    /// 🎬️ The scan of `part_id` dropped at `position`; `None` for an unknown part. A part without a grip fastens
+    /// nothing, so its scan is already done.
+    pub fn begin(base: &Puzzle5dSnapshot, part_id: &str, position: [f64; 3], radius: f64) -> Option<Self> {
+        let part = base.parts.iter().find(|part| part.id == part_id)?;
+        let offset = [position[0] - part.part_3d.origin[0], position[1] - part.part_3d.origin[1], position[2] - part.part_3d.origin[2]];
+        let source = part.grips.first().map(|grip| (puzzle5d_grip_full_id(&part.id, &grip.id), puzzle5d_world_point(position, part.part_3d.orientation, grip.grip_3d.position)));
+        let fastened = source.as_ref().map_or_else(Default::default, |(source, _)| {
+            base.fasteners.iter().filter_map(|entry| if &entry.source == source { Some(entry.target.clone()) } else if &entry.target == source { Some(entry.source.clone()) } else { None }).collect()
+        });
+        let cursor = if source.is_some() { 0 } else { base.parts.len() };
+        Some(Self { record: Puzzle5dSelectionRecord { targets: vec![part.id.clone()], motion: Puzzle5dSelectionMotion::World(Puzzle3dSelectionMotion::Drag { offset }), fastenings: Vec::new() }, source, fastened, radius: radius.max(0.0), cursor })
+    }
+
+    /// 📏️ Measures the grips of the next `page` parts (at least one); `true` once every part is measured.
+    pub fn step(&mut self, base: &Puzzle5dSnapshot, page: usize) -> bool {
+        let end = self.cursor.saturating_add(page.max(1)).min(base.parts.len());
+        if let Some((source, from)) = self.source.as_ref() {
+            for other in base.parts.get(self.cursor..end).into_iter().flatten().filter(|other| other.id != self.record.targets[0]) {
+                for candidate in &other.grips {
+                    let target = puzzle5d_grip_full_id(&other.id, &candidate.id);
+                    let at = puzzle5d_world_point(other.part_3d.origin, other.part_3d.orientation, candidate.grip_3d.position);
+                    if target != *source && !self.fastened.contains(&target) && ((from[0] - at[0]).powi(2) + (from[1] - at[1]).powi(2) + (from[2] - at[2]).powi(2)).sqrt() <= self.radius {
+                        self.record.fastenings.push((source.clone(), target));
+                    }
+                }
+            }
+        }
+        self.cursor = end;
+        self.cursor >= base.parts.len()
+    }
+
+    /// 📊️ `(measured parts, all parts)` of `base`.
+    pub fn progress(&self, base: &Puzzle5dSnapshot) -> (usize, usize) {
+        (self.cursor.min(base.parts.len()), base.parts.len())
+    }
+
+    /// 🏁️ The scanned drop record.
+    pub fn finish(self) -> Puzzle5dSelectionRecord {
+        self.record
+    }
 }
 
 fn puzzle5d_world_point(origin: [f64; 3], orientation: Option<[f64; 4]>, local: [f64; 3]) -> [f64; 3] {

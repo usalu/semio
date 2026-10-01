@@ -1,0 +1,9 @@
+{
+  "name": "@semio-tech/hub-auth-client-rs",
+  "private": true,
+  "scripts": {
+    "check": "nx run @semio-tech/hub-auth-client-rs:check",
+    "test": "nx run @semio-tech/hub-auth-client-rs:test",
+    "test-source": "nx run @semio-tech/hub-auth-client-rs:test-source"
+  }
+}

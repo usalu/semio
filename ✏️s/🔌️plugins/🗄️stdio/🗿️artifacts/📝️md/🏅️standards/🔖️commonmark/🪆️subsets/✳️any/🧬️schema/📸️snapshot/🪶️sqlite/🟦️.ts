@@ -1,6 +1,7 @@
 /** 📝️ Explicit CommonMark domain and ownership tables. */
 import type {MdSnapshot,MdBlock,MdInline} from "../🟦️.ts";
 import type {SqliteDatabase,SqliteRow} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
+import type {ArtifactDialect} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import {ArtifactSqliteProjection,artifactSqliteCheckpoint,artifactSqliteTables,artifactSqliteInteger,artifactSqliteText,artifactSqliteBoolean,type ArtifactSqliteOptions} from "../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧩️artifact/🟦️.ts";
 /** 🏛️ The same individually authored CommonMark SQL declaration as the native owner. */
 export const MD_SQLITE_SCHEMA=String.raw`CREATE TABLE md_document (id INTEGER PRIMARY KEY, schema TEXT NOT NULL, CHECK (id=1));
@@ -119,3 +120,6 @@ export async function mdSnapshotFromSqliteDatabase(database:SqliteDatabase,optio
  }
  if(seenBlocks.size!==source.blocks.size||seenInlines.size!==source.inlines.size||inlines.length||items.length)throw Error("CommonMark tree contains unreachable entities");await artifactSqliteCheckpoint(options,"reconstructSnapshot",steps,steps);return{schema:artifactSqliteText(source.document,1),blocks};
 }
+
+/** 🧭️ Borrowed CommonMark admission checks its exact declaration and authored document identity. */
+export async function validateMdSnapshotSqliteDialect(snapshot:MdSnapshot,dialect:ArtifactDialect,database:SqliteDatabase,options:ArtifactSqliteOptions={}):Promise<readonly never[]>{await artifactSqliteCheckpoint(options,"projectSnapshot",0,0,false);if(dialect.artifactKind!=="s.stdio.md"||dialect.standard!=="commonmark"||dialect.subset!=="*")throw Error("CommonMark does not own this semantic subset");const table=database.tables.find(table=>table.name.toLowerCase()==="md_document");if(table?.rows.length!==1||table.rows[0]!.rowid!==1n||artifactSqliteInteger(table.rows[0]!,0)!==1n||artifactSqliteText(table.rows[0]!,1)!==snapshot.schema)throw Error("CommonMark document identity disagrees with its snapshot");return[]}

@@ -210,10 +210,10 @@ impl protocol::OpBinary for MapWindowConfigMutation {
 mod tests;
 
 #[cfg(test)]
-#[path = "🧪️tests/🧬️direct-leaves/🦀️.rs"]
+#[path = "🧪️tests/🧬️direct/🦀️.rs"]
 mod direct_mutation_tests;
 
 #[cfg(test)]
-#[path = "🧪️tests/🔬️window-ownership/🦀️.rs"]
+#[path = "🧪️tests/🔬️window/🦀️.rs"]
 mod window_ownership_tests;
 //#endregion 🧪️Tests

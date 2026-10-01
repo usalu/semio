@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract;
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]

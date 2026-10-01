@@ -194,3 +194,46 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 1.0, "the leaf moved the box");
     crate::editor::cad::unit_tests::context::close(&mut app);
 }
+
+/// 🎚️ One streamed gumball dispatch of the press `gesture` (design §13.1, §17.4): the cumulative offset from the press, the
+/// release adding `commit`, a cancel naming its `abort` reason — settled like the host settles it.
+async fn stream_translate(app: &mut crate::editor::cad::unit_tests::context::CadFixtureApp, target: &str, gesture: &str, dx: f64, phase: Option<(&str, protocol::DslValue)>) {
+    use semio_framework_plugin::PluginApp;
+    let mut args = vec![
+        ("objectIds".to_string(), protocol::DslValue::Array(vec![protocol::DslValue::String(target.into())])),
+        ("dx".to_string(), protocol::DslValue::float(dx)),
+        ("dy".to_string(), protocol::DslValue::float(0.0)),
+        ("dz".to_string(), protocol::DslValue::float(0.0)),
+        ("gesture".to_string(), protocol::DslValue::String(gesture.into())),
+    ];
+    args.extend(phase.map(|(key, value)| (key.to_string(), value)));
+    app.handle_action("translateSelection", Some(&protocol::DslValue::Object(args)), &crate::editor::cad::unit_tests::context::meta("local")).await.expect("the streamed translate is admitted");
+    let _ = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(app, crate::editor::cad::unit_tests::context::TEST_INSTANCE).await;
+}
+
+/// 🪟️ The streamed gumball (design §17.4): every tick of one press stays provisional — the render reads committed ⊕ the
+/// press's leaf while the document and the history stay untouched — the release lands ONE `drag-selection` edit of the
+/// release's cumulative offset stamped with the press's transaction, and a press the host cancels leaves zero trace.
+#[semio_framework_async_macros::async_test]
+async fn a_streamed_gumball_press_is_one_transaction_and_a_cancel_leaves_zero_trace() {
+    use crate::editor::cad::commands::object::add_object::AddObject;
+    let mut app = crate::editor::cad::unit_tests::context::new_app().await;
+    dispatch_rows(&mut app, crate::editor::cad::CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) })).await;
+    let placed = crate::editor::cad::cad_pane_objects(&app.snapshot().expect("snapshot"), CadPaneId::Shape).last().expect("the box is placed").id.clone();
+    let edits = app.edit_transactions().len();
+    stream_translate(&mut app, &placed, "gumball:1", 0.5, None).await;
+    stream_translate(&mut app, &placed, "gumball:1", 1.25, None).await;
+    assert_eq!(app.edit_transactions().len(), edits, "ticks publish no edit");
+    assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 0.0, "the committed box never moves during the press");
+    assert_eq!(origin(&app.rendered_snapshot(), CadPaneId::Shape, &placed)[0], 1.25, "the render previews the press's cumulative offset");
+    stream_translate(&mut app, &placed, "gumball:1", 2.0, Some(("commit", protocol::DslValue::Bool(true)))).await;
+    let transactions = app.edit_transactions();
+    assert_eq!(transactions.len(), edits + 1, "the release is ONE edit");
+    assert!(transactions.last().and_then(Option::as_ref).is_some_and(|transaction| transaction.tool == "s.cad.cad@1/*#editor#translateSelection"), "{transactions:?}");
+    assert_eq!(origin(&app.snapshot().expect("snapshot"), CadPaneId::Shape, &placed)[0], 2.0, "the release lands the cumulative offset");
+    stream_translate(&mut app, &placed, "gumball:2", 5.0, None).await;
+    stream_translate(&mut app, &placed, "gumball:2", 0.0, Some(("abort", protocol::DslValue::String("captureLost".into())))).await;
+    assert_eq!(app.edit_transactions().len(), edits + 1, "a cancelled press leaves zero trace");
+    assert_eq!(origin(&app.rendered_snapshot(), CadPaneId::Shape, &placed)[0], 2.0, "the cancelled preview is gone");
+    crate::editor::cad::unit_tests::context::close(&mut app);
+}

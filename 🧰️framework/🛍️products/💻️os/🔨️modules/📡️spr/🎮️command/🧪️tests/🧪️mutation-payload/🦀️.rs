@@ -3,9 +3,9 @@
 //! `operation` tag, and `with_payload_value` rebuilds the same kind or refuses — never another kind.
 
 use super::mutation_laws_fixture::{AddCounter, AddCounterTwice, Counter, CounterMutation};
-use crate::os_spr::{Mutation, MutationLeaf};
+use crate::os_spr::{Mutation, MutationLeaf, SemanticMutation};
 use crate::{DslValue, ToValue};
-use super::super::{mutation_payload_round_trip_failures, mutation_fixture_ops};
+use super::super::{mutation_fixture_ops, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures};
 
 #[test]
 fn input_schemas_follow_the_descriptor_rows() {
@@ -53,4 +53,88 @@ fn the_payload_law_holds_for_every_editable_op_and_reads_only_decodable_fixtures
     let (decoded, files) = mutation_fixture_ops::<CounterMutation>(&root);
     std::fs::remove_dir_all(&root).expect("cleanup");
     assert_eq!((decoded, files), (vec![CounterMutation::AddCounter(AddCounter { delta: 9 })], 2));
+}
+
+/// 🙈️ A hand-written aggregate over the counter that forwards its behavior but publishes no payload schema and labels itself
+/// without German — the shape the editability and label laws must refuse.
+#[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
+struct Unpublished {
+    op: CounterMutation,
+}
+
+impl Mutation<Counter> for Unpublished {
+    type Diff = <CounterMutation as Mutation<Counter>>::Diff;
+    const DESCRIPTORS: &'static [crate::os_spr::MutationLeafDescriptor] = <CounterMutation as Mutation<Counter>>::DESCRIPTORS;
+    fn descriptor(&self) -> &'static crate::os_spr::MutationLeafDescriptor {
+        self.op.descriptor()
+    }
+    fn diff(&self, base: &Counter) -> crate::os_spr::MutationOutcome<Self::Diff> {
+        self.op.diff(base)
+    }
+    fn inverse(&self, base: &Counter) -> Vec<Self> {
+        self.op.inverse(base).into_iter().map(|op| Self { op }).collect()
+    }
+}
+
+impl SemanticMutation<Counter> for Unpublished {
+    fn kinds() -> &'static [crate::os_spr::SemanticDescriptor] {
+        <CounterMutation as SemanticMutation<Counter>>::kinds()
+    }
+    fn semantics(&self) -> &'static crate::os_spr::SemanticDescriptor {
+        self.op.semantics()
+    }
+    fn label(&self) -> crate::LocalizedLabel {
+        crate::LocalizedLabel::native("Add to the counter", "")
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
+fn witnesses() -> Vec<CounterMutation> {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    fixture["cases"].as_array().expect("cases").iter().map(|case| crate::os_pack::json::from_json_str(&case["wire"].to_string()).expect("a counter witness")).collect()
+}
+
+/// ⚖️ LAW: every runtime operation reaches the language-agnostic fixture's editability verdict — editable exactly when it has an
+/// input schema and cannot emit foreign steps — which the static `schema mutation-editability` gate reaches from source alone.
+#[test]
+fn every_witness_reaches_its_editability_verdict() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️mutation-editability/🔣️.json")).expect("editability fixture");
+    for (op, case) in witnesses().iter().zip(fixture["cases"].as_array().expect("cases")) {
+        let verdict = match (Mutation::<Counter>::input_schema(op).is_some(), Mutation::<Counter>::may_emit_foreign_steps(op)) {
+            (_, true) => "foreign",
+            (true, false) => "editable",
+            (false, false) => "inert",
+        };
+        assert_eq!((op.descriptor().semantic_kind, verdict), (case["kind"].as_str().expect("kind"), case["verdict"].as_str().expect("verdict")));
+    }
+}
+
+/// ⚖️ LAW: a derived aggregate publishes one payload schema per leaf; a hand-written one that forwards none is refused.
+#[test]
+fn every_leaf_publishes_one_payload_schema() {
+    assert_eq!(mutation_input_schema_failures::<Counter, CounterMutation>(), Vec::<String>::new());
+    assert_eq!(mutation_input_schema_failures::<Counter, Unpublished>(), vec!["0 payload schema(s) for 5 leaf descriptor(s)".to_string()]);
+}
+
+/// ⚖️ LAW: every derived operation is labelled in every locale; a label with an empty German cell names that cell.
+#[test]
+fn the_label_law_reads_every_locale_of_every_operation() {
+    assert_eq!(mutation_label_failures::<Counter, _>(&witnesses()), Vec::<String>::new());
+    let unpublished: Vec<Unpublished> = witnesses().into_iter().map(|op| Unpublished { op }).collect();
+    let failures = mutation_label_failures::<Counter, _>(&unpublished);
+    assert_eq!(failures.len(), unpublished.len());
+    assert!(failures.iter().all(|failure| failure.contains("native/de") && !failure.contains("/en")), "{failures:#?}");
+}
+
+/// ⚖️ LAW: an operation without an input schema is editable by no one, so it must refuse to rebuild from its payload — a
+/// hand-written aggregate whose defaults decode the whole value breaks the law once per operation.
+#[test]
+fn an_operation_without_a_schema_refuses_its_payload() {
+    let unpublished: Vec<Unpublished> = witnesses().into_iter().map(|op| Unpublished { op }).collect();
+    let count = unpublished.len();
+    let failures = mutation_payload_round_trip_failures::<Counter, _>(unpublished);
+    assert_eq!(failures.len(), count, "{failures:#?}");
+    assert!(failures.iter().all(|failure| failure.contains("declares no input schema yet rebuilds from its payload")), "{failures:#?}");
 }

@@ -48,10 +48,10 @@ type Recipe = { id: string; mutation: string; subset: string; subsetDirectoryNam
  * `generate` (the crate refuses an unknown `--only` id) or by `fixture reproduce` (a missing file).
  */
 const RECIPES: readonly Recipe[] = [
-  { id: "retitles-the-document", mutation: "rename-note", subset: "document", subsetDirectoryName: "📜️document", directoryName: "🏷️retitles-the-document", files: [{ carrier: "pdf", before: "⬅️before.pdf", after: "➡️after.pdf" }] },
+  { id: "retitles-the-document", mutation: "rename-note", subset: "document", subsetDirectoryName: "📜️document", directoryName: "🏷️retitles", files: [{ carrier: "pdf", before: "⬅️before.pdf", after: "➡️after.pdf" }] },
   { id: "adds-the-diagram-asset", mutation: "create-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "➕️adds-the-diagram-asset", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
   { id: "swaps-the-logo-payload", mutation: "replace-asset-payload", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🔁️swaps-the-logo-payload", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "removes-the-logo-asset", mutation: "delete-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🗑️removes-the-logo-asset", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "removes-the-logo-asset", mutation: "delete-asset", subset: "asset", subsetDirectoryName: "🖼️asset", directoryName: "🗑️removes", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
   { id: "creates-an-ink-block", mutation: "create-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🖋️creates-an-ink-block", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
   { id: "deletes-the-intro-text-block", mutation: "delete-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "✂️deletes-the-intro-text-block", files: [{ carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
   { id: "deletes-the-ink-and-text-blocks", mutation: "delete-blocks", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🗑️deletes-the-ink-and-text-blocks", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }, { carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }] },
@@ -62,8 +62,8 @@ const RECIPES: readonly Recipe[] = [
   { id: "resizes-the-image-block", mutation: "resize-block", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "↔️resizes-the-image-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
   { id: "hides-the-intro-text-block", mutation: "change-block-visible", subset: "block", subsetDirectoryName: "🧱️block", directoryName: "🙈️hides-the-intro-text-block", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
   { id: "edits-the-intro-paragraph", mutation: "edit-block-text", subset: "text", subsetDirectoryName: "📝️text", directoryName: "✏️edits-the-intro-paragraph", files: [{ carrier: "pdf", before: "📖️before.pdf", after: "📕️after.pdf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
-  { id: "thickens-the-sketch-stroke", mutation: "change-block-ink-width", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🖊️thickens-the-sketch-stroke", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
-  { id: "redraws-the-sketch-polyline", mutation: "edit-block-ink-stroke", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🎨️redraws-the-sketch-polyline", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
+  { id: "thickens-the-sketch-stroke", mutation: "change-block-ink-width", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🖊️thickens", files: [{ carrier: "svg", before: "⬅️before.svg", after: "➡️after.svg" }] },
+  { id: "redraws-the-sketch-polyline", mutation: "edit-block-ink-stroke", subset: "ink", subsetDirectoryName: "🖋️ink", directoryName: "🎨️redraws", files: [{ carrier: "dxf", before: "🖊️before.dxf", after: "📐️after.dxf" }, { carrier: "svg", before: "🖼️before.svg", after: "🎨️after.svg" }] },
 ] as const;
 
 const MEDIA_TYPE: Record<string, string> = { dxf: "image/vnd.dxf", svg: "image/svg+xml", pdf: "application/pdf" };

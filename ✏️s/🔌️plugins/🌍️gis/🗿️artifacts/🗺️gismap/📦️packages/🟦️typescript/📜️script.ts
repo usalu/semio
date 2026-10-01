@@ -2,7 +2,9 @@
 /** 🌍 GIS Map inference, history and acknowledged-view conformance command owner. */
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { BundleScript, ScriptRouter, getWorkspaceRoot, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { getWorkspaceRoot, resolveTestLevel, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 //#region 💡️InferencePortCheck
 /** 💡️ One rendered phase of the host-owned inference port, restated independently of production. */
 type OraclePreview = { schema: "semio.hub.gis-map-inference-preview/v1"; jobId: string; proposalHash: string; regionId: string; ring: readonly [readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number], readonly [number, number]] };
@@ -177,7 +179,7 @@ const OWNED_SCHEMA_MODULES = {
 
 /** 🧬️ Compiles one named `$defs` export of an owning `🧬️schema/` module against its draft-07 `$id`. */
 async function ownedExport(repoRoot: string, scope: keyof typeof OWNED_SCHEMA_MODULES, exportId: string) {
-  const { semioSchemaAjvV1 } = await import("../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts");
+  const { semioSchemaAjvV1 } = await import("../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts");
   const doc = JSON.parse(readFileSync(join(repoRoot, OWNED_SCHEMA_MODULES[scope]), "utf8")) as { $id: string };
   const compiled = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(doc).getSchema(`${doc.$id}#/$defs/${exportId}`);
   if (!compiled) throw new Error(`${scope} schema module publishes no export ${exportId}`);
@@ -594,4 +596,4 @@ class TilePrefetchScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("tiles-check", TileCheckScript).register("tiles-prefetch", TilePrefetchScript).register("inference-check", GisMapInferencePortCheckScript).register("inference-bridge-check",InferenceBridgeCheckScript).register("cold-document-pair-check", ColdDocumentPairBrowserCheckScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "inference-check" });
+await runScriptMain(router, { defaultCommand: "inference-check" });

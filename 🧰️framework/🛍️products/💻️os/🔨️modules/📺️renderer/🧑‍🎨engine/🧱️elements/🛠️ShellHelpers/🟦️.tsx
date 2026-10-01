@@ -2264,9 +2264,11 @@ export type BrowserActorPanelHostV1 = Readonly<{
 /** 🗂️ The panel-tab ids whose bodies an actor may render for `app`: its panel-tab leaves with a body, exactly the
  * panels the local refresh asks a guest for (`buildUiRefreshRequest`). */
 /** 🛟️ Every history-edit refusal code the shell names, with its label key: the event log's and the hub's `history.*`
- * transition refusals (`🛢️db/🗿️artifact`, `🏪️store/🔄️sync`) and a live session's `timeTravel.*` refusals
- * (`⏪️time-travel`). The `history.*` texts are byte-equal with the wgpu shell's.
+ * transition refusals (`🛢️db/🗿️artifact`, `🏪️store/🔄️sync`), a live session's `timeTravel.*` refusals
+ * (`⏪️time-travel`), the plugin runtime's own preconditions of a `historyEdit*` verb and the driver faults it records on
+ * the session (`🔌️plugin/⏪️time-travel`). Every text is byte-equal with the wgpu shell's (the shared band corpus).
  * @see ../../../../../../../../🔨️modules/🛢️db/🗿️artifact/🦀️.rs
+ * @see ../../../../🔌️plugin/⏪️time-travel/🦀️.rs
  * @see ../../../../../../../../../../🔨️modules/⏪️time-travel/🟦️.ts */
 export const HISTORY_REFUSAL_LABEL_KEYS = {
   "history.malformed-transition": "ui.history.refusal.malformedTransition",
@@ -2279,6 +2281,16 @@ export const HISTORY_REFUSAL_LABEL_KEYS = {
   "timeTravel.empty": "ui.timeTravel.refusal.empty",
   "timeTravel.cancelled": "ui.timeTravel.refusal.cancelled",
   "timeTravel.name-invalid": "ui.timeTravel.refusal.nameInvalid",
+  "timeTravel.busy": "ui.timeTravel.refusal.busy",
+  "timeTravel.unknown-mutation": "ui.timeTravel.refusal.unknownMutation",
+  "timeTravel.not-editable": "ui.timeTravel.refusal.notEditable",
+  "timeTravel.unknown-input": "ui.timeTravel.refusal.unknownInput",
+  "timeTravel.invalid-input": "ui.timeTravel.refusal.invalidInput",
+  "timeTravel.no-selection": "ui.timeTravel.refusal.noSelection",
+  "timeTravel.name-required": "ui.timeTravel.refusal.nameRequired",
+  "timeTravel.schema-unavailable": "ui.timeTravel.refusal.schemaUnavailable",
+  "timeTravel.replay-faulted": "ui.timeTravel.refusal.replayFaulted",
+  "timeTravel.commit-failed": "ui.timeTravel.refusal.commitFailed",
 } as const satisfies Readonly<Record<string, UiTranslationKey>>;
 
 /** 🛟️ One code of {@link HISTORY_REFUSAL_LABEL_KEYS}. */
@@ -3231,6 +3243,38 @@ export const FRAMEWORK_CHECKIN_CONTROLLER_ID = "framework.checkin";
 export function checkinSubmitMessageV1(args: unknown): string {
   const message = typeof args === "object" && args !== null && typeof (args as { readonly message?: unknown }).message === "string" ? (args as { readonly message: string }).message.trim() : "";
   return message === "" ? "check-in" : message;
+}
+
+/** ⏪️ What a checkpoint request does while the focused program's history may be under edit (e2e R2-6): outside a
+ * session it dispatches `commitCheckpoint`; inside one the guest freezes the history (`timeTravel.frozen`), so an
+ * automatic check-in (`"auto"`: idle, edit count, close) waits for the next one after the session and an explicit one is
+ * told why — no `commitCheckpoint` reaches the guest from either. */
+export function checkpointGateV1(timeTravel: HistoryTimeTravel | null, message: string): "dispatch" | "wait" | "frozen" {
+  if (timeTravel === null) return "dispatch";
+  return message === "auto" ? "wait" : "frozen";
+}
+
+/** 📌️ The identity a checkpoint-on-close is keyed on: one program's one document, `null` when no editor holds one. A
+ * view-state rewrite (every finalize, the New-alternative submit) mints a new session object of the SAME program, which
+ * keeps this key and so closes nothing (e2e R2-6). */
+export function checkpointOnCloseKeyV1(editor: boolean, program: { readonly pluginId: string; readonly instanceId: number } | null, documentId: string | null): string | null {
+  return editor && program !== null && documentId !== null && documentId !== "" ? `${program.pluginId}#${program.instanceId}@${documentId}` : null;
+}
+
+/** 📌️ Runs `onClose` — the closure of the render that opened `key` — when `key` changes or the shell unmounts: the
+ * document that is being left checkpoints, never the one that replaced it. */
+export function useCheckpointOnCloseV1(key: string | null, onClose: () => void): void {
+  useEffect(() => (key === null ? undefined : onClose), [key]);
+}
+
+/** 🪪️ The document a sync attach addresses: a hub target's own document, else the program's own document identity — the
+ * id its store stamps on every envelope it publishes (`ReadDocumentIdentity`), so the actor admits the program's edits as
+ * that document's instead of refusing each batch `local.backbone-scope-mismatch` (e2e R2-4). `null`: the program holds no
+ * document, and there is nothing to attach. */
+export function syncAttachDocumentIdV1(target: { readonly kind: "folder" | "file" | "remote"; readonly documentId?: string | null }, identity: { readonly parent_document_id: string | null } | null): string | null {
+  const own = target.kind === "remote" ? (target.documentId ?? null) : null;
+  const documentId = own ?? identity?.parent_document_id ?? null;
+  return documentId === "" ? null : documentId;
 }
 
 /** 📌️ The hub Check In's own status vocabulary: a running phase with its progress, and one sentence

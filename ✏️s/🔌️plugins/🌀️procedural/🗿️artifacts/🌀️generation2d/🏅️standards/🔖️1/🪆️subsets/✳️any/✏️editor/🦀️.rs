@@ -38,6 +38,9 @@ use store::EngineHandles;
 /// id now, contract §2.1) reused wherever a window/panel needs a stable controller/action-factory id.
 pub const GENERATION2D_PLAY_APP_ID: &str = "procedural2d-play";
 
+/// 🪪️ The editor surface id every tool transaction's `tool` is scoped by (`<appId>#<verb>`, design §2).
+pub const GENERATION2D_EDITOR_APP_ID: &str = "s.procedural.generation2d@1/*#editor";
+
 /// 🕹️ The framework interaction domain every generation2d window is bound to: the node graph and
 /// both canvas previews read and write the same `graph` hover/selection.
 pub const GENERATION2D_INTERACTION_DOMAIN: &str = "graph";
@@ -416,28 +419,65 @@ impl ArtifactCommandWork<EditorApp<Generation2dPlayApp>> for Generation2dFlowEva
             return Err(Fault::from("generation2d-flow-eval-work-repeated"));
         }
         self.consumed = true;
-        let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
+        let overlay = generation2d_provisional_snapshot(input.snapshot, input.context.map_or(&[][..], |context| context.provisional()));
+        let committed = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: None };
-        let (emit, transient) = self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, input.command, &doc, &cfg))?;
+        let provisional_generation = input.context.map_or(0, |context| context.provisional_generation());
+        let hop = {
+            let doc = ArtifactView::with_operation(overlay.as_ref().unwrap_or(input.snapshot), input.history, input.operation.clone());
+            self.instance_owner.with_mut::<Generation2dInstanceOperationOwner, _>(|owner| generation2d_flow_eval_hop(owner, input.command, &doc, &committed, &cfg, provisional_generation))
+        };
+        if let Some(overlay) = overlay {
+            overlay.retire_cold();
+        }
+        let (emit, transient) = hop?;
         Ok(ArtifactCommandWorkStep::CompleteWithEphemeral { emit, ephemeral: EphemeralEmit { transient, ..Default::default() } })
     }
 }
 
+/// 🪞️ The document a derived view evaluates while a continuous tool transaction is open (design §13, F-7): the committed
+/// snapshot with every open press's and typing run's provisional leaves (the framework's, as of admission) folded in —
+/// `None` while nothing is open, so the committed snapshot is read as is. The overlay is retired cold, never dropped.
+fn generation2d_provisional_snapshot(committed: &Generation2dSnapshot, provisional: &[dsl::DslValue]) -> Option<Generation2dSnapshot> {
+    use crate::standards::v1::subsets::any::schema::mutations::apply_generation2d_mutation;
+    if provisional.is_empty() {
+        return None;
+    }
+    let mut overlay = committed.clone();
+    for value in provisional {
+        if let Ok(leaf) = <Generation2dMutation as dsl::FromValue>::from_value(value.clone()) {
+            let _ = apply_generation2d_mutation(&mut overlay, &leaf);
+            leaf.retire_cold();
+        }
+    }
+    Some(overlay)
+}
+
+/// 🔢️ The digest a preview target is evaluated and owed under: the committed document's target digest folded with the
+/// continuous-tool overlay generation, so every tick, release and zero-trace abort of an open press owes ONE fresh
+/// evaluation and an evaluated overlay owes nothing more.
+pub(crate) fn generation2d_preview_digest(target: PreviewEvalTarget, committed: &ArtifactView<'_, Generation2dSnapshot>, cfg: &ConfigView<'_, Generation2dConfig>, provisional_generation: u64) -> u64 {
+    flow_eval_tick::target_digest(target, committed, cfg) ^ provisional_generation.wrapping_mul(0x9e37_79b9_7f4a_7c15)
+}
+
 /// ⏱️ One `previewEval` hop against `owner`: the tick or the answer fold `command` names, over the
-/// session of the target its window kind evaluates. Answers the hop's emit and the app transient the
-/// generate preview's changed evaluation owes.
+/// session of the target its window kind evaluates. `doc` is what the hop evaluates (the committed document with any open
+/// tool transaction's provisional leaves folded in), `committed` and `provisional_generation` what it is recorded under.
+/// Answers the hop's emit and the app transient the generate preview's changed evaluation owes.
 pub(crate) fn generation2d_flow_eval_hop(
     owner: &mut Generation2dInstanceOperationOwner,
     command: &Generation2dCommand,
     doc: &ArtifactView<'_, Generation2dSnapshot>,
+    committed: &ArtifactView<'_, Generation2dSnapshot>,
     cfg: &ConfigView<'_, Generation2dConfig>,
+    provisional_generation: u64,
 ) -> Result<(Emit<Generation2dMutation, Generation2dConfigMutation, NoDraftMutation>, Vec<Generation2dTransientMutation>), Fault> {
     let (mut sessions, link) = owner.parts()?;
     let result = match command {
         Generation2dCommand::FlowEvalTick(payload) => {
             let target = generation2d_preview_target(&payload.window_kind_id).ok_or_else(|| Fault::from("generation2d-flow-eval-window-kind-unknown"))?;
             let (emit, publication) = flow_eval_tick::evaluate(&payload.window_id, &payload.window_kind_id, target, doc, cfg, sessions.get_mut(target));
-            link.note_evaluated(target, flow_eval_tick::target_digest(target, doc, cfg));
+            link.note_evaluated(target, generation2d_preview_digest(target, committed, cfg, provisional_generation));
             let transient = match (target, publication) {
                 (PreviewEvalTarget::Generation, semio_framework_os_flow::FlowEvalPublication::Changed(preview_text)) => vec![SetGenerationPreview { preview_text }.into()],
                 _ => Vec::new(),
@@ -765,7 +805,7 @@ impl Generation2dContributionsJobFactoryProofs {
 /// and their id prefix, so this one generic helper replaces two copies of the same literal.
 fn generation2d_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -1046,7 +1086,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         }
         let authority = self.authority.as_ref().ok_or_else(|| "generation2d-config-authority-missing".to_string())?;
         let id = format!("generation2d-config-{}", authority.next_sequence_number());
-        let edit = protocol::Edit {
+        let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
             id: id.clone(),
             actor: Some(authority.actor().to_string()),
             forwards: vec![mutation.clone()],
@@ -1710,7 +1750,7 @@ impl ArtifactEditor for Generation2dPlayApp {
         let mut targets: Vec<PreviewEvalTarget> = windows.iter().map(|(_, _, target)| *target).collect();
         targets.sort_unstable();
         targets.dedup();
-        let current: std::collections::BTreeMap<PreviewEvalTarget, u64> = targets.into_iter().map(|target| (target, flow_eval_tick::target_digest(target, doc, cfg))).collect();
+        let current: std::collections::BTreeMap<PreviewEvalTarget, u64> = targets.into_iter().map(|target| (target, generation2d_preview_digest(target, doc, cfg, doc.provisional_generation()))).collect();
         owner
             .with_mut::<Generation2dInstanceOperationOwner, _>(|owner| {
                 let (sessions, link) = owner.parts()?;

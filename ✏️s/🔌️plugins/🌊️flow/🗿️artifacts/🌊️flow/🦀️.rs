@@ -475,7 +475,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🧪️tests/🚫️rejects-a-duplicate-widget-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕️create-widget/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_widget_id;
                         }
                         #[path = "."]
@@ -488,7 +488,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️rejects-deleting-a-missing-widget/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-widget/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_missing_widget;
                         }
                         #[path = "."]
@@ -501,7 +501,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/🧪️tests/🗜️clamps-an-out-of-range-index-onto-the-last-slot/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️reorder-widgets/🧪️tests/🗜️clamps/🦀️.rs"]
                             mod tests_clamps_an_out_of_range_index_onto_the_last_slot;
                         }
                         #[path = "."]
@@ -514,7 +514,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/🟰️replaces-a-note-with-an-identical-note/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️replace-widget/🧪️tests/🟰️replaces/🦀️.rs"]
                             mod tests_replaces_a_note_with_an_identical_note;
                         }
                         #[path = "."]
@@ -527,7 +527,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/🧪️tests/🚫️refuses-a-parallel-synapse-as-a-no-op/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️connect-widgets/🧪️tests/🚫️refuses/🦀️.rs"]
                             mod tests_refuses_a_parallel_synapse_as_a_no_op;
                         }
                         #[path = "."]
@@ -540,7 +540,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🧪️tests/🚫️rejects-disconnecting-a-missing-synapse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-widgets/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_disconnecting_a_missing_synapse;
                         }
                         #[path = "."]
@@ -553,7 +553,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🧪️tests/🟰️keeps-the-leading-synapse-at-index-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-synapses/🧪️tests/🟰️keeps/🦀️.rs"]
                             mod tests_keeps_the_leading_synapse_at_index_zero;
                         }
                         #[path = "."]
@@ -566,7 +566,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🧪️tests/🟰️re-declares-the-same-endpoints/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse-endpoints/🧪️tests/🟰️re/🦀️.rs"]
                             mod tests_re_declares_the_same_endpoints;
                         }
                         #[path = "."]
@@ -579,7 +579,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🧪️tests/🟰️re-applies-the-current-layout-to-both-widgets/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widgets/🧪️tests/🟰️re/🦀️.rs"]
                             mod tests_re_applies_the_current_layout_to_both_widgets;
                         }
                         // 🌉️ COMPOSITE — owns 🦠️mutation + 🧩️plan only (no 🔺️diff/↩️inverse: both fold from the plan).
@@ -590,7 +590,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧩️plan/🦀️.rs"]
                             pub mod plan;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧪️tests/🚫️rejects-duplicating-onto-a-taken-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👯️duplicate-widget/🧪️tests/🚫️rejects/🦀️.rs"]
                             mod tests_rejects_duplicating_onto_a_taken_id;
                         }
                     }
@@ -788,7 +788,7 @@ pub mod editor {
             pub mod replace_image;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/▶️run-extension-action/🦀️.rs"]
             pub mod run_extension_action;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set-active-example/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🎨️set/🦀️.rs"]
             pub mod set_active_example;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🛍️set-catalogue-sections/🦀️.rs"]
             pub mod set_catalogue_sections;
@@ -800,7 +800,7 @@ pub mod editor {
             pub mod set_grid_snap_enabled;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/👁️set-grid-visible/🦀️.rs"]
             pub mod set_grid_visible;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod-mode/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔬️set-lod/🦀️.rs"]
             pub mod set_lod_mode;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🙈️set-preview-off/🦀️.rs"]
             pub mod set_preview_off;
@@ -810,7 +810,7 @@ pub mod editor {
             pub mod spotlight_commit;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔌️toggle-extension/🦀️.rs"]
             pub mod toggle_extension;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
             pub mod set_contributions;
         }
 
@@ -869,7 +869,7 @@ pub mod editor {
                     pub mod add_generation;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🗑️remove-generation/🦀️.rs"]
                     pub mod remove_generation;
-                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🏷️rename-generation/🦀️.rs"]
+                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🏷️rename/🦀️.rs"]
                     pub mod rename_generation;
                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/🧬️generate/🎮️commands/🎯️select-generation/🦀️.rs"]
                     pub mod select_generation;

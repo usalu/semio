@@ -65,32 +65,25 @@ async fn add_primitive_pick_translate_and_camera() {
     let id = snapshot.objects[1].id.clone();
     let before = object(&app, &id);
     act(&mut app, "interactionSelect", select(&[("object", &crate::editor::lowpoly::view::document_object_row_id(&id))])).await;
-    act(&mut app, "transformBegin", serde_json::json!({})).await;
     act(&mut app, "translateSelection", serde_json::json!({ "mode": "mesh", "ids": [crate::editor::lowpoly::view::document_object_row_id(&id)], "dx": 1.0, "dy": 0.0, "dz": 0.0 })).await;
-    act(&mut app, "transformEnd", serde_json::json!({})).await;
     assert_ne!(object(&app, &id).mesh_content, before.mesh_content, "the picked object moved");
     assert_eq!(object(&app, "obj-1").mesh_content, object(&app, "obj-1").mesh_content);
     act(&mut app, "setCamera", serde_json::json!({ "windowId": "lowpoly-main", "camera": { "position": [3.0, 2.0, 5.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 } })).await;
 }
 
-/// 🧲️ The composable gumball's three handle groups, exactly as `World3dHost` dispatches a drag end:
-/// `transformBegin`, ONE absolute delta in the host shape (`mode` + string `ids`, `rotateSelection`'s
-/// axis + angle, `scaleSelection`'s factors), `transformEnd` — each an undoable document edit; and a
-/// face-level translate moves only the picked face's vertices.
+/// 🧲️ The composable gumball's three handle groups, exactly as `World3dHost` dispatches a released drag: ONE net
+/// delta in the host shape (`mode` + string `ids`, `rotateSelection`'s axis + angle, `scaleSelection`'s factors) —
+/// each one undoable document edit; and a face-level translate moves only the picked face's vertices.
 #[semio_framework_async_macros::async_test]
 async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     let mut app = mounted();
     let before = object(&app, "obj-1");
     let row = crate::editor::lowpoly::view::document_object_row_id("obj-1");
     act(&mut app, "interactionSelect", select(&[("object", &row)])).await;
-    act(&mut app, "transformBegin", serde_json::json!({})).await;
     act(&mut app, "rotateSelection", serde_json::json!({ "mode": "mesh", "ids": [row], "ax": 0.0, "ay": 1.0, "az": 0.0, "angle": 0.5 })).await;
-    act(&mut app, "transformEnd", serde_json::json!({})).await;
     let rotated = object(&app, "obj-1");
     assert_ne!(rotated.mesh, before.mesh, "a gumball rotate lands");
-    act(&mut app, "transformBegin", serde_json::json!({})).await;
     act(&mut app, "scaleSelection", serde_json::json!({ "mode": "mesh", "ids": [row], "sx": 2.0, "sy": 1.0, "sz": 1.0 })).await;
-    act(&mut app, "transformEnd", serde_json::json!({})).await;
     let scaled = object(&app, "obj-1");
     assert_ne!(scaled.mesh, rotated.mesh, "a gumball scale lands");
     act(&mut app, "undo", serde_json::json!({})).await;
@@ -100,9 +93,7 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     // ✂️ A face pick, then the gumball's translate over that component selection.
     act(&mut app, "interactionSelect", select(&[("face", "lowpoly-document.obj-1.face.0")])).await;
     let mesh_before = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
-    act(&mut app, "transformBegin", serde_json::json!({})).await;
     act(&mut app, "translateSelection", serde_json::json!({ "mode": "face", "ids": [row, "lowpoly-document.obj-1.face.0"], "dx": 0.0, "dy": 0.0, "dz": 2.0 })).await;
-    act(&mut app, "transformEnd", serde_json::json!({})).await;
     let mesh_after = semio_framework_3d::mesh::HalfedgeMesh::from_json(&object(&app, "obj-1").mesh_content).expect("mesh");
     assert_eq!(mesh_after.face_count(), mesh_before.face_count(), "a face translate keeps the topology");
     let moved = (0..mesh_before.vertex_count() as u32).filter(|index| {
@@ -112,6 +103,26 @@ async fn gumball_rotate_scale_and_face_translate_land_through_the_host_shape() {
     }).count();
     let face_vertices = mesh_before.face_vertex_ids(semio_framework_3d::mesh::FaceId(0)).expect("face 0").len();
     assert!(moved > 0 && moved <= face_vertices.max(4), "only the picked face's vertices move: {moved} of {} (face has {face_vertices})", mesh_before.vertex_count());
+}
+
+/// 🖌️ A World3d paint drag in the host's own argument shape: streamed `paintAt` ticks leave the document untouched, the
+/// release (`phase: "commit"`, no point) writes ONE edit, and a blurred drag (`phase: "abort"`) leaves zero trace.
+#[semio_framework_async_macros::async_test]
+async fn a_host_paint_drag_is_one_edit_and_a_blurred_drag_is_none() {
+    let mut app = mounted();
+    let before = object(&app, "obj-1").paint_layers[0].materialized_pixels();
+    let edits = crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await;
+    act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.4, "v": 0.5, "phase": "stream" })).await;
+    act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.45, "v": 0.5, "phase": "stream" })).await;
+    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "a streamed tick never reaches the document");
+    act(&mut app, "paintAt", serde_json::json!({ "phase": "commit" })).await;
+    assert_ne!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), before, "the release paints the stroke");
+    assert_eq!(crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await, edits + 1, "one drag is one edit");
+    let painted = object(&app, "obj-1").paint_layers[0].materialized_pixels();
+    act(&mut app, "paintAt", serde_json::json!({ "objectId": "obj-1", "u": 0.6, "v": 0.5, "phase": "stream" })).await;
+    act(&mut app, "paintAt", serde_json::json!({ "phase": "abort", "reason": "blur" })).await;
+    assert_eq!(object(&app, "obj-1").paint_layers[0].materialized_pixels(), painted, "a blurred drag paints nothing");
+    assert_eq!(crate::editor::lowpoly::unit_tests::context::committed_edits(&mut app).await, edits + 1, "a blurred drag is no edit");
 }
 
 /// 📐️ Vertex and edge picks select through the same `<object>.<granularity>.<id>` targets, and the

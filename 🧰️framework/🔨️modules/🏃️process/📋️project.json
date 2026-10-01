@@ -1,0 +1,47 @@
+{
+  "name": "@semio-tech/framework-process",
+  "targets": {
+    "test-routing": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test routing"
+      }
+    },
+    "test-artifact-files": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test artifact-files"
+      }
+    },
+    "test-test-budget": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "bun ./📜️script.ts test test-budget"
+      }
+    }
+  },
+  "tags": [
+    "scope:framework"
+  ]
+}

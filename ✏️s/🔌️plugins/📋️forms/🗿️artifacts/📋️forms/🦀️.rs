@@ -528,7 +528,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🧪️tests/🧪️no-ops-when-the-block-stays-at-its-index-in-its-own-step/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦move-block-to-step/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_block_stays_at_its_index_in_its_own_step;
                         }
                         #[path = "."]
@@ -540,7 +540,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🧪️tests/🧪️no-ops-when-the-step-already-sits-at-that-index/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-step/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_step_already_sits_at_that_index;
                         }
                         #[path = "."]
@@ -552,7 +552,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🧪️tests/🧪️rejects-a-block-for-a-step-that-does-not-exist/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➕create-block/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_a_block_for_a_step_that_does_not_exist;
                         }
                         #[path = "."]
@@ -564,7 +564,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🧪️rejects-a-duplicate-step-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌱create-step/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_a_duplicate_step_id;
                         }
                         #[path = "."]
@@ -576,7 +576,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🧪️tests/🧪️rejects-deleting-a-block-missing-from-an-existing-step/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖delete-block/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_block_missing_from_an_existing_step;
                         }
                         #[path = "."]
@@ -588,7 +588,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🧪️rejects-deleting-a-step-the-scene-does-not-hold/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-step/🧪️tests/🧪️rejects/🦀️.rs"]
                             mod tests_rejects_deleting_a_step_the_scene_does_not_hold;
                         }
                         #[path = "."]
@@ -600,7 +600,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🧪️tests/🧪️titles-an-untitled-survey/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️change-form-title/🧪️tests/🧪️titles/🦀️.rs"]
                             mod tests_titles_an_untitled_survey;
                         }
                         #[path = "."]
@@ -612,8 +612,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧪️tests/🧪️no-ops-when-the-replacement-block-is-identical/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-block/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_replacement_block_is_identical;
+                        }
+                        #[path = "."]
+                        pub mod change_block_field {
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🔺️diff/🦀️.rs"]
+                            pub mod diff;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/↩️inverse/🦀️.rs"]
+                            pub mod inverse;
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🦠️mutation/🦀️.rs"]
+                            pub mod mutation;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️rejects/🦀️.rs"]
+                            mod tests_rejects_a_field_of_a_question_the_scene_does_not_hold;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️refuses/🦀️.rs"]
+                            mod tests_refuses_a_minimum_above_the_maximum;
+                            #[cfg(test)]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-block-field/🧪️tests/🧪️no/🦀️.rs"]
+                            mod tests_no_ops_when_the_field_already_holds_the_value;
                         }
                         #[path = "."]
                         pub mod change_step_description {
@@ -624,7 +642,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🧪️tests/🧪️no-ops-when-clearing-an-already-absent-description/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📝change-step-description/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_clearing_an_already_absent_description;
                         }
                         #[path = "."]
@@ -636,7 +654,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🦠️mutation/🦀️.rs"]
                             pub mod mutation;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🧪️tests/🧪️no-ops-when-the-step-already-carries-that-title/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✏️rename-step/🧪️tests/🧪️no/🦀️.rs"]
                             mod tests_no_ops_when_the_step_already_carries_that_title;
                         }
                     }
@@ -890,7 +908,7 @@ pub mod editor {
             pub mod reset_try;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📥️set-active-example/🦀️.rs"]
             pub mod set_active_example;
-            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set-contributions/🦀️.rs"]
+            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧩️set/🦀️.rs"]
             pub mod set_contributions;
             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔣️set-spec-json/🦀️.rs"]
             pub mod set_spec_json;

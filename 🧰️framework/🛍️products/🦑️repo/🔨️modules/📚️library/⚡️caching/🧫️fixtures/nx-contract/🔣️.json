@@ -4,186 +4,223 @@
     {
       "target": "setup",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "publish",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "update",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "clean-test",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "format",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "deploy",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "bench",
       "cache": false,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "dev",
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "disabledCache": false
     },
     {
       "target": "serve",
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "disabledCache": false
     },
     {
       "target": "watch",
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "disabledCache": false
     },
     {
       "target": "dev-storybook",
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "disabledCache": false
     },
     {
       "target": "test-watch",
       "cache": false,
-      "continuous": true
+      "continuous": true,
+      "disabledCache": false
     },
     {
       "target": "test",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "test-quick",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "test-exhaustive",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "lint",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "build",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "generate",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "verify",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "format-check",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "schema-check",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "cpp-build",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "generator-inputs",
       "cache": true,
       "continuous": false,
-      "authored": true
+      "disabledCache": false
     },
     {
       "target": "forms-document-contract",
       "cache": true,
-      "continuous": false
+      "continuous": false,
+      "disabledCache": false
     },
     {
       "target": "catalog-smoke",
       "cache": true,
       "continuous": false,
-      "authored": true,
-      "command": "bun ./📜️script.ts verify catalog"
+      "command": "bun ./📜️script.ts verify catalog",
+      "disabledCache": false
     },
     {
       "target": "collab-e2e",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify collab"
+      "command": "bun ./📜️script.ts verify collab",
+      "disabledCache": false
     },
     {
       "target": "artifact-field-parity-report",
       "cache": true,
       "continuous": false,
-      "authored": true,
-      "command": "bun ./📜️script.ts verify artifact-field-parity report"
+      "command": "bun ./📜️script.ts verify artifact-field-parity report",
+      "disabledCache": false
     },
     {
       "target": "verify-taxonomy-report",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify taxonomy report"
+      "command": "bun ./📜️script.ts verify taxonomy report",
+      "disabledCache": false
     },
     {
       "target": "build-report",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts build report"
+      "command": "bun ./📜️script.ts build report",
+      "disabledCache": false
     },
     {
       "target": "reset-document-ownership",
       "cache": true,
       "continuous": false,
-      "authored": true,
-      "command": "bun ./📜️script.ts verify reset-document-ownership"
+      "command": "bun ./📜️script.ts verify reset-document-ownership",
+      "disabledCache": false
     },
     {
       "target": "verify-dependencies-freeze-write-baseline",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts verify dependencies write-baseline"
+      "command": "bun ./📜️script.ts verify dependencies write-baseline",
+      "disabledCache": false
     },
     {
       "target": "hub-live-catalog-check",
       "cache": true,
       "continuous": false,
-      "command": "bun ./📜️script.ts hub-live-catalog-check"
+      "command": "bun ./📜️script.ts hub-live-catalog-check",
+      "disabledCache": false
     },
     {
       "target": "admin-live-journey-check",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts admin-live-journey-check"
+      "command": "bun ./📜️script.ts admin-live-journey-check",
+      "disabledCache": false
     },
     {
       "target": "cache-report",
       "cache": false,
       "continuous": false,
-      "command": "bun ./📜️script.ts cache-report"
+      "command": "bun ./📜️script.ts cache-report",
+      "disabledCache": false
+    },
+    {
+      "target": "portable-inspection",
+      "command": "bun ./📜️script.ts verify portable",
+      "cache": true,
+      "disabledCache": false,
+      "continuous": false
     }
   ],
   "pluginGraph": {

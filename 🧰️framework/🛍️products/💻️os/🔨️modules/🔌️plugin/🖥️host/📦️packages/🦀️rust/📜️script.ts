@@ -6,7 +6,9 @@ import Ajv from "ajv";
 import findIndex from "lodash-es/findIndex.js";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, orchestratorBudgetOpts, runBundleScriptMain, runCargo, runCmd, runProbe, runExactCargoLaws } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { orchestratorBudgetOpts, runCargo, runCmd, runProbe, runExactCargoLaws } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 //#region 🎯️Tasks
 class CheckScript extends BundleScript {
@@ -399,5 +401,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("lifecycle-check", LifecycleCheckScript)
   .register("guest-fault-check", GuestFaultCheckScript)
   .register("ui-patch-marshalling-check", UiPatchMarshallingCheckScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });
 //#endregion 🎯️Tasks

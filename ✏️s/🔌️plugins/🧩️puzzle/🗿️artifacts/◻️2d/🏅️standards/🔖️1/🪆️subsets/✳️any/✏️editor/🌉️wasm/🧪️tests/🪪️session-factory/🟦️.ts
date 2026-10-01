@@ -2,7 +2,7 @@ import { act as reactAct, createElement, type ReactElement } from "react";
 import { cleanup, fireEvent, render, waitFor } from "@semio-tech/ui-react/test";
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import { boardTestSession } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🔮️oracles/🪪️session-double/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import * as flowSessionLoader from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🪪️WasmSessionLoader/🟦️.tsx";
 import { Board2dHost, beginPuzzle2dPeerGesture, endPuzzle2dPeerGesture, unregisterBoard2dPeer, puzzle2dPeerOwnsGesture } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx";
 import boardSessionFixture from "../../🧫️fixtures/🔣️session-factory.json";

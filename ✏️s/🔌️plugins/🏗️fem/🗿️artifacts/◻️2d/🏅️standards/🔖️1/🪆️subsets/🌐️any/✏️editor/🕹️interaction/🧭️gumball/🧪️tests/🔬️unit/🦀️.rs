@@ -1,7 +1,6 @@
 use super::*;
 use crate::editor::fem2d::transient::{FemGumballPhase, FemGumballTransient};
 use crate::editor::fem2d::interaction::canvas_gesture::FEM2D_UTILITY_TRANSFORM;
-use crate::Viewport2d;
 use store::ArtifactDsl;
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
@@ -13,8 +12,7 @@ fn demo() -> Fem2dSnapshot {
 #[test]
 fn gumball_meta_layer_emitted_when_transform_utility_and_selection() {
     let doc = demo();
-    let camera = Viewport2d::default();
-    let meta = fem2d_gumball_meta_layer(&doc, &["n1".into()], &camera, FEM2D_UTILITY_TRANSFORM, Some("w")).expect("meta");
+    let meta = fem2d_gumball_meta_layer(&doc, &["n1".into()], FEM2D_UTILITY_TRANSFORM, Some("w")).expect("meta");
     assert_eq!(meta.get("role").and_then(|value| value.as_str()), Some("meta"));
     assert!(meta.get("gumball").is_some());
     assert_eq!(meta.pointer("/gumball/config/moveAxes").and_then(|value| value.as_bool()), Some(true));
@@ -23,8 +21,7 @@ fn gumball_meta_layer_emitted_when_transform_utility_and_selection() {
 #[test]
 fn gumball_meta_absent_without_selection() {
     let doc = demo();
-    let camera = Viewport2d::default();
-    assert!(fem2d_gumball_meta_layer(&doc, &[], &camera, FEM2D_UTILITY_TRANSFORM, None).is_none());
+    assert!(fem2d_gumball_meta_layer(&doc, &[], FEM2D_UTILITY_TRANSFORM, None).is_none());
 }
 
 /// 🎯️ A translate tick is the relative `move-selection` leaf over the selection's literal geometry, pivoted on its
@@ -121,4 +118,48 @@ fn host_aborts_leave_zero_trace_and_keep_sibling_gestures() {
     let [Fem2dMutation::MoveSelection(only)] = mutations.as_slice() else { panic!("one leaf") };
     assert_eq!(only.dx, 0.5, "the interrupted stream contributes nothing");
     assert!(interrupted.transient.expect("captureLost clears the stream").gestures.is_empty());
+}
+
+/// ⏪️ LAW: a gumball move edited in history replays its downstream: the preview base is the state right before the
+/// move, and the Report replay re-applies the downstream relative scaling and turn onto the edited move — exactly the
+/// fresh fold of the edited log; overwrite commits it.
+#[semio_framework_async_macros::async_test]
+async fn a_gumball_move_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    let base = demo();
+    let tick = |motion| Fem2dMutation::MoveSelection(fem2d_gumball_tick(&base, &["n1".to_string()], motion).expect("the selection moves geometry"));
+    let log = [tick(Fem2dGumballMotion::Translate { dx: 1.0, dy: 0.0 }), tick(Fem2dGumballMotion::Scale { sx: 2.0, sy: 1.0 }), tick(Fem2dGumballMotion::Rotate { angle: 0.5 })];
+    let mut store = store::ArtifactStore::<Fem2dSnapshot, Fem2dMutation>::new(store::create_document_envelope::<Fem2dSnapshot, Fem2dMutation>(crate::FEM_2D_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem2dSnapshot, Fem2dMutation>());
+    for mutation in &log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let edited = tick(Fem2dGumballMotion::Translate { dx: -0.5, dy: 3.0 });
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::FEM_2D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset move never blocks finalizing");
+    let fold = |mutations: &[Fem2dMutation]| {
+        let mut snapshot = base.clone();
+        for mutation in mutations {
+            crate::standards::v1::subsets::any::schema::mutations::apply_fem2d_mutation(&mut snapshot, mutation).expect("the log folds");
+        }
+        snapshot
+    };
+    let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
+    assert_ne!(fresh, fold(&log), "the edit changes the outcome");
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Fem2dSnapshot, Fem2dMutation>();
+    for _ in 0..4_096 {
+        if disposer.terminal_is_empty(&store) {
+            break;
+        }
+        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+    }
+    assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
 }

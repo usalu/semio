@@ -4,8 +4,8 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfCreatePrimitivePayload {
-  mesh: number;
-  position: number;
+  mesh: bigint;
+  position: bigint;
 }
 
 export type CreatePrimitiveMutation = GltfPhase<GltfCreatePrimitivePayload, GltfDiff>;

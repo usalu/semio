@@ -194,3 +194,22 @@ fn shared_value_clone_reservation_rejects_allocator_overcapacity_before_payload_
         if let Ok(value) = result { assert!(value.is_empty()); assert!(value.capacity() <= budget); }
     }
 }
+
+#[test]
+fn shared_value_clone_intrinsic_octets_obey_copy_grants_and_exact_cancellation() {
+    let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../🧬️bytes/🧪️tests/🧬️base64/🧫️fixtures/🔣️.json")).unwrap();
+    let unit=neutral["cases"][5]["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>();
+    let value=DslValue::Bytes(unit.repeat(32768));
+    let (actual,checkpoint)=clone_value(&value,DSL_VALUE_CLONE_CHUNK_BYTES);
+    assert_eq!(actual,value);assert_eq!(checkpoint.copied_bytes,unit.len()*32768);
+    assert_eq!(serde_json::to_value(&actual).unwrap(),serde_json::to_value(&value).unwrap());
+    let root=Arc::new(value);let mut cursor=DslValueCloneCursor::new(root.clone(),limits()).unwrap();
+    let first=cursor.advance(DslValueCloneGrant{maximum_items:1,maximum_bytes:0}).unwrap();
+    let (previous,complete)=observe_step(first,DslValueCloneCheckpoint::default(),DslValueCloneGrant{maximum_items:1,maximum_bytes:0});assert!(!complete);
+    let copied=cursor.advance(DslValueCloneGrant{maximum_items:0,maximum_bytes:17}).unwrap();
+    let (checkpoint,complete)=observe_step(copied,previous,DslValueCloneGrant{maximum_items:0,maximum_bytes:17});assert!(!complete);assert_eq!(checkpoint.copied_bytes,17);
+    cursor.cancel();assert!(cursor.take_value().is_none());let returned=close_and_return(&mut cursor);assert!(Arc::ptr_eq(&returned,&root));drop(returned);
+    let mut denied=DslValueCloneCursor::new(root.clone(),DslValueCloneLimits{maximum_retained_bytes:64,..limits()}).unwrap();
+    assert_eq!(denied.advance(grant(256)).unwrap_err(),"retained-byte-limit");assert_eq!(denied.checkpoint().copied_bytes,0);
+    denied.cancel();let returned=close_and_return(&mut denied);assert!(Arc::ptr_eq(&returned,&root));
+}

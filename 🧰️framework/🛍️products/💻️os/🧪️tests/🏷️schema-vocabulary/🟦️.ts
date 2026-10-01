@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { SEMIO_SCHEMA_VENDOR_VOCABULARY_V1, semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { SEMIO_SCHEMA_VENDOR_VOCABULARY_V1, semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const os = fileURLToPath(new URL("../..", import.meta.url));
 const hub = fileURLToPath(new URL("../../../../../🌎️hub", import.meta.url));

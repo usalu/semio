@@ -36,7 +36,7 @@
       }
     },
     "app.animate.presentation.config.mutation.set-engagement-input": {
-      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⌨️set-engagement-input/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⌨️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -84,7 +84,7 @@
       }
     },
     "app.animate.presentation.presence.mutation.replace-presence": {
-      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -132,7 +132,7 @@
       }
     },
     "app.architect.architect.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -180,7 +180,7 @@
       }
     },
     "app.architect.architect.presence.mutation.replace-presence": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -683,7 +683,7 @@
       }
     },
     "app.energy.model.config.mutation.change-result-field": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result-field/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎨️change-result/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -701,7 +701,7 @@
       }
     },
     "app.energy.model.config.mutation.change-simulation-settings": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⏱️change-simulation-settings/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⏱️change-simulation/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -840,7 +840,7 @@
       }
     },
     "app.forms.forms.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -858,7 +858,7 @@
       }
     },
     "app.forms.forms.config.mutation.set-contributions": {
-      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set-contributions/🧬️schema",
+      "path": "✏️s/🔌️plugins/📋️forms/🗿️artifacts/📋️forms/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -996,7 +996,7 @@
       }
     },
     "app.imperative.imperative.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -1014,7 +1014,7 @@
       }
     },
     "app.imperative.imperative.config.mutation.set-contributions": {
-      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set-contributions/🧬️schema",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -1032,7 +1032,7 @@
       }
     },
     "app.imperative.imperative.config.mutation.set-run-output": {
-      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📤️set-run-output/🧬️schema",
+      "path": "✏️s/🔌️plugins/📜️imperative/🗿️artifacts/📜️procedure/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📤️set-run/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2052,7 +2052,7 @@
       }
     },
     "app.note.note.presence.mutation.replace-presence": {
-      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗒️note/🗿️artifacts/🗒️note/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2101,7 +2101,7 @@
       }
     },
     "app.playbook.playbook.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2119,7 +2119,7 @@
       }
     },
     "app.playbook.playbook.config.mutation.set-contributions": {
-      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set-contributions/🧬️schema",
+      "path": "✏️s/🔌️plugins/📖️playbook/🗿️artifacts/📖️playbook/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧩️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2249,7 +2249,7 @@
       }
     },
     "app.procedural.2d.transient.mutation.set-generation-preview": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-generation-preview/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-generation/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2310,7 +2310,7 @@
       }
     },
     "app.procedural.3d.config.mutation.set-camera": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🕸️set-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🕸️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2330,7 +2330,7 @@
       }
     },
     "app.procedural.3d.config.mutation.set-lod-mode": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔬️set-lod-mode/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔬️set-lod/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2368,7 +2368,7 @@
       }
     },
     "app.procedural.3d.config.mutation.set-selected-generation": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧬️set-selected-generation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🧬️set-selected/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2404,7 +2404,7 @@
       }
     },
     "app.procedural.3d.config.mutation.set-snapshot": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⚙️set-snapshot/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/⚙️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2504,7 +2504,7 @@
       }
     },
     "app.procedural.3d.transient.mutation.set-generation-preview": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-generation-preview/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/👁️set-generation/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2522,7 +2522,7 @@
       }
     },
     "app.procedural.3d.viewer.config.mutation.set-active-example": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🎨️set-active-example/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🎨️set/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2540,7 +2540,7 @@
       }
     },
     "app.procedural.3d.viewer.config.mutation.set-lod-mode": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🔬️set-lod-mode/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🎚️config/🧬️schema/🧬️mutations/🔬️set-lod/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2616,7 +2616,7 @@
       }
     },
     "app.procedural.3d.viewer.presence.mutation.set-preview-camera": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/📷️set-preview-camera/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/👥️presence/🧬️schema/🧬️mutations/📷️set-preview/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -2654,7 +2654,7 @@
       }
     },
     "app.procedural.3d.viewer.transient.mutation.set-preview-eval": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👁️set-preview-eval/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/🫧️transient/🧬️schema/🧬️mutations/👁️set-preview/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3073,7 +3073,7 @@
       }
     },
     "app.shooting.shooting.config.mutation.replace-config": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace-config/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3109,7 +3109,7 @@
       }
     },
     "app.shooting.shooting.config.mutation.set-camera-draft-label": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏷️set-camera-draft-label/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🏷️set-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3127,7 +3127,7 @@
       }
     },
     "app.shooting.shooting.config.mutation.set-center-model": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎯️set-center-model/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🎯️set-center/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3163,7 +3163,7 @@
       }
     },
     "app.shooting.shooting.config.mutation.set-fit-revision": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔢️set-fit-revision/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/🔢️set-fit/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3181,7 +3181,7 @@
       }
     },
     "app.shooting.shooting.config.mutation.set-shot-selection": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/☑️set-shot-selection/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/🧬️schema/🧬️mutations/☑️set-shot/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3230,7 +3230,7 @@
       }
     },
     "app.shooting.shooting.presence.mutation.replace-presence": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace-presence/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/👥️presence/🧬️schema/🧬️mutations/📸️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -3409,7 +3409,7 @@
       }
     },
     "app.space.home.transient.mutation.apply-directory-page": {
-      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🧬️schema",
+      "path": "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22025,7 +22025,7 @@
       }
     },
     "s.architect.program.mutation.create-accessibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22115,7 +22115,7 @@
       }
     },
     "s.architect.program.mutation.create-audit-event": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit-event/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22169,7 +22169,7 @@
       }
     },
     "s.architect.program.mutation.create-collaboration-record": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration-record/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22187,7 +22187,7 @@
       }
     },
     "s.architect.program.mutation.create-communication-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22259,7 +22259,7 @@
       }
     },
     "s.architect.program.mutation.create-cost-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22331,7 +22331,7 @@
       }
     },
     "s.architect.program.mutation.create-environmental-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22367,7 +22367,7 @@
       }
     },
     "s.architect.program.mutation.create-flexibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22385,7 +22385,7 @@
       }
     },
     "s.architect.program.mutation.create-flow-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22439,7 +22439,7 @@
       }
     },
     "s.architect.program.mutation.create-human-factor-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human-factor-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22457,7 +22457,7 @@
       }
     },
     "s.architect.program.mutation.create-information-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22475,7 +22475,7 @@
       }
     },
     "s.architect.program.mutation.create-infrastructure-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22547,7 +22547,7 @@
       }
     },
     "s.architect.program.mutation.create-operational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22565,7 +22565,7 @@
       }
     },
     "s.architect.program.mutation.create-option-evaluation": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option-evaluation/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22583,7 +22583,7 @@
       }
     },
     "s.architect.program.mutation.create-organizational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22601,7 +22601,7 @@
       }
     },
     "s.architect.program.mutation.create-performance-criterion": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance-criterion/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22637,7 +22637,7 @@
       }
     },
     "s.architect.program.mutation.create-privacy-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22709,7 +22709,7 @@
       }
     },
     "s.architect.program.mutation.create-quantity-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22727,7 +22727,7 @@
       }
     },
     "s.architect.program.mutation.create-regulatory-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22799,7 +22799,7 @@
       }
     },
     "s.architect.program.mutation.create-resilience-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22853,7 +22853,7 @@
       }
     },
     "s.architect.program.mutation.create-safety-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22889,7 +22889,7 @@
       }
     },
     "s.architect.program.mutation.create-schedule-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22925,7 +22925,7 @@
       }
     },
     "s.architect.program.mutation.create-security-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22943,7 +22943,7 @@
       }
     },
     "s.architect.program.mutation.create-service-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -22961,7 +22961,7 @@
       }
     },
     "s.architect.program.mutation.create-site-context": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site-context/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23015,7 +23015,7 @@
       }
     },
     "s.architect.program.mutation.create-storage-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23051,7 +23051,7 @@
       }
     },
     "s.architect.program.mutation.create-sustainability-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23087,7 +23087,7 @@
       }
     },
     "s.architect.program.mutation.create-user-profile": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user-profile/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23123,7 +23123,7 @@
       }
     },
     "s.architect.program.mutation.create-wayfinding-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding-requirement/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23177,7 +23177,7 @@
       }
     },
     "s.architect.program.mutation.delete-accessibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23267,7 +23267,7 @@
       }
     },
     "s.architect.program.mutation.delete-audit-event": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit-event/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23321,7 +23321,7 @@
       }
     },
     "s.architect.program.mutation.delete-collaboration-record": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration-record/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23339,7 +23339,7 @@
       }
     },
     "s.architect.program.mutation.delete-communication-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23411,7 +23411,7 @@
       }
     },
     "s.architect.program.mutation.delete-cost-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23483,7 +23483,7 @@
       }
     },
     "s.architect.program.mutation.delete-environmental-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23519,7 +23519,7 @@
       }
     },
     "s.architect.program.mutation.delete-flexibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23537,7 +23537,7 @@
       }
     },
     "s.architect.program.mutation.delete-flow-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23591,7 +23591,7 @@
       }
     },
     "s.architect.program.mutation.delete-human-factor-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human-factor-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23609,7 +23609,7 @@
       }
     },
     "s.architect.program.mutation.delete-information-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23627,7 +23627,7 @@
       }
     },
     "s.architect.program.mutation.delete-infrastructure-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23699,7 +23699,7 @@
       }
     },
     "s.architect.program.mutation.delete-operational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23717,7 +23717,7 @@
       }
     },
     "s.architect.program.mutation.delete-option-evaluation": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option-evaluation/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23735,7 +23735,7 @@
       }
     },
     "s.architect.program.mutation.delete-organizational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23753,7 +23753,7 @@
       }
     },
     "s.architect.program.mutation.delete-performance-criterion": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance-criterion/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23789,7 +23789,7 @@
       }
     },
     "s.architect.program.mutation.delete-privacy-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23861,7 +23861,7 @@
       }
     },
     "s.architect.program.mutation.delete-quantity-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23879,7 +23879,7 @@
       }
     },
     "s.architect.program.mutation.delete-regulatory-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -23951,7 +23951,7 @@
       }
     },
     "s.architect.program.mutation.delete-resilience-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24005,7 +24005,7 @@
       }
     },
     "s.architect.program.mutation.delete-safety-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24041,7 +24041,7 @@
       }
     },
     "s.architect.program.mutation.delete-schedule-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24077,7 +24077,7 @@
       }
     },
     "s.architect.program.mutation.delete-security-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24095,7 +24095,7 @@
       }
     },
     "s.architect.program.mutation.delete-service-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24113,7 +24113,7 @@
       }
     },
     "s.architect.program.mutation.delete-site-context": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site-context/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24167,7 +24167,7 @@
       }
     },
     "s.architect.program.mutation.delete-storage-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24203,7 +24203,7 @@
       }
     },
     "s.architect.program.mutation.delete-sustainability-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24239,7 +24239,7 @@
       }
     },
     "s.architect.program.mutation.delete-user-profile": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user-profile/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24275,7 +24275,7 @@
       }
     },
     "s.architect.program.mutation.delete-wayfinding-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding-requirement/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24365,7 +24365,7 @@
       }
     },
     "s.architect.program.mutation.rename-accessibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24455,7 +24455,7 @@
       }
     },
     "s.architect.program.mutation.rename-audit-event": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit-event/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24509,7 +24509,7 @@
       }
     },
     "s.architect.program.mutation.rename-collaboration-record": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration-record/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24527,7 +24527,7 @@
       }
     },
     "s.architect.program.mutation.rename-communication-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24599,7 +24599,7 @@
       }
     },
     "s.architect.program.mutation.rename-cost-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24671,7 +24671,7 @@
       }
     },
     "s.architect.program.mutation.rename-environmental-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24707,7 +24707,7 @@
       }
     },
     "s.architect.program.mutation.rename-flexibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24725,7 +24725,7 @@
       }
     },
     "s.architect.program.mutation.rename-flow-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24797,7 +24797,7 @@
       }
     },
     "s.architect.program.mutation.rename-human-factor-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human-factor-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24815,7 +24815,7 @@
       }
     },
     "s.architect.program.mutation.rename-information-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24833,7 +24833,7 @@
       }
     },
     "s.architect.program.mutation.rename-infrastructure-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24923,7 +24923,7 @@
       }
     },
     "s.architect.program.mutation.rename-operational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24941,7 +24941,7 @@
       }
     },
     "s.architect.program.mutation.rename-option-evaluation": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option-evaluation/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24959,7 +24959,7 @@
       }
     },
     "s.architect.program.mutation.rename-organizational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -24977,7 +24977,7 @@
       }
     },
     "s.architect.program.mutation.rename-performance-criterion": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance-criterion/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25013,7 +25013,7 @@
       }
     },
     "s.architect.program.mutation.rename-privacy-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25103,7 +25103,7 @@
       }
     },
     "s.architect.program.mutation.rename-quantity-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25121,7 +25121,7 @@
       }
     },
     "s.architect.program.mutation.rename-regulatory-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25193,7 +25193,7 @@
       }
     },
     "s.architect.program.mutation.rename-resilience-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25247,7 +25247,7 @@
       }
     },
     "s.architect.program.mutation.rename-safety-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25283,7 +25283,7 @@
       }
     },
     "s.architect.program.mutation.rename-schedule-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25319,7 +25319,7 @@
       }
     },
     "s.architect.program.mutation.rename-security-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25337,7 +25337,7 @@
       }
     },
     "s.architect.program.mutation.rename-service-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25355,7 +25355,7 @@
       }
     },
     "s.architect.program.mutation.rename-site-context": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site-context/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25409,7 +25409,7 @@
       }
     },
     "s.architect.program.mutation.rename-storage-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25445,7 +25445,7 @@
       }
     },
     "s.architect.program.mutation.rename-sustainability-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25481,7 +25481,7 @@
       }
     },
     "s.architect.program.mutation.rename-user-profile": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user-profile/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25517,7 +25517,7 @@
       }
     },
     "s.architect.program.mutation.rename-wayfinding-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding-requirement/🏷️rename/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25571,7 +25571,7 @@
       }
     },
     "s.architect.program.mutation.replace-accessibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♿️accessibility/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25661,7 +25661,7 @@
       }
     },
     "s.architect.program.mutation.replace-audit-event": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit-event/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📒️audit/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25715,7 +25715,7 @@
       }
     },
     "s.architect.program.mutation.replace-collaboration-record": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration-record/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️collaboration/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25733,7 +25733,7 @@
       }
     },
     "s.architect.program.mutation.replace-communication-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️communication/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25805,7 +25805,7 @@
       }
     },
     "s.architect.program.mutation.replace-cost-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️cost/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25877,7 +25877,7 @@
       }
     },
     "s.architect.program.mutation.replace-environmental-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌿️environmental/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25913,7 +25913,7 @@
       }
     },
     "s.architect.program.mutation.replace-flexibility-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️flexibility/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -25931,7 +25931,7 @@
       }
     },
     "s.architect.program.mutation.replace-flow-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌊️flow/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26003,7 +26003,7 @@
       }
     },
     "s.architect.program.mutation.replace-human-factor-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human-factor-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧠️human/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26021,7 +26021,7 @@
       }
     },
     "s.architect.program.mutation.replace-information-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/ℹ️information/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26039,7 +26039,7 @@
       }
     },
     "s.architect.program.mutation.replace-infrastructure-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏗️infrastructure/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26129,7 +26129,7 @@
       }
     },
     "s.architect.program.mutation.replace-operational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📋️operational/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26147,7 +26147,7 @@
       }
     },
     "s.architect.program.mutation.replace-option-evaluation": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option-evaluation/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚖️option/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26165,7 +26165,7 @@
       }
     },
     "s.architect.program.mutation.replace-organizational-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️organizational/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26183,7 +26183,7 @@
       }
     },
     "s.architect.program.mutation.replace-performance-criterion": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance-criterion/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️performance/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26219,7 +26219,7 @@
       }
     },
     "s.architect.program.mutation.replace-privacy-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔒️privacy/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26309,7 +26309,7 @@
       }
     },
     "s.architect.program.mutation.replace-quantity-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️quantity/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26327,7 +26327,7 @@
       }
     },
     "s.architect.program.mutation.replace-regulatory-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜️regulatory/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26399,7 +26399,7 @@
       }
     },
     "s.architect.program.mutation.replace-resilience-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💪️resilience/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26453,7 +26453,7 @@
       }
     },
     "s.architect.program.mutation.replace-safety-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦺️safety/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26489,7 +26489,7 @@
       }
     },
     "s.architect.program.mutation.replace-schedule-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️schedule/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26525,7 +26525,7 @@
       }
     },
     "s.architect.program.mutation.replace-security-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛡️security/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26543,7 +26543,7 @@
       }
     },
     "s.architect.program.mutation.replace-service-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛎️service/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26561,7 +26561,7 @@
       }
     },
     "s.architect.program.mutation.replace-site-context": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site-context/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️site/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26615,7 +26615,7 @@
       }
     },
     "s.architect.program.mutation.replace-storage-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️storage/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26651,7 +26651,7 @@
       }
     },
     "s.architect.program.mutation.replace-sustainability-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️sustainability/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26687,7 +26687,7 @@
       }
     },
     "s.architect.program.mutation.replace-user-profile": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user-profile/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧑️user/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -26723,7 +26723,7 @@
       }
     },
     "s.architect.program.mutation.replace-wayfinding-requirement": {
-      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding-requirement/♻️replace/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️wayfinding/♻️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -27084,7 +27084,7 @@
       }
     },
     "s.block.block2d.mutation.change-handle-kind-default-wire-kind": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-handle-kind-default-wire-kind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-handle-kind-default-wire/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -27823,7 +27823,7 @@
       }
     },
     "s.block.block3d.mutation.change-object-kind-description": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-object-kind-description/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📃️change-object-kind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -27913,7 +27913,7 @@
       }
     },
     "s.block.block3d.mutation.change-representation-description": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -27985,7 +27985,7 @@
       }
     },
     "s.block.block3d.mutation.change-vortex-kind-default-cable-kind": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌change-vortex-kind-default-cable-kind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌change-vortex-kind-default-cable/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -28907,7 +28907,7 @@
       }
     },
     "s.block.block5d.mutation.change-representation-description": {
-      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation-description/🧬️schema",
+      "path": "✏️s/🔌️plugins/🧱️block/🗿️artifacts/🖐️5d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📜change-representation/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -29729,7 +29729,7 @@
       }
     },
     "s.cad.cad.mutation.create-structure-classic-model": {
-      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic-model/🧬️schema",
+      "path": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏛️create-structure-classic/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -30508,7 +30508,7 @@
       }
     },
     "s.dev.composition-laws": {
-      "path": "✏️s/🧑‍💻dev/🧩️composition-laws/🧬️schema",
+      "path": "✏️s/🧑‍💻dev/🧩️composition/🧬️schema",
       "level": "implementation-dev-module",
       "facetKind": "🧬️data",
       "formats": {
@@ -30998,7 +30998,7 @@
       }
     },
     "s.draw.drawing.1.transform.mutation.set-layer-boolean-operation": {
-      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean-operation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔀set-layer-boolean/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31016,7 +31016,7 @@
       }
     },
     "s.draw.drawing.1.transform.mutation.update-layer-trace-params": {
-      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer-trace-params/🧬️schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔍️update-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31034,7 +31034,7 @@
       }
     },
     "s.draw.drawing.1.transform.mutation.update-layer-transform": {
-      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer-transform/🧬️schema",
+      "path": "✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/🔀️transform/🧬️schema/🧬️mutations/🔄️update-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31626,7 +31626,7 @@
       }
     },
     "s.energy.model.mutation.add-annual-schedule-holiday": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31662,7 +31662,7 @@
       }
     },
     "s.energy.model.mutation.add-electrical-load-center-battery": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31680,7 +31680,7 @@
       }
     },
     "s.energy.model.mutation.add-electrical-load-center-pv": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31770,7 +31770,7 @@
       }
     },
     "s.energy.model.mutation.bind-fenestration-glazing-construction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31806,7 +31806,7 @@
       }
     },
     "s.energy.model.mutation.change-air-loop-design-supply-air-flow": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31824,7 +31824,7 @@
       }
     },
     "s.energy.model.mutation.change-air-loop-return-node": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31842,7 +31842,7 @@
       }
     },
     "s.energy.model.mutation.change-air-loop-supply-node": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31860,7 +31860,7 @@
       }
     },
     "s.energy.model.mutation.change-annual-schedule-default-daily-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31878,7 +31878,7 @@
       }
     },
     "s.energy.model.mutation.change-annual-schedule-holiday-daily-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31932,7 +31932,7 @@
       }
     },
     "s.energy.model.mutation.change-battery-max-discharge": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31950,7 +31950,7 @@
       }
     },
     "s.energy.model.mutation.change-battery-round-trip-efficiency": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31968,7 +31968,7 @@
       }
     },
     "s.energy.model.mutation.change-constant-schedule-value": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -31986,7 +31986,7 @@
       }
     },
     "s.energy.model.mutation.change-daily-schedule-interpolation": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32004,7 +32004,7 @@
       }
     },
     "s.energy.model.mutation.change-daily-schedule-limits": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32022,7 +32022,7 @@
       }
     },
     "s.energy.model.mutation.change-daylight-zone-glare-limit": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32040,7 +32040,7 @@
       }
     },
     "s.energy.model.mutation.change-daylight-zone-illuminance-target": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32058,7 +32058,7 @@
       }
     },
     "s.energy.model.mutation.change-daylight-zone-window-transmittance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32094,7 +32094,7 @@
       }
     },
     "s.energy.model.mutation.change-equipment-gain-latent-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32112,7 +32112,7 @@
       }
     },
     "s.energy.model.mutation.change-equipment-gain-radiant-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32130,7 +32130,7 @@
       }
     },
     "s.energy.model.mutation.change-equipment-gain-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32148,7 +32148,7 @@
       }
     },
     "s.energy.model.mutation.change-equipment-gain-watts-per-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32202,7 +32202,7 @@
       }
     },
     "s.energy.model.mutation.change-fault-start-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32220,7 +32220,7 @@
       }
     },
     "s.energy.model.mutation.change-fault-target-equipment": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32274,7 +32274,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-divider-conductance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32292,7 +32292,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-fin-depth": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32310,7 +32310,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-fin-offset": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32328,7 +32328,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-frame-conductance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32364,7 +32364,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-overhang-depth": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32382,7 +32382,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-overhang-offset": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32418,7 +32418,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-sill-height": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32436,7 +32436,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-surface": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32454,7 +32454,7 @@
       }
     },
     "s.energy.model.mutation.change-fenestration-u-value": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32508,7 +32508,7 @@
       }
     },
     "s.energy.model.mutation.change-gas-material-thickness": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32526,7 +32526,7 @@
       }
     },
     "s.energy.model.mutation.change-glazing-material-conductivity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32544,7 +32544,7 @@
       }
     },
     "s.energy.model.mutation.change-glazing-material-infrared-emissivity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32562,7 +32562,7 @@
       }
     },
     "s.energy.model.mutation.change-glazing-material-solar-transmittance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32580,7 +32580,7 @@
       }
     },
     "s.energy.model.mutation.change-glazing-material-thickness": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32598,7 +32598,7 @@
       }
     },
     "s.energy.model.mutation.change-glazing-material-visible-transmittance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32616,7 +32616,7 @@
       }
     },
     "s.energy.model.mutation.change-humidistat-dehumidifying-setpoint-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32634,7 +32634,7 @@
       }
     },
     "s.energy.model.mutation.change-humidistat-dehumidifying-throttle-range": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32652,7 +32652,7 @@
       }
     },
     "s.energy.model.mutation.change-humidistat-humidifying-setpoint-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32670,7 +32670,7 @@
       }
     },
     "s.energy.model.mutation.change-humidistat-humidifying-throttle-range": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32706,7 +32706,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-max-cooling-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32724,7 +32724,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-max-heating-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32742,7 +32742,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-max-heating-supply-air-temp": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32760,7 +32760,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-min-cooling-supply-air-temp": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32778,7 +32778,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-outdoor-air-per-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32796,7 +32796,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-outdoor-air-per-person": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32814,7 +32814,7 @@
       }
     },
     "s.energy.model.mutation.change-ideal-loads-system-zone": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32832,7 +32832,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-constant-term-coefficient": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32850,7 +32850,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-design-flow-ach": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32868,7 +32868,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-discharge-coefficient": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32886,7 +32886,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-effective-leakage-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32904,7 +32904,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-flow-per-exterior-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32940,7 +32940,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32958,7 +32958,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-stack-height": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32976,7 +32976,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-temperature-term-coefficient": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅱️change-infiltration-temperature-term-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅱️change-infiltration-temperature-term/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -32994,7 +32994,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-velocity-squared-term-coefficient": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆑️change-infiltration-velocity-squared-term-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆑️change-infiltration-velocity-squared-term/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33012,7 +33012,7 @@
       }
     },
     "s.energy.model.mutation.change-infiltration-velocity-term-coefficient": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33048,7 +33048,7 @@
       }
     },
     "s.energy.model.mutation.change-lighting-gain-radiant-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33066,7 +33066,7 @@
       }
     },
     "s.energy.model.mutation.change-lighting-gain-return-air-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33084,7 +33084,7 @@
       }
     },
     "s.energy.model.mutation.change-lighting-gain-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33102,7 +33102,7 @@
       }
     },
     "s.energy.model.mutation.change-lighting-gain-visible-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33120,7 +33120,7 @@
       }
     },
     "s.energy.model.mutation.change-lighting-gain-watts-per-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33156,7 +33156,7 @@
       }
     },
     "s.energy.model.mutation.change-material-conductivity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33210,7 +33210,7 @@
       }
     },
     "s.energy.model.mutation.change-material-solar-absorptance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33228,7 +33228,7 @@
       }
     },
     "s.energy.model.mutation.change-material-specific-heat": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33246,7 +33246,7 @@
       }
     },
     "s.energy.model.mutation.change-material-thermal-absorptance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33282,7 +33282,7 @@
       }
     },
     "s.energy.model.mutation.change-material-visible-absorptance": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33300,7 +33300,7 @@
       }
     },
     "s.energy.model.mutation.change-mechanical-ventilation-design-flow": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33318,7 +33318,7 @@
       }
     },
     "s.energy.model.mutation.change-mechanical-ventilation-fan-delta-pressure": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎈️change-mechanical-ventilation-fan-delta-pressure/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎈️change-mechanical-ventilation-fan-delta/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33336,7 +33336,7 @@
       }
     },
     "s.energy.model.mutation.change-mechanical-ventilation-fan-total-efficiency": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️change-mechanical-ventilation-fan-total-efficiency/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💠️change-mechanical-ventilation-fan-total/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33354,7 +33354,7 @@
       }
     },
     "s.energy.model.mutation.change-mechanical-ventilation-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33372,7 +33372,7 @@
       }
     },
     "s.energy.model.mutation.change-mechanical-ventilation-zone": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33408,7 +33408,7 @@
       }
     },
     "s.energy.model.mutation.change-outdoor-air-system-air-loop": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33426,7 +33426,7 @@
       }
     },
     "s.energy.model.mutation.change-outdoor-air-system-economizer-enabled": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33444,7 +33444,7 @@
       }
     },
     "s.energy.model.mutation.change-outdoor-air-system-min-oa-flow": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33462,7 +33462,7 @@
       }
     },
     "s.energy.model.mutation.change-people-gain-activity-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33480,7 +33480,7 @@
       }
     },
     "s.energy.model.mutation.change-people-gain-latent-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33498,7 +33498,7 @@
       }
     },
     "s.energy.model.mutation.change-people-gain-people-per-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33516,7 +33516,7 @@
       }
     },
     "s.energy.model.mutation.change-people-gain-radiant-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33552,7 +33552,7 @@
       }
     },
     "s.energy.model.mutation.change-people-gain-sensible-fraction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33588,7 +33588,7 @@
       }
     },
     "s.energy.model.mutation.change-plant-loop-design-flow": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33606,7 +33606,7 @@
       }
     },
     "s.energy.model.mutation.change-plant-loop-return-temperature": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33624,7 +33624,7 @@
       }
     },
     "s.energy.model.mutation.change-plant-loop-supply-temperature": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33696,7 +33696,7 @@
       }
     },
     "s.energy.model.mutation.change-pv-system-dc-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33714,7 +33714,7 @@
       }
     },
     "s.energy.model.mutation.change-pv-system-inverter-efficiency": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33732,7 +33732,7 @@
       }
     },
     "s.energy.model.mutation.change-pv-system-module-efficiency": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33768,7 +33768,7 @@
       }
     },
     "s.energy.model.mutation.change-refrigeration-system-case-count": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33786,7 +33786,7 @@
       }
     },
     "s.energy.model.mutation.change-refrigeration-system-defrost-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33804,7 +33804,7 @@
       }
     },
     "s.energy.model.mutation.change-refrigeration-system-design-load": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33840,7 +33840,7 @@
       }
     },
     "s.energy.model.mutation.change-setpoint-manager-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33858,7 +33858,7 @@
       }
     },
     "s.energy.model.mutation.change-shading-surface-transmittance-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33876,7 +33876,7 @@
       }
     },
     "s.energy.model.mutation.change-shw-system-heater-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33930,7 +33930,7 @@
       }
     },
     "s.energy.model.mutation.change-shw-system-storage-volume": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33948,7 +33948,7 @@
       }
     },
     "s.energy.model.mutation.change-sizing-object-design-day-type": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -33966,7 +33966,7 @@
       }
     },
     "s.energy.model.mutation.change-sizing-object-sizing-type": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34002,7 +34002,7 @@
       }
     },
     "s.energy.model.mutation.change-solar-thermal-system-azimuth": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34020,7 +34020,7 @@
       }
     },
     "s.energy.model.mutation.change-solar-thermal-system-collector-area": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34038,7 +34038,7 @@
       }
     },
     "s.energy.model.mutation.change-solar-thermal-system-efficiency": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34056,7 +34056,7 @@
       }
     },
     "s.energy.model.mutation.change-solar-thermal-system-storage-volume": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34074,7 +34074,7 @@
       }
     },
     "s.energy.model.mutation.change-solar-thermal-system-tilt": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34128,7 +34128,7 @@
       }
     },
     "s.energy.model.mutation.change-surface-boundary-condition": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34164,7 +34164,7 @@
       }
     },
     "s.energy.model.mutation.change-surface-construction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34218,7 +34218,7 @@
       }
     },
     "s.energy.model.mutation.change-surface-wind-exposed": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34254,7 +34254,7 @@
       }
     },
     "s.energy.model.mutation.change-thermostat-cooling-setpoint-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34272,7 +34272,7 @@
       }
     },
     "s.energy.model.mutation.change-thermostat-cooling-throttle-range": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34290,7 +34290,7 @@
       }
     },
     "s.energy.model.mutation.change-thermostat-heating-setpoint-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34308,7 +34308,7 @@
       }
     },
     "s.energy.model.mutation.change-thermostat-heating-throttle-range": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34344,7 +34344,7 @@
       }
     },
     "s.energy.model.mutation.change-time-series-schedule-timestep": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34362,7 +34362,7 @@
       }
     },
     "s.energy.model.mutation.change-water-system-fixture-count": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34380,7 +34380,7 @@
       }
     },
     "s.energy.model.mutation.change-water-system-peak-flow": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34398,7 +34398,7 @@
       }
     },
     "s.energy.model.mutation.change-water-system-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34452,7 +34452,7 @@
       }
     },
     "s.energy.model.mutation.change-zone-equipment-cooling-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34470,7 +34470,7 @@
       }
     },
     "s.energy.model.mutation.change-zone-equipment-heating-capacity": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34488,7 +34488,7 @@
       }
     },
     "s.energy.model.mutation.change-zone-equipment-priority": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34542,7 +34542,7 @@
       }
     },
     "s.energy.model.mutation.change-zone-floor-area-participation": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34596,7 +34596,7 @@
       }
     },
     "s.energy.model.mutation.clear-fenestration-glazing-construction": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34776,7 +34776,7 @@
       }
     },
     "s.energy.model.mutation.create-electrical-load-center": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34938,7 +34938,7 @@
       }
     },
     "s.energy.model.mutation.create-mechanical-ventilation": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -34956,7 +34956,7 @@
       }
     },
     "s.energy.model.mutation.create-outdoor-air-system": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35046,7 +35046,7 @@
       }
     },
     "s.energy.model.mutation.create-room-air-model-assignment": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35136,7 +35136,7 @@
       }
     },
     "s.energy.model.mutation.create-solar-thermal-system": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35244,7 +35244,7 @@
       }
     },
     "s.energy.model.mutation.create-time-series-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35460,7 +35460,7 @@
       }
     },
     "s.energy.model.mutation.delete-electrical-load-center": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35622,7 +35622,7 @@
       }
     },
     "s.energy.model.mutation.delete-mechanical-ventilation": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35712,7 +35712,7 @@
       }
     },
     "s.energy.model.mutation.delete-refrigeration-system": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35730,7 +35730,7 @@
       }
     },
     "s.energy.model.mutation.delete-room-air-model-assignment": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35820,7 +35820,7 @@
       }
     },
     "s.energy.model.mutation.delete-solar-thermal-system": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -35928,7 +35928,7 @@
       }
     },
     "s.energy.model.mutation.delete-time-series-schedule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36018,7 +36018,7 @@
       }
     },
     "s.energy.model.mutation.disconnect-referenced-model": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36054,7 +36054,7 @@
       }
     },
     "s.energy.model.mutation.insert-annual-schedule-rule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36072,7 +36072,7 @@
       }
     },
     "s.energy.model.mutation.remove-air-loop-terminal-zone": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36090,7 +36090,7 @@
       }
     },
     "s.energy.model.mutation.remove-annual-schedule-holiday": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36108,7 +36108,7 @@
       }
     },
     "s.energy.model.mutation.remove-annual-schedule-rule": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36144,7 +36144,7 @@
       }
     },
     "s.energy.model.mutation.remove-electrical-load-center-battery": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36162,7 +36162,7 @@
       }
     },
     "s.energy.model.mutation.remove-electrical-load-center-pv": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36234,7 +36234,7 @@
       }
     },
     "s.energy.model.mutation.remove-thermal-enclosure-zone": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36288,7 +36288,7 @@
       }
     },
     "s.energy.model.mutation.rename-electrical-load-center": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36540,7 +36540,7 @@
       }
     },
     "s.energy.model.mutation.reorder-annual-schedule-rules": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36558,7 +36558,7 @@
       }
     },
     "s.energy.model.mutation.reorder-construction-layers": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36594,7 +36594,7 @@
       }
     },
     "s.energy.model.mutation.replace-daily-schedule-hourly-values": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36612,7 +36612,7 @@
       }
     },
     "s.energy.model.mutation.replace-fenestration-vertices": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36630,7 +36630,7 @@
       }
     },
     "s.energy.model.mutation.replace-setpoint-manager-kind": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36648,7 +36648,7 @@
       }
     },
     "s.energy.model.mutation.replace-shading-surface-vertices": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -36684,7 +36684,7 @@
       }
     },
     "s.energy.model.mutation.replace-time-series-schedule-values": {
-      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41224,7 +41224,7 @@
       }
     },
     "s.lowpoly.lowpoly.mutation.change-object-smooth-shading": {
-      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth-shading/🧬️schema",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔘️change-object-smooth/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41242,7 +41242,7 @@
       }
     },
     "s.lowpoly.lowpoly.mutation.change-paint-layer-blend-mode": {
-      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer-blend-mode/🧬️schema",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-paint-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41260,7 +41260,7 @@
       }
     },
     "s.lowpoly.lowpoly.mutation.change-paint-layer-opacity": {
-      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer-opacity/🧬️schema",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-paint-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41278,7 +41278,7 @@
       }
     },
     "s.lowpoly.lowpoly.mutation.change-paint-layer-visible": {
-      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer-visible/🧬️schema",
+      "path": "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-paint-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41563,7 +41563,7 @@
       }
     },
     "s.mathematical.equation.1.equation.mutation.change-coefficient": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change-coefficient/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/➗️equation/🧬️schema/🧬️mutations/🎚️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41650,7 +41650,7 @@
       }
     },
     "s.mathematical.equation.1.geometry.mutation.replace-points": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace-points/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/📐️geometry/🧬️schema/🧬️mutations/🔄️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41683,7 +41683,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.change-graph-directed": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph-directed/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧭️change-graph/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41701,7 +41701,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.change-node-label": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node-label/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🏷️change-node/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -41845,7 +41845,7 @@
       }
     },
     "s.mathematical.equation.1.graph.mutation.update-graph-algorithm": {
-      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph-algorithm/🧬️schema",
+      "path": "✏️s/🔌️plugins/➗️mathematical/🗿️artifacts/➗️equation/🏅️standards/🔖️1/🪆️subsets/🕸️graph/🧬️schema/🧬️mutations/🧮️update-graph/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -56670,7 +56670,7 @@
       }
     },
     "s.procedural.generation2d.mutation.change-generation-value": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-generation-value/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -56862,7 +56862,7 @@
       }
     },
     "s.procedural.generation2d.mutation.disconnect-synapse": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -56880,7 +56880,7 @@
       }
     },
     "s.procedural.generation2d.mutation.move-widget": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -56898,7 +56898,7 @@
       }
     },
     "s.procedural.generation2d.mutation.rename-generation": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -56916,7 +56916,7 @@
       }
     },
     "s.procedural.generation2d.mutation.replace-synapse": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace-synapse/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️replace/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57206,7 +57206,7 @@
       }
     },
     "s.procedural.generation3d.mutation.change-generation-value": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-generation-value/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57344,7 +57344,7 @@
       }
     },
     "s.procedural.generation3d.mutation.delete-generation": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-generation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57380,7 +57380,7 @@
       }
     },
     "s.procedural.generation3d.mutation.delete-widget-position": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget-position/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-widget/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57398,7 +57398,7 @@
       }
     },
     "s.procedural.generation3d.mutation.disconnect-synapse": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-synapse/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57416,7 +57416,7 @@
       }
     },
     "s.procedural.generation3d.mutation.move-widget": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move-widget/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57434,7 +57434,7 @@
       }
     },
     "s.procedural.generation3d.mutation.rename-generation": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-generation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57470,7 +57470,7 @@
       }
     },
     "s.procedural.generation3d.mutation.update-synapse": {
-      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update-synapse/🧬️schema",
+      "path": "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️update/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -57927,7 +57927,7 @@
       }
     },
     "s.process.process3d.mutation.replace-machine-capabilities": {
-      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine-capabilities/🧬️schema",
+      "path": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-machine/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -61116,7 +61116,7 @@
       }
     },
     "s.raster.raster.mutation.change-layer-adjustment-kind": {
-      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-layer-adjustment-kind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-layer-adjustment/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -61134,7 +61134,7 @@
       }
     },
     "s.raster.raster.mutation.change-layer-adjustment-parameter": {
-      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer-adjustment-parameter/🧬️schema",
+      "path": "✏️s/🔌️plugins/🖨️raster/🗿️artifacts/🖨️raster/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-layer/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62164,7 +62164,7 @@
       }
     },
     "s.remodel.remodeling.mutation.create-camera-calibration": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera-calibration/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭create-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62200,7 +62200,7 @@
       }
     },
     "s.remodel.remodeling.mutation.create-rig-extrinsic": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig-extrinsic/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️create-rig/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62254,7 +62254,7 @@
       }
     },
     "s.remodel.remodeling.mutation.delete-camera-calibration": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera-calibration/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫delete-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62470,7 +62470,7 @@
       }
     },
     "s.remodel.remodeling.mutation.replace-stream-source": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream-source/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-stream/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62524,7 +62524,7 @@
       }
     },
     "s.remodel.remodeling.mutation.update-camera-calibration": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera-calibration/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️update-camera/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62650,7 +62650,7 @@
       }
     },
     "s.remodel.remodeling.mutation.update-motion-params": {
-      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion-params/🧬️schema",
+      "path": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏎️update-motion/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62847,7 +62847,7 @@
       }
     },
     "s.sequence.sequence.1.dependency.mutation.connect-steps": {
-      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect-steps/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/🔗️connect/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -62865,7 +62865,7 @@
       }
     },
     "s.sequence.sequence.1.dependency.mutation.disconnect-steps": {
-      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect-steps/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎬️sequence/🗿️artifacts/🎬️sequence/🏅️standards/🔖️1/🪆️subsets/🔗️dependency/🧬️schema/🧬️mutations/✂️disconnect/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63248,7 +63248,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-ambient-intensity": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient-intensity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-scene-ambient/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63266,7 +63266,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-material-roughness": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene-material-roughness/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪨️change-scene/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63284,7 +63284,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-shadow-enabled": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow-enabled/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌑️change-scene-shadow/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63302,7 +63302,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-sun-azimuth": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun-azimuth/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-scene-sun/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63320,7 +63320,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-sun-elevation": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun-elevation/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-scene-sun/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63338,7 +63338,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-sun-enabled": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun-enabled/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-scene-sun/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63356,7 +63356,7 @@
       }
     },
     "s.shooting.shooting.mutation.change-scene-sun-intensity": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun-intensity/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💡️change-scene-sun/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63680,7 +63680,7 @@
       }
     },
     "s.shooting.shooting.mutation.replace-saved-camera-view": {
-      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved-camera-view/🧬️schema",
+      "path": "✏️s/🔌️plugins/🎥️shooting/🗿️artifacts/🎥️shooting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️replace-saved/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -63892,7 +63892,7 @@
       }
     },
     "s.sourcing.curation.mutation.change-curated-item-count": {
-      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item-count/🧬️schema",
+      "path": "✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts/🗂️curation/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢change-curated-item/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70402,7 +70402,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.add-required-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➕️add/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70426,7 +70426,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.add-used-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➕️add/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➕️add/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70474,7 +70474,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.bind-morph-target-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔗️bind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔗️bind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70594,7 +70594,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.bind-primitive-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔗️bind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔗️bind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70618,7 +70618,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.bind-primitive-indices": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/🔗️bind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/🔗️bind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70642,7 +70642,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.bind-primitive-material": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/🔗️bind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/🔗️bind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70690,7 +70690,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-asset-descriptive-metadata": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/📝️change-description/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70714,7 +70714,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-asset-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70786,7 +70786,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-document-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70810,7 +70810,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-document-extra-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/📝️change-extras/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70834,7 +70834,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-material-alpha-mode": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change-alpha/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70858,7 +70858,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-material-double-sided": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70882,7 +70882,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-mesh-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70910,7 +70910,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-mesh-extra-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change-extras/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70938,7 +70938,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-mesh-morph-weights": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change-weights/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -70986,7 +70986,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-node-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71014,7 +71014,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-node-extra-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71042,7 +71042,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-node-morph-weights": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71120,7 +71120,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-primitive-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71148,7 +71148,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-primitive-extra-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71176,7 +71176,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-primitive-topology-mode": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change-topology/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71200,7 +71200,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-scene-extension-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71228,7 +71228,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.change-scene-extra-data": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71472,7 +71472,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.create-morph-target": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🌱️create/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🌱️create/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -71832,7 +71832,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.delete-morph-target": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🗑️delete/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🗑️delete/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72192,7 +72192,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.move-morph-target": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🚚️move/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🚚️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72216,7 +72216,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.move-morph-target-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🚚️move/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🚚️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72336,7 +72336,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.move-primitive-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🚚️move/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🚚️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72360,7 +72360,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.move-required-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/🚚️move/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🚚️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72504,7 +72504,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.move-used-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🚚️move/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🚚️move/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72528,7 +72528,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.remove-required-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/➖️remove/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➖️remove/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72552,7 +72552,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.remove-used-extension": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/➖️remove/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➖️remove/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72768,7 +72768,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.reorder-morph-target-attributes": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/🔀️reorder/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔀️reorder/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72792,7 +72792,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.reorder-morph-targets": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph-target/🔀️reorder/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🔀️reorder/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72864,7 +72864,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.reorder-primitive-attributes": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/🔀️reorder/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔀️reorder/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -72912,7 +72912,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.reorder-required-extensions": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required-extension/🔀️reorder/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🔀️reorder/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -73056,7 +73056,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.reorder-used-extensions": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used-extension/🔀️reorder/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🔀️reorder/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -73124,7 +73124,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.unbind-morph-target-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph-attribute/✂️unbind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/✂️unbind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -73244,7 +73244,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.unbind-primitive-attribute": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive-attribute/✂️unbind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/✂️unbind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -73268,7 +73268,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.unbind-primitive-indices": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive-indices/✂️unbind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/✂️unbind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -73292,7 +73292,7 @@
       }
     },
     "s.stdio.gltf.2.0.any.mutation.unbind-primitive-material": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive-material/✂️unbind/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/✂️unbind/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75025,7 +75025,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.baseline.mutation.remove-huffman-table": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧱️baseline/🧬️schema/🧬️mutations/🪓️remove-huffman/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75302,7 +75302,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.change-jfif-header": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif-header/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪪️change-jfif/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75328,7 +75328,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.change-re-encode-quality": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re-encode-quality/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🎚️change-re/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75346,7 +75346,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.change-restart-interval": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart-interval/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🔁️change-restart/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75364,7 +75364,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.insert-other-segment": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other-segment/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📥️insert-other/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75406,7 +75406,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.remove-huffman-table": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman-table/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🪓️remove-huffman/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75432,7 +75432,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.remove-other-segment": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other-segment/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🗑️remove-other/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75450,7 +75450,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.remove-quant-table": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant-table/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🧹️remove-quant/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75468,7 +75468,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.replace-huffman-table": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman-table/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/🌳️replace-huffman/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -75512,7 +75512,7 @@
       }
     },
     "s.stdio.jpg.jfif-1.01.document.mutation.replace-quant-table": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant-table/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🧬️schema/🧬️mutations/📊️replace-quant/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -87433,7 +87433,7 @@
       }
     },
     "s.stdio.semio.v1.drawing.mutation.change-stroke-color": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke-color/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/🧬️mutations/🖌️change-stroke/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -89614,7 +89614,7 @@
       }
     },
     "s.stdio.semio.v1.mesh.mutation.change-material-base-color": {
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base-color/🧬️schema",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/🧬️schema/🧬️mutations/🌈change-material-base/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -98054,7 +98054,7 @@
       }
     },
     "s.trinity.rewriting.mutation.change-parameter-binding": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter-binding/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-parameter/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -98074,7 +98074,7 @@
       }
     },
     "s.trinity.rewriting.mutation.change-rule-layout-point": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout-point/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-rule-layout/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {
@@ -98164,7 +98164,7 @@
       }
     },
     "s.trinity.rewriting.mutation.remove-rule-layout-point": {
-      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout-point/🧬️schema",
+      "path": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️remove-rule-layout/🧬️schema",
       "level": "mutation-leaf",
       "facetKind": "🧬️data",
       "formats": {

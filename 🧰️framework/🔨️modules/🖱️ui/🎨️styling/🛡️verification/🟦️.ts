@@ -2,7 +2,7 @@ import { lstatSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import schema from "./🧬️schema/🔣️.json";
 import { stylingSourceDataV1 } from "./📖️source-data/🟦️.ts";
-import { validateJsonSchemaSubset } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/✅️validation/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
 
 export type StylingScanScopeV1 = Readonly<{ roots: readonly string[] }>;
 export type StylingSourceManifestV1 = StylingScanScopeV1 & Readonly<{ files: readonly string[] }>;
@@ -11,7 +11,7 @@ export type StylingViolationKindV1 = "tailwind-arbitrary-px" | "raw-hex-color" |
 export type StylingViolationV1 = Readonly<{ file: string; line: number; kind: StylingViolationKindV1; text: string }>;
 const OPAQUE_DIRECTORIES = new Set(["node_modules", ".🧬semio", ".git", "dist", "target", ".vite", ".stage", "🤖️generated", "🧪️tests", "🧫️fixtures"]);
 const PX_PATTERNS: { name: StylingViolationKindV1; re: RegExp }[] = [
-  { name: "tailwind-arbitrary-px", re: /\[(?!9999px)[-0-9]*\.?[0-9]+px\]/ },
+  { name: "tailwind-arbitrary-px", re: /\[[-0-9]*\.?[0-9]+px\]/ },
 ];
 const COLOR_PATTERNS: { name: StylingViolationKindV1; re: RegExp }[] = [
   { name: "raw-hex-color", re: /(?<![&\w])#(?:[0-9a-fA-F]{8}|[0-9a-fA-F]{6}|[0-9a-fA-F]{4}|[0-9a-fA-F]{3})(?!\w)/ },

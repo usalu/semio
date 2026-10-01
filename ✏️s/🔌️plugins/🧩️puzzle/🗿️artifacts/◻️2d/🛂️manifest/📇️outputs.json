@@ -11,6 +11,11 @@
   },
   "manifests": [
     {
+      "id": "nakagin",
+      "rust": "🏢️nakagin/🦀️.rs",
+      "typescript": "🏢️nakagin/🟦️.ts"
+    },
+    {
       "id": "puzzle2d-default",
       "rust": "◻️puzzle2d-default/🦀️.rs",
       "typescript": "◻️puzzle2d-default/🟦️.ts"

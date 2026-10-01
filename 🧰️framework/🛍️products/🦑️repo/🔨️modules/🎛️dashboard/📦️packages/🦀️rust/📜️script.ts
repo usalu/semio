@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** ⚙️ Builds and tests the `semio-framework-repo-dashboard` crate (nx bridge for `repo/dashboard/rs`). */
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 const crate = "semio-framework-repo-dashboard";
 
@@ -19,4 +21,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runScriptMain(router);

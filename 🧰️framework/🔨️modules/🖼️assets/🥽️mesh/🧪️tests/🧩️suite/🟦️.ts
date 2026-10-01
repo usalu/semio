@@ -6,6 +6,27 @@ import { parseMeshDeliveryCatalog, resolveMeshAsset, meshAssetTransportUrl } fro
 const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧫️fixtures/🔣️.json"), "utf8"));
 
 describe("explicit mesh delivery authority", () => {
+  it("keeps concrete product transport out of the general mesh dependency closure", async () => {
+    const { build } = await import("esbuild");
+    const { default: Ajv } = await import("ajv");
+    const schema = JSON.parse(readFileSync(resolve(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8"));
+    const ajv = new Ajv({ strict: true }).addSchema(schema);
+    expect(ajv.compile({ $ref: schema.$id + "#/$defs/MeshTransportCasesV1" })(fixture.transport)).toBe(true);
+    const catalog = parseMeshDeliveryCatalog(fixture.delivery, path => fixture.catalogs[path]);
+    for (const row of fixture.transport) {
+      if (!row.valid) expect(() => meshAssetTransportUrl(row.url, catalog), row.id).toThrow();
+      else expect(new URL(meshAssetTransportUrl(row.url, catalog), "https://owner.test").href, row.id).toBe(new URL(row.output, "https://owner.test").href);
+    }
+    const products = resolve(import.meta.dir, "../../../../../🛍️products") + "/";
+    const program = `import { parseMeshDeliveryCatalog, meshAssetTransportUrl } from ${JSON.stringify(resolve(import.meta.dir, "../../🟦️.ts"))}; const fixture=${JSON.stringify(fixture)}; const catalog=parseMeshDeliveryCatalog(fixture.delivery,path=>fixture.catalogs[path]); console.log(JSON.stringify(fixture.transport.map(row=>{try{return {valid:true,output:meshAssetTransportUrl(row.url,catalog)}}catch{return {valid:false,output:null}}})));`;
+    const bundle = await build({ stdin: { contents: program, resolveDir: import.meta.dir }, bundle: true, platform: "node", format: "esm", write: false, plugins: [{ name: "mesh-product-removal", setup(builder) {
+      builder.onLoad({ filter: /.*/ }, input => input.path.replaceAll("\\", "/").startsWith(products.replaceAll("\\", "/")) ? { errors: [{ text: "General mesh imports a concrete framework product: " + input.path }] } : undefined);
+    } }] });
+    const node = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(bundle.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
+    expect(node.exitCode, Buffer.from(node.stderr).toString()).toBe(0);
+    expect(JSON.parse(Buffer.from(node.stdout).toString())).toEqual(fixture.transport.map(row => ({ valid: row.valid, output: row.output })));
+  });
+
   it("agrees with independent JSON Schema admission and the neutral source/output map", async () => {
     const { default: Ajv } = await import("ajv");
     const ajv = new Ajv({ strict: true });

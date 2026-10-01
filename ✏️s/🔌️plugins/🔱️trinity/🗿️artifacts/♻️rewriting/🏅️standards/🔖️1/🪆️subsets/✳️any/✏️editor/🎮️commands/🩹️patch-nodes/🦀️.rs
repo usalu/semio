@@ -1,7 +1,7 @@
 //! 🩹️ Trinity Rewriting app command — `patch-nodes`.
 
 use semio_s_artifact_trinity_jack::JackWorkingScene;
-use crate::rewriting_snapshot_mutations;
+use crate::standards::v1::subsets::any::schema::mutations::edit_before_fixture;
 use crate::standards::v1::subsets::any::schema::mutations::text::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
@@ -50,7 +50,8 @@ pub(crate) fn patch_nodes(state: &RewritingSnapshot, node_ids: &[String], select
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("mutation.target-missing"), format!("the working graph has no node {}", missing.join(", "))));
     }
     let patched = patch_fixture_nodes(&state.before_fixture_json, targets, field, value).map_err(|error| invalid(format!("the patched working graph is not a valid graph: {error}")))?;
-    let mut next = state.clone();
-    next.before_fixture_json = patched;
-    Ok(Emit::mutations(rewriting_snapshot_mutations(state, &next)))
+    Ok(match patched == state.before_fixture_json {
+        true => Emit::default(),
+        false => Emit::mutations(vec![edit_before_fixture(patched)]),
+    })
 }

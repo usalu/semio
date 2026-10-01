@@ -1,5 +1,7 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, buildBudgetMs, runBundleScriptMain, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { buildBudgetMs, runCargoTestBudgeted, runTestBudgeted } from "@semio-tech/repo-lib";
+import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 💾️ Runs every resident library assertion through the shared native budget. */
 class TestScript extends BundleScript {
@@ -20,4 +22,4 @@ class CheckWasmScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("check-wasm", CheckWasmScript);
-if (import.meta.main) await runBundleScriptMain(router, import.meta.url);
+if (import.meta.main) await runScriptMain(router);

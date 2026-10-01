@@ -22,7 +22,7 @@ import {
 import { createHubPluginSource, HUB_PLUGIN_MODULE_ROUTE, TrustedPluginModuleTransientError, type HubPluginSourceNoticeV1, type PluginModuleLocksV1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🟦️.ts";
 import { PLUGIN_MODULE_TRANSFER_RETRY_V1 } from "../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧬️schema/🟦️.ts";
 import { TrustedPluginModuleRefusalV1 } from "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
-import { semioSchemaAjvV1 } from "../🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const here = (path: string) => JSON.parse(readFileSync(fileURLToPath(new URL(path, import.meta.url)), "utf8"));
 const fixture = here("../../🔨️modules/🔌️plugin/📇️registry/🌎️hub-source/🧫️fixtures/🗄️store/🔣️.json");

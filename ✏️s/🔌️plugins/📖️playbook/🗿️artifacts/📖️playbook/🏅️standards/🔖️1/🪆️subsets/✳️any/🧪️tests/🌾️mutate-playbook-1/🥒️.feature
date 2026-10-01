@@ -67,15 +67,15 @@ Feature: Apply every typed playbook document mutation twice — once in Rust, on
     Then the resulting snapshot is the committed after-snapshot and the raised diagnostics are the committed outcome's
     Examples:
       | id            | vector                                                                | scene                                                                                                                                              |
-      | add-step      | ➕add-step/🧪️no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
-      | remove-step   | ➖remove-step/🧪️rejects-removing-a-missing-step                  | []                                                                                                                                                 |
-      | move-step     | ↔️move-step/🧪️no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | add-block     | 🧱add-block/🧪️rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
-      | remove-block  | 🗑️remove-block/🧪️rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | move-block    | 🔀move-block/🧪️rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
-      | replace-block | 🔄replace-block/🧪️no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
-      | update-step   | 🩹update-step/🧪️no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
-      | change-title  | ✏️change-title/🧪️changes-the-playbook-title                     | []                                                                                                                                                 |
+      | add-step      | ➕add-step/🧪️no                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
+      | remove-step   | ➖remove-step/🧪️rejects                  | []                                                                                                                                                 |
+      | move-step     | ↔️move-step/🧪️no     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | add-block     | 🧱add-block/🧪️rejects           | []                                                                                                                                                 |
+      | remove-block  | 🗑️remove-block/🧪️rejects | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | move-block    | 🔀move-block/🧪️rejects        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
+      | replace-block | 🔄replace-block/🧪️no     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
+      | update-step   | 🩹update-step/🧪️no        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
+      | change-title  | ✏️change-title/🧪️changes                     | []                                                                                                                                                 |
 
   @id-inverse
   @level-exhaustive
@@ -90,15 +90,15 @@ Feature: Apply every typed playbook document mutation twice — once in Rust, on
     Then the projection is the committed before-snapshot's again, field for field
     Examples:
       | id            | vector                                                                | scene                                                                                                                                              |
-      | add-step      | ➕add-step/🧪️no-ops-on-a-duplicate-step-id                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
-      | remove-step   | ➖remove-step/🧪️rejects-removing-a-missing-step                  | []                                                                                                                                                 |
-      | move-step     | ↔️move-step/🧪️no-ops-when-the-step-is-already-at-that-index     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | add-block     | 🧱add-block/🧪️rejects-adding-a-block-to-a-missing-step           | []                                                                                                                                                 |
-      | remove-block  | 🗑️remove-block/🧪️rejects-removing-a-block-missing-from-its-step | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
-      | move-block    | 🔀move-block/🧪️rejects-moving-a-block-into-a-missing-step        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
-      | replace-block | 🔄replace-block/🧪️no-ops-when-the-block-is-already-identical     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
-      | update-step   | 🩹update-step/🧪️no-ops-when-the-header-is-already-current        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
-      | change-title  | ✏️change-title/🧪️changes-the-playbook-title                     | []                                                                                                                                                 |
+      | add-step      | ➕add-step/🧪️no                       | [{"id":"s-review","title":"Review","blocks":[]}]                                                                                                   |
+      | remove-step   | ➖remove-step/🧪️rejects                  | []                                                                                                                                                 |
+      | move-step     | ↔️move-step/🧪️no     | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | add-block     | 🧱add-block/🧪️rejects           | []                                                                                                                                                 |
+      | remove-block  | 🗑️remove-block/🧪️rejects | [{"id":"s-intro","title":"Intro","blocks":[]}]                                                                                                     |
+      | move-block    | 🔀move-block/🧪️rejects        | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-notes","label":"Notes","kind":"text"}]}]                                                       |
+      | replace-block | 🔄replace-block/🧪️no     | [{"id":"s-intro","title":"Intro","blocks":[{"id":"b-size","label":"Team size","kind":"number","required":true,"min":1,"max":80,"unit":"people"}]}] |
+      | update-step   | 🩹update-step/🧪️no        | [{"id":"s-intro","title":"Intro","description":"Warm up the room.","blocks":[]}]                                                                   |
+      | change-title  | ✏️change-title/🧪️changes                     | []                                                                                                                                                 |
 
   @id-identity-round-trip
   @level-long

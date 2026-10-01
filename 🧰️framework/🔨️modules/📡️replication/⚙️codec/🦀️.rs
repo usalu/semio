@@ -54,7 +54,7 @@ crate::fault_from_error!(PackError, FaultOrigin::Module, "module.pack");
 /// contract, and seven unrelated s-plugins needed it without pulling in replication's
 /// mutation/causal/conflict vocabulary. Re-exported here so every existing `crate::base64_standard_*`
 /// caller in this crate keeps resolving unchanged.
-pub use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode, Base64Error};
+pub use semio_framework_io_base64::{base64_standard_decode,base64_standard_encode,base64_standard_decode_controlled,base64_standard_encode_controlled,Base64Error,Base64Control,Base64ControlError,Base64Progress,Base64Phase};
 //#endregion 🔤️Base64
 
 //#region 🔖️Limits

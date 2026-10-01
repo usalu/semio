@@ -158,3 +158,47 @@ fn the_selection_record_arms_the_gumball_only_with_the_transform_utility() {
     let off = Fem3dGumballConfig { move_axes: false, move_planes: false, rotate: false, scale_axes: false, scale_uniform: false };
     assert!(!fem3d_gumball_active(&doc, &selected, true, &off));
 }
+
+/// ⏪️ LAW: a gumball move edited in history replays its downstream: the preview base is the state right before the
+/// move, and the Report replay re-applies the downstream relative scaling and turn onto the edited move — exactly the
+/// fresh fold of the edited log; overwrite commits it.
+#[semio_framework_async_macros::async_test]
+async fn a_gumball_move_edited_in_history_replays_its_downstream() {
+    use protocol::OpBinary;
+    let base = demo();
+    let tick = |motion| Fem3dMutation::MoveSelection(fem3d_gumball_tick(&base, &ids(&["n20_l1", "sol1"]), motion).expect("the selection moves geometry"));
+    let log = [tick(Fem3dGumballMotion::Translate { dx: 1.0, dy: 0.0, dz: 0.0 }), tick(Fem3dGumballMotion::Scale { sx: 2.0, sy: 1.0, sz: 1.0 }), tick(Fem3dGumballMotion::Rotate { axis: [0.0, 0.0, 1.0], angle: 0.5 })];
+    let mut store = store::ArtifactStore::<Fem3dSnapshot, Fem3dMutation>::new(store::create_document_envelope::<Fem3dSnapshot, Fem3dMutation>(crate::FEM_3D_SCHEMA, "gumball-time-travel", base.clone(), None)).await.expect("the store opens");
+    store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<Fem3dSnapshot, Fem3dMutation>());
+    for mutation in &log {
+        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], description: None, transaction: None }).await.expect("the edit applies");
+    }
+    let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
+    let edited = tick(Fem3dGumballMotion::Translate { dx: -0.5, dy: 3.0, dz: 0.25 });
+    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::FEM_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &base, "the preview base is the state right before the edited move");
+    let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    let result = replay.finish().expect("a finished replay yields its result");
+    assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset move never blocks finalizing");
+    let fold = |mutations: &[Fem3dMutation]| {
+        let mut snapshot = base.clone();
+        for mutation in mutations {
+            crate::standards::v1::subsets::any::schema::mutations::apply_fem3d_mutation(&mut snapshot, mutation).expect("the log folds");
+        }
+        snapshot
+    };
+    let fresh = fold(&[edited, log[1].clone(), log[2].clone()]);
+    assert_ne!(fresh, fold(&log), "the edit changes the outcome");
+    assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");
+    store.commit_finished_replay(result, store::HistoryFinalization::Overwrite).await.expect("overwrite commits");
+    assert_eq!(store.snapshot_ref(), &fresh, "the overwritten history folds to the edited state");
+    let mut disposer = semio_framework_plugin::bounded_document_store_disposer::<Fem3dSnapshot, Fem3dMutation>();
+    for _ in 0..4_096 {
+        if disposer.terminal_is_empty(&store) {
+            break;
+        }
+        disposer.close_step(&mut store, 1, 1 << 20).expect("the store retires");
+    }
+    assert!(disposer.terminal_is_empty(&store), "the standalone store retires to its terminal-empty shell");
+}

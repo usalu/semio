@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "groups"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.repository.cargo-capability-links/v1"
+    },
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "feature",
+          "requires",
+          "targets"
+        ],
+        "properties": {
+          "feature": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "requires": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            }
+          },
+          "targets": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "package",
+                "manifest",
+                "feature",
+                "owner"
+              ],
+              "properties": {
+                "package": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]*$"
+                },
+                "manifest": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\).+$"
+                },
+                "feature": {
+                  "type": "string",
+                  "pattern": "^[a-z][a-z0-9-]*$"
+                },
+                "owner": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "^(?!/)(?![A-Za-z]:)(?!.*\\\\).+$"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

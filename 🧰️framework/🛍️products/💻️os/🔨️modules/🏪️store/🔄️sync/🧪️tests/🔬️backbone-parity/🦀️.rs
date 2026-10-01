@@ -28,7 +28,7 @@ fn parity_frontier(value: &Value) -> RuntimeFrontierSummary {
 }
 
 async fn parity_envelope(document_id: &str, mutation_id: &str, n: i32) -> MutationEnvelope {
-    let edit = Edit {
+    let edit = Edit { line: None,
         id: mutation_id.into(),
         actor: None,
         forwards: vec![DemoMutation::SetN { n }],

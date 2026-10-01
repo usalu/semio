@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { applyPatch } from "fast-json-patch";
 import fixture from "../../🧫️fixtures/🔣️.json";
 import schema from "../../🧬️schema/🔣️.json";

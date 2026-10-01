@@ -4,7 +4,9 @@
  * package DOES test is the `boxed_fixed_slots` budget twin: the Rust-free re-check of
  * `../../🧫️fixtures/🧱️boxed-fixed-slots/🔣️.json`'s `capacity × size_of` arithmetic, the independent
  * half of the law the per-crate Rust guards assert against live `size_of`. */
-import { BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runVitest } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { resolveTestLevel, runVitest } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class InfoScript extends BundleScript {
   run(): void {
@@ -33,4 +35,4 @@ class TwinScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("info", InfoScript).register("test", TestScript).register("twin", TwinScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "info" });
+await runScriptMain(router, { defaultCommand: "info" });

@@ -1,6 +1,6 @@
 // 🧪️ Example `terrain-ring` — the raster laws, asserted against the TypeScript twin.
 
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "bun:test";
 
 import { orderedIndex } from "../../../../🧬️schema/📸️snapshot/🟦️.ts";
 import { applyWfc2dMutation, wfc2dInverse, type Wfc2dMutation } from "../../../../🧬️schema/🧬️mutations/🟦️.ts";

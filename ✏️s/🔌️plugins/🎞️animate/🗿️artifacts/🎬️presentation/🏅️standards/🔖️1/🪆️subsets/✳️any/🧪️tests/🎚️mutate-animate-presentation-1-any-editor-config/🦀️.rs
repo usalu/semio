@@ -14,11 +14,11 @@ use semio_s_plugin_stdio_test_oracle::law::vector::Vector;
 fn vector(kind: &str) -> Result<Vector, String> {
     Ok(match kind {
         "set-engagement-input" => Vector {
-            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set-engagement-input/✅️set-engagement-input-applied/📸️snapshot/⬅️before/🔣️.json"),
-            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set-engagement-input/✅️set-engagement-input-applied/🦠️mutation/🔣️.json"),
-            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set-engagement-input/✅️set-engagement-input-applied/📸️snapshot/➡️after/🔣️.json"),
-            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set-engagement-input/✅️set-engagement-input-applied/🔺️diff/🔣️.json"),
-            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set-engagement-input/✅️set-engagement-input-applied/🎯️outcome/🔣️.json"),
+            before: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set/✅️set/📸️snapshot/⬅️before/🔣️.json"),
+            mutation: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set/✅️set/🦠️mutation/🔣️.json"),
+            after: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set/✅️set/📸️snapshot/➡️after/🔣️.json"),
+            diff: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set/✅️set/🔺️diff/🔣️.json"),
+            outcome: include_str!("../../✏️editor/🎚️config/🧫️fixtures/⌨️set/✅️set/🎯️outcome/🔣️.json"),
             observable: true,
         },
         other => return Err(format!("no committed vector for {other:?}")),

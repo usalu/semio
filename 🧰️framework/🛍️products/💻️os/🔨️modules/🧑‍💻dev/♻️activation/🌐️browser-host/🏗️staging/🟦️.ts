@@ -13,37 +13,9 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import {
-  BundleScript,
-  ScriptRouter,
-  buildBudgetMs,
-  daemonBudgetOpts,
-  describeDevPortOccupant,
-  devServerUrl,
-  getWorkspaceRoot,
-  getRepoMetaDir,
-  isDevPortInUse,
-  loadFrameworkOsPlaygroundCatalog,
-  wgpuDevPlayUrl,
-  runBundleScriptMain,
-  runCmd,
-  runCmdStatus,
-  runBunxStatus,
-  runNodeBinStatus,
-  runProbe,
-  runVitest,
-  spawnDaemon,
-  type SpawnDaemonHandle,
-  runViteBunxDev,
-  frameworkOsPlaygroundDefaultPort,
-  frameworkOsLockedPrefsEnv,
-  resolveTestLevel,
-  atTestLevel,
-  cargoProfileDir,
-  selectComponentWasmProfile,
-  semioBuildMode,
-  semioShipEnv,
-} from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, resolveTestLevel, atTestLevel, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 import { decodeDocumentPackBytes, decodePackValue, DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, encodeDocumentArchiveBytes, encodePackValue, packValueToExactJson } from "@semio-tech/framework-os";
 

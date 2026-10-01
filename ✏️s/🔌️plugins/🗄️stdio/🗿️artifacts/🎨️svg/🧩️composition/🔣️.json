@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_svg::editor::svg_any::SvgAnyEditor",
       "factory": "semio_s_artifact_stdio_svg::editor::svg_any::create_svg_any_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "svg_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_svg_any_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -23,7 +27,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_svg::viewer::svg_any::SvgAnyViewer",
       "factory": "semio_s_artifact_stdio_svg::viewer::svg_any::create_svg_any_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-image",
@@ -32,7 +37,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_svg::editor::svg_basic::SvgBasicEditor",
       "factory": "semio_s_artifact_stdio_svg::editor::svg_basic::create_svg_basic_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "svg_basic_editor",
+        "sqliteSnapshot": "sqlite_snapshot_svg_basic_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -41,7 +50,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_svg::viewer::svg_basic::SvgBasicViewer",
       "factory": "semio_s_artifact_stdio_svg::viewer::svg_basic::create_svg_basic_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio-image",
@@ -50,7 +60,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_svg::editor::svg_tiny::SvgTinyEditor",
       "factory": "semio_s_artifact_stdio_svg::editor::svg_tiny::create_svg_tiny_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "svg_tiny_editor",
+        "sqliteSnapshot": "sqlite_snapshot_svg_tiny_editor"
+      }
     },
     {
       "owner": "stdio-image",
@@ -59,22 +73,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_svg::viewer::svg_tiny::SvgTinyViewer",
       "factory": "semio_s_artifact_stdio_svg::viewer::svg_tiny::create_svg_tiny_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "svg",
-      "factory_id": "stdio.native.svg.v1",
-      "descriptor_codec_id": "s.stdio.svg.standard.1-1.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.svg.standard.1-1.codec.codec-stdio-svg-extension-svg.v1",
-      "artifact_kind": "s.stdio.svg",
-      "artifact_schema": "stdio.svg",
-      "extension": "svg",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
-      "protocol_source_sha256": "964a75715eac33f5ff9a20e288803d353944d021d4c99da735955b1e5ef7f8d9",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -115,6 +115,56 @@
         "react": 6230,
         "wgpu": 6330
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "SvgMutation",
+      "snapshot": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot",
+      "mutation": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::mutations::SvgMutation"
+    },
+    {
+      "name": "SvgBasicMutation",
+      "snapshot": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot",
+      "mutation": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::basic::schema::mutations::SvgBasicMutation"
+    },
+    {
+      "name": "SvgTinyMutation",
+      "snapshot": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot",
+      "mutation": "semio_s_artifact_stdio_svg::standards::v1_1::subsets::tiny::schema::mutations::SvgTinyMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "basic",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔰️basic",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.svg",
+      "standard": "1.1",
+      "subset": "tiny",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🔬️tiny",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.svg.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/🏅️standards/🔖️1.1/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

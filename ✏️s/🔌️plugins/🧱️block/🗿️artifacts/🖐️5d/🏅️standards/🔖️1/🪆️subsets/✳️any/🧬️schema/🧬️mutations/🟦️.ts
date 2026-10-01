@@ -15,7 +15,7 @@ export type { DeleteRepresentation } from "./🗑️delete-representation/🟦�
 export type { RenameRepresentation } from "./✒️rename-representation/🟦️";
 export type { ChangeRepresentationMeshUrl } from "./🌐change-representation-mesh-url/🟦️";
 export type { ChangeRepresentationLod } from "./🏔️change-representation-lod/🟦️";
-export type { ChangeRepresentationDescription } from "./📜change-representation-description/🟦️";
+export type { ChangeRepresentationDescription } from "./📜change-representation/🟦️";
 export type { AddRepresentationTag } from "./🔖add-representation-tag/🟦️";
 export type { RemoveRepresentationTag } from "./🚫remove-representation-tag/🟦️";
 export type { AddRepresentationAttribute } from "./🧩add-representation-attribute/🟦️";
@@ -58,7 +58,7 @@ export type Block5dMutation =
   | { mutation: "renameRepresentation" } & import("./✒️rename-representation/🟦️").RenameRepresentation
   | { mutation: "changeRepresentationMeshUrl" } & import("./🌐change-representation-mesh-url/🟦️").ChangeRepresentationMeshUrl
   | { mutation: "changeRepresentationLod" } & import("./🏔️change-representation-lod/🟦️").ChangeRepresentationLod
-  | { mutation: "changeRepresentationDescription" } & import("./📜change-representation-description/🟦️").ChangeRepresentationDescription
+  | { mutation: "changeRepresentationDescription" } & import("./📜change-representation/🟦️").ChangeRepresentationDescription
   | { mutation: "addRepresentationTag" } & import("./🔖add-representation-tag/🟦️").AddRepresentationTag
   | { mutation: "removeRepresentationTag" } & import("./🚫remove-representation-tag/🟦️").RemoveRepresentationTag
   | { mutation: "addRepresentationAttribute" } & import("./🧩add-representation-attribute/🟦️").AddRepresentationAttribute

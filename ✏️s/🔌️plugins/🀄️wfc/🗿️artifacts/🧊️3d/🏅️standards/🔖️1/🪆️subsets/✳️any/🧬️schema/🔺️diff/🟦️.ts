@@ -4,7 +4,7 @@ import type { GraphRule, Slot3d, SlotEdge, Tile } from "../📸️snapshot/🟦�
 
 export interface Wfc3dDiff {
   schema: string | null;
-  seed: number | null;
+  seed: bigint | null;
   slotsRemoved: string[];
   slotsUpserted: [number, Slot3d][];
   edgesRemoved: string[];

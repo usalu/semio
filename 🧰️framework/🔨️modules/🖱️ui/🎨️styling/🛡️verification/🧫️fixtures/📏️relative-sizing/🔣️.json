@@ -157,5 +157,28 @@
         1218
       ]
     }
+  ],
+  "rounding": [
+    {
+      "id": "horizontal-track",
+      "semanticClass": "rounded-full",
+      "widthRem": 8,
+      "heightRem": 0.625,
+      "shape": "capsule"
+    },
+    {
+      "id": "vertical-track",
+      "semanticClass": "rounded-full",
+      "widthRem": 0.625,
+      "heightRem": 8,
+      "shape": "capsule"
+    },
+    {
+      "id": "square-thumb",
+      "semanticClass": "rounded-full",
+      "widthRem": 1.125,
+      "heightRem": 1.125,
+      "shape": "capsule"
+    }
   ]
 }

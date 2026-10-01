@@ -1,4 +1,18 @@
 use super::*;
+#[test]
+fn sqlite_snapshot_mp4_authored_grammar_and_protocol_admit_every_logical_record() {
+    let grammar = dsl::parse_grammar(include_str!("../../📝️text/📖️.grammar.semio")).unwrap();
+    let recognizer = dsl::Recognizer::compile(&grammar);
+    for snapshot in [fixture(), Mp4Snapshot::default(), crate::standards::isobmff::subsets::any::io::decode_mp4(include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎬️.mp4")).unwrap()] {
+        let text = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
+        assert!(recognizer.recognize(body).unwrap(), "{body}");
+    }
+    let protocol = dsl::parse_protocol(include_str!("../../💾️binary/📡️.protocol.semio")).unwrap();
+    assert_eq!(protocol.schema, "stdio.mp4");
+    assert_eq!(protocol.version, 1);
+    assert_eq!(protocol.blocks.iter().filter(|block| matches!(block, dsl::Block::Record { .. })).count(), 15);
+}
 use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteValue,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 fn unsigned(object:&mut serde_json::Value,fields:&[&str]){for field in fields{let value=object[*field].as_str().unwrap().parse::<u64>().unwrap();object[*field]=value.into();}}
 fn fixture()->Mp4Snapshot{let mut value:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap();unsigned(&mut value["movie"],&["creationTime","modificationTime","duration"]);for track in value["tracks"].as_array_mut().unwrap(){unsigned(&mut track["metadata"],&["creationTime","modificationTime","duration","mediaDuration","mediaCreationTime","mediaModificationTime"]);for edit in track["metadata"]["edits"].as_array_mut().unwrap(){unsigned(edit,&["segmentDuration"]);edit["mediaTime"]=edit["mediaTime"].as_str().unwrap().parse::<i64>().unwrap().into();}if !track["codec"]["hevc"].is_null(){unsigned(&mut track["codec"]["hevc"],&["generalConstraintIndicatorFlags"]);}}<Mp4Snapshot as dsl::FromValue>::from_value(dsl::DslValue::from(value)).unwrap()}

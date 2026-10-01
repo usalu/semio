@@ -56,3 +56,11 @@ export function cargoTargetDirectory(repoRoot: string, env: NodeJS.ProcessEnv = 
 export function cargoBuildDirectory(repoRoot: string, env: NodeJS.ProcessEnv = process.env): string {
   return cargoDirectories(repoRoot, env).build;
 }
+
+/** 🦀️ The canonical component publication profile used by compiled descriptor receipts. */
+export const WASM_PUBLICATION_PROFILE = "wasm-release";
+
+/** 🔐 Selects the canonical publication profile from the caller's actual Cargo deliverable root. */
+export function publicationWasmPath(repoRoot: string, wasmOut: string): string {
+  return join(cargoTargetDirectory(repoRoot), "wasm32-wasip2", WASM_PUBLICATION_PROFILE, wasmOut);
+}

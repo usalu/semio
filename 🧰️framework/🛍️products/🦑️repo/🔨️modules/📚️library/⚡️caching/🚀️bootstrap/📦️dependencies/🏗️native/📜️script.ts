@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { Script, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { orchestratorBudgetMs } from "../../../../🏃️process/🟦️.ts";
 import { discoverCargoWorkspaces } from "../../../../🗂️workspaces/🦀️cargo/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../🗂️workspaces/🟦️.ts";

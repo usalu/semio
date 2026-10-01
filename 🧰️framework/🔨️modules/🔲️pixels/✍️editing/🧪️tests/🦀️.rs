@@ -181,3 +181,50 @@ fn selection_rasterization_is_bounded_and_cancellable(){
     for rows in case["cancelAfterRows"].as_array().unwrap(){let mut job=PixelSelectionJob::new(width,height,shape.clone()).unwrap();if rows.as_u64().unwrap()>0{job.advance(rows.as_u64().unwrap() as usize).unwrap();}job.cancel();assert_eq!(job.result(),Err(PixelEditError::Cancelled));assert_eq!(job.advance(1),Err(PixelEditError::Cancelled));}
     for rows in case["invalidGrants"].as_array().unwrap(){let mut job=PixelSelectionJob::new(width,height,shape.clone()).unwrap();assert!(job.advance(rows.as_u64().unwrap() as usize).is_err());assert_eq!(job.advance(1).unwrap().completed,1);}
 }
+
+/// 🔲️ The stroke reach the in-place painter walks agrees with the shared contract (and so with the TypeScript twin).
+#[test]
+fn stroke_bounds_language_neutral_cases() {
+    let fixture = fixture();
+    for row in fixture["strokeBounds"].as_array().unwrap() {
+        let points: Vec<[f64; 2]> = row["points"].as_array().unwrap().iter().map(|point| [point[0].as_f64().unwrap(), point[1].as_f64().unwrap()]).collect();
+        let expected = row["expected"].as_object().map(|rect| PixelRect { x: rect["x"].as_u64().unwrap() as u32, y: rect["y"].as_u64().unwrap() as u32, width: rect["width"].as_u64().unwrap() as u32, height: rect["height"].as_u64().unwrap() as u32 });
+        assert_eq!(stroke_bounds(&points, row["size"].as_f64().unwrap(), row["width"].as_u64().unwrap() as u32, row["height"].as_u64().unwrap() as u32), expected, "{}", row["name"]);
+    }
+}
+
+/// 🖌️ The in-place painter is byte-identical to the whole-image job: on every brush case of the shared corpus (selected
+/// or not), and on a generated image whose brushes reach past every edge under a graded selection.
+#[test]
+fn the_in_place_painter_equals_the_whole_image_job() {
+    let fixture = fixture();
+    for case in fixture["cases"].as_array().unwrap().iter().filter(|case| matches!(case["operation"]["kind"].as_str(), Some("stroke" | "alphaStroke"))) {
+        let image = case.get("image").unwrap_or(&fixture["image"]);
+        let mut painted = RasterImage { width: image["width"].as_u64().unwrap() as u32, height: image["height"].as_u64().unwrap() as u32, pixels: bytes(&image["pixels"]) };
+        let selection = case.get("selection").map(bytes);
+        paint_stroke_in_place(&mut painted, &operation(&case["operation"]), selection.as_deref()).unwrap();
+        assert_eq!(painted.pixels, bytes(&case["expected"]), "{}", case["name"]);
+    }
+    let (width, height) = (23_u32, 17_u32);
+    let source = RasterImage { width, height, pixels: (0..width * height * 4).map(|index| ((index * 37 + index / 7) % 256) as u8).collect() };
+    let points = vec![[-4.0, 3.5], [6.25, 9.75], [12.5, 2.0], [26.0, 15.5], [11.0, 18.5]];
+    for operation in [
+        PixelOperation::Stroke(PixelBrush { points: points.clone(), size: 5.0, opacity: 0.7, hardness: 0.35, color: [200, 30, 90, 180], erase: false }),
+        PixelOperation::Stroke(PixelBrush { points: points.clone(), size: 3.5, opacity: 1.0, hardness: 1.0, color: [0, 0, 0, 255], erase: true }),
+        PixelOperation::AlphaStroke(PixelAlphaBrush { points: points.clone(), size: 7.0, opacity: 0.5, hardness: 0.0, alpha: 40 }),
+    ] {
+        let graded: Vec<u8> = (0..width * height).map(|index| [0, 64, 255, 128, 255][(index % 5) as usize]).collect();
+        for selection in [None, Some(graded)] {
+            let mut job = PixelEditJob::new(source.clone(), operation.clone(), selection.clone()).unwrap();
+            while !job.advance(4096).unwrap().done {}
+            let mut painted = source.clone();
+            assert!(paint_stroke_in_place(&mut painted, &operation, selection.as_deref()).unwrap().is_some());
+            assert_eq!(painted, job.into_result().unwrap(), "{operation:?} selected={}", selection.is_some());
+        }
+    }
+    assert!(paint_stroke_in_place(&mut source.clone(), &PixelOperation::Invert, None).is_err(), "only a brush paints in place");
+    assert!(paint_stroke_in_place(&mut source.clone(), &PixelOperation::AlphaStroke(PixelAlphaBrush { points: vec![[1.0, 1.0]], size: 2.0, opacity: 1.0, hardness: 1.0, alpha: 0 }), Some(&[255; 3])).is_err(), "a selection covers the image exactly");
+    let mut untouched = source.clone();
+    assert_eq!(paint_stroke_in_place(&mut untouched, &PixelOperation::Stroke(PixelBrush { points: vec![[90.0, 90.0]], size: 2.0, opacity: 1.0, hardness: 1.0, color: [1, 2, 3, 255], erase: false }), None).unwrap(), None);
+    assert_eq!(untouched, source, "a stroke out of reach changes nothing");
+}

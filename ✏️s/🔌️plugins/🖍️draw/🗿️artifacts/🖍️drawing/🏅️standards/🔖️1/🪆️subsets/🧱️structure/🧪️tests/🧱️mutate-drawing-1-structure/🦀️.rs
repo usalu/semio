@@ -34,24 +34,24 @@ const UNOBSERVABLE: &[&str] = &["duplicate-layer"];
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
         "create-layer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends-shape-b-at-the-root/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends-shape-b-at-the-root/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends-shape-b-at-the-root/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/➕️create-layer/➕️appends/📸️snapshot/➡️after/🔣️.json"),
         ),
         "delete-layer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes-group-a-with-its-child/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes-group-a-with-its-child/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes-group-a-with-its-child/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🗑️delete-layer/🚫️removes/📸️snapshot/➡️after/🔣️.json"),
         ),
         "duplicate-layer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects-a-missing-source-layer/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects-a-missing-source-layer/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects-a-missing-source-layer/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/📋️duplicate-layer/🚫️rejects/📸️snapshot/➡️after/🔣️.json"),
         ),
         "reorder-layer" => (
-            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves-shape-a-above-shape-b/📸️snapshot/⬅️before/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves-shape-a-above-shape-b/🦠️mutation/🔣️.json"),
-            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves-shape-a-above-shape-b/📸️snapshot/➡️after/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/🦠️mutation/🔣️.json"),
+            include_str!("../../🧫️fixtures/🧬️mutations/🔃reorder-layer/⬆️moves/📸️snapshot/➡️after/🔣️.json"),
         ),
         other => panic!("mutate-drawing-1-structure: {other:?} is not a declared kind of this subset"),
     }

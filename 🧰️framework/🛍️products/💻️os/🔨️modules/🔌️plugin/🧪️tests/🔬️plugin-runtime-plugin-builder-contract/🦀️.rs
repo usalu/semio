@@ -217,7 +217,7 @@ mod plugin_builder_contract_tests {
                     return Err("test count requires scalar mutation".into());
                 };
                 let authority = &request.authority;
-                let edit = store::Edit {
+                let edit = store::Edit { line: authority.line_id().map(str::to_owned),
                     id: format!("fixture-count-{}", authority.next_sequence_number()),
                     actor: Some(authority.actor().into()),
                     forwards: vec![TestMutation::SetCount(SetCount { value: *value })],
@@ -4337,7 +4337,7 @@ mod plugin_builder_contract_tests {
 
         let state = InteractionState::default();
         let hover = InteractionHoverState::new();
-        let view = InteractionView { state: &state, hover: &hover, peers: &peers };
+        let view = InteractionView { state: &state, hover: &hover, peers: &peers, draft_references: &std::collections::BTreeMap::new() };
 
         let selecting = view.peers_selecting("items", "item-1");
         assert_eq!(selecting.len(), 2, "only alice and zed selected item-1");

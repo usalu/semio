@@ -67,7 +67,7 @@ test("typechecks an acyclic owner graph with no command-module back edge", () =>
     allowJs: true,
     skipLibCheck: true,
     noEmit: true,
-    types: ["node"],
+    types: ["node", "bun"],
   });
   expect(
     paths

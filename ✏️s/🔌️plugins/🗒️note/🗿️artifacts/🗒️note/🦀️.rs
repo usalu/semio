@@ -800,7 +800,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧪️tests/🧽️enlarges-eraser/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🧽️change-eraser-radius/🧪️tests/🧽️enlarges/🦀️.rs"]
                             mod tests_enlarges_eraser;
                         }
                         #[path = "."]
@@ -813,7 +813,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧪️tests/🖊️thickens-the-sketch-stroke/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🖊️change-block-ink-width/🧪️tests/🖊️thickens/🦀️.rs"]
                             mod tests_thickens_the_sketch_stroke;
                         }
                         #[path = "."]
@@ -826,7 +826,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧪️tests/🎨️redraws-the-sketch-polyline/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖋️ink/🧬️schema/🧬️mutations/🎨️edit-block-ink-stroke/🧪️tests/🎨️redraws/🦀️.rs"]
                             mod tests_redraws_the_sketch_polyline;
                         }
                     }
@@ -848,7 +848,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧪️tests/📝️replaces-the-intro-paragraphs/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📝️text/🧬️schema/🧬️mutations/📝️edit-block-text/🧪️tests/📝️replaces/🦀️.rs"]
                             mod tests_replaces_the_intro_paragraphs;
                         }
                     }
@@ -870,7 +870,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧪️tests/📐️replaces-the-tex-with-pythagoras/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧮️math/🧬️schema/🧬️mutations/🧮️edit-block-math/🧪️tests/📐️replaces/🦀️.rs"]
                             mod tests_replaces_the_tex_with_pythagoras;
                         }
                     }
@@ -892,7 +892,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧪️tests/⬇️appends-a-blank-third-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬇️insert-table-row/🧪️tests/⬇️appends/🦀️.rs"]
                             mod tests_appends_a_blank_third_row;
                         }
                         #[path = "."]
@@ -905,7 +905,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧪️tests/⬆️drops-the-trailing-blank-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬆️remove-table-row/🧪️tests/⬆️drops/🦀️.rs"]
                             mod tests_drops_the_trailing_blank_row;
                         }
                         #[path = "."]
@@ -918,7 +918,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧪️tests/➡️appends-the-lettered-column-c/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/➡️insert-table-column/🧪️tests/➡️appends/🦀️.rs"]
                             mod tests_appends_the_lettered_column_c;
                         }
                         #[path = "."]
@@ -931,7 +931,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧪️tests/⬅️drops-the-trailing-column-b/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📊️table/🧬️schema/🧬️mutations/⬅️remove-table-column/🧪️tests/⬅️drops/🦀️.rs"]
                             mod tests_drops_the_trailing_column_b;
                         }
                     }
@@ -953,7 +953,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧪️tests/➕️adds-a-second-image-asset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🆕️create-asset/🧪️tests/➕️adds/🦀️.rs"]
                             mod tests_adds_a_second_image_asset;
                         }
                         #[path = "."]
@@ -966,7 +966,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🧪️tests/🔁️swaps-logo-payload-for-svg/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🔁️replace-asset-payload/🧪️tests/🔁️swaps/🦀️.rs"]
                             mod tests_swaps_logo_payload_for_svg;
                         }
                         #[path = "."]
@@ -979,7 +979,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes-the-logo-asset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🖼️asset/🧬️schema/🧬️mutations/🗑️delete-asset/🧪️tests/🗑️removes/🦀️.rs"]
                             mod tests_removes_the_logo_asset;
                         }
                     }
@@ -1001,7 +1001,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧪️tests/📷️inserts-a-photo-block-at-root-index-2/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/➕️create-block/🧪️tests/📷️inserts/🦀️.rs"]
                             mod tests_inserts_a_photo_block_at_root_index_2;
                         }
                         #[path = "."]
@@ -1027,7 +1027,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🧪️tests/🗑️removes-the-ink-and-image-blocks/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🧹️delete-blocks/🧪️tests/🗑️removes/🦀️.rs"]
                             mod tests_removes_the_ink_and_image_blocks;
                         }
                         #[path = "."]
@@ -1040,7 +1040,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🧪️tests/📋️copies-the-math-block-right-after-its-source/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📋️duplicate-block/🧪️tests/📋️copies/🦀️.rs"]
                             mod tests_copies_the_math_block_right_after_its_source;
                         }
                         #[path = "."]
@@ -1053,7 +1053,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧪️tests/👥️copies-ink-and-table-with-shifting-indices/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👥️duplicate-blocks/🧪️tests/👥️copies/🦀️.rs"]
                             mod tests_copies_ink_and_table_with_shifting_indices;
                         }
                         #[path = "."]
@@ -1066,7 +1066,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧪️tests/📥️reparents-ink-into-the-callout-group/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🚚️move-block-to-container/🧪️tests/📥️reparents/🦀️.rs"]
                             mod tests_reparents_ink_into_the_callout_group;
                         }
                         #[path = "."]
@@ -1079,7 +1079,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🤏️nudges-ink-and-the-whole-group-subtree/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🤏️drag-blocks/🧪️tests/🤏️nudges/🦀️.rs"]
                             mod tests_nudges_ink_and_the_whole_group_subtree;
                         }
                         #[path = "."]
@@ -1092,7 +1092,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧪️tests/🏷️renames-the-table-block/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔖️rename-block/🧪️tests/🏷️renames/🦀️.rs"]
                             mod tests_renames_the_table_block;
                         }
                         #[path = "."]
@@ -1105,7 +1105,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧪️tests/🙈️hides-the-image-block/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/👀️change-block-visible/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_the_image_block;
                         }
                         #[path = "."]
@@ -1118,7 +1118,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🧪️tests/🔒️locks-the-callout-group/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔒️change-block-locked/🧪️tests/🔒️locks/🦀️.rs"]
                             mod tests_locks_the_callout_group;
                         }
                         #[path = "."]
@@ -1131,7 +1131,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧪️tests/📍️repositions-the-math-block/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/📍️move-block/🧪️tests/📍️repositions/🦀️.rs"]
                             mod tests_repositions_the_math_block;
                         }
                         #[path = "."]
@@ -1144,7 +1144,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧪️tests/📐️enlarges-the-image-block/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/↔️resize-block/🧪️tests/📐️enlarges/🦀️.rs"]
                             mod tests_enlarges_the_image_block;
                         }
                         #[path = "."]
@@ -1157,7 +1157,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🧪️tests/🔤️enlarges-the-intro-font/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🧱️block/🧬️schema/🧬️mutations/🔤️change-block-font-size/🧪️tests/🔤️enlarges/🦀️.rs"]
                             mod tests_enlarges_the_intro_font;
                         }
                     }
@@ -1179,7 +1179,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧪️tests/🙈️hides-the-grid/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/👁️change-grid-visible/🧪️tests/🙈️hides/🦀️.rs"]
                             mod tests_hides_the_grid;
                         }
                         #[path = "."]
@@ -1192,7 +1192,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧪️tests/📏️widens-grid-spacing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📏️change-grid-spacing/🧪️tests/📏️widens/🦀️.rs"]
                             mod tests_widens_grid_spacing;
                         }
                         #[path = "."]
@@ -1205,7 +1205,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧪️tests/🔢️doubles-grid-subdivisions/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🔢️change-grid-subdivisions/🧪️tests/🔢️doubles/🦀️.rs"]
                             mod tests_doubles_grid_subdivisions;
                         }
                         #[path = "."]
@@ -1218,7 +1218,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧪️tests/🌫️raises-grid-opacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/🌫️change-grid-opacity/🧪️tests/🌫️raises/🦀️.rs"]
                             mod tests_raises_grid_opacity;
                         }
                         #[path = "."]
@@ -1244,7 +1244,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧪️tests/📐️halves-snap-grid-spacing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/🎨️canvas/🧬️schema/🧬️mutations/📐️change-snap-grid-spacing/🧪️tests/📐️halves/🦀️.rs"]
                             mod tests_halves_snap_grid_spacing;
                         }
                     }
@@ -1266,7 +1266,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles-the-document/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/📜️document/🧬️schema/🧬️mutations/🏷️rename-note/🧪️tests/🏷️retitles/🦀️.rs"]
                             mod tests_retitles_the_document;
                         }
                     }

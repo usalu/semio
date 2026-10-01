@@ -1,3 +1,4 @@
+import invocationSchema from "./🧬️schema/🏃️invocation/🔣️.json";
 import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -59,18 +60,19 @@ export function cargoWorkspaceMembers(root: string, owner: CargoWorkspaceScope):
   const leaves = owner.memberManifests.map(pattern => new Bun.Glob(pattern.slice(0, -"/Cargo.toml".length)));
   const prefixes = owner.memberManifests.map(pattern => pattern.split(/[*?\[{]/u)[0]!.replace(/\/$/u, ""));
   const excluded = owner.contribution.exclude.map(pattern => new Bun.Glob(pattern));
-  const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "temp", "compose"]);
+  const opaque = new Set(["node_modules", "target", "dist", "build", "🤖️generated", "coverage", "🗑️generated"]);
   const walk = (directory: string): void => {
     if (directory && !prefixes.some(prefix => !prefix || directory.startsWith(prefix + "/") || prefix === directory || prefix.startsWith(directory + "/"))) return;
     if (directory && leaves.some(pattern => pattern.match(directory))) {
       const manifest = join(cwd, directory, "Cargo.toml");
-      if (existsSync(manifest)) { physical(root, slash(relative(root,manifest))); paths.add(slash(relative(root,manifest))); }
-      return;
+      if (existsSync(manifest)) { physical(root, slash(relative(root,manifest))); paths.add(slash(relative(root,manifest))); return; }
     }
-    for (const entry of readdirSync(join(cwd, directory), { withFileTypes: true })) {
-      const local = directory ? `${directory}/${entry.name}` : entry.name;
-      if (entry.isDirectory()) { if (!entry.name.startsWith(".") && !opaque.has(entry.name) && !excluded.some((pattern, index) => pattern.match(`${local}/`) || owner.contribution.exclude[index]!.endsWith("/**") && new Bun.Glob(owner.contribution.exclude[index]!.slice(0,-3)).match(local))) walk(local); }
-      else if (entry.isFile() && entry.name === "Cargo.toml" && patterns.some(pattern => pattern.match(local)) && !excluded.some(pattern => pattern.match(slash(dirname(local))))) paths.add(slash(relative(root, join(cwd, local))));
+    for (const name of readdirSync(join(cwd,directory))) {
+      const local=directory?`${directory}/${name}`:name;
+      if(name.startsWith(".") || opaque.has(name) || excluded.some((pattern,index)=>pattern.match(local) || pattern.match(`${local}/`) || owner.contribution.exclude[index]!.endsWith("/**") && new Bun.Glob(owner.contribution.exclude[index]!.slice(0,-3)).match(local)))continue;
+      const entry=lstatSync(join(cwd,local));
+      if(entry.isDirectory())walk(local);
+      else if(entry.isFile() && name==="Cargo.toml" && local!=="Cargo.toml" && patterns.some(pattern=>pattern.match(local)) && !excluded.some(pattern=>pattern.match(slash(dirname(local)))))paths.add(slash(relative(root,join(cwd,local))));
     }
   };
   walk("");
@@ -183,21 +185,27 @@ export function prepareCargoOwners(root: string, selected: CargoWorkspaceScope):
  for(const group of groups)for(const kind of ["dependencies","dev-dependencies","build-dependencies"])for(const [alias,value] of Object.entries(group[kind]??{})){const entry=value as any;if(!entry || typeof entry!=="object")continue;const dependency=entry.workspace?authority.dependencies?.[alias]:entry;if(!dependency)throw new Error(`Missing inherited Cargo dependency: ${pkg.manifest} ${alias}`);if(typeof dependency.path!=="string")continue;const path=resolve(root,entry.workspace?owner.directory:pkg.directory,dependency.path), local=slash(relative(root,path));if(local.startsWith("../") || isAbsolute(local))throw new Error(`Cargo dependency escapes preparation authority: ${alias}`);const child=scopes.filter(s=>s.directory==="." || local===s.directory || local.startsWith(s.directory+"/")).sort((a,b)=>b.directory.length-a.directory.length)[0];if(child)reachable.add(child.directory);}
  const value=document.package?.metadata?.semio?.preparation;if(value===undefined)continue;const recipe=parseCargoPreparation(value), script=physical(root,slash(relative(root,resolve(root,pkg.directory,recipe.script)))), key=JSON.stringify([script,...recipe.command]);if(slash(relative(resolve(root,owner.directory),script)).startsWith("../"))throw new Error(`Cargo preparation leaves its owner workspace: ${pkg.manifest}`);if(executed.has(key))continue;executed.add(key);
  console.log(`[cargo-preparation] ${pkg.manifest} ${recipe.command.join(" ")}`);
- const result=Bun.spawnSync([process.execPath,script,...recipe.command],{cwd:resolve(root,pkg.directory),env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script},stdout:"inherit",stderr:"inherit",timeout:30_000});if(result.exitCode!==0)throw new Error(`Cargo owner preparation failed: ${pkg.manifest} (${result.exitCode})`);
+ const result=Bun.spawnSync([process.execPath,script,...recipe.command],{cwd:resolve(root,pkg.directory),env:{...process.env,NX_WORKSPACE_ROOT:root,SEMIO_CARGO_PREPARATION_ACTIVE:script},stdout:"pipe",stderr:"inherit",timeout:30_000});if(result.stdout.byteLength)process.stderr.write(result.stdout);if(result.exitCode!==0)throw new Error(`Cargo owner preparation failed: ${pkg.manifest} (${result.exitCode})`);
  }
  }
 }
 
+/** 🦀️ Uses the owned schema authority for native operations that consume current package inputs. */
+export function cargoCommandRequiresOwnerPreparationV1(command: string): boolean {
+  return invocationSchema.allOf[0]!.if.properties.command.enum.includes(command);
+}
+
 /** 🛠️ Refreshes the selected native workspace before each repository Cargo operation. */
 export function prepareCargoWorkspaceInvocation(root: string, args: readonly string[], cwd: string): void {
-  if (!["build", "check", "test", "metadata", "fetch", "update", "tree", "clippy", "rustc", "nextest", "llvm-cov", "generate-lockfile"].includes(args[0] ?? "")) return;
+  if (!cargoCommandRequiresOwnerPreparationV1(args[0] ?? "")) return;
   const index = args.indexOf("--manifest-path"), inline = args.find(arg => arg.startsWith("--manifest-path="));
   const selected = index >= 0 ? args[index+1] : inline?.slice(16);
   const path = selected ? resolve(cwd, selected) : join(cwd, "Cargo.toml");
   if (process.env.SEMIO_CARGO_PREPARATION_ACTIVE) throw new Error(`Cargo recursion in owner preparation: ${process.env.SEMIO_CARGO_PREPARATION_ACTIVE}`);
   const owner = cargoWorkspaceForManifest(root, slash(relative(root, path))), source = read(root, owner.manifest);
   if (source.workspace?.metadata?.semio?.repository !== undefined) {
-    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"inherit",stderr:"inherit",timeout:30_000});
+    const result=Bun.spawnSync([process.execPath,fileURLToPath(new URL("./📜️script.ts",import.meta.url)),"prepare","--manifest",owner.manifest],{cwd:root,env:{...process.env,NX_WORKSPACE_ROOT:root},stdout:"pipe",stderr:"inherit"});
+    if (result.stdout.byteLength) process.stderr.write(result.stdout);
     if(result.exitCode!==0)throw new Error(`Selected Cargo preparation failed: ${owner.manifest} (${result.exitCode})`);
   }
 }

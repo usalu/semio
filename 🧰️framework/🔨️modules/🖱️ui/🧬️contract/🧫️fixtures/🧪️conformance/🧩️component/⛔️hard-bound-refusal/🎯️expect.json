@@ -1,0 +1,32 @@
+{
+  "case": "hard-bound-refusal",
+  "kind": "component",
+  "description": "A number field whose hard range excludes 0 and stops at 100: a typed value beyond either bound is refused with the producer's localized message and never dispatched, the draft kept.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "input",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Width",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setWidth@1"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "ScaleSelection": {
+    "factor": [
+      1.0,
+      1.0,
+      0.5
+    ],
+    "objectId": "obj-plane",
+    "pivot": [
+      0.0,
+      0.0,
+      0.0
+    ],
+    "vertexIds": [
+      3,
+      7
+    ]
+  }
+}

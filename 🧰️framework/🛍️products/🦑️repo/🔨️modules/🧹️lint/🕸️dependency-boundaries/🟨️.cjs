@@ -52,6 +52,23 @@ function escapeRegex(literal) {
   return literal.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+/** 🏷️ Physical source ownership ends before installed package storage. */
+function sourceOwnerPattern(owner) {
+  return `^${escapeRegex(owner)}/(?!node_modules(?:/|$)|.*/node_modules(?:/|$))`;
+}
+
+/** 🏷️ Groups installed aliases that share the same direction while retaining exact package boundaries. */
+function packageOwnerPatterns(names) {
+  const packages = [...new Set(names)].sort();
+  return packages.length ? [`(?:^(?:node_modules/)?|/node_modules/)(?:${packages.map(escapeRegex).join("|")})(?:$|/)`] : [];
+}
+
+/** 🗂️ Removes only redundant descendants already covered by an identical physical owner direction. */
+function sourceOwnerPatterns(owners) {
+  const roots = [...new Set(owners)];
+  return roots.filter((owner) => !roots.some((root) => owner !== root && owner.startsWith(`${root}/`))).map(sourceOwnerPattern);
+}
+
 /** 🧪️ Fails config loading if the two resolver-boundary allowlists regress into broad source or vendor exclusions. */
 function assertFocusedBoundarySemantics() {
   const bootstrap = new RegExp(BOOTSTRAP_TOOLING_ENTRY_PATH, "u");
@@ -111,8 +128,8 @@ assertFocusedBoundarySemantics();
 /** 🗺️ Classifies package ownership from the taxonomy and authored workspace manifests without reading opaque areas. */
 const AREA_LAYERS = Object.entries(TAXONOMY.areaLayers);
 const OPAQUE_PATHS = Object.values(TAXONOMY.pathExclusions).map(({ path: prefix }) => prefix.replace(/\/$/u, ""));
-const WORKSPACES = JSON.parse(fs.readFileSync(path.join(REPO_ROOT, "package.json"), "utf8")).workspaces;
-if (!Array.isArray(WORKSPACES) || WORKSPACES.some((dir) => typeof dir !== "string" || !dir || dir.includes("\\") || dir.startsWith("/") || dir.split("/").some((part) => !part || part === "." || part === ".."))) throw new Error("Dependency boundaries require authored workspace paths");
+const { dependencyDirectionWorkspacePackages } = require("../../📚️library/🕸️dependencies/🧭️direction/🟦️.ts");
+const WORKSPACES = dependencyDirectionWorkspacePackages(REPO_ROOT, OPAQUE_PATHS.map((prefix) => `^${escapeRegex(prefix)}(?:/|$)`)).map((pkg) => pkg.owner);
 const WORKSPACE_PACKAGES = WORKSPACES
   .filter((dir) => !OPAQUE_PATHS.some((prefix) => dir === prefix || dir.startsWith(`${prefix}/`)))
   .filter(presentWorkspace)
@@ -126,15 +143,12 @@ const IGNORED_GRAPH_PATHS = TAXONOMY.implementationLeafPolicy.ignoredPathPattern
 function frameworkNoImplementationRule() {
   const frameworkAreas = AREA_LAYERS.filter(([, layer]) => layer === "framework").map(([area]) => area);
   const implementationAreas = AREA_LAYERS.filter(([, layer]) => layer === "implementation").map(([area]) => area);
-  const targets = implementationAreas.map((area) => `^${escapeRegex(area)}/`);
-  for (const pkg of WORKSPACE_PACKAGES) {
-    if (implementationAreas.some((area) => pkg.dir === area || pkg.dir.startsWith(`${area}/`))) targets.push(`(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`);
-  }
+  const targets = sourceOwnerPatterns(implementationAreas).concat(packageOwnerPatterns(WORKSPACE_PACKAGES.filter((pkg) => implementationAreas.some((area) => pkg.dir === area || pkg.dir.startsWith(`${area}/`))).map((pkg) => pkg.name)));
   return {
     name: "framework-no-implementation",
     severity: "error",
     comment: "Taxonomy framework areas must remain independent of implementation areas, including type imports, dynamic imports, tests, tooling and package subpaths",
-    from: { path: frameworkAreas.map((area) => `^${escapeRegex(area)}/`) },
+    from: { path: frameworkAreas.map(sourceOwnerPattern) },
     to: { path: targets },
   };
 }
@@ -147,7 +161,7 @@ function declaredDependencyDirectionRules() {
     const role = roles[id];
     if (!role) throw new Error(`Unknown dependency direction role ${id}`);
     const packages = WORKSPACE_PACKAGES.filter((pkg) => pkg.dependencyRole === id || role.ownerPaths.some((owner) => pkg.dir === owner || pkg.dir.startsWith(`${owner}/`)));
-    return role.ownerPaths.concat(packages.map((pkg) => pkg.dir)).map((owner) => `^${escapeRegex(owner)}/`).concat(packages.map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`), role.externalPackages.map((name) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(name)}(?:$|/)`));
+    return sourceOwnerPatterns(role.ownerPaths.concat(packages.map((pkg) => pkg.dir))).concat(packageOwnerPatterns(packages.map((pkg) => pkg.name).concat(role.externalPackages)));
   });
   return Object.entries(rules).map(([name, rule]) => ({ name, severity: "error", comment: "Semantic owners must follow their declared dependency direction through resolved paths, package aliases and subpaths", from: { path: patterns(rule.fromRoles) }, to: { path: patterns(rule.toRoles) } }));
 }
@@ -275,7 +289,7 @@ function frameworkNoSRule() {
     comment: "🧰️framework must not import ✏️s app/plugin/module code — apps consume framework, never the reverse",
     from: { path: "^🧰️framework/" },
     to: {
-      path: ["^✏️s/"].concat(S_PACKAGES.map((p) => `^${escapeRegex(p.name)}$`)),
+      path: [sourceOwnerPattern("✏️s")].concat(S_PACKAGES.map((p) => `^${escapeRegex(p.name)}$`)),
     },
   };
 }
@@ -285,14 +299,14 @@ function frameworkNoSRule() {
  * audit for this ticket found zero real violations of this direction, so it's safe to enforce as ERROR
  * immediately rather than staging it through `warn`. */
 function sModulesNoPluginsRule() {
-  const pluginPackageNames = S_PACKAGES.filter((p) => p.dir.startsWith("✏️s/🔌️plugins/")).map((p) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(p.name)}(?:$|/)`);
+  const pluginPackageNames = packageOwnerPatterns(S_PACKAGES.filter((p) => p.dir.startsWith("✏️s/🔌️plugins/")).map((p) => p.name));
   return {
     name: "s-modules-no-plugins",
     severity: "error",
     comment: "✏️s/🔨️modules must not import ✏️s/🔌️plugins — modules are shared substrate for plugins, not the reverse",
     from: { path: "^✏️s/🔨️modules/" },
     to: {
-      path: ["^✏️s/🔌️plugins/"].concat(pluginPackageNames),
+      path: [sourceOwnerPattern("✏️s/🔌️plugins")].concat(pluginPackageNames),
     },
   };
 }
@@ -300,13 +314,13 @@ function sModulesNoPluginsRule() {
 /** 🧩️ Optional extensions and artifacts consume their plugin owner, never the reverse. */
 function pluginNoExtensionOrArtifactRules() {
   const ownerPaths = ["🧩️extensions", "🗿️artifacts"];
-  const packagePatterns = S_PACKAGES.filter((pkg) => ownerPaths.some((owner) => pkg.dir.includes(`/${owner}/`))).map((pkg) => `(?:^(?:node_modules/)?|/node_modules/)${escapeRegex(pkg.name)}(?:$|/)`);
+  const packagePatterns = packageOwnerPatterns(S_PACKAGES.filter((pkg) => ownerPaths.some((owner) => pkg.dir.includes(`/${owner}/`))).map((pkg) => pkg.name));
   return PLUGINS.map((plugin) => ({
     name: `plugin-no-extension-or-artifact-${plugin}`,
     severity: "error",
     comment: "Plugin owners must remain independent of optional extensions and artifacts through every import form",
     from: { path: `^✏️s/🔌️plugins/${escapeRegex(plugin)}/`, pathNot: `^✏️s/🔌️plugins/${escapeRegex(plugin)}/(?:${ownerPaths.join("|")})/` },
-    to: { path: ["^✏️s/🔌️plugins/[^/]+/(?:🧩️extensions|🗿️artifacts)/"].concat(packagePatterns) },
+    to: { path: ["^✏️s/(?!node_modules(?:/|$)|.*/node_modules(?:/|$))🔌️plugins/[^/]+/(?:🧩️extensions|🗿️artifacts)/"].concat(packagePatterns) },
   }));
 }
 

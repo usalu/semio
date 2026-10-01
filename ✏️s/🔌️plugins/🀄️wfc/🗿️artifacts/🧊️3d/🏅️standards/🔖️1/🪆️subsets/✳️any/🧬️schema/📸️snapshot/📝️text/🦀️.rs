@@ -216,6 +216,7 @@ impl store::ArtifactDsl for Wfc3dSnapshot {
 }
 
 impl store::ArtifactPack for Wfc3dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         <Wfc3dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&wfc3d_document_to_dsl(self), options)
     }

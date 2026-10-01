@@ -40,16 +40,16 @@ from semio_repo_test import Adapter, Context, Outcome
 # region 🔖️Fixtures
 _ROOT = "shared://🧬️mutations"
 VECTORS = {
-    "create-node": (f"{_ROOT}/🌱create-node/🧪️rejects-a-node-id-the-board-already-holds", "createNode", True),
-    "delete-node": (f"{_ROOT}/🗑️delete-node/🧪️rejects-deleting-a-node-the-board-never-held", "deleteNode", True),
-    "move-node": (f"{_ROOT}/🧭move-node/🧪️reports-a-no-op-when-a-y-less-node-is-moved-to-y-zero", "moveNode", False),
-    "resize-node": (f"{_ROOT}/📐resize-node/🧪️reports-a-no-op-when-the-radius-already-matches", "resizeNode", False),
-    "change-node-kind": (f"{_ROOT}/🏷️change-node-kind/🧪️reports-no-op-when-kind-already-reads-topic", "changeNodeKind", False),
-    "change-node-shape": (f"{_ROOT}/🔷change-node-shape/🧪️reports-no-op-when-shape-already-reads-circle", "changeNodeShape", False),
-    "edit-node-text": (f"{_ROOT}/✏️edit-node-text/🧪️reports-a-no-op-when-the-label-is-retyped-verbatim", "editNodeText", False),
-    "set-node-root": (f"{_ROOT}/🚩set-node-root/🧪️reports-no-op-when-unflagged-node-is-set-not-root", "setNodeRoot", False),
-    "connect-nodes": (f"{_ROOT}/🤝️connect-nodes/🧪️rejects-an-edge-whose-source-node-is-absent", "connectNodes", True),
-    "disconnect-nodes": (f"{_ROOT}/✂️disconnect-nodes/🧪️rejects-cutting-an-edge-the-board-never-carried", "disconnectNodes", True),
+    "create-node": (f"{_ROOT}/🌱create-node/🧪️rejects", "createNode", True),
+    "delete-node": (f"{_ROOT}/🗑️delete-node/🧪️rejects", "deleteNode", True),
+    "move-node": (f"{_ROOT}/🧭move-node/🧪️reports", "moveNode", False),
+    "resize-node": (f"{_ROOT}/📐resize-node/🧪️reports", "resizeNode", False),
+    "change-node-kind": (f"{_ROOT}/🏷️change-node-kind/🧪️reports", "changeNodeKind", False),
+    "change-node-shape": (f"{_ROOT}/🔷change-node-shape/🧪️reports", "changeNodeShape", False),
+    "edit-node-text": (f"{_ROOT}/✏️edit-node-text/🧪️reports", "editNodeText", False),
+    "set-node-root": (f"{_ROOT}/🚩set-node-root/🧪️reports", "setNodeRoot", False),
+    "connect-nodes": (f"{_ROOT}/🤝️connect-nodes/🧪️rejects", "connectNodes", True),
+    "disconnect-nodes": (f"{_ROOT}/✂️disconnect-nodes/🧪️rejects", "disconnectNodes", True),
 }
 
 

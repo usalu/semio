@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "adds-an-empty-roof-design",
-              "directoryName": "🏠️adds-an-empty-roof-design"
+              "directoryName": "🏠️adds"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "appends-a-slab-type-to-the-catalogue",
-              "directoryName": "📇️appends-a-slab-type-to-the-catalogue"
+              "directoryName": "📇️appends"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "binds-a-second-representation-to-an-existing-type",
-              "directoryName": "🔗️binds-a-second-representation-to-an-existing-type"
+              "directoryName": "🔗️binds"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "repins-the-representation-from-head-to-a-checkpoint",
-              "directoryName": "📌️repins-the-representation-from-head-to-a-checkpoint"
+              "directoryName": "📌️repins"
             }
           ]
         },
@@ -107,7 +107,7 @@
           "scenarios": [
             {
               "id": "attaches-a-second-model-child",
-              "directoryName": "🏛️attaches-a-second-model-child"
+              "directoryName": "🏛️attaches"
             }
           ]
         },
@@ -118,7 +118,7 @@
           "scenarios": [
             {
               "id": "attaches-a-second-object-child",
-              "directoryName": "🏗️attaches-a-second-object-child"
+              "directoryName": "🏗️attaches"
             }
           ]
         },
@@ -129,7 +129,7 @@
           "scenarios": [
             {
               "id": "attaches-a-properties-child-to-a-kit-that-has-none",
-              "directoryName": "🏷️attaches-a-properties-child-to-a-kit-that-has-none"
+              "directoryName": "🏷️attaches"
             }
           ]
         },
@@ -140,7 +140,7 @@
           "scenarios": [
             {
               "id": "detaches-the-only-model-child-and-keeps-the-object-child",
-              "directoryName": "💣️detaches-the-only-model-child-and-keeps-the-object-child"
+              "directoryName": "💣️detaches"
             }
           ]
         },
@@ -151,7 +151,7 @@
           "scenarios": [
             {
               "id": "detaches-the-only-object-child-and-keeps-the-model-child",
-              "directoryName": "🪓️detaches-the-only-object-child-and-keeps-the-model-child"
+              "directoryName": "🪓️detaches"
             }
           ]
         },
@@ -173,7 +173,7 @@
           "scenarios": [
             {
               "id": "replaces-the-designs-pieces-and-connections-in-one-step",
-              "directoryName": "🧩️replaces-the-designs-pieces-and-connections-in-one-step"
+              "directoryName": "🧩️replaces"
             }
           ]
         },
@@ -184,7 +184,7 @@
           "scenarios": [
             {
               "id": "removes-the-only-design-together-with-its-pieces",
-              "directoryName": "🚫️removes-the-only-design-together-with-its-pieces"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -195,7 +195,7 @@
           "scenarios": [
             {
               "id": "removes-the-column-type-and-keeps-the-beam-type",
-              "directoryName": "🚫️removes-the-column-type-and-keeps-the-beam-type"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -206,7 +206,7 @@
           "scenarios": [
             {
               "id": "renames-the-beam-type-without-recategorising-it",
-              "directoryName": "✏️renames-the-beam-type-without-recategorising-it"
+              "directoryName": "✏️renames"
             }
           ]
         },

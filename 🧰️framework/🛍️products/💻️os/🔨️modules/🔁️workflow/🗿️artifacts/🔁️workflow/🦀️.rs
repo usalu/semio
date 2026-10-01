@@ -1218,8 +1218,8 @@ fn workflow_parameter_entity_id(parameter: &WorkflowParameter) -> &str {
 #[path = "🧬️schema/🧬️mutations/🦀️.rs"]
 mod workflow_mutations;
 pub use workflow_mutations::{
-    AddInput, AddNode, AddParameter, BindInput, BindOutput, BindParameterField, ChangeParameter, ConnectPorts, DisconnectEdge, MoveNode, RemoveInput, RemoveNode, RemoveParameter, RenameNode, UnbindInput, UnbindOutput, UnbindParameterField,
-    UpdateNodePorts, WorkflowMutation,
+    AddInput, AddNode, AddParameter, BindInput, BindOutput, BindParameterField, ChangeParameter, ConnectPorts, DisconnectEdge, MoveNode, MoveNodes, RemoveInput, RemoveNode, RemoveParameter, RenameNode, SetNodePositions, UnbindInput, UnbindOutput,
+    UnbindParameterField, UpdateNodePorts, WorkflowMutation, WorkflowNodePosition,
 };
 
 pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &WorkflowMutation) -> WorkflowSnapshot {
@@ -1297,6 +1297,20 @@ pub fn apply_workflow_operation(document: &WorkflowSnapshot, operation: &Workflo
         WorkflowMutation::UnbindOutput(UnbindOutput { node_id, port_id }) => {
             next.output_bindings.retain(|binding| !(binding.node_id == *node_id && binding.port_id == *port_id));
         }
+        WorkflowMutation::MoveNodes(MoveNodes { node_ids, dx, dy }) => {
+            for node in next.graph.nodes.iter_mut().filter(|node| node_ids.contains(&node.id)) {
+                node.x += *dx;
+                node.y += *dy;
+            }
+        }
+        WorkflowMutation::SetNodePositions(SetNodePositions { positions }) => {
+            for position in positions {
+                for node in next.graph.nodes.iter_mut().filter(|node| node.id == position.node_id) {
+                    node.x = position.x;
+                    node.y = position.y;
+                }
+            }
+        }
     }
     next
 }
@@ -1322,6 +1336,9 @@ pub enum WorkflowDiff {
         node_id: String,
         x: f64,
         y: f64,
+    },
+    PlaceNodes {
+        positions: Vec<WorkflowNodePosition>,
     },
     PatchNode {
         node_id: String,
@@ -1378,6 +1395,11 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
             WorkflowDiff::RemoveNode { node_id } | WorkflowDiff::MoveNode { node_id, .. } | WorkflowDiff::PatchNode { node_id, .. } => {
                 if !document.graph.nodes.iter().any(|node| node.id == *node_id) {
                     return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow node does not exist").at(["nodes", node_id.as_str()]));
+                }
+            }
+            WorkflowDiff::PlaceNodes { positions } => {
+                if let Some(position) = positions.iter().find(|position| !document.graph.nodes.iter().any(|node| node.id == position.node_id)) {
+                    return Err(protocol::MutationApplyError::new("mutation.apply.missing-target", "workflow node does not exist").at(["nodes", position.node_id.as_str()]));
                 }
             }
             WorkflowDiff::ConnectPorts { edge } => {
@@ -1486,6 +1508,7 @@ impl protocol::MutationDiff<WorkflowSnapshot> for WorkflowDiff {
             WorkflowDiff::ConnectPorts { edge } => WorkflowMutation::ConnectPorts(ConnectPorts { edge: edge.clone() }),
             WorkflowDiff::DisconnectEdge { edge_id } => WorkflowMutation::DisconnectEdge(DisconnectEdge { edge_id: edge_id.clone() }),
             WorkflowDiff::MoveNode { node_id, x, y } => WorkflowMutation::MoveNode(MoveNode { node_id: node_id.clone(), x: *x, y: *y }),
+            WorkflowDiff::PlaceNodes { positions } => WorkflowMutation::SetNodePositions(SetNodePositions { positions: positions.clone() }),
             WorkflowDiff::PatchNode { node_id, label } => WorkflowMutation::RenameNode(RenameNode { node_id: node_id.clone(), label: label.clone() }),
             WorkflowDiff::AddParameter { parameter } => WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(parameter.clone()) }),
             WorkflowDiff::RemoveParameter { parameter_id } => WorkflowMutation::RemoveParameter(RemoveParameter { parameter_id: parameter_id.clone() }),

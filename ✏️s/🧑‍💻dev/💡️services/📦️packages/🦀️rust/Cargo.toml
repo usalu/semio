@@ -26,6 +26,8 @@ semio-framework-os-renderer-wgpu={workspace=true,optional=true}
 semio-s-artifact-gis-gismap.workspace=true
 semio-framework-os-mcp={workspace=true,optional=true}
 
+semio-hub-auth-client={path="../../../../../🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust",optional=true}
+
 [dev-dependencies]
 serde_json.workspace = true
 
@@ -36,4 +38,4 @@ required-features=["mcp-service"]
 
 [features]
 native-renderer=["dep:semio-framework-os-renderer-wgpu"]
-mcp-service=["dep:semio-framework-os-mcp","semio-s-artifact-gis-gismap/mcp-service"]
+mcp-service=["dep:semio-framework-os-mcp","dep:semio-hub-auth-client","semio-s-artifact-gis-gismap/mcp-service"]

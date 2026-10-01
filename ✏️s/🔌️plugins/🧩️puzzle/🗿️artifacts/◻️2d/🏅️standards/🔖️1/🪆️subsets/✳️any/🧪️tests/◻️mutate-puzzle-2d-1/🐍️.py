@@ -115,8 +115,8 @@ because its only vector supplied a genuinely different handle and yet declared `
 reading equally consistent with an unimplemented verb, with a refusal of an edge-attached handle, and
 with a refusal of a kind the `kindCompatibility` relation does not admit. It also refused
 `inverse-replace-kind-catalogs`, because the only vector INSTALLED a catalogue and nothing said
-whether the verb accepts a null argument. `🔌️rekinds-an-unconnected-tambour-door` and
-`🗑️clears-the-installed-handle-catalog` decide both: `replace-<singular>-<member>` replaces the
+whether the verb accepts a null argument. `🔌️rekinds` and
+`🗑️clears` decide both: `replace-<singular>-<member>` replaces the
 addressed record, exactly as `📓️derivation-rules.md` rule 2 states, and a null catalogue argument is
 accepted and removes the member. The subject half agreed only after its diff builder was repaired —
 its no-op guard ran BEFORE the replacement loop, so the verb could never move anything."""

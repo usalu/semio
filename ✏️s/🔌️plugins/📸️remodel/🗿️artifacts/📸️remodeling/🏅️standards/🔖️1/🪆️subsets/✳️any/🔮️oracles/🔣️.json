@@ -72,19 +72,19 @@
           "scenarios": [
             {
               "id": "adds-the-first-05b1b5",
-              "directoryName": "🔎️adds-the-first-05b1b5"
+              "directoryName": "🔎️adds"
             },
             {
               "id": "refuses-to-pick-3c0570",
-              "directoryName": "🚫️refuses-to-pick-3c0570"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-this-dca661",
-              "directoryName": "🔁️warns-that-this-dca661"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "picks-the-south-eb0c4d",
-              "directoryName": "🔎️picks-the-south-eb0c4d"
+              "directoryName": "🔎️picks"
             }
           ]
         },
@@ -95,23 +95,23 @@
           "scenarios": [
             {
               "id": "appends-a-third-8ac259",
-              "directoryName": "🎞️appends-a-third-8ac259"
+              "directoryName": "🎞️appends"
             },
             {
               "id": "refuses-a-frame-81beea",
-              "directoryName": "🎬️refuses-a-frame-81beea"
+              "directoryName": "🎬️refuses"
             },
             {
               "id": "refuses-to-c93e98",
-              "directoryName": "🚫️refuses-to-c93e98"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-1e8abe",
-              "directoryName": "🔁️warns-that-the-1e8abe"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "appends-an-0c2164",
-              "directoryName": "🎞️appends-an-0c2164"
+              "directoryName": "🎞️appends2"
             }
           ]
         },
@@ -122,7 +122,7 @@
           "scenarios": [
             {
               "id": "appends-sparse-leaves",
-              "directoryName": "🧱️appends-sparse-leaves"
+              "directoryName": "🧱️appends"
             },
             {
               "id": "refuses-a-gap",
@@ -130,7 +130,7 @@
             },
             {
               "id": "warns-that-the-leaves-exist",
-              "directoryName": "🔁️warns-that-the-leaves-exist"
+              "directoryName": "🔁️warns"
             }
           ]
         },
@@ -141,19 +141,19 @@
           "scenarios": [
             {
               "id": "shifts-stream-a-5b442c",
-              "directoryName": "⏱️shifts-stream-a-5b442c"
+              "directoryName": "⏱️shifts"
             },
             {
               "id": "refuses-to-8095d3",
-              "directoryName": "🚫️refuses-to-8095d3"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-a98c13",
-              "directoryName": "🔁️warns-that-the-a98c13"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "retimes-the-50dd75",
-              "directoryName": "⏱️retimes-the-50dd75"
+              "directoryName": "⏱️retimes"
             }
           ]
         },
@@ -164,15 +164,15 @@
           "scenarios": [
             {
               "id": "rejects-an-e9fa51",
-              "directoryName": "🖼️rejects-an-e9fa51"
+              "directoryName": "🖼️rejects"
             },
             {
               "id": "rejects-an-5d3a60",
-              "directoryName": "🕸️rejects-an-5d3a60"
+              "directoryName": "🕸️rejects"
             },
             {
               "id": "rejects-an-2e5568",
-              "directoryName": "⭐️rejects-an-2e5568"
+              "directoryName": "⭐️rejects"
             }
           ]
         },
@@ -183,7 +183,7 @@
           "scenarios": [
             {
               "id": "stores-a-new-d56283",
-              "directoryName": "🖼️stores-a-new-d56283"
+              "directoryName": "🖼️stores"
             },
             {
               "id": "stores-an-9f39e1",
@@ -191,30 +191,30 @@
             },
             {
               "id": "refuses-an-asset-cb0d4b",
-              "directoryName": "🚫️refuses-an-asset-cb0d4b"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "overwrites-an-a34b9d",
-              "directoryName": "♻️overwrites-an-a34b9d"
+              "directoryName": "♻️overwrites"
             }
           ]
         },
         {
           "mutationId": "create-camera-calibration",
-          "sourceMutationDirectoryName": "🔭create-camera-calibration",
-          "mutationDirectoryName": "🔭create-camera-calibration",
+          "sourceMutationDirectoryName": "🔭create-camera",
+          "mutationDirectoryName": "🔭create-camera",
           "scenarios": [
             {
               "id": "adds-the-cam-c-82c8fb",
-              "directoryName": "📷️adds-the-cam-c-82c8fb"
+              "directoryName": "📷️adds2"
             },
             {
               "id": "refuses-a-camera-e92a02",
-              "directoryName": "🚫️refuses-a-camera-e92a02"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "adds-a-fourth-97e912",
-              "directoryName": "📷️adds-a-fourth-97e912"
+              "directoryName": "📷️adds"
             }
           ]
         },
@@ -225,7 +225,7 @@
           "scenarios": [
             {
               "id": "adds-gcp-tower-d71a54",
-              "directoryName": "📍️adds-gcp-tower-d71a54"
+              "directoryName": "📍️adds"
             },
             {
               "id": "refuses-a-19c1ab",
@@ -237,30 +237,30 @@
             },
             {
               "id": "adds-a-control-298de4",
-              "directoryName": "🕳️adds-a-control-298de4"
+              "directoryName": "🕳️adds"
             }
           ]
         },
         {
           "mutationId": "create-rig-extrinsic",
-          "sourceMutationDirectoryName": "⛓️create-rig-extrinsic",
-          "mutationDirectoryName": "⛓️create-rig-extrinsic",
+          "sourceMutationDirectoryName": "⛓️create-rig",
+          "mutationDirectoryName": "⛓️create-rig",
           "scenarios": [
             {
               "id": "adds-a-rig-2df5df",
-              "directoryName": "🔗️adds-a-rig-2df5df"
+              "directoryName": "🔗️adds"
             },
             {
               "id": "refuses-a-second-95e04d",
-              "directoryName": "🚫️refuses-a-second-95e04d"
+              "directoryName": "🚫️refuses2"
             },
             {
               "id": "places-the-0d0b8d",
-              "directoryName": "🔗️places-the-0d0b8d"
+              "directoryName": "🔗️places"
             },
             {
               "id": "refuses-a-rig-cb71ba",
-              "directoryName": "🚫️refuses-a-rig-cb71ba"
+              "directoryName": "🚫️refuses"
             }
           ]
         },
@@ -271,7 +271,7 @@
           "scenarios": [
             {
               "id": "adds-stream-c-458900",
-              "directoryName": "🎥️adds-stream-c-458900"
+              "directoryName": "🎥️adds"
             },
             {
               "id": "rejects-a-6b58da",
@@ -279,15 +279,15 @@
             },
             {
               "id": "adds-a-third-61fb5d",
-              "directoryName": "🛰️adds-a-third-61fb5d"
+              "directoryName": "🛰️adds"
             },
             {
               "id": "adds-an-unbound-2b2373",
-              "directoryName": "🎞️adds-an-unbound-2b2373"
+              "directoryName": "🎞️adds"
             },
             {
               "id": "rejects-a-stream-aac5c2",
-              "directoryName": "👻️rejects-a-stream-aac5c2"
+              "directoryName": "👻️rejects"
             }
           ]
         },
@@ -298,46 +298,46 @@
           "scenarios": [
             {
               "id": "drops-the-spare-c6ffb6",
-              "directoryName": "🧹️drops-the-spare-c6ffb6"
+              "directoryName": "🧹️drops"
             },
             {
               "id": "refuses-to-5c6f74",
-              "directoryName": "🗺️refuses-to-5c6f74"
+              "directoryName": "🗺️refuses"
             },
             {
               "id": "refuses-to-c4563a",
-              "directoryName": "🚫️refuses-to-c4563a"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "sweeps-the-503b27",
-              "directoryName": "🗑️sweeps-the-503b27"
+              "directoryName": "🗑️sweeps"
             },
             {
               "id": "refuses-to-f9541f",
-              "directoryName": "🖼️refuses-to-f9541f"
+              "directoryName": "🖼️refuses"
             }
           ]
         },
         {
           "mutationId": "delete-camera-calibration",
-          "sourceMutationDirectoryName": "🚫delete-camera-calibration",
-          "mutationDirectoryName": "🚫delete-camera-calibration",
+          "sourceMutationDirectoryName": "🚫delete-camera",
+          "mutationDirectoryName": "🚫delete-camera",
           "scenarios": [
             {
               "id": "removes-the-cam-f90b89",
-              "directoryName": "🚫️removes-the-cam-f90b89"
+              "directoryName": "🚫️removes2"
             },
             {
               "id": "refuses-to-73655a",
-              "directoryName": "🚫️refuses-to-73655a"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "removes-the-40cba4",
-              "directoryName": "🚫️removes-the-40cba4"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "refuses-to-remove-3c8f32",
-              "directoryName": "⛓️refuses-to-remove-3c8f32"
+              "directoryName": "⛓️refuses"
             }
           ]
         },
@@ -356,7 +356,7 @@
             },
             {
               "id": "removes-the-south-42cd9e",
-              "directoryName": "🚮removes-the-south-42cd9e"
+              "directoryName": "🚮removes"
             },
             {
               "id": "removes-an-8f3868",
@@ -371,19 +371,19 @@
           "scenarios": [
             {
               "id": "drops-the-cam-a-a1f8a2",
-              "directoryName": "✂️drops-the-cam-a-a1f8a2"
+              "directoryName": "✂️drops"
             },
             {
               "id": "unplaces-the-f5b35e",
-              "directoryName": "⏮️unplaces-the-f5b35e"
+              "directoryName": "⏮️unplaces"
             },
             {
               "id": "refuses-to-1805df",
-              "directoryName": "🚫️refuses-to-1805df"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "unplaces-the-a39356",
-              "directoryName": "✂️unplaces-the-a39356"
+              "directoryName": "✂️unplaces"
             }
           ]
         },
@@ -394,19 +394,19 @@
           "scenarios": [
             {
               "id": "removes-the-first-c0fc2a",
-              "directoryName": "⏮️removes-the-first-c0fc2a"
+              "directoryName": "⏮️removes"
             },
             {
               "id": "refuses-to-3c20ff",
-              "directoryName": "🚫️refuses-to-3c20ff"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "removes-the-spare-556d1d",
-              "directoryName": "🪓removes-the-spare-556d1d"
+              "directoryName": "🪓removes"
             },
             {
               "id": "refuses-to-remove-422a37",
-              "directoryName": "⛓️refuses-to-remove-422a37"
+              "directoryName": "⛓️refuses"
             }
           ]
         },
@@ -417,11 +417,11 @@
           "scenarios": [
             {
               "id": "drops-the-content",
-              "directoryName": "🗑️drops-the-content"
+              "directoryName": "🗑️drops"
             },
             {
               "id": "refuses-missing-content",
-              "directoryName": "🚫️refuses-missing-content"
+              "directoryName": "🚫️refuses"
             }
           ]
         },
@@ -432,19 +432,19 @@
           "scenarios": [
             {
               "id": "removes-the-only-f82e64",
-              "directoryName": "🚫️removes-the-only-f82e64"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "drops-the-first-9ebf0b",
-              "directoryName": "⏮️drops-the-first-9ebf0b"
+              "directoryName": "⏮️drops"
             },
             {
               "id": "refuses-an-109cf1",
-              "directoryName": "🚫️refuses-an-109cf1"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "drops-the-middle-282fb7",
-              "directoryName": "🚷drops-the-middle-282fb7"
+              "directoryName": "🚷drops"
             }
           ]
         },
@@ -455,19 +455,19 @@
           "scenarios": [
             {
               "id": "removes-the-last-304bdf",
-              "directoryName": "🚫️removes-the-last-304bdf"
+              "directoryName": "🚫️removes"
             },
             {
               "id": "drops-the-first-d98a0f",
-              "directoryName": "⏮️drops-the-first-d98a0f"
+              "directoryName": "⏮️drops"
             },
             {
               "id": "refuses-a-frame-e7c374",
-              "directoryName": "🚫️refuses-a-frame-e7c374"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "drops-the-middle-2d6d53",
-              "directoryName": "✂️drops-the-middle-2d6d53"
+              "directoryName": "✂️drops"
             }
           ]
         },
@@ -478,15 +478,15 @@
           "scenarios": [
             {
               "id": "swaps-in-a-two-c688db",
-              "directoryName": "☁️swaps-in-a-two-c688db"
+              "directoryName": "☁️swaps2"
             },
             {
               "id": "warns-that-the-675b6e",
-              "directoryName": "🔁️warns-that-the-675b6e"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "swaps-in-a-denser-4174e1",
-              "directoryName": "☁️swaps-in-a-denser-4174e1"
+              "directoryName": "☁️swaps"
             }
           ]
         },
@@ -497,19 +497,19 @@
           "scenarios": [
             {
               "id": "adds-the-dtm-and-64d5bb",
-              "directoryName": "🗺️adds-the-dtm-and-64d5bb"
+              "directoryName": "🗺️adds"
             },
             {
               "id": "refuses-to-clear-b8c54a",
-              "directoryName": "🚫️refuses-to-clear-b8c54a"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "clears-the-geo-f4886e",
-              "directoryName": "🧹️clears-the-geo-f4886e"
+              "directoryName": "🧹️clears"
             },
             {
               "id": "records-a-dtm-6e132a",
-              "directoryName": "🗺️records-a-dtm-6e132a"
+              "directoryName": "🗺️records"
             }
           ]
         },
@@ -520,19 +520,19 @@
           "scenarios": [
             {
               "id": "swaps-in-an-f23e71",
-              "directoryName": "🕸️swaps-in-an-f23e71"
+              "directoryName": "🕸️swaps"
             },
             {
               "id": "warns-that-the-b39bab",
-              "directoryName": "🔁️warns-that-the-b39bab"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "swaps-the-c43d9c",
-              "directoryName": "🕸️swaps-the-c43d9c"
+              "directoryName": "🕸️swaps2"
             },
             {
               "id": "refuses-a-48f3a6",
-              "directoryName": "🚫️refuses-a-48f3a6"
+              "directoryName": "🚫️refuses"
             }
           ]
         },
@@ -547,15 +547,15 @@
             },
             {
               "id": "refuses-to-clear-30cbb5",
-              "directoryName": "🚫️refuses-to-clear-30cbb5"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "clears-the-qc-1d2249",
-              "directoryName": "🧹️clears-the-qc-1d2249"
+              "directoryName": "🧹️clears"
             },
             {
               "id": "files-a-qc-report-64d222",
-              "directoryName": "✅️files-a-qc-report-64d222"
+              "directoryName": "✅️files"
             }
           ]
         },
@@ -566,38 +566,38 @@
           "scenarios": [
             {
               "id": "swaps-in-an-6d9ae4",
-              "directoryName": "✨️swaps-in-an-6d9ae4"
+              "directoryName": "✨️swaps2"
             },
             {
               "id": "warns-that-the-56a3a9",
-              "directoryName": "🔁️warns-that-the-56a3a9"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "swaps-in-a-re-3cfa6d",
-              "directoryName": "✨️swaps-in-a-re-3cfa6d"
+              "directoryName": "✨️swaps"
             }
           ]
         },
         {
           "mutationId": "replace-stream-source",
-          "sourceMutationDirectoryName": "🔁replace-stream-source",
-          "mutationDirectoryName": "🔁replace-stream-source",
+          "sourceMutationDirectoryName": "🔁replace-stream",
+          "mutationDirectoryName": "🔁replace-stream",
           "scenarios": [
             {
               "id": "clears-the-video-143f2b",
-              "directoryName": "🧹️clears-the-video-143f2b"
+              "directoryName": "🧹️clears"
             },
             {
               "id": "attaches-a-607df8",
-              "directoryName": "📼️attaches-a-607df8"
+              "directoryName": "📼️attaches"
             },
             {
               "id": "refuses-to-f7f40d",
-              "directoryName": "🚫️refuses-to-f7f40d"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "reingests-the-311c32",
-              "directoryName": "🎥️reingests-the-311c32"
+              "directoryName": "🎥️reingests"
             }
           ]
         },
@@ -608,19 +608,19 @@
           "scenarios": [
             {
               "id": "replaces-the-d40c68",
-              "directoryName": "⏸️replaces-the-d40c68"
+              "directoryName": "⏸️replaces"
             },
             {
               "id": "clears-every-760061",
-              "directoryName": "🕳️clears-every-760061"
+              "directoryName": "🕳️clears"
             },
             {
               "id": "warns-that-the-8dbf82",
-              "directoryName": "🔁️warns-that-the-8dbf82"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "swaps-in-two-166265",
-              "directoryName": "🏃️swaps-in-two-166265"
+              "directoryName": "🏃️swaps"
             }
           ]
         },
@@ -631,26 +631,26 @@
           "scenarios": [
             {
               "id": "clears-the-d2f81a",
-              "directoryName": "🧹️clears-the-d2f81a"
+              "directoryName": "🧹️clears"
             },
             {
               "id": "refuses-to-clear-524569",
-              "directoryName": "🚫️refuses-to-clear-524569"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "drops-the-6436a8",
-              "directoryName": "🕳️drops-the-6436a8"
+              "directoryName": "🕳️drops"
             },
             {
               "id": "swaps-in-a-three-49b17f",
-              "directoryName": "🛣️swaps-in-a-three-49b17f"
+              "directoryName": "🛣️swaps"
             }
           ]
         },
         {
           "mutationId": "update-camera-calibration",
-          "sourceMutationDirectoryName": "🛠️update-camera-calibration",
-          "mutationDirectoryName": "🛠️update-camera-calibration",
+          "sourceMutationDirectoryName": "🛠️update-camera",
+          "mutationDirectoryName": "🛠️update-camera",
           "scenarios": [
             {
               "id": "refines-the-cam-0eaef0",
@@ -658,15 +658,15 @@
             },
             {
               "id": "refuses-to-b60a39",
-              "directoryName": "🚫️refuses-to-b60a39"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-697b4f",
-              "directoryName": "🔁️warns-that-the-697b4f"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "refines-the-9fd25a",
-              "directoryName": "🔍️refines-the-9fd25a"
+              "directoryName": "🔍️refines"
             }
           ]
         },
@@ -677,15 +677,15 @@
           "scenarios": [
             {
               "id": "raises-the-dense-ddb263",
-              "directoryName": "🔬️raises-the-dense-ddb263"
+              "directoryName": "🔬️raises"
             },
             {
               "id": "warns-that-the-4e65c8",
-              "directoryName": "🔁️warns-that-the-4e65c8"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "sharpens-the-25044c",
-              "directoryName": "🧊️sharpens-the-25044c"
+              "directoryName": "🧊️sharpens"
             }
           ]
         },
@@ -696,19 +696,19 @@
           "scenarios": [
             {
               "id": "switches-the-423de9",
-              "directoryName": "🔎️switches-the-423de9"
+              "directoryName": "🔎️switches"
             },
             {
               "id": "refuses-a-d82e38",
-              "directoryName": "🚫️refuses-a-d82e38"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-b6b7dc",
-              "directoryName": "🔁️warns-that-the-b6b7dc"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "moves-the-3621f6",
-              "directoryName": "🌟️moves-the-3621f6"
+              "directoryName": "🌟️moves"
             }
           ]
         },
@@ -719,19 +719,19 @@
           "scenarios": [
             {
               "id": "enables-georefere-18a68a",
-              "directoryName": "🌐️enables-georefere-18a68a"
+              "directoryName": "🌐️enables"
             },
             {
               "id": "refuses-a-zero-fa917f",
-              "directoryName": "🚫️refuses-a-zero-fa917f"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-efc6e8",
-              "directoryName": "🔁️warns-that-the-efc6e8"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "halves-the-002a17",
-              "directoryName": "🌐️halves-the-002a17"
+              "directoryName": "🌐️halves"
             }
           ]
         },
@@ -742,19 +742,19 @@
           "scenarios": [
             {
               "id": "tightens-the-499c47",
-              "directoryName": "🔍️tightens-the-499c47"
+              "directoryName": "🔍️tightens"
             },
             {
               "id": "refuses-an-59752a",
-              "directoryName": "🚫️refuses-an-59752a"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-8eaad8",
-              "directoryName": "🔁️warns-that-the-8eaad8"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "widens-the-73f33e",
-              "directoryName": "📥️widens-the-73f33e"
+              "directoryName": "📥️widens"
             }
           ]
         },
@@ -765,19 +765,19 @@
           "scenarios": [
             {
               "id": "switches-the-652d03",
-              "directoryName": "🌳️switches-the-652d03"
+              "directoryName": "🌳️switches"
             },
             {
               "id": "refuses-a-ratio-65dcb9",
-              "directoryName": "🚫️refuses-a-ratio-65dcb9"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-414aae",
-              "directoryName": "🔁️warns-that-the-414aae"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "switches-to-a-kd-d6fa4b",
-              "directoryName": "🌳️switches-to-a-kd-d6fa4b"
+              "directoryName": "🌳️switches2"
             }
           ]
         },
@@ -788,34 +788,34 @@
           "scenarios": [
             {
               "id": "doubles-the-c245d5",
-              "directoryName": "🔳️doubles-the-c245d5"
+              "directoryName": "🔳️doubles"
             },
             {
               "id": "warns-that-the-887e9f",
-              "directoryName": "🔁️warns-that-the-887e9f"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "halves-the-voxel-21b53d",
-              "directoryName": "🔳️halves-the-voxel-21b53d"
+              "directoryName": "🔳️halves"
             }
           ]
         },
         {
           "mutationId": "update-motion-params",
-          "sourceMutationDirectoryName": "🏎️update-motion-params",
-          "mutationDirectoryName": "🏎️update-motion-params",
+          "sourceMutationDirectoryName": "🏎️update-motion",
+          "mutationDirectoryName": "🏎️update-motion",
           "scenarios": [
             {
               "id": "enables-motion-2444a3",
-              "directoryName": "🏃️enables-motion-2444a3"
+              "directoryName": "🏃️enables"
             },
             {
               "id": "warns-that-the-83ff67",
-              "directoryName": "🔁️warns-that-the-83ff67"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "triples-the-4bb69f",
-              "directoryName": "🏃️triples-the-4bb69f"
+              "directoryName": "🏃️triples"
             }
           ]
         },
@@ -826,19 +826,19 @@
           "scenarios": [
             {
               "id": "retunes-the-cam-4ca5a2",
-              "directoryName": "📍️retunes-the-cam-4ca5a2"
+              "directoryName": "📍️retunes2"
             },
             {
               "id": "refuses-to-2cfb53",
-              "directoryName": "🚫️refuses-to-2cfb53"
+              "directoryName": "🚫️refuses"
             },
             {
               "id": "warns-that-the-89422a",
-              "directoryName": "🔁️warns-that-the-89422a"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "retunes-the-675f52",
-              "directoryName": "📍️retunes-the-675f52"
+              "directoryName": "📍️retunes"
             }
           ]
         },
@@ -849,15 +849,15 @@
           "scenarios": [
             {
               "id": "switches-the-7f0371",
-              "directoryName": "🎯️switches-the-7f0371"
+              "directoryName": "🎯️switches"
             },
             {
               "id": "warns-that-the-79a92a",
-              "directoryName": "🔁️warns-that-the-79a92a"
+              "directoryName": "🔁️warns"
             },
             {
               "id": "tightens-the-850036",
-              "directoryName": "🎯️tightens-the-850036"
+              "directoryName": "🎯️tightens"
             }
           ]
         }

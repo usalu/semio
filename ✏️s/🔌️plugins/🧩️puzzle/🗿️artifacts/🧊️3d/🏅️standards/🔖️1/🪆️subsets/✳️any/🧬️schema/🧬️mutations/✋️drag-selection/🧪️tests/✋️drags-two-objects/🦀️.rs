@@ -1,6 +1,6 @@
 //! 🧪️ `drag-selection` fixture — `✋️drags-two-objects`.
 //!
-//! Drags `object-a` and `object-b` by (1.5, -2, 0.5): both origins move by the one offset, read off the base; the attraction between them is not re-solved.
+//! Drags `object-a` and `object-b` by (1.5, -2, 0.5): both origins move by the one offset, read off the base, and `attraction-1`, which touches both, is re-derived from the moved poses (`mutation.cascade`).
 //!
 //! Source of truth is the committed JSON quintet under `🧫️fixtures/🧬️mutations/✋️drag-selection/✋️drags-two-objects/`
 //! (contract D1); the scene is the synthetic selection scene shared by every selection-transform vector.
@@ -72,7 +72,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "drag-selection/drags-two-objects: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(committed["attractions"].is_null() && committed["meta"].is_null() && committed["references"].is_null(), "drag-selection/drags-two-objects: a selection transform touches no relation and no document meta");
+    assert!(committed["meta"].is_null() && committed["references"].is_null(), "drag-selection/drags-two-objects: a selection transform touches no document meta and no reference");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`.

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { ValidateFunction } from 'ajv';
 import { getWorkspaceRoot } from '../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts';
-import { semioSchemaAjvV1 } from '../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts';
+import { semioSchemaAjvV1 } from '../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts';
 import { runStdioTypeScriptCompiler } from '../../🏘️composition/🏗️build/🟦️.ts';
 import { parseDocxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📜️docx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
 import { parseXlsxDiff } from '../../../../🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🧬️schema/🔺️diff/🟦️.ts';
@@ -18,14 +18,14 @@ type OfficeCase = Readonly<{ artifact: string; slug: string; parse: (value: unkn
 type PublicOfficeCase = Readonly<{ artifact: string; slug: string; subsets: readonly string[] }>;
 
 const cases: readonly OfficeCase[] = [
-  { artifact: '📜️docx', slug: '🅱️bolds-the-tower-run-of-the-opening-paragraph', parse: parseDocxDiff },
-  { artifact: '📕️xlsx', slug: '🧮️widens-the-total-formula-to-a-third-row', parse: parseXlsxDiff },
-  { artifact: '📽️pptx', slug: '🏷️retitles-and-lowers-the-title-placeholder', parse: parsePptxDiff },
+  { artifact: '📜️docx', slug: '🅱️bolds', parse: parseDocxDiff },
+  { artifact: '📕️xlsx', slug: '🧮️widens', parse: parseXlsxDiff },
+  { artifact: '📽️pptx', slug: '🏷️retitles', parse: parsePptxDiff },
 ];
 const publicCases: readonly PublicOfficeCase[] = [
-  { artifact: '📜️docx', slug: '🅱️bolds-the-tower-run-of-the-opening-paragraph', subsets: ['🧱️base', '📏️strict', '🔄️transitional'] },
-  { artifact: '📕️xlsx', slug: '🧮️widens-the-total-formula-to-a-third-row', subsets: ['🧱️base', '🔒️strict', '🌉️transitional'] },
-  { artifact: '📽️pptx', slug: '🏷️retitles-and-lowers-the-title-placeholder', subsets: ['🧱️base', '🔒️strict', '🌉️transitional'] },
+  { artifact: '📜️docx', slug: '🅱️bolds', subsets: ['🧱️base', '📏️strict', '🔄️transitional'] },
+  { artifact: '📕️xlsx', slug: '🧮️widens', subsets: ['🧱️base', '🔒️strict', '🌉️transitional'] },
+  { artifact: '📽️pptx', slug: '🏷️retitles', subsets: ['🧱️base', '🔒️strict', '🌉️transitional'] },
 ];
 
 const json = (path: string): Json => JSON.parse(readFileSync(path, 'utf8')) as Json;

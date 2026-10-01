@@ -120,7 +120,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | unflatten-node | 🎈️unflatten-node |
       | replace-path | 🛤️replace-path |
       | replace-fill | 🪣️replace-fill |
-      | change-stroke-color | 🖌️change-stroke-color |
+      | change-stroke-color | 🖌️change-stroke |
       | change-stroke-width | 📐️change-stroke-width |
 
   @id-inverse
@@ -148,7 +148,7 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
       | unflatten-node | 🎈️unflatten-node |
       | replace-path | 🛤️replace-path |
       | replace-fill | 🪣️replace-fill |
-      | change-stroke-color | 🖌️change-stroke-color |
+      | change-stroke-color | 🖌️change-stroke |
       | change-stroke-width | 📐️change-stroke-width |
 
   @id-spec-vector
@@ -162,23 +162,23 @@ Feature: Apply every typed semio DRAWING mutation to a real vector document, aga
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                  | dir                    | slug                                                        |
-      | change-stroke-color | 🖌️change-stroke-color | 🎨️recolours-primary-styles-stroke    |
-      | change-stroke-width | 📐change-stroke-width  | 📐️thickens-the-primary-styles-stroke                          |
-      | create-layer        | 🌱create-layer         | 🪜️inserts-a-second-layer-above-the-base-layer                 |
-      | create-node         | ➕create-node          | 🔤️appends-a-caption-text-node-to-the-layer-root               |
-      | delete-layer        | 🗑️delete-layer        | 🚫️removes-the-leading-layer-and-keeps-the-overlay             |
-      | delete-node         | ➖delete-node          | 🚫️removes-the-text-node-from-the-layer-root                   |
-      | drag-nodes          | 🖐️drag-nodes          | 🖐️drags-text-node-nested-group-same-offset |
-      | flatten             | 🫓flatten-node         | 🫓️flattens-an-identity-nested-group-into-its-leaves           |
-      | group               | 🧷group-nodes          | 🧷️groups-the-two-leading-children-into-a-new-group            |
-      | move-node           | 📍move-node            | 📍️moves-the-text-node-to-a-new-origin                         |
-      | reorder-nodes       | 🔀reorder-nodes        | 🔀️moves-leading-path-node-end-layer-root    |
-      | replace-fill        | 🪣replace-fill         | 🎨️repaints-the-primary-styles-fill-from-red-to-blue           |
-      | replace-path        | 🛤️replace-path        | 🔺️swaps-the-open-path-for-a-closed-triangle                   |
-      | rotate              | 🔄rotate-node          | 🔄️rotates-the-nested-group-a-half-turn-about-z                |
-      | scale               | 📏scale-node           | 📏️scales-the-nested-group-non-uniformly                       |
-      | unflatten           | 🎈unflatten-node       | 🎈️restores-captured-hierarchy-over-flat-group         |
-      | ungroup             | 💫ungroup-node         | 💫️dissolves-the-nested-group-into-its-parent                  |
+      | change-stroke-color | 🖌️change-stroke | 🎨️recolours    |
+      | change-stroke-width | 📐change-stroke-width  | 📐️thickens                          |
+      | create-layer        | 🌱create-layer         | 🪜️inserts                 |
+      | create-node         | ➕create-node          | 🔤️appends               |
+      | delete-layer        | 🗑️delete-layer        | 🚫️removes             |
+      | delete-node         | ➖delete-node          | 🚫️removes                   |
+      | drag-nodes          | 🖐️drag-nodes          | 🖐️drags |
+      | flatten             | 🫓flatten-node         | 🫓️flattens           |
+      | group               | 🧷group-nodes          | 🧷️groups            |
+      | move-node           | 📍move-node            | 📍️moves                         |
+      | reorder-nodes       | 🔀reorder-nodes        | 🔀️moves    |
+      | replace-fill        | 🪣replace-fill         | 🎨️repaints           |
+      | replace-path        | 🛤️replace-path        | 🔺️swaps                   |
+      | rotate              | 🔄rotate-node          | 🔄️rotates                |
+      | scale               | 📏scale-node           | 📏️scales                       |
+      | unflatten           | 🎈unflatten-node       | 🎈️restores         |
+      | ungroup             | 💫ungroup-node         | 💫️dissolves                  |
 
   @id-identity-round-trip
   @level-long

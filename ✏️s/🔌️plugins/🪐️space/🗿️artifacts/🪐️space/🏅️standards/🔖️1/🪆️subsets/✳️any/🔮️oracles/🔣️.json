@@ -64,7 +64,7 @@
           "scenarios": [
             {
               "id": "appends-artifact-3-to-the-index",
-              "directoryName": "🧪️appends-artifact-3-to-the-index"
+              "directoryName": "🧪️appends"
             }
           ]
         },
@@ -75,7 +75,7 @@
           "scenarios": [
             {
               "id": "removes-artifact-2-from-the-index",
-              "directoryName": "🧪️removes-artifact-2-from-the-index"
+              "directoryName": "🧪️removes"
             }
           ]
         },
@@ -97,7 +97,7 @@
           "scenarios": [
             {
               "id": "stamps-artifact-1-with-a-new-editor",
-              "directoryName": "🧪️stamps-artifact-1-with-a-new-editor"
+              "directoryName": "🧪️stamps"
             }
           ]
         }

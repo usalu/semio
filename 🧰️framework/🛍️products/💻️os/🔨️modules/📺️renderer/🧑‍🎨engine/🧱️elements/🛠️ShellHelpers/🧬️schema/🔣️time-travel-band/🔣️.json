@@ -11,7 +11,8 @@
     "axes",
     "chords",
     "cases",
-    "refusals"
+    "refusals",
+    "transitions"
   ],
   "definitions": {
     "Line": {
@@ -200,6 +201,54 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json#/definitions/Severity"
         }
       }
+    },
+    "Transition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "from",
+        "to",
+        "reveal",
+        "focus"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "from": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json#/definitions/HistoryTimeTravel"
+            }
+          ]
+        },
+        "to": {
+          "oneOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "https://json.schemas.assets.semio-tech.com/framework/kernel/history-patch/schema.json#/definitions/HistoryTimeTravel"
+            }
+          ]
+        },
+        "reveal": {
+          "type": "boolean"
+        },
+        "focus": {
+          "enum": [
+            null,
+            "editor",
+            "band",
+            "dialog"
+          ]
+        }
+      }
     }
   },
   "properties": {
@@ -258,6 +307,13 @@
       "minItems": 1,
       "items": {
         "$ref": "#/definitions/Refusal"
+      }
+    },
+    "transitions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/Transition"
       }
     }
   }

@@ -73,7 +73,7 @@ export * from './🪞️symmetry/🔁️rotational-symmetries/🟦️.ts';
 export * from './🪞️symmetry/🔂️repetition-ratio/🟦️.ts';
 export * from './🪞️symmetry/🧩️modularity-ratio/🟦️.ts';
 export * from './🌊️roughness/🎯️deviation-from-ideal/🟦️.ts';
-export * from './🌊️roughness/🧽️deviation-from-smoothed-geometry/🟦️.ts';
+export * from './🌊️roughness/🧽️deviation-from-smoothed/🟦️.ts';
 export * from './🌊️roughness/🧭️normal-variation/🟦️.ts';
 export * from './🌊️roughness/🌊️surface-waviness/🟦️.ts';
 export * from './🌊️roughness/🪨️irregularity/🟦️.ts';

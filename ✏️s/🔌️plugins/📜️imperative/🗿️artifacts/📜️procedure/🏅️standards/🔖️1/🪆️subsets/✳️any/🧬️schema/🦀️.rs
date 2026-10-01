@@ -224,5 +224,5 @@ pub fn default_snapshot() -> crate::ProcedureSnapshot {
 //#endregion 🔖️DocumentHelpers
 
 #[cfg(test)]
-#[path = "🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;

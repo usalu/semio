@@ -128,18 +128,18 @@ Feature: Apply every typed gis.gismap mutation twice — once in Rust, once in P
     Then each implementation lands on the committed after-snapshot in role, and the two agree
     Examples:
       | id                    | dir                     | fixture                                    |
-      | create-position       | 🆕create-position       | 💡️adds-lighthouse-position-after-harbor      |
-      | delete-position       | 🗑️delete-position       | 🚫️removes-lighthouse-position                |
-      | replace-position-data | 🔁replace-position-data | ⚓️rewrites-harbor-position-payload           |
-      | reorder-positions     | 🔀reorder-positions     | ⚓️moves-harbor-position-to-end               |
-      | create-route          | 🛣️create-route         | 🚋️adds-tram-route-after-ferry                |
+      | create-position       | 🆕create-position       | 💡️adds      |
+      | delete-position       | 🗑️delete-position       | 🚫️removes                |
+      | replace-position-data | 🔁replace-position-data | ⚓️rewrites           |
+      | reorder-positions     | 🔀reorder-positions     | ⚓️moves               |
+      | create-route          | 🛣️create-route         | 🚋️adds                |
       | delete-route          | ✂️delete-route          | 🚫️removes-tram-route                         |
-      | replace-route-data    | ♻️replace-route-data    | ⛴️rewrites-ferry-route-payload               |
-      | reorder-routes        | 🧭reorder-routes        | 🚌️moves-bus-route-to-front                   |
-      | create-region         | 🌐create-region         | 🏘️adds-old-town-region-after-harbor-district |
+      | replace-route-data    | ♻️replace-route-data    | ⛴️rewrites               |
+      | reorder-routes        | 🧭reorder-routes        | 🚌️moves                   |
+      | create-region         | 🌐create-region         | 🏘️adds |
       | delete-region         | 🧹delete-region         | 🚫️removes-old-town-region                    |
-      | replace-region-data   | 🔄replace-region-data   | 🏘️rewrites-harbor-district-region-payload    |
-      | reorder-regions       | 🔃reorder-regions       | 🌳️moves-park-region-between-2-districts      |
+      | replace-region-data   | 🔄replace-region-data   | 🏘️rewrites    |
+      | reorder-regions       | 🔃reorder-regions       | 🌳️moves      |
 
   @id-identity-round-trip
   @level-long

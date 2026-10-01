@@ -6,7 +6,9 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { registerPlaygroundSiteBuildCommands, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { registerPlaygroundSiteBuildCommands, resolveTestLevel, runCargoTestBudgeted, runExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 /** 🧵️ Keeps compiler worker stacks bounded while retaining the native laws' deeper runtime stack. */
 function homeExactCargoEnvironment(): { env: NodeJS.ProcessEnv; nativeEnv: NodeJS.ProcessEnv } {
@@ -153,12 +155,12 @@ function homeDirectoryEventPageOwnerOracle(repoRoot: string): number {
     const hostile = { ...structuredClone(receiptFixture.valid), ...row.patch };
     assert.equal(validateReceipt(hostile), false, `receipt schema accepted ${row.id}`);
   }
-  const leaf = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🔣️.json"), "utf8"));
+  const leaf = JSON.parse(readFileSync(join(base, "🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory/🔣️.json"), "utf8"));
   assert.equal(leaf.invertibility, "non-invertible", "a derived directory page is never undone");
   const read = (relative: string): string => readFileSync(join(base, relative), "utf8");
   const command = read("🎮️commands/📬️apply-directory-event-page/🦀️.rs");
   const transient = read("🫧️transient/🦀️.rs");
-  const page = read("🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory-page/🦀️.rs");
+  const page = read("🫧️transient/🧬️schema/🧬️mutations/📬️apply-directory/🦀️.rs");
   const editor = read("🦀️.rs");
   const viewer = readFileSync(join(base, "../👁️viewer/🦀️.rs"), "utf8");
   const crate = readFileSync(join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🦀️.rs"), "utf8");
@@ -331,12 +333,12 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
     && viewerTestSource.includes('origin: "hub", data_class: "persistedShared", role: None');
   assert(/use crate::editor::home::commands::\{[^}]*\bmanage_space\b[^}]*\};/.test(controller) && controller.includes('"manageSpace" as "manage-space" => manage_space::ManageSpace'), "Home controller does not import and dispatch the manageSpace command module");
   assert(exact(editor, editorTests, viewerTests), "Home identity rows expose administration without current author authority");
-  const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps-the-catalog-generation-to-7/🦀️.rs";
+  const catalogGenerationFixture = "🧬️schema/🧬️mutations/🔢️change-catalog-generation/🧪️tests/🧪️bumps/🦀️.rs";
   const catalogGenerationSource = readFileSync(join(base, catalogGenerationFixture), "utf8");
   assert(existsSync(join(base, catalogGenerationFixture)), "Home catalog-generation fixture is not present at its canonical bounded physical path");
   assert(homeCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${catalogGenerationFixture}`), "Home artifact crate misses the canonical bounded fixture path");
   const spaceBase = join(repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any");
-  const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends-artifact-3-to-the-index/🦀️.rs";
+  const createArtifactFixture = "🧬️schema/🧬️mutations/🌱create-artifact/🧪️tests/🧪️appends/🦀️.rs";
   assert(existsSync(join(spaceBase, createArtifactFixture)), "Space create-artifact fixture is not present at its canonical bounded physical path");
   assert(spaceIndexCrate.includes(`🏅️standards/🔖️1/🪆️subsets/✳️any/${createArtifactFixture}`), "Space Index artifact crate misses the canonical create-artifact fixture path");
   const missingMounts = [
@@ -607,4 +609,4 @@ const router = new ScriptRouter(import.meta.dir).register("test", TestScript).re
 
 registerPlaygroundSiteBuildCommands(router);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

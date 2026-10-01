@@ -122,7 +122,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-generate"
+            "generate",
+            "trinity-rewriting-graph"
           ]
         }
       }
@@ -141,7 +142,8 @@
       "metadata": {
         "semio": {
           "workspaceCommand": [
-            "graph-wire-check"
+            "check",
+            "trinity-rewriting-graph-wire"
           ]
         }
       }

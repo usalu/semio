@@ -176,7 +176,7 @@ import { unresolvedActionArgs } from "@semio-tech/framework";
 import { examplesForApp, examplesForDialect, surfaceAppId, type AppRole } from "@semio-tech/framework";
 import choiceFixture from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧫️fixtures/🔽️choices/🔣️.json";
 import choiceSchema from "../../../../../../../🔨️modules/🧩️action-argument-resolution/🧬️schema/🔣️.json";
-import { semioSchemaAjvV1 } from "../../../../../🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 const ownedExports = semioSchemaAjvV1({ strict: true, allErrors: true }).addSchema(rendererSchema).addSchema(directorySchema);
 /** 🧬️ Compiles one named export of the `os.renderer` schema module. */
@@ -2187,6 +2187,8 @@ import {
   worldGumballConfigForProjection,
   gumballTransformDeltaBetweenPoses,
   gumballIdentityDelta,
+  worldPaintStep,
+  WORLD_PAINT_IDLE,
   world3dGumballSelectionArgsV1,
   world3dRelocateDragTargetV1,
   world3dRelocateDispatchArgsV1,
@@ -5801,6 +5803,27 @@ describe("framework renderer hosts", () => {
       }),
     );
     expect(markup).toContain("semio-board-2d-host");
+  });
+
+  it("projects the ids a time-travel draft references onto the puzzle 2d board host", () => {
+    const board2d = {
+      fixtureJson: JSON.stringify({ nodes: [], edges: [], camera: { x: 0, y: 0, zoom: 1 } }),
+      cameraJson: '{"x":0,"y":0,"zoom":1}',
+      glyphCatalogsJson: "{}",
+      selectionJson: "[]",
+      interactive: true,
+      selectionMethod: "rectangle",
+      gridSnapEnabled: false,
+      gridFactor: 1,
+      suggestionOffset: 0,
+      brushWeightsJson: "{}",
+      placementCompatibilityJson: "[]",
+      lodMode: "automatic",
+    };
+    const mount = (highlightedIdsJson?: string) =>
+      renderToStaticMarkup(createElement(Board2dHost, { node: { type: "componentScene", surfaceId: "puzzle2d.play.composite.2d-overview", controllerId: "puzzle2d-play", componentKind: "board-2d", board2d: { ...board2d, highlightedIdsJson } }, onAction: noopAction }));
+    expect(mount('["mid","left"]')).toContain('data-board-highlighted-ids-json="[&quot;mid&quot;,&quot;left&quot;]"');
+    expect(mount(undefined)).toContain('data-board-highlighted-ids-json="[]"');
   });
 
   it("uses the live puzzle 2d board camera for wheel persistence actions", () => {
@@ -10124,6 +10147,26 @@ describe("registry-derived utilities and activation (P5)", () => {
     expect(gumballIdentityDelta("transform", base, "rotateY")).toEqual({ action: "rotateSelection", args: { ...base, ax: 0, ay: 0, az: 1, angle: 0 } });
     expect(gumballIdentityDelta("scale", base)).toEqual({ action: "scaleSelection", args: { ...base, sx: 1, sy: 1, sz: 1 } });
     expect(gumballTransformDeltaBetweenPoses("move", { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, { position: [0, 0, 0], quaternion: [0, 0, 0, 1], scale: [1, 1, 1] }, base)).toBeNull();
+  });
+
+  it("worldPaintStep streams a gesture's dabs into one transaction, commits on release, swallows the click and aborts with zero trace (the wgpu world engine's press/move/release protocol)", () => {
+    const steps = (events: Parameters<typeof worldPaintStep>[1][]) => {
+      let gesture = WORLD_PAINT_IDLE;
+      const dispatched: (Record<string, unknown> | null)[] = [];
+      for (const event of events) {
+        const next = worldPaintStep(gesture, event);
+        gesture = next.gesture;
+        dispatched.push(next.dispatch);
+      }
+      return { gesture, dispatched };
+    };
+    const dab = (origin: "press" | "drag" | "click", u: number) => ({ kind: "dab" as const, origin, objectId: "obj-1", u, v: 0.5 });
+    const drag = steps([dab("press", 0.1), { kind: "press" }, dab("drag", 0.2), { kind: "release" }, dab("click", 0.2)]);
+    expect(drag.dispatched).toEqual([{ objectId: "obj-1", u: 0.1, v: 0.5, phase: "stream" }, null, { objectId: "obj-1", u: 0.2, v: 0.5, phase: "stream" }, { phase: "commit" }, null]);
+    expect(drag.gesture).toEqual(WORLD_PAINT_IDLE);
+    expect(steps([{ kind: "press" }, { kind: "release" }, dab("click", 0.4)]).dispatched).toEqual([null, null, { objectId: "obj-1", u: 0.4, v: 0.5 }]);
+    expect(steps([dab("drag", 0.3), { kind: "cancel", reason: "blur" }, { kind: "release" }]).dispatched).toEqual([{ objectId: "obj-1", u: 0.3, v: 0.5, phase: "stream" }, { phase: "abort", reason: "blur" }, null]);
+    expect(steps([{ kind: "cancel", reason: "captureLost" }]).dispatched).toEqual([null]);
   });
 
   it("gumballTransformDeltaBetweenPoses emits incremental translate/rotate/scale args", () => {

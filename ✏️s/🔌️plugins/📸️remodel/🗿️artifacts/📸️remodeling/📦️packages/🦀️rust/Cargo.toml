@@ -15,13 +15,23 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+default = ["video-containers"]
+# 🧩️ Capability Features
+video-containers = ["video-avi","video-mp4"]
+video-avi = ["dep:semio-s-artifact-stdio-avi"]
+video-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
+# /🧩️ Capability Features
+
 [dependencies]
-semio-s-artifact-stdio-avi = { workspace = true }
+# 🧩️ Capability Dependencies
+semio-s-artifact-stdio-avi = { workspace = true, optional = true }
+semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
+# /🧩️ Capability Dependencies
 semio-s-artifact-stdio-gltf = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
-semio-s-artifact-stdio-mp4 = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
@@ -77,3 +87,7 @@ png = "0.17.16"
 # 🔬️ Test oracle only: an independent Hamming distance over bit vectors recomputes every traced match
 # candidate verdict of the reconstruction tool run.
 bitvec = "1.0.1"
+
+[package.metadata.semio.preparation]
+script = "📜️script.ts"
+command = ["composition", "prepare"]

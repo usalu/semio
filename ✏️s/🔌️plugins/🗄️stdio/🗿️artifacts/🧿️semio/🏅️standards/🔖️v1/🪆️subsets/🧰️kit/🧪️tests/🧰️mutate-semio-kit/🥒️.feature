@@ -142,21 +142,21 @@ Feature: Apply every typed semio KIT mutation to the Nakagin Capsule Tower kit o
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                        | dir                        | fixture                                                               |
-      | create-object             | 🏗️create-object            | 🏗️attaches-a-second-object-child                                        |
-      | delete-object             | 🪓delete-object             | 🪓️detaches-the-only-object-child-and-keeps-the-model-child              |
-      | create-model              | 🏛️create-model             | 🏛️attaches-a-second-model-child                                         |
-      | delete-model              | 💣delete-model              | 💣️detaches-the-only-model-child-and-keeps-the-object-child              |
-      | create-properties         | 🏷️create-properties        | 🏷️attaches-a-properties-child-to-a-kit-that-has-none                    |
+      | create-object             | 🏗️create-object            | 🏗️attaches                                        |
+      | delete-object             | 🪓delete-object             | 🪓️detaches              |
+      | create-model              | 🏛️create-model             | 🏛️attaches                                         |
+      | delete-model              | 💣delete-model              | 💣️detaches              |
+      | create-properties         | 🏷️create-properties        | 🏷️attaches                    |
       | delete-properties         | 🚫delete-properties         | 🚫️detaches-the-properties-child-and-leaves-every-other-collection-alone |
-      | bind-representation       | 🪢️bind-representation       | 🔗️binds-a-second-representation-to-an-existing-type                     |
+      | bind-representation       | 🪢️bind-representation       | 🔗️binds                     |
       | unbind-representation     | ✂️unbind-representation    | 🔗️unbinds-the-leading-representation-and-keeps-the-trailing-one         |
-      | change-representation-pin | 📌change-representation-pin | 📌️repins-the-representation-from-head-to-a-checkpoint                   |
-      | add-type                  | ➕add-type                  | 📇️appends-a-slab-type-to-the-catalogue                                  |
-      | remove-type               | ➖remove-type               | 🚫️removes-the-column-type-and-keeps-the-beam-type                       |
-      | rename-type               | ✏️rename-type              | ✏️renames-the-beam-type-without-recategorising-it                       |
-      | add-design                | 🆕add-design                | 🏠️adds-an-empty-roof-design                                             |
-      | remove-design             | 🗑️remove-design            | 🚫️removes-the-only-design-together-with-its-pieces                      |
-      | edit-design               | 🖊️edit-design              | 🧩️replaces-the-designs-pieces-and-connections-in-one-step               |
+      | change-representation-pin | 📌change-representation-pin | 📌️repins                   |
+      | add-type                  | ➕add-type                  | 📇️appends                                  |
+      | remove-type               | ➖remove-type               | 🚫️removes                       |
+      | rename-type               | ✏️rename-type              | ✏️renames                       |
+      | add-design                | 🆕add-design                | 🏠️adds                                             |
+      | remove-design             | 🗑️remove-design            | 🚫️removes                      |
+      | edit-design               | 🖊️edit-design              | 🧩️replaces               |
 
   @id-identity-round-trip
   @level-long

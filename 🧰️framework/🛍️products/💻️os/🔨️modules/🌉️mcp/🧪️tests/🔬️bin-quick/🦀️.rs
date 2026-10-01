@@ -34,7 +34,7 @@ fn the_delegated_agent_credential_is_a_path_and_never_a_secret_in_argv() {
     for refused in [
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-file", "/a", "--credential-fd", "5"],
         vec!["--credential-file", "/a"],
-        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-token", "delegation.v1.deadbeef"],
+        vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-token", "fixture-secret"],
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "3"],
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "0"],
         vec!["--hub", "http://127.0.0.1:7501", "--space", "space-a", "--credential-fd", "not-a-number"],

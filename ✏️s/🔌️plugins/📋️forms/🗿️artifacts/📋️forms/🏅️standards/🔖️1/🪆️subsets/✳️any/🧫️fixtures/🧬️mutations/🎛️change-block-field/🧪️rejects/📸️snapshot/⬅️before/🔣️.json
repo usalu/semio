@@ -1,0 +1,44 @@
+{
+  "schema": "forms.form",
+  "id": "site-survey",
+  "version": "1",
+  "title": "Site Survey",
+  "structure": {
+    "childId": "forms-value-change-block-field-rejects",
+    "target": {
+      "artifactId": "forms-value-change-block-field-rejects",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "value"
+      }
+    }
+  },
+  "results": {
+    "childId": "forms-table-change-block-field-rejects",
+    "target": {
+      "artifactId": "forms-table-change-block-field-rejects",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "table"
+      }
+    }
+  },
+  "definition": {
+    "steps": [
+      {
+        "id": "step-basics",
+        "title": "Basics",
+        "blocks": [
+          {
+            "id": "q-site-name",
+            "label": "Site name",
+            "kind": "text"
+          }
+        ]
+      }
+    ]
+  },
+  "responses": []
+}

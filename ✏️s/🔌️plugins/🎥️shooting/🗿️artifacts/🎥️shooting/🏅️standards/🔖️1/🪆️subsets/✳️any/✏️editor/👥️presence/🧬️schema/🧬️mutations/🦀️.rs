@@ -1,7 +1,7 @@
 //! 🧬️ Shooting shooting.presence mutation collection.
 
 use super::*;
-#[path = "📸️replace-presence/🦀️.rs"]
+#[path = "📸️replace/🦀️.rs"]
 mod replace_presence;
 pub use replace_presence::ReplacePresence;
 

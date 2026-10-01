@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
 import { DescribeComponentScript, testFreshComponentSourceEpochV1, testFreshComponentStagingV1, testFreshComponentProcessV1 } from "../../🏭️fresh-component/🟦️.ts";
@@ -14,4 +15,4 @@ class FreshComponentCheckScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await runBundleScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", DescribeComponentScript).register("test-fresh-component", FreshComponentCheckScript), import.meta.url);
+if (import.meta.main) await runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", DescribeComponentScript).register("test-fresh-component", FreshComponentCheckScript));

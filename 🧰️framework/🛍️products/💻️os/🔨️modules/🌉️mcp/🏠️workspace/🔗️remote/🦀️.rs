@@ -855,33 +855,16 @@ fn next_authority_generation() -> Result<u64, HubBindingError> {
     NEXT_HUB_AUTHORITY_GENERATION.try_update(Ordering::SeqCst, Ordering::SeqCst, |current| current.checked_add(1)).map_err(|_| HubBindingError::CapacityExceeded)
 }
 
-/// 🤖️ Exchanges a delegated agent credential for a hub session, once, at process start.
-///
-/// This is the only network call `semio-os-mcp` makes before it has a session: `POST
-/// /auth/agent-sessions` with the delegation as the bearer. It runs on its own short-lived
-/// `TokioHostRuntime` because the real hub binding driver does not exist yet — the credential this
-/// returns is what builds it.
-///
-/// The delegation token is read exactly once here and is never logged, never copied into
-/// `HubOptions`, and never written anywhere: what leaves this function is a session capability.
-///
-/// 🧵️ `process_worker_pool` SEALS the process-wide configuration on its first call, and this
-/// exchange is the first thing a `--hub --credential-file` process does — before
-/// `NativeHubBindingDriver::connect`, before the workspace, before the transport. Sizing it at a
-/// literal `1` therefore sealed the whole process at one core and made every later subsystem's
-/// `available_parallelism()` request a hard assertion failure (observed live 2026-09-20: the
-/// agent principal was adopted, the next line panicked with "process worker pool configuration
-/// mismatch … left: cores: 10, right: cores: 1"). Every other pool site in this crate reads
-/// `available_parallelism()`; this one must agree with them, not undercut them.
+/// 🔑️ Exchanges an explicitly selected credential protocol with the shared bounded native transport.
 #[cfg(not(target_arch = "wasm32"))]
-pub fn exchange_agent_session(base_url: &str, credential: &crate::agent_credential::AgentCredentialV1) -> Result<crate::agent_credential::AgentSessionGrantV1, GatewayError> {
+pub fn exchange_delegated_session_v1(base_url: &str, credential: &crate::agent_credential::DelegatedCredentialV1, protocol: crate::agent_credential::CredentialExchangeProtocolV1) -> Result<crate::agent_credential::DelegatedSessionGrantV1, GatewayError> {
     use semio_framework_actor::{ActorId, PackageId};
     use semio_framework_async::{ProcessKind, ScopeOwner, TraceId, WorkerPoolConfig};
     use semio_framework_os_kernel::os_directory::client::{native::NativeDirectoryTransport, DirectoryTransport, HttpMethod};
     use semio_framework_os_services::{ComputePool, TokioHostRuntime};
 
     let origin = base_url.trim_end_matches('/');
-    if origin != credential.hub_origin().trim_end_matches('/') {
+    if origin != credential.origin().trim_end_matches('/') {
         return Err(GatewayError::new(GatewayErrorCode::PermissionDenied, "--hub origin does not match the origin this agent credential was issued for"));
     }
     let cores = std::thread::available_parallelism().map_or(1, std::num::NonZeroUsize::get);
@@ -901,15 +884,15 @@ pub fn exchange_agent_session(base_url: &str, credential: &crate::agent_credenti
         cancel: cancel.child_now(),
         capability: None,
     };
-    let body = crate::agent_credential::agent_session_request_body(credential.audience(), &agent_instance_id());
-    let url = format!("{origin}/auth/agent-sessions");
-    let response = runtime
-        .block_on(transport.http(&ctx, HttpMethod::Post, &url, Some(credential.expose_for_exchange()), Some(body)))
+    let request = (protocol.request)(credential, &agent_instance_id())?;
+    let request = crate::agent_credential::CredentialExchangeRequestV1::new(request.path, request.body)?;
+    let url = format!("{origin}{}", request.path);
+    let mut response = runtime
+        .block_on(transport.http(&ctx, HttpMethod::Post, &url, Some(credential.expose_for_exchange()), Some(request.body)))
         .map_err(|error| GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("the hub at {origin} did not answer the agent-session exchange: {error:?}")).retryable())?;
-    if response.status != 200 {
-        return Err(crate::agent_credential::agent_exchange_error(response.status, &response.body));
-    }
-    crate::agent_credential::decode_agent_session_grant(&response.body)
+    let outcome = if response.status != 200 { Err((protocol.decode_error)(response.status, &response.body)) } else { (protocol.decode_grant)(&response.body, credential) };
+    response.body.fill(0);
+    outcome
 }
 
 /// 🔖️ A per-process instance id, so two agents sharing one delegation still get separate sessions

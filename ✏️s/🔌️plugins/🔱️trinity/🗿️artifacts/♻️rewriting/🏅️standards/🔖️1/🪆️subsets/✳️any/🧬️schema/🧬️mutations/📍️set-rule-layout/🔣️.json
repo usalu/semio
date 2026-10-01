@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🔱️trinity/🗿️artifacts/♻️rewriting/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📍️set-rule-layout",
+  "semanticKind": "set-rule-layout-points",
+  "displayName": "Set Rule Layout Points",
+  "emoji": "📍️",
+  "aggregateVariant": "SetRuleLayoutPoints",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "set-rule-layout-points",
+  "binaryTag": 10,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "protobuf",
+    "json-schema",
+    "text",
+    "binary"
+  ]
+}

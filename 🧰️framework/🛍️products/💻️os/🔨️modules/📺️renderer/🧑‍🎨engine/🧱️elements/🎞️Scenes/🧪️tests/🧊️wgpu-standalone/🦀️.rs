@@ -383,7 +383,8 @@ pub fn handle_scene_pointer_move(scene: &UiComponentSceneNode, bounds: Rect, x: 
             actions.extend(ink_hover_move(scene, inner, x, y));
         }
         SurfaceKind::Canvas2d if down => {
-            actions.push(scene_action(scene, "canvasPointerMove",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "samples": [[x - inner.x, y - inner.y]] })))));
+            let (world_x, world_y) = scene_state(&scene.surface_id).viewport.screen_to_world(x, y, inner);
+            actions.push(scene_action(scene, "canvasPointerMove",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "samples": [[x - inner.x, y - inner.y]], "worldSamples": [[world_x, world_y]] })))));
         }
         SurfaceKind::NodeGraph if down => {
             actions.extend(engine_canvas::node_graph_pointer_move(&scene.surface_id, &scene.controller_id, inner, x, y, false, false, false));
@@ -422,7 +423,6 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                             state.paint_stroke_active = true;
                         }
                     });
-                    actions.push(scene_action(scene, "paintStrokeBegin", semio_framework::dsl_value!({ "surfaceId": scene.surface_id })));
                 }
                 actions.push(scene_action(scene, "canvasPointerDown",semio_framework::DslValue::from(canvas_world_pointer_json(scene, inner, x, y, json!({ "button": button, "extend": shift })))));
                 if button == 1 || button == 2 {
@@ -465,7 +465,6 @@ pub fn handle_scene_pointer_button(scene: &UiComponentSceneNode, bounds: Rect, x
                         state.paint_stroke_active = false;
                     }
                 });
-                actions.push(scene_action(scene, "paintStrokeEnd", semio_framework::dsl_value!({ "surfaceId": scene.surface_id })));
             }
             SurfaceKind::NodeGraph => {
                 actions.extend(engine_canvas::node_graph_pointer_up(&scene.surface_id, &scene.controller_id, inner, x, y, shift, false, false));

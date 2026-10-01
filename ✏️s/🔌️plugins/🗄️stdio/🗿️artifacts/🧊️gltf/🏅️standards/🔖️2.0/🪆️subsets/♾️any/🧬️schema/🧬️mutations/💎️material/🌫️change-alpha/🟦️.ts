@@ -4,7 +4,7 @@ import { type GltfAlphaMode, gltfWireIndex, gltfWireObject, gltfWireRequired, pa
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfChangeMaterialAlphaModePayload {
-  material: number;
+  material: bigint;
   alphaMode: GltfAlphaMode;
 }
 

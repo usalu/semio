@@ -12,7 +12,8 @@
     "removabilityCases",
     "publicExportCases",
     "typeCases",
-    "infrastructureCases"
+    "infrastructureCases",
+    "policyOwners"
   ],
   "properties": {
     "schemaVersion": {
@@ -92,6 +93,10 @@
                 "package": {
                   "type": "string",
                   "minLength": 1
+                },
+                "installation": {
+                  "type": "string",
+                  "pattern": "(?:^|/)node_modules/.*[^/]$"
                 }
               },
               "allOf": [
@@ -119,6 +124,18 @@
                   }
                 }
               ]
+            }
+          },
+          "forbiddenRules": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "minItems": 1,
+              "uniqueItems": true,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
             }
           }
         }
@@ -345,6 +362,34 @@
           },
           "accept": {
             "type": "boolean"
+          },
+          "members": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "nextManifests": {
+            "type": "object",
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "nextExpectedPackages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       }
@@ -456,6 +501,32 @@
               "type": "string",
               "minLength": 1
             }
+          }
+        }
+      }
+    },
+    "policyOwners": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "name"
+        ],
+        "properties": {
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "role": {
+            "type": "string",
+            "minLength": 1
           }
         }
       }

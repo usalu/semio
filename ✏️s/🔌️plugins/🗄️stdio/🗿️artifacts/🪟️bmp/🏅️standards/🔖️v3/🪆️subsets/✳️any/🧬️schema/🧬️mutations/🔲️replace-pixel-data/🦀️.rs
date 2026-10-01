@@ -78,11 +78,11 @@ fn replaced(base: &BmpSnapshot, pixels: &[u8]) -> Option<BmpSnapshot> {
 
 #[cfg(test)]
 pub(crate) fn test_case() -> BmpMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed replace-pixel-data payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/🔲️replace-pixel-data/🎯️direct/🦠️mutation/🔣️.json")).expect("committed replace-pixel-data payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;
 #[cfg(test)]
-#[path = "🧪️tests/🎨️keeps-indexed-storage/🦀️.rs"]
+#[path = "🧪️tests/🎨️keeps/🦀️.rs"]
 mod tests_keeps_indexed_storage;

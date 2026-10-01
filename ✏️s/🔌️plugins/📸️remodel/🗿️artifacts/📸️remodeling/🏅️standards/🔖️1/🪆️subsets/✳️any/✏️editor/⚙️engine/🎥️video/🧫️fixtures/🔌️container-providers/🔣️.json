@@ -1,0 +1,714 @@
+{
+  "cases": [
+    {
+      "id": "empty-inventory-refuses",
+      "providers": [],
+      "expected": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "selected-future-provider",
+      "providers": [
+        {
+          "id": "future",
+          "matches": true
+        }
+      ],
+      "expected": {
+        "status": "selected",
+        "id": "future"
+      }
+    },
+    {
+      "id": "absent-known-provider-refuses",
+      "providers": [
+        {
+          "id": "mp4",
+          "matches": false
+        }
+      ],
+      "expected": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "unrelated-provider-does-not-change-selection",
+      "providers": [
+        {
+          "id": "unrelated",
+          "matches": false
+        },
+        {
+          "id": "future",
+          "matches": true
+        }
+      ],
+      "expected": {
+        "status": "selected",
+        "id": "future"
+      }
+    },
+    {
+      "id": "ambiguous-matching-providers-refuse",
+      "providers": [
+        {
+          "id": "first",
+          "matches": true
+        },
+        {
+          "id": "second",
+          "matches": true
+        }
+      ],
+      "expected": {
+        "status": "ambiguous"
+      }
+    },
+    {
+      "id": "duplicate-provider-identity-refuses",
+      "providers": [
+        {
+          "id": "same",
+          "matches": true
+        },
+        {
+          "id": "same",
+          "matches": false
+        }
+      ],
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "invalid-provider-identity-refuses",
+      "providers": [
+        {
+          "id": "../future",
+          "matches": true
+        }
+      ],
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "unselected-invalid-provider-refuses",
+      "providers": [
+        {
+          "id": "future",
+          "matches": true
+        },
+        {
+          "id": "",
+          "matches": false
+        }
+      ],
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "all-unselected-providers-refuse",
+      "providers": [
+        {
+          "id": "first",
+          "matches": false
+        },
+        {
+          "id": "second",
+          "matches": false
+        }
+      ],
+      "expected": {
+        "status": "missing"
+      }
+    },
+    {
+      "id": "over-capacity-inventory-refuses",
+      "providers": [
+        {
+          "id": "provider-0",
+          "matches": true
+        },
+        {
+          "id": "provider-1",
+          "matches": false
+        },
+        {
+          "id": "provider-2",
+          "matches": false
+        },
+        {
+          "id": "provider-3",
+          "matches": false
+        },
+        {
+          "id": "provider-4",
+          "matches": false
+        },
+        {
+          "id": "provider-5",
+          "matches": false
+        },
+        {
+          "id": "provider-6",
+          "matches": false
+        },
+        {
+          "id": "provider-7",
+          "matches": false
+        },
+        {
+          "id": "provider-8",
+          "matches": false
+        },
+        {
+          "id": "provider-9",
+          "matches": false
+        },
+        {
+          "id": "provider-10",
+          "matches": false
+        },
+        {
+          "id": "provider-11",
+          "matches": false
+        },
+        {
+          "id": "provider-12",
+          "matches": false
+        },
+        {
+          "id": "provider-13",
+          "matches": false
+        },
+        {
+          "id": "provider-14",
+          "matches": false
+        },
+        {
+          "id": "provider-15",
+          "matches": false
+        },
+        {
+          "id": "provider-16",
+          "matches": false
+        },
+        {
+          "id": "provider-17",
+          "matches": false
+        },
+        {
+          "id": "provider-18",
+          "matches": false
+        },
+        {
+          "id": "provider-19",
+          "matches": false
+        },
+        {
+          "id": "provider-20",
+          "matches": false
+        },
+        {
+          "id": "provider-21",
+          "matches": false
+        },
+        {
+          "id": "provider-22",
+          "matches": false
+        },
+        {
+          "id": "provider-23",
+          "matches": false
+        },
+        {
+          "id": "provider-24",
+          "matches": false
+        },
+        {
+          "id": "provider-25",
+          "matches": false
+        },
+        {
+          "id": "provider-26",
+          "matches": false
+        },
+        {
+          "id": "provider-27",
+          "matches": false
+        },
+        {
+          "id": "provider-28",
+          "matches": false
+        },
+        {
+          "id": "provider-29",
+          "matches": false
+        },
+        {
+          "id": "provider-30",
+          "matches": false
+        },
+        {
+          "id": "provider-31",
+          "matches": false
+        },
+        {
+          "id": "provider-32",
+          "matches": false
+        },
+        {
+          "id": "provider-33",
+          "matches": false
+        },
+        {
+          "id": "provider-34",
+          "matches": false
+        },
+        {
+          "id": "provider-35",
+          "matches": false
+        },
+        {
+          "id": "provider-36",
+          "matches": false
+        },
+        {
+          "id": "provider-37",
+          "matches": false
+        },
+        {
+          "id": "provider-38",
+          "matches": false
+        },
+        {
+          "id": "provider-39",
+          "matches": false
+        },
+        {
+          "id": "provider-40",
+          "matches": false
+        },
+        {
+          "id": "provider-41",
+          "matches": false
+        },
+        {
+          "id": "provider-42",
+          "matches": false
+        },
+        {
+          "id": "provider-43",
+          "matches": false
+        },
+        {
+          "id": "provider-44",
+          "matches": false
+        },
+        {
+          "id": "provider-45",
+          "matches": false
+        },
+        {
+          "id": "provider-46",
+          "matches": false
+        },
+        {
+          "id": "provider-47",
+          "matches": false
+        },
+        {
+          "id": "provider-48",
+          "matches": false
+        },
+        {
+          "id": "provider-49",
+          "matches": false
+        },
+        {
+          "id": "provider-50",
+          "matches": false
+        },
+        {
+          "id": "provider-51",
+          "matches": false
+        },
+        {
+          "id": "provider-52",
+          "matches": false
+        },
+        {
+          "id": "provider-53",
+          "matches": false
+        },
+        {
+          "id": "provider-54",
+          "matches": false
+        },
+        {
+          "id": "provider-55",
+          "matches": false
+        },
+        {
+          "id": "provider-56",
+          "matches": false
+        },
+        {
+          "id": "provider-57",
+          "matches": false
+        },
+        {
+          "id": "provider-58",
+          "matches": false
+        },
+        {
+          "id": "provider-59",
+          "matches": false
+        },
+        {
+          "id": "provider-60",
+          "matches": false
+        },
+        {
+          "id": "provider-61",
+          "matches": false
+        },
+        {
+          "id": "provider-62",
+          "matches": false
+        },
+        {
+          "id": "provider-63",
+          "matches": false
+        },
+        {
+          "id": "provider-64",
+          "matches": false
+        }
+      ],
+      "expected": {
+        "status": "invalid"
+      }
+    },
+    {
+      "id": "terminal-newline-identity-refuses",
+      "providers": [
+        {
+          "id": "future\n",
+          "matches": true
+        }
+      ],
+      "expected": {
+        "status": "invalid"
+      }
+    }
+  ],
+  "probes": [
+    {
+      "id": "owned-future-record",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": true
+    },
+    {
+      "id": "negative-presentation-offset",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": -12
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": true
+    },
+    {
+      "id": "unknown-codec-remains-probeable",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "unknown",
+          "fourcc": [
+            88,
+            86,
+            73,
+            68
+          ]
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": true
+    },
+    {
+      "id": "provider-identity-mismatch",
+      "provider": "future",
+      "probe": {
+        "container": "other",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": false
+    },
+    {
+      "id": "sample-count-mismatch",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 2,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": false
+    },
+    {
+      "id": "zero-time-base",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 0
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": false
+    },
+    {
+      "id": "negative-frame-rate",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": -1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": false
+    },
+    {
+      "id": "foreign-record-field",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null,
+        "foreign": true
+      },
+      "expected": false
+    },
+    {
+      "id": "invalid-avc-length-width",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "avc"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": {
+          "sps": [],
+          "pps": [],
+          "nal_length_size": 0
+        }
+      },
+      "expected": false
+    },
+    {
+      "id": "explicit-nullable-avc-field-required",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "time_base": {
+          "numerator": 1,
+          "denominator": 1000
+        },
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ]
+      },
+      "expected": false
+    },
+    {
+      "id": "explicit-nullable-time-base-required",
+      "provider": "future",
+      "probe": {
+        "container": "future",
+        "width": 16,
+        "height": 16,
+        "fps": 1,
+        "duration_ms": 1000,
+        "frame_count": 1,
+        "codec": {
+          "kind": "mjpeg"
+        },
+        "samples": [
+          {
+            "data": [],
+            "timestamp_ms": 0
+          }
+        ],
+        "avc_config": null
+      },
+      "expected": false
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 //! 🧬️ Architect architect.config mutation collection.
 
 use super::*;
-#[path = "📸️replace-config/🦀️.rs"]
+#[path = "📸️replace/🦀️.rs"]
 mod replace_config;
 pub use replace_config::ReplaceConfig;
 

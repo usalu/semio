@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/lowpoly/lowpoly/mutation/move-selection/schema.json",
+  "title": "MoveSelection",
+  "description": "The gumball's drag of a selection stated as its intent: the object, the vertices it names (every vertex when empty) and one offset. The geometry is derived from the object's persisted mesh on every application. Its hard bounds (vertices named once) state the payload-intrinsic breach the diff refuses as `mutation.invariant`; refusals that depend on the base (an absent object, mesh or vertex) belong to the diff alone.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "objectId",
+    "offset",
+    "vertexIds"
+  ],
+  "properties": {
+    "objectId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Object",
+          "de": "Objekt"
+        },
+        "description": {
+          "en": "The object whose mesh the motion moves.",
+          "de": "Das Objekt, dessen Netz die Bewegung bewegt."
+        },
+        "ref": {
+          "kind": "object",
+          "domain": "mesh",
+          "granularity": "object"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "vertexIds": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true,
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Vertices",
+          "de": "Eckpunkte"
+        },
+        "description": {
+          "en": "The vertices the motion carries; empty carries every vertex of the object, absent ones are skipped.",
+          "de": "Die Eckpunkte, die die Bewegung mitnimmt; leer nimmt jeden Eckpunkt des Objekts mit, fehlende werden übersprungen."
+        },
+        "ref": {
+          "kind": "vertex",
+          "domain": "mesh",
+          "granularity": "vertex"
+        },
+        "group": "target",
+        "order": 20
+      }
+    },
+    "offset": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3,
+      "x-semio-ui": {
+        "widget": "vector",
+        "role": "value",
+        "label": {
+          "en": "Offset",
+          "de": "Versatz"
+        },
+        "description": {
+          "en": "How far every named vertex moves along x, y and z.",
+          "de": "Wie weit sich jeder genannte Eckpunkt entlang x, y und z bewegt."
+        },
+        "step": 0.1,
+        "precision": 3,
+        "group": "motion",
+        "order": 30
+      }
+    }
+  }
+}

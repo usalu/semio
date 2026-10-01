@@ -101,16 +101,16 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                           | dir                            | fixture                             |
-    | create-load-case             | 📋️create-load-case             | 🌬️appends-a-wind-case-a6c267        |
-    | delete-load-case             | 🗑️delete-load-case             | 🚫️removes-the-wind-caeb06           |
-    | add-load                     | ➕️add-load                     | 🏠️lays-an-area-pressure-over-769710 |
-    | remove-load                  | ➖️remove-load                  | ➖️drops-the-trailing-member-b73b25  |
-    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⏸️switches-self-7e0cda              |
+    | create-load-case             | 📋️create-load-case             | 🌬️appends        |
+    | delete-load-case             | 🗑️delete-load-case             | 🚫️removes           |
+    | add-load                     | ➕️add-load                     | 🏠️lays |
+    | remove-load                  | ➖️remove-load                  | ➖️drops  |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | ⏸️switches              |
     | create-combination           | 🔗️create-combination           | 🔗️appends-a-8ede20                  |
     | delete-combination           | ✂️delete-combination           | ✂️removes-the-182f7b                |
-    | replace-load                 | 🔁️replace-load                 | 🔁️retunes-the-rafter-udl-241993     |
-    | change-load-case-name        | 🏷️change-load-case-name        | 🏷️renames-the-wind-case-1ac4f5      |
-    | replace-combination          | 🔁️replace-combination          | 🔁️reweights-the-terms-828cb2        |
+    | replace-load                 | 🔁️replace-load                 | 🔁️retunes     |
+    | change-load-case-name        | 🏷️change-load-case-name        | 🏷️renames      |
+    | replace-combination          | 🔁️replace-combination          | 🔁️reweights        |
 
   @id-hall-vector
   @level-exhaustive
@@ -123,16 +123,16 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     Then each implementation lands on the committed after-model in role, only the member this verb writes moved, and the two agree
     Examples:
     | id                           | dir                            | fixture                     |
-    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏗️hall-crane-sw-978370      |
+    | change-load-case-self-weight | ⚖️change-load-case-self-weight | 🏗️hall      |
     | delete-combination           | ✂️delete-combination           | 🏗️hall-cut-qp-ebd806        |
     | add-load                     | ➕️add-load                     | 🏗️hall-adds-udl-e345cb      |
     | remove-load                  | ➖️remove-load                  | 🏗️hall-cut-wind-6cf528      |
-    | create-load-case             | 📋️create-load-case             | 🏗️hall-snow-drift-068d9b    |
-    | create-combination           | 🔗️create-combination           | 🏗️hall-new-acc-4099b2       |
-    | delete-load-case             | 🗑️delete-load-case             | 🏗️hall-cut-crane-52270d     |
+    | create-load-case             | 📋️create-load-case             | 🏗️hall    |
+    | create-combination           | 🔗️create-combination           | 🏗️hall       |
+    | delete-load-case             | 🗑️delete-load-case             | 🏗️hall     |
     | replace-load                 | 🔁️replace-load                 | 🏗️hall-retunes-wx-a635fe    |
-    | change-load-case-name        | 🏷️change-load-case-name        | 🏗️hall-renames-crane-9f2be8 |
-    | replace-combination          | 🔁️replace-combination          | 🏗️hall-retunes-sls-280f78   |
+    | change-load-case-name        | 🏷️change-load-case-name        | 🏗️hall |
+    | replace-combination          | 🔁️replace-combination          | 🏗️hall   |
 
   @id-reject
   @level-exhaustive
@@ -145,13 +145,13 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     Then both implementations refuse it, or declare it a no-op, and leave the committed before-model exactly as it was
     Examples:
     | id                      | dir                            | fixture                   |
-    | sw-no-such-case-bfe5bc  | ⚖️change-load-case-self-weight | 🚨️sw-no-such-case-bfe5bc  |
-    | no-such-combo-f42cd6    | ✂️delete-combination           | 🚨️no-such-combo-f42cd6    |
+    | sw-no-such-case-bfe5bc  | ⚖️change-load-case-self-weight | 🚨️sw  |
+    | no-such-combo-f42cd6    | ✂️delete-combination           | 🚨️no    |
     | dup-load-id-4f4a0a      | ➕️add-load                     | ⏸️dup-load-id-4f4a0a      |
     | no-such-member-3fe6e9   | ➕️add-load                     | 🚨️no-such-member-3fe6e9   |
     | no-such-load-5bab2d     | ➖️remove-load                  | 🚨️no-such-load-5bab2d     |
-    | dangling-solid-5e04d9   | 📋️create-load-case             | 🚨️dangling-solid-5e04d9   |
-    | dangling-term-b9d144    | 🔗️create-combination           | 🚨️dangling-term-b9d144    |
+    | dangling-solid-5e04d9   | 📋️create-load-case             | 🚨️dangling   |
+    | dangling-term-b9d144    | 🔗️create-combination           | 🚨️dangling    |
     | dead-in-combos-e73167   | 🗑️delete-load-case             | ⛓️dead-in-combos-e73167   |
     | no-such-case-ef1fde     | 🗑️delete-load-case             | 🚨️no-such-case-ef1fde     |
     | same-load-65135e        | 🔁️replace-load                 | ⏸️same-load-65135e        |
@@ -160,8 +160,8 @@ Feature: Apply every typed fem3d load mutation twice — once in Rust, once in P
     | no-such-load-cc8aee     | 🔁️replace-load                 | 🚨️no-such-load-cc8aee     |
     | renames-load-a535c9     | 🔁️replace-load                 | 🪪️renames-load-a535c9     |
     | same-name-56ab29        | 🏷️change-load-case-name        | ⏸️same-name-56ab29        |
-    | no-such-case-15cca1     | 🏷️change-load-case-name        | 🚨️no-such-case-15cca1     |
-    | same-combination-4f8781 | 🔁️replace-combination          | ⏸️same-combination-4f8781 |
-    | dangling-term-17506c    | 🔁️replace-combination          | 🚨️dangling-term-17506c    |
-    | no-such-combo-0c9c39    | 🔁️replace-combination          | 🚨️no-such-combo-0c9c39    |
-    | renames-combo-e8f4f2    | 🔁️replace-combination          | 🪪️renames-combo-e8f4f2    |
+    | no-such-case-15cca1     | 🏷️change-load-case-name        | 🚨️no     |
+    | same-combination-4f8781 | 🔁️replace-combination          | ⏸️same |
+    | dangling-term-17506c    | 🔁️replace-combination          | 🚨️dangling    |
+    | no-such-combo-0c9c39    | 🔁️replace-combination          | 🚨️no    |
+    | renames-combo-e8f4f2    | 🔁️replace-combination          | 🪪️renames    |

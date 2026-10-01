@@ -75,47 +75,47 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                                 | vector                                                                     |
-      | rename-part-kind                   | ✏️rename-part-kind/🧪️renames-part-kind-to-pod                        |
-      | change-part-kind-label             | 🏷️change-part-kind-label/🧪️relabels-part-kind                        |
-      | change-part-kind-variant           | 🔀️change-part-kind-variant/🧪️switches-variant-to-b                   |
-      | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites-part-kind-description      |
-      | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints-part-kind-icon                    |
-      | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches-unit-to-centimeter                 |
-      | update-part2d                      | 🖌️update-part2d/🧪️circle-to-rectangle                               |
-      | update-part3d                      | 🧊update-part3d/🧪️reorients-and-rescales-part                        |
-      | create-representation              | 🧱create-representation/🧪️appends-frame-representation                |
-      | delete-representation              | 🗑️delete-representation/🧪️removes-shell-representation                |
-      | rename-representation              | ✒️rename-representation/🧪️renames-shell-to-hull                       |
-      | change-representation-mesh-url     | 🌐change-representation-mesh-url/🧪️repoints-shell-mesh-url            |
-      | change-representation-lod          | 🏔️change-representation-lod/🧪️promotes-shell-to-lod2                  |
-      | change-representation-description  | 📜change-representation-description/🧪️rewrites-shell-description      |
-      | add-representation-tag             | 🔖add-representation-tag/🧪️tags-shell-as-structural                   |
-      | remove-representation-tag          | 🚫remove-representation-tag/🧪️untags-shell-printable                  |
-      | add-representation-attribute       | 🧩add-representation-attribute/🧪️adds-color-attribute-to-shell        |
-      | remove-representation-attribute    | ➖remove-representation-attribute/🧪️drops-finish-attribute-from-shell |
+      | rename-part-kind                   | ✏️rename-part-kind/🧪️renames                        |
+      | change-part-kind-label             | 🏷️change-part-kind-label/🧪️relabels                        |
+      | change-part-kind-variant           | 🔀️change-part-kind-variant/🧪️switches                   |
+      | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites      |
+      | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints                    |
+      | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches                 |
+      | update-part2d                      | 🖌️update-part2d/🧪️circle                               |
+      | update-part3d                      | 🧊update-part3d/🧪️reorients                        |
+      | create-representation              | 🧱create-representation/🧪️appends                |
+      | delete-representation              | 🗑️delete-representation/🧪️removes                |
+      | rename-representation              | ✒️rename-representation/🧪️renames                       |
+      | change-representation-mesh-url     | 🌐change-representation-mesh-url/🧪️repoints            |
+      | change-representation-lod          | 🏔️change-representation-lod/🧪️promotes                  |
+      | change-representation-description  | 📜change-representation/🧪️rewrites      |
+      | add-representation-tag             | 🔖add-representation-tag/🧪️tags                   |
+      | remove-representation-tag          | 🚫remove-representation-tag/🧪️untags                  |
+      | add-representation-attribute       | 🧩add-representation-attribute/🧪️adds        |
+      | remove-representation-attribute    | ➖remove-representation-attribute/🧪️drops |
       | create-grip-kind                   | 🌱create-grip-kind/🧪️appends-hook-grip-kind                           |
       | delete-grip-kind                   | ❌delete-grip-kind/🧪️removes-plug-grip-kind                           |
-      | rename-grip-kind                   | 🖋️rename-grip-kind/🧪️renames-plug-to-coupler                          |
-      | change-grip-kind-label             | 🎫change-grip-kind-label/🧪️relabels-plug-grip-kind                    |
-      | change-grip-kind-color             | 🎨change-grip-kind-color/🧪️recolors-plug-grip-kind                    |
-      | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps-plug-default-rope-kind   |
+      | rename-grip-kind                   | 🖋️rename-grip-kind/🧪️renames                          |
+      | change-grip-kind-label             | 🎫change-grip-kind-label/🧪️relabels                    |
+      | change-grip-kind-color             | 🎨change-grip-kind-color/🧪️recolors                    |
+      | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps   |
       | create-grip                        | 🌿create-grip/🧪️appends-south-grip                                    |
       | delete-grip                        | 🕳️delete-grip/🧪️removes-north-grip                                    |
-      | move-grip2d                        | 📍move-grip2d/🧪️swings-north-grip-along-the-rim                      |
-      | move-grip3d                        | 🧭move-grip3d/🧪️repositions-north-grip-in-world                      |
+      | move-grip2d                        | 📍move-grip2d/🧪️swings                      |
+      | move-grip3d                        | 🧭move-grip3d/🧪️repositions                      |
       | resize-grip3d                      | 📏resize-grip3d/🧪️widens-north-grip-radius                           |
-      | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds-north-grip-as-socket                |
-      | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows-plug-to-socket                      |
-      | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes-plug-to-plug                    |
+      | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds                |
+      | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows                      |
+      | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes                    |
       | add-attribute                      | 🔩add-attribute/🧪️adds-weight-attribute                               |
-      | remove-attribute                   | 🚷remove-attribute/🧪️drops-material-attribute                         |
+      | remove-attribute                   | 🚷remove-attribute/🧪️drops                         |
       | add-author                         | 👤add-author/🧪️credits-bo                                             |
       | remove-author                      | 🙅remove-author/🧪️uncredits-ada                                       |
       | move-camera2d                      | 🎥move-camera2d/🧪️pans-2d-camera                                      |
       | scale-camera2d                     | 🔍scale-camera2d/🧪️zooms-2d-camera-in                                 |
       | move-camera3d                      | 🎬move-camera3d/🧪️orbits-3d-camera                                    |
       | scale-camera3d                     | 🔎scale-camera3d/🧪️zooms-3d-camera-out                                |
-      | change-meta-description            | 💬change-meta-description/🧪️rewrites-session-notes                    |
+      | change-meta-description            | 💬change-meta-description/🧪️rewrites                    |
 
   @id-inverse
   @level-exhaustive
@@ -136,52 +136,52 @@ Feature: Apply every typed block5d part-kind mutation twice — once in Rust, on
     And every field the committed diff declares actually differs
     Examples:
       | id                                 | vector                                                                     |
-      | rename-part-kind                   | ✏️rename-part-kind/🧪️renames-part-kind-to-pod                        |
-      | change-part-kind-label             | 🏷️change-part-kind-label/🧪️relabels-part-kind                        |
-      | change-part-kind-variant           | 🔀️change-part-kind-variant/🧪️switches-variant-to-b                   |
-      | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites-part-kind-description      |
-      | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints-part-kind-icon                    |
-      | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches-unit-to-centimeter                 |
-      | update-part2d                      | 🖌️update-part2d/🧪️circle-to-rectangle                               |
-      | update-part3d                      | 🧊update-part3d/🧪️reorients-and-rescales-part                        |
-      | create-representation              | 🧱create-representation/🧪️appends-frame-representation                |
-      | delete-representation              | 🗑️delete-representation/🧪️removes-shell-representation                |
-      | rename-representation              | ✒️rename-representation/🧪️renames-shell-to-hull                       |
-      | change-representation-mesh-url     | 🌐change-representation-mesh-url/🧪️repoints-shell-mesh-url            |
-      | change-representation-lod          | 🏔️change-representation-lod/🧪️promotes-shell-to-lod2                  |
-      | change-representation-description  | 📜change-representation-description/🧪️rewrites-shell-description      |
-      | add-representation-tag             | 🔖add-representation-tag/🧪️tags-shell-as-structural                   |
-      | remove-representation-tag          | 🚫remove-representation-tag/🧪️untags-shell-printable                  |
-      | add-representation-attribute       | 🧩add-representation-attribute/🧪️adds-color-attribute-to-shell        |
-      | remove-representation-attribute    | ➖remove-representation-attribute/🧪️drops-finish-attribute-from-shell |
+      | rename-part-kind                   | ✏️rename-part-kind/🧪️renames                        |
+      | change-part-kind-label             | 🏷️change-part-kind-label/🧪️relabels                        |
+      | change-part-kind-variant           | 🔀️change-part-kind-variant/🧪️switches                   |
+      | change-part-kind-description       | 📃️change-part-kind-description/🧪️rewrites      |
+      | change-part-kind-icon              | 🖼️change-part-kind-icon/🧪️repoints                    |
+      | change-part-kind-unit              | 📐change-part-kind-unit/🧪️switches                 |
+      | update-part2d                      | 🖌️update-part2d/🧪️circle                               |
+      | update-part3d                      | 🧊update-part3d/🧪️reorients                        |
+      | create-representation              | 🧱create-representation/🧪️appends                |
+      | delete-representation              | 🗑️delete-representation/🧪️removes                |
+      | rename-representation              | ✒️rename-representation/🧪️renames                       |
+      | change-representation-mesh-url     | 🌐change-representation-mesh-url/🧪️repoints            |
+      | change-representation-lod          | 🏔️change-representation-lod/🧪️promotes                  |
+      | change-representation-description  | 📜change-representation/🧪️rewrites      |
+      | add-representation-tag             | 🔖add-representation-tag/🧪️tags                   |
+      | remove-representation-tag          | 🚫remove-representation-tag/🧪️untags                  |
+      | add-representation-attribute       | 🧩add-representation-attribute/🧪️adds        |
+      | remove-representation-attribute    | ➖remove-representation-attribute/🧪️drops |
       | create-grip-kind                   | 🌱create-grip-kind/🧪️appends-hook-grip-kind                           |
       | delete-grip-kind                   | ❌delete-grip-kind/🧪️removes-plug-grip-kind                           |
-      | rename-grip-kind                   | 🖋️rename-grip-kind/🧪️renames-plug-to-coupler                          |
-      | change-grip-kind-label             | 🎫change-grip-kind-label/🧪️relabels-plug-grip-kind                    |
-      | change-grip-kind-color             | 🎨change-grip-kind-color/🧪️recolors-plug-grip-kind                    |
-      | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps-plug-default-rope-kind   |
+      | rename-grip-kind                   | 🖋️rename-grip-kind/🧪️renames                          |
+      | change-grip-kind-label             | 🎫change-grip-kind-label/🧪️relabels                    |
+      | change-grip-kind-color             | 🎨change-grip-kind-color/🧪️recolors                    |
+      | change-grip-kind-default-rope-kind | 🪢change-grip-kind-default-rope-kind/🧪️swaps   |
       | create-grip                        | 🌿create-grip/🧪️appends-south-grip                                    |
       | delete-grip                        | 🕳️delete-grip/🧪️removes-north-grip                                    |
-      | move-grip2d                        | 📍move-grip2d/🧪️swings-north-grip-along-the-rim                      |
-      | move-grip3d                        | 🧭move-grip3d/🧪️repositions-north-grip-in-world                      |
+      | move-grip2d                        | 📍move-grip2d/🧪️swings                      |
+      | move-grip3d                        | 🧭move-grip3d/🧪️repositions                      |
       | resize-grip3d                      | 📏resize-grip3d/🧪️widens-north-grip-radius                           |
-      | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds-north-grip-as-socket                |
-      | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows-plug-to-socket                      |
-      | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes-plug-to-plug                    |
+      | change-grip-grip-kind              | 🧷change-grip-grip-kind/🧪️rekinds                |
+      | add-compatibility-rule             | ➕add-compatibility-rule/🧪️allows                      |
+      | remove-compatibility-rule          | ✂️remove-compatibility-rule/🧪️revokes                    |
       | add-attribute                      | 🔩add-attribute/🧪️adds-weight-attribute                               |
-      | remove-attribute                   | 🚷remove-attribute/🧪️drops-material-attribute                         |
+      | remove-attribute                   | 🚷remove-attribute/🧪️drops                         |
       | add-author                         | 👤add-author/🧪️credits-bo                                             |
       | remove-author                      | 🙅remove-author/🧪️uncredits-ada                                       |
       | move-camera2d                      | 🎥move-camera2d/🧪️pans-2d-camera                                      |
       | scale-camera2d                     | 🔍scale-camera2d/🧪️zooms-2d-camera-in                                 |
       | move-camera3d                      | 🎬move-camera3d/🧪️orbits-3d-camera                                    |
       | scale-camera3d                     | 🔎scale-camera3d/🧪️zooms-3d-camera-out                                |
-      | change-meta-description            | 💬change-meta-description/🧪️rewrites-session-notes                    |
+      | change-meta-description            | 💬change-meta-description/🧪️rewrites                    |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the fully populated part-kind definition with both facets
-    Given the committed before-snapshot shared://🧬️mutations/✏️rename-part-kind/🧪️renames-part-kind-to-pod/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/✏️rename-part-kind/🧪️renames/📸️snapshot/⬅️before/🔣️.json
     When it is parsed by the platform's own dependency-free JSON reader, re-serialized and parsed again
     Then the document is unchanged and the re-serialized bytes are not the committed bytes

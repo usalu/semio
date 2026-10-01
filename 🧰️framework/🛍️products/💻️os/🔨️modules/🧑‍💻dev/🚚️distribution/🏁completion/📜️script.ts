@@ -1,4 +1,4 @@
-import { Script, ScriptRouter } from "../../../../../🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts";
+import { Script, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 
 /** 🏁️ Completes the default production graph after Nx has built or restored its deliverables. */
 class CompleteScript extends Script {

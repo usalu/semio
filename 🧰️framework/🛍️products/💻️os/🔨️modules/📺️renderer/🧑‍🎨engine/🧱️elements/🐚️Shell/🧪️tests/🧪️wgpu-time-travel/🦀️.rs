@@ -172,7 +172,7 @@ fn the_band_announces_its_message_politely() {
     }
     shell.observe_history_time_travel(None);
     assert!(shell.history_time_travel().is_none(), "an absent status closes the session");
-    assert_eq!(time_travel_band_lines(&session("an error downstream"), Terminology::default(), Locale::En).message(), "Reviewing the edited history · Errors in later mutations block finalizing · Worst outcome: Error · Accepted changes: 2");
+    assert_eq!(time_travel_band_lines(&session("an error downstream"), Terminology::default(), Locale::En).message(), "Reviewing the edited history · Errors must be fixed or withdrawn before finalizing · Worst outcome: Error · Accepted changes: 2");
 }
 
 /// ⚖️ LAW: the captions are React's `ui.timeTravel.<control>` labels in both locales, and every control dispatches its
@@ -275,7 +275,9 @@ fn the_keyboard_router_accepts_by_chord_and_escape_discards_nothing() {
 
 //#region 📐️Band
 /// ⚖️ LAW: the band floats bottom-centre just above the footer, its buttons right-aligned in stage order after the
-/// message, the replay track fills its share, and it never overflows a narrow viewport.
+/// message on one row, the replay track fills its share, and on a phone-width viewport it wraps compact like React's
+/// `max-w-[90vw] flex-wrap` band: within 90 % of the viewport, the message over whole-line segments, every button below
+/// it inside the band, nothing overlapping, the track still along its lower edge.
 #[test]
 fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
     let theme = Theme::light();
@@ -287,15 +289,33 @@ fn the_band_lays_out_above_the_footer_with_its_buttons_in_stage_order() {
     assert_eq!(plan.buttons.iter().map(|button| button.control.verb).collect::<Vec<_>>(), [TimeTravelVerb::Rerun, TimeTravelVerb::Finalize, TimeTravelVerb::Exit]);
     assert!(plan.buttons.windows(2).all(|pair| pair[0].rect.x + pair[0].rect.w <= pair[1].rect.x));
     assert!(plan.buttons[2].rect.x + plan.buttons[2].rect.w <= plan.band.x + plan.band.w);
-    assert!(plan.message_x + plan.message_w <= plan.buttons[0].rect.x);
+    assert_eq!(plan.lines.len(), 1, "a desktop band is one row");
+    assert!(plan.lines[0].rect.x + plan.lines[0].rect.w <= plan.buttons[0].rect.x);
     assert!(plan.progress.is_none());
     let replaying = session("a running replay");
     let plan = time_travel_band_plan(&replaying, "Replaying".into(), buttons(&replaying), 1280.0, 720.0, &theme);
     let (track, share) = plan.progress.expect("a replay with a known total paints its track");
     assert!((share - 3.0 / 8.0).abs() < 0.0001, "3 of 8");
     assert!(track.x >= plan.band.x && track.x + track.w <= plan.band.x + plan.band.w);
-    let narrow = time_travel_band_plan(&reviewing, "x".repeat(400), buttons(&reviewing), 320.0, 480.0, &theme);
-    assert!(narrow.band.x >= 0.0 && narrow.band.x + narrow.band.w <= 320.0);
+    let inside = |outer: Rect, inner: Rect| inner.x >= outer.x - 0.001 && inner.y >= outer.y - 0.001 && inner.x + inner.w <= outer.x + outer.w + 0.001 && inner.y + inner.h <= outer.y + outer.h + 0.001;
+    let apart = |a: Rect, b: Rect| a.x + a.w <= b.x + 0.001 || b.x + b.w <= a.x + 0.001 || a.y + a.h <= b.y + 0.001 || b.y + b.h <= a.y + 0.001;
+    for (status, width) in [(&reviewing, 375.0_f32), (&replaying, 375.0), (&reviewing, 320.0)] {
+        let message = time_travel_band_lines(status, Terminology::default(), Locale::De).message();
+        let compact = time_travel_band_plan(status, message.clone(), buttons(status), width, 812.0, &theme);
+        assert!(compact.band.x >= 0.0 && compact.band.w <= width * 0.9 + 0.001 && compact.band.x + compact.band.w <= width, "{width}: within 90 % of the viewport");
+        assert!((compact.band.y + compact.band.h - (812.0 - theme.footer_height - TIME_TRAVEL_BAND_GAP)).abs() < 0.001, "{width}: still just above the footer");
+        assert!(compact.lines.len() > 1, "{width}: the message wraps: {:?}", compact.lines);
+        let words = |text: &str| text.split_whitespace().filter(|word| *word != "·").map(str::to_string).collect::<Vec<_>>();
+        assert_eq!(words(&compact.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" ")), words(&message), "{width}: every word, in order, none lost");
+        assert!(compact.lines.iter().all(|line| !line.text.starts_with(" · ") && !line.text.ends_with(" · ")), "{width}: a line never starts or ends on the separator");
+        assert!(compact.lines.iter().all(|line| inside(compact.band, line.rect)) && compact.buttons.iter().all(|button| inside(compact.band, button.rect)), "{width}: everything inside the band");
+        let last_line = compact.lines.last().expect("a line");
+        assert!(compact.buttons.iter().all(|button| button.rect.y >= last_line.rect.y + last_line.rect.h - 0.001), "{width}: the buttons flow below the message");
+        assert!(compact.buttons.iter().enumerate().all(|(index, a)| compact.buttons[index + 1..].iter().all(|b| apart(a.rect, b.rect))), "{width}: no two buttons overlap");
+        if let Some((track, _)) = compact.progress {
+            assert!(inside(compact.band, track) && track.y + track.h >= compact.band.y + compact.band.h - TIME_TRAVEL_PROGRESS_TRACK - 1.001, "{width}: the track runs along the lower edge");
+        }
+    }
 }
 
 /// ⚖️ LAW: the painted band registers one hit per control — an enabled one carrying its dispatch on the session
@@ -338,6 +358,191 @@ fn the_band_registers_each_control_with_its_dispatch_name_and_state() {
 }
 //#endregion 📐️Band
 
+//#region 🎯️Focus
+fn focus_corpus() -> Value {
+    serde_json::from_str(include_str!("../../../🛠️ShellHelpers/🧫️fixtures/🧫️time-travel-focus/🔣️.json")).expect("the shared time-travel focus corpus parses")
+}
+
+fn focus_name(focus: Option<TimeTravelFocus>) -> Value {
+    match focus {
+        None => Value::Null,
+        Some(TimeTravelFocus::Editor) => "editor".into(),
+        Some(TimeTravelFocus::NextProblem) => "nextProblem".into(),
+        Some(TimeTravelFocus::Dialog) => "dialog".into(),
+        Some(TimeTravelFocus::Control(verb)) => verb_name(verb).into(),
+    }
+}
+
+/// ⚖️ LAW (shared with React): for every edge of the focus corpus — another session, another stage, another edited
+/// mutation, and the edges that must leave focus alone (a draft edit, replay progress, the commit, a closed session) —
+/// the wgpu shell names exactly the corpus's focus target, and resolves the editor and Next problem through the corpus's
+/// keys, settle time and band fallbacks.
+#[test]
+fn the_shared_focus_corpus_holds_on_wgpu() {
+    let corpus = focus_corpus();
+    assert_eq!(corpus["settleMs"].as_f64(), Some(TIME_TRAVEL_FOCUS_SETTLE_MS));
+    assert_eq!((corpus["keys"]["editorInputs"].as_str(), corpus["keys"]["editorAccept"].as_str(), corpus["keys"]["nextProblem"].as_str()), (Some(TIME_TRAVEL_EDITOR_INPUTS_KEY), Some(TIME_TRAVEL_EDITOR_ACCEPT_KEY), Some(TIME_TRAVEL_NEXT_PROBLEM_KEY)));
+    for (focus, key) in [(TimeTravelFocus::Editor, "editor"), (TimeTravelFocus::NextProblem, "nextProblem")] {
+        assert_eq!(focus_name(focus.fallback().map(TimeTravelFocus::Control)), corpus["fallbacks"][key], "{key}");
+    }
+    let cases = corpus["cases"].as_array().expect("cases");
+    assert!(cases.len() >= 15, "every stage edge and every edge that keeps focus");
+    for case in cases {
+        let name = case["name"].as_str().expect("name");
+        let status = |key: &str| (!case[key].is_null()).then(|| serde_json::from_value::<HistoryTimeTravel>(case[key].clone()).unwrap_or_else(|error| panic!("{name}: a kernel session: {error}")));
+        let (previous, next) = (status("previous"), status("next"));
+        assert_eq!(focus_name(time_travel_focus_target(previous.as_ref(), next.as_ref())), case["focus"], "{name}");
+    }
+}
+
+fn projected(key: &str, role: &str, depth: usize, focusable: bool) -> ui_contract::AccessibilityProjectionNode {
+    let mut node = chrome_status_accessibility_node(0, key, key.to_string());
+    node.role = role.to_string();
+    node.depth = depth;
+    node.focusable = focusable;
+    node.live = ui_contract::liveness_name(ui_contract::Liveness::Off).to_string();
+    node
+}
+
+/// ⚖️ LAW: in a history body's projection the editor target is the first enabled control under the inputs section — never
+/// its row, never a control outside the section — matched bare or surface-qualified; with no usable input it is the
+/// editor's Accept button; Next problem is its own button; a band control or the prompt is no body node.
+#[test]
+fn the_editor_target_is_the_first_enabled_input_control_else_accept() {
+    let surface = "framework.panel.history";
+    let mut nodes = vec![
+        projected("#0", "tree", 0, false),
+        projected(&format!("{surface}/framework.history.editor"), "group", 1, false),
+        projected(&format!("{surface}/framework.history.editor.accept.row"), "treeitem", 2, true),
+        projected(&format!("{surface}/framework.history.editor.accept"), "button", 3, true),
+        projected(&format!("{surface}/{TIME_TRAVEL_EDITOR_INPUTS_KEY}"), "group", 1, false),
+        projected(&format!("{surface}/framework.history.editor.input.dx.row"), "treeitem", 2, true),
+        projected(&format!("{surface}/framework.history.editor.input.dx"), "spinbutton", 3, true),
+        projected(&format!("{surface}/framework.history.editor.input.targets.useSelection"), "button", 3, true),
+        projected(&format!("{surface}/{TIME_TRAVEL_NEXT_PROBLEM_KEY}"), "button", 2, true),
+    ];
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(6), "the first input control, past its row");
+    nodes[6].disabled = true;
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(7), "a disabled control is passed over");
+    nodes[7].disabled = true;
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::Editor, &nodes), Some(3), "no usable input: Accept");
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &nodes), Some(8), "the section ends at the next shallower node");
+    let bare: Vec<_> = nodes.iter().cloned().map(|mut node| {
+        node.key = node.key.rsplit_once('/').map_or(node.key.clone(), |(_, key)| key.to_string());
+        node
+    }).collect();
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &bare), Some(8), "a bare key matches too");
+    assert_eq!(time_travel_focus_node(TimeTravelFocus::NextProblem, &nodes[..8]), None, "an absent button is no target");
+    assert_eq!((time_travel_focus_node(TimeTravelFocus::Dialog, &nodes), time_travel_focus_node(TimeTravelFocus::Control(TimeTravelVerb::Exit), &nodes)), (None, None));
+}
+
+/// 🖌️ Publishes the band's hits the way a presented frame does and resolves the waiting focus against them.
+fn present_band(shell: &mut ShellState) -> InputState<ActionDescriptor> {
+    let mut input = InputState::<ActionDescriptor>::default();
+    for hit in paint_band(shell) {
+        input.register_hit(hit);
+    }
+    input.publish_hits();
+    shell.resolve_time_travel_focus(&mut input);
+    input
+}
+
+fn focused_chrome(shell: &ShellState, input: &InputState<ActionDescriptor>) -> Vec<String> {
+    shell.chrome_accessibility_nodes(input.hits()).into_iter().filter(|node| node.focused).map(|node| node.key).collect()
+}
+
+/// ⚖️ LAW: each edge moves keyboard focus once its target is on screen — Cancel while a replay runs, Finalize on a ready
+/// review, the prompt while choosing — and the chrome projection the ARIA mirror reads marks exactly that control
+/// focused; replay progress leaves it alone; an editor that never shows falls back to the band's Accept after the settle
+/// time; a closed session drops a waiting focus.
+#[test]
+fn each_session_edge_focuses_its_band_control_or_the_prompt_and_a_missing_editor_falls_back_to_accept() {
+    let mut shell = session_shell();
+    shell.session.as_mut().expect("session").app.dialogs.push(finalize_dialog());
+    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor));
+    let input = present_band(&mut shell);
+    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Editor), "no history body on screen yet: still waiting");
+    assert!(focused_chrome(&shell, &input).is_empty());
+    shell.time_travel_focus = Some((TimeTravelFocus::Editor, 0.0));
+    present_band(&mut shell);
+    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Control(TimeTravelVerb::Accept)), "past the settle time the band's Accept stands in");
+    let input = present_band(&mut shell);
+    assert_eq!((shell.time_travel_focus, focused_chrome(&shell, &input)), (None, vec!["ui.timeTravel.accept".to_string()]));
+
+    let mut replaying = session("a running replay");
+    shell.observe_history_time_travel(Some(&replaying));
+    let input = present_band(&mut shell);
+    assert_eq!(focused_chrome(&shell, &input), ["shell.time-travel.cancel-replay"]);
+    replaying.done = Some(4);
+    shell.observe_history_time_travel(Some(&replaying));
+    assert_eq!(shell.time_travel_focus, None, "progress inside the replay moves nothing");
+
+    shell.observe_history_time_travel(Some(&session("a ready review")));
+    let input = present_band(&mut shell);
+    assert_eq!(focused_chrome(&shell, &input), ["shell.time-travel.finalize"]);
+
+    let choosing = session("the finalize prompt can go back");
+    shell.observe_history_time_travel(Some(&choosing));
+    assert_eq!(shell.time_travel_focus.map(|(focus, _)| focus), Some(TimeTravelFocus::Dialog));
+    present_band(&mut shell);
+    assert!(shell.time_travel_focus.is_some(), "the prompt is not open yet");
+    open_finalize_prompt(&mut shell, "Alternative");
+    let input = present_band(&mut shell);
+    assert_eq!(shell.time_travel_focus, None, "the open prompt holds focus");
+    assert!(input.hits().is_empty() && shell.chrome_build.dialog_open(), "under the prompt the band registers nothing; the prompt's own first stop is focused (its projection law lives with the prompt)");
+
+    shell.observe_history_time_travel(Some(&session("a ready review")));
+    shell.observe_history_time_travel(None);
+    assert_eq!(shell.time_travel_focus, None, "a closed session drops a waiting focus");
+}
+
+/// ⚖️ LAW (focus reaches the ARIA mirror): beginning an edit gives the first input control of the history body's draft
+/// editor the keyboard focus on the next presented frame — the control the mirror then focuses, not its row — and hands
+/// that window the keyboard; nothing is left waiting.
+#[test]
+fn beginning_an_edit_focuses_the_first_editor_input_in_the_published_projection() {
+    use super::shell_input_tests::tree_pointer_record;
+    const SURFACE: &str = "framework.history.focus-law";
+    let component = |wire: Value| serde_json::from_value::<ui_contract::Component>(wire).expect("history body component wire");
+    let records = vec![
+        tree_pointer_record(1, "#0", component(serde_json::json!({ "type": "tree" })), &[2, 4], None),
+        tree_pointer_record(2, "framework.history.editor", component(serde_json::json!({ "type": "treeSection", "label": "Drag selection", "defaultOpen": true })), &[3], None),
+        tree_pointer_record(3, "framework.history.editor.accept.row", component(serde_json::json!({ "type": "treeItem", "label": "Accept" })), &[5], None),
+        tree_pointer_record(5, TIME_TRAVEL_EDITOR_ACCEPT_KEY, component(serde_json::json!({ "type": "button", "label": "Accept" })), &[], Some("historyEditAccept")),
+        tree_pointer_record(4, TIME_TRAVEL_EDITOR_INPUTS_KEY, component(serde_json::json!({ "type": "treeSection", "label": "Inputs", "defaultOpen": true })), &[6], None),
+        tree_pointer_record(6, "framework.history.editor.input.dx.row", component(serde_json::json!({ "type": "treeItem", "label": "Offset x" })), &[7], None),
+        tree_pointer_record(7, "framework.history.editor.input.dx", component(serde_json::json!({ "type": "numberStepper", "value": 2.0, "step": 1.0, "uniform": false })), &[], None),
+    ];
+    let mut shell = session_shell();
+    let document = shell.publish_surface_records(SURFACE, records).expect("the history body publishes");
+    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    let (mut draw, mut atlas, icons, theme) = (DrawList::default(), FontAtlas::builtin(), IconAtlas::default(), Theme::default());
+    let mut input = InputState::<ActionDescriptor>::default();
+    let (mut scroll, mut collapsed, mut selects) = (HashMap::new(), HashMap::new(), HashMap::new());
+    let mut world3d_states = std::mem::take(&mut shell.world3d_states);
+    let mut world_resources = infinite_world::world::World3dBuildContext::new(infinite_world::world::WorldCursorWakeAuthority::new());
+    let body = Rect::new(0.0, 0.0, 420.0, 640.0);
+    crate::interpreter::begin_accessibility_visible_documents();
+    let mut cursor = UiDocumentFrameCursor::default();
+    let painted = (0..SHELL_WINDOW_PAINT_OPPORTUNITIES.min(1 << 20)).any(|_| {
+        let mut ctx = framework_widget_context(&mut draw, None, &mut atlas, Some(&icons), &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None, body.h);
+        let mut hosts = crate::scenes::SceneEngineHosts { chrome_labels: SceneChromeLabels::english(), world3d_states: &mut world3d_states, world_resources: &mut world_resources, window_id: SURFACE };
+        render_ui_document_step(&mut cursor, &document, body, &mut ctx, SURFACE, "test", ui_wgpu::wgpu::UiDriverDrag::Handle, &mut hosts)
+    });
+    assert!(painted, "the history body painted within its opportunity ceiling");
+    shell.register_retained_body_hits(SURFACE, body, &mut input);
+    shell.world3d_states = world3d_states;
+    shell.publish_retained_hit_registry(&mut input);
+    assert_eq!(shell.time_travel_focus, None, "the editor reached the screen and took the focus");
+    let nodes = crate::interpreter::published_accessibility_nodes_for_test(SURFACE);
+    let focused: Vec<_> = nodes.iter().filter(|node| node.focused).map(|node| (node.key.clone(), node.role.clone())).collect();
+    assert_eq!(focused.len(), 1, "one focused node: {focused:?}");
+    assert!(projected_key_is(&focused[0].0, "framework.history.editor.input.dx") && focused[0].1 == "spinbutton", "the stepper itself, not its row: {focused:?}");
+    assert_eq!(shell.chrome_build.focused_retained_surface.as_deref(), Some(SURFACE), "the history body holds the keyboard");
+}
+//#endregion 🎯️Focus
+
 //#region 🪟️RevealAndIndicator
 /// ⚖️ LAW: the edge into a session reveals the History tab once, later statuses of the same session leave a closed
 /// panel closed, and every pane's indicator is a named note under its own window id that no pane chip claims.
@@ -358,6 +563,24 @@ fn a_session_reveals_the_history_tab_and_each_pane_wears_an_indicator() {
     assert!(indicator.starts_with("framework.window.") && indicator.ends_with(".timeTravel.indicator"));
     assert!(shell.window_pane_chip_target(&indicator).is_none(), "no pane chip claims the indicator");
     assert_eq!((time_travel_indicator_caption(Locale::En), time_travel_indicator_caption(Locale::De)), ("Time travel", "Zeitreise"));
+}
+
+/// ⚖️ LAW (phone width): below the mobile breakpoint, where no anchor paints, the edge into a session opens the one
+/// mobile panel on the History tab that holds the editor; on a desktop the mobile panel stays shut.
+#[test]
+fn on_a_phone_the_session_start_opens_the_mobile_panel_on_history() {
+    let mut shell = session_shell();
+    shell.sync_dock_tabs();
+    shell.observe_history_time_travel(Some(&session("editing a mutation")));
+    assert!(!shell.mobile_panel_visible, "a desktop reveals the anchor, not the mobile panel");
+    let mut phone = session_shell();
+    phone.screen_w = 375.0;
+    phone.screen_h = 812.0;
+    phone.sync_dock_tabs();
+    assert!(phone.mobile_panel_active() && !phone.mobile_panel_visible);
+    phone.observe_history_time_travel(Some(&session("editing a mutation")));
+    assert!(phone.mobile_panel_visible, "the mobile panel opens");
+    assert_eq!(phone.mobile_panel_path.last().map(String::as_str), Some(FRAMEWORK_PANEL_TAB_HISTORY_ID), "on the History tab");
 }
 
 /// ⚖️ LAW: every non-stale dispatch reply carries the session status (absent = closed); a stale reply changes nothing;
@@ -413,10 +636,10 @@ fn unsolicited_progress_patches_move_the_band_between_dispatches() {
 //#endregion 🪟️RevealAndIndicator
 
 //#region 🛑️HistoryRefusals
-/// ⚖️ LAW: every history-edit refusal of the shared corpus (`refusals`: the hub's `history.*`, the session's
-/// `timeTravel.*` including a cancelled replay and an invalid alternative name) reads its copy in both locales wherever
-/// a fault surfaces — the band's fault line and a dispatch fault (a notice carrying the code at the corpus severity) —
-/// and nothing else is mistaken for one.
+/// ⚖️ LAW: every history-edit refusal of the shared corpus (`refusals`: the hub's `history.*`, and every `timeTravel.*`
+/// code the session, its hosting runtime and its replay driver answer — exactly the framework's `TIME_TRAVEL_CODE_LABELS`)
+/// reads its copy in both locales wherever a fault surfaces — the band's fault line and a dispatch fault (a notice
+/// carrying the code at the corpus severity) — and nothing else is mistaken for one.
 #[test]
 fn history_refusals_are_localized_notices_carrying_their_code() {
     let corpus = corpus();
@@ -433,7 +656,9 @@ fn history_refusals_are_localized_notices_carrying_their_code() {
             (row["code"].as_str().expect("code").to_string(), row["text"]["en"].as_str().expect("en").to_string(), row["text"]["de"].as_str().expect("de").to_string(), severity)
         })
         .collect();
-    assert!(refusals.len() >= 10, "the hub's three and the session's seven");
+    let time_travel_codes: std::collections::BTreeSet<&str> = refusals.iter().map(|(code, ..)| code.as_str()).filter(|code| code.starts_with("timeTravel.")).collect();
+    assert_eq!(time_travel_codes, semio_framework_time_travel::TIME_TRAVEL_CODE_LABELS.iter().map(|(code, _)| *code).collect(), "the corpus names every timeTravel code the framework answers, and no other");
+    assert_eq!(refusals.len(), time_travel_codes.len() + 3, "the hub's three beside them");
     for (code, en, de, severity) in refusals {
         let (code, en, de) = (code.as_str(), en.as_str(), de.as_str());
         for (locale, text) in [(Locale::En, en), (Locale::De, de)] {
@@ -553,6 +778,7 @@ fn peer_rows(corpus: &Value) -> BTreeMap<String, HistoryEntry> {
                     editable: true,
                     pending: false,
                     edited: false,
+                    introduced: false,
                     store: None,
                 })
                 .collect();

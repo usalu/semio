@@ -62,10 +62,10 @@ Feature: Apply every typed s.space.space index mutation against an independent P
     Then each reaches the committed after-snapshot under the committed outcome status and the two agree
     Examples:
       | id              | dir                | fixture                              |
-      | create-artifact | 🌱create-artifact  | 🧪️appends-artifact-3-to-the-index      |
-      | delete-artifact | 🗑️delete-artifact  | 🧪️removes-artifact-2-from-the-index    |
+      | create-artifact | 🌱create-artifact  | 🧪️appends      |
+      | delete-artifact | 🗑️delete-artifact  | 🧪️removes    |
       | rename-artifact | 🏷️rename-artifact  | 🧪️renames-artifact-1                   |
-      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps-artifact-1-with-a-new-editor  |
+      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps  |
 
   @id-inverse
   @level-exhaustive
@@ -79,10 +79,10 @@ Feature: Apply every typed s.space.space index mutation against an independent P
     Then both restore the before-snapshot and agree on the mutated and the restored document
     Examples:
       | id              | dir                | fixture                              |
-      | create-artifact | 🌱create-artifact  | 🧪️appends-artifact-3-to-the-index      |
-      | delete-artifact | 🗑️delete-artifact  | 🧪️removes-artifact-2-from-the-index    |
+      | create-artifact | 🌱create-artifact  | 🧪️appends      |
+      | delete-artifact | 🗑️delete-artifact  | 🧪️removes    |
       | rename-artifact | 🏷️rename-artifact  | 🧪️renames-artifact-1                   |
-      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps-artifact-1-with-a-new-editor  |
+      | touch-artifact  | 🕒touch-artifact   | 🧪️stamps  |
 
   @id-identity-round-trip
   @level-long

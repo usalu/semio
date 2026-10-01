@@ -3,9 +3,15 @@
   "$id": "https://json.schemas.assets.semio-tech.com/repo/source-ownership.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "entries", "ownerDirectoryChains"],
+  "required": [
+    "version",
+    "entries",
+    "ownerDirectoryChains"
+  ],
   "properties": {
-    "version": { "const": 1 },
+    "version": {
+      "const": 1
+    },
     "entries": {
       "type": "array",
       "minItems": 22,
@@ -13,24 +19,109 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["legacy", "owner", "kind", "boundary", "anchor"],
+        "required": [
+          "legacy",
+          "owner",
+          "kind",
+          "boundary",
+          "anchor"
+        ],
         "properties": {
-          "legacy": { "type": "string", "minLength": 1 },
-          "owner": { "type": "string", "minLength": 1 },
-          "kind": { "enum": ["dotnet", "rust", "typescript", "typescript-declaration", "typescript-jsx"] },
-          "boundary": { "enum": ["cargo-bin", "cargo-lib", "declaration", "dotnet-compile", "next-layout", "next-page", "next-route", "none", "package-reexport"] },
-          "anchor": { "type": "string", "minLength": 1 },
-          "glue": { "type": "string", "minLength": 1 },
-          "exports": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } }
+          "legacy": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "dotnet",
+              "rust",
+              "typescript",
+              "typescript-declaration",
+              "javascript-declaration",
+              "typescript-jsx"
+            ]
+          },
+          "boundary": {
+            "enum": [
+              "cargo-bin",
+              "cargo-lib",
+              "declaration",
+              "dotnet-compile",
+              "next-layout",
+              "next-page",
+              "next-route",
+              "none",
+              "package-reexport"
+            ]
+          },
+          "anchor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "glue": {
+            "type": "string",
+            "minLength": 1
+          },
+          "exports": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         },
         "allOf": [
           {
-            "if": { "properties": { "boundary": { "enum": ["cargo-bin", "cargo-lib", "dotnet-compile", "next-layout", "next-page", "next-route", "package-reexport"] } } },
-            "then": { "properties": { "glue": true }, "required": ["glue"] }
+            "if": {
+              "properties": {
+                "boundary": {
+                  "enum": [
+                    "cargo-bin",
+                    "cargo-lib",
+                    "dotnet-compile",
+                    "next-layout",
+                    "next-page",
+                    "next-route",
+                    "package-reexport"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "glue": true
+              },
+              "required": [
+                "glue"
+              ]
+            }
           },
           {
-            "if": { "properties": { "boundary": { "enum": ["next-layout", "next-page", "next-route"] } } },
-            "then": { "properties": { "exports": true }, "required": ["exports"] }
+            "if": {
+              "properties": {
+                "boundary": {
+                  "enum": [
+                    "next-layout",
+                    "next-page",
+                    "next-route"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "exports": true
+              },
+              "required": [
+                "exports"
+              ]
+            }
           }
         ]
       }
@@ -42,10 +133,19 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["owner", "parentKind", "members"],
+        "required": [
+          "owner",
+          "parentKind",
+          "members"
+        ],
         "properties": {
-          "owner": { "type": "string", "minLength": 1 },
-          "parentKind": { "const": "modules" },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parentKind": {
+            "const": "modules"
+          },
           "members": {
             "type": "array",
             "minItems": 1,
@@ -53,14 +153,22 @@
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["name", "kind"],
+              "required": [
+                "name",
+                "kind"
+              ],
               "properties": {
-                "name": { "type": "string", "minLength": 1 },
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
                 "kind": {
                   "enum": [
                     "members-of-modules",
                     "members-of-members-of-modules",
-                    "members-of-members-of-members-of-modules"
+                    "members-of-members-of-members-of-modules",
+                    "repo-test-dependencies",
+                    "repo-dependency-runtime"
                   ]
                 }
               }

@@ -10,7 +10,7 @@
 //! SECOND real-world fem2d model — the first is the timber portal frame the subset-level
 //! differential cases share. Every value is in SI base units.
 //!
-//! ⛔️ `delete-node` guards only the target's EXISTENCE. It has no cascade and no referential guard at all — deleting a node an element still names is accepted (see the sibling `🚫️removes-node-n3-without-6eab3f` vector); only a node that is not there at all is refused.
+//! ⛔️ `delete-node` guards only the target's EXISTENCE. It has no cascade and no referential guard at all — deleting a node an element still names is accepted (see the sibling `🚫️removes` vector); only a node that is not there at all is refused.
 
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use crate::standards::v1::subsets::any::schema::mutations::{apply_fem2d_mutation, inverse_fem2d_mutation};

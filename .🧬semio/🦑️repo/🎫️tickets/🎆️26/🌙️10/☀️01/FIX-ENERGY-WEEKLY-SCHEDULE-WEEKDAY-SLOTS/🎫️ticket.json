@@ -1,0 +1,14 @@
+{
+  "title": "Fix Energy Weekly Schedule Weekday Slots",
+  "emoji": "🗓️",
+  "status": "closed",
+  "description": "Fix the energy engine weekly-schedule weekday slot mapping. Date::day_of_week is 1=Sunday through 7=Saturday. weekly_value and the kernel index with min(day_of_week, 6), so slot 0 is never read and Friday shares Saturday's slot. Map onto the Sunday-first dailyScheduleIds order documented by the weekly schedule leaf (EnergyPlus Schedule:Week:Daily). Add a regression test, a language-agnostic fixture, and a honeybee comparison.",
+  "summary": "Weekly schedule lookup now uses Sunday-first slots: day_of_week 1=Sunday maps to slot 0 and 7=Saturday maps to slot 6, in both ScheduleSet::weekly_value and the kernel. A fixture case, two Rust regressions, and a Honeybee Schedule:Week:Daily comparison lock the order.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2764"
+  },
+  "goal": "🎯runningframework🎯runningproducts🎯runningos🎯runnings🎯runningplugins🎯runningenergy🎯runningmodel",
+  "sessions": [
+    "⚪6a28cda29dca497e9b4d2d2f0aab3dd7"
+  ]
+}

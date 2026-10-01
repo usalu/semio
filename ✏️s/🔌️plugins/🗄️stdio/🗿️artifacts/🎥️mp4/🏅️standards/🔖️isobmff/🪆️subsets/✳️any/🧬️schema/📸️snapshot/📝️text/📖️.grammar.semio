@@ -1,12 +1,25 @@
-dialect grammar stdio.mp4.snapshot
-root = document
-; The preamble is stripped before parsing. The body is a schema-first logical record tree.
-document = record
-record = IDENT "{" field* "}"
-field = IDENT "=" value
-value = IDENT / STRING / INT / record / list / object
-list = "[" value* "]"
-object = "{" field* "}"
-IDENT = 1*(ALPHA / DIGIT / "-" / "_")
-STRING = DQUOTE *(%x20-21 / %x23-5B / %x5D-10FFFF) DQUOTE
-INT = ["-"] 1*DIGIT
+dialect grammar
+grammar stdio.mp4.snapshot
+extension semio
+start document
+
+document = "schema" "=" text "ftyp" "=" ftyp "movie" "=" movie "tracks" "=" "[" track* "]"
+ftyp = "major-brand" "=" text "minor-version" "=" INT "compatible-brands" "=" "[" text* "]"
+movie = "creation-time" "=" INT "modification-time" "=" INT "timescale" "=" INT "duration" "=" INT "rate" "=" INT "volume" "=" INT "matrix" "=" matrix "next-track-id" "=" INT ("title" "=" text)? ("encoder" "=" text)?
+track = "track-id" "=" INT "timescale" "=" INT "width" "=" INT "height" "=" INT "codec" "=" codec "metadata" "=" metadata "chunk-sample-counts" "=" "[" INT* "]" "samples" "=" "[" sample* "]"
+codec = "format" "=" format "nal-length-size" "=" INT "sps" "=" units "pps" "=" units ("extension" "=" avc-extension)? ("hevc" "=" hevc-config)?
+format = "avc1" / "avc3" / "hvc1" / "hev1" / "jpeg" / "mjpa"
+avc-extension = "chroma-format" "=" INT "bit-depth-luma-minus8" "=" INT "bit-depth-chroma-minus8" "=" INT "sps-ext" "=" units
+hevc-config = "general-profile-space" "=" INT "general-tier-flag" "=" boolean "general-profile-idc" "=" INT "general-profile-compatibility-flags" "=" INT "general-constraint-indicator-flags" "=" INT "general-level-idc" "=" INT "min-spatial-segmentation-idc" "=" INT "parallelism-type" "=" INT "chroma-format-idc" "=" INT "bit-depth-luma-minus8" "=" INT "bit-depth-chroma-minus8" "=" INT "avg-frame-rate" "=" INT "constant-frame-rate" "=" INT "num-temporal-layers" "=" INT "temporal-id-nested" "=" boolean "arrays" "=" "[" hevc-array* "]"
+hevc-array = "array-completeness" "=" boolean "nal-unit-type" "=" INT "nal-units" "=" units
+metadata = "creation-time" "=" INT "modification-time" "=" INT "flags" "=" INT "duration" "=" INT "layer" "=" INT "alternate-group" "=" INT "volume" "=" INT "matrix" "=" matrix "media-duration" "=" INT "media-creation-time" "=" INT "media-modification-time" "=" INT "language" "=" text "quality" "=" INT "handler-name" "=" text "edits" "=" "[" edit* "]" "visual" "=" visual ("color" "=" color)? ("pixel-aspect-ratio" "=" pixel-aspect-ratio)? ("bitrate" "=" bitrate)?
+edit = "segment-duration" "=" INT "media-time" "=" INT "media-rate-integer" "=" INT "media-rate-fraction" "=" INT
+visual = "data-reference-index" "=" INT "version" "=" INT "revision-level" "=" INT "vendor" "=" INT "temporal-quality" "=" INT "spatial-quality" "=" INT "horizontal-resolution" "=" INT "vertical-resolution" "=" INT "frame-count" "=" INT "compressor-name" "=" text "depth" "=" INT "color-table-id" "=" INT
+color = "color-type" "=" text "primaries" "=" INT "transfer" "=" INT "matrix" "=" INT ("full-range" "=" boolean)?
+pixel-aspect-ratio = "horizontal-spacing" "=" INT "vertical-spacing" "=" INT
+bitrate = "buffer-size" "=" INT "maximum" "=" INT "average" "=" INT
+sample = "data" "=" STRING "duration" "=" INT "cts-offset" "=" INT "sync" "=" boolean
+matrix = INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT "," INT
+units = "[" ("[" INT* "]")* "]"
+boolean = "true" / "false"
+text = STRING / IDENT / INT / FLOAT

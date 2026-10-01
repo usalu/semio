@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://framework/os/renderer/canvas2d-host/gumball-meta",
+  "title": "Canvas2d gumball meta layer",
+  "description": "🧭️ The `meta:gumball` layer a plugin puts into its Canvas2d scene to arm the host gumball — React `Canvas2dGumballOverlay` and its wgpu twin `canvas2d_gumball` read it the same way. Hosts paint the handles at `pivotLayer`, map pointer motion back to model units through `modelToLayer` and dispatch `translateSelection` / `rotateSelection` / `scaleSelection` over the `selectionIds` pinned at pointer-down.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "role", "gumball"],
+  "properties": {
+    "id": { "const": "meta:gumball" },
+    "role": { "const": "meta" },
+    "gumball": { "$ref": "#/definitions/Gumball" }
+  },
+  "definitions": {
+    "Gumball": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["active", "pivotLayer", "selectionIds", "config"],
+      "properties": {
+        "active": { "type": "boolean", "description": "Only an active gumball is painted." },
+        "liveDispatch": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: the app previews the open gesture itself, so hosts stream it — `phase: stream` per pointer move, `commit` on release, `abort{reason}` on cancel. false: hosts preview locally and dispatch ONE one-shot pose delta (no `phase`) on release; a cancel dispatches nothing."
+        },
+        "pivotLayer": { "$ref": "#/definitions/Point", "description": "The pivot in layer (world) units — where the handles are painted and what a turn or scaling is measured about." },
+        "modelToLayer": { "$ref": "#/definitions/ModelToLayer" },
+        "selectionIds": { "type": "array", "items": { "type": "string", "minLength": 1 }, "uniqueItems": true },
+        "config": { "$ref": "#/definitions/Config" }
+      }
+    },
+    "Point": {
+      "type": "array",
+      "items": [{ "type": "number" }, { "type": "number" }],
+      "minItems": 2,
+      "maxItems": 2,
+      "additionalItems": false
+    },
+    "ModelToLayer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scale", "offset"],
+      "description": "The affine map from model to layer units, per axis: layer = model × scale + offset. Absent = identity (the app's model IS its layer space).",
+      "properties": {
+        "scale": {
+          "type": "array",
+          "items": [{ "type": "number", "not": { "const": 0 } }, { "type": "number", "not": { "const": 0 } }],
+          "minItems": 2,
+          "maxItems": 2,
+          "additionalItems": false
+        },
+        "offset": { "$ref": "#/definitions/Point" }
+      }
+    },
+    "Config": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["moveAxes", "rotate", "scaleAxes", "scaleUniform"],
+      "properties": {
+        "moveAxes": { "type": "boolean" },
+        "rotate": { "type": "boolean" },
+        "scaleAxes": { "type": "boolean" },
+        "scaleUniform": { "type": "boolean" }
+      }
+    }
+  }
+}

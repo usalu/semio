@@ -42,8 +42,8 @@
     },
     {
       "legacy": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟦️.d.mts",
-      "kind": "typescript-declaration",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
+      "kind": "javascript-declaration",
       "boundary": "declaration",
       "anchor": "RuntimeComponentClosureRowV1"
     },
@@ -227,7 +227,7 @@
       ]
     },
     {
-      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟦️.d.mts",
+      "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.d.mts",
       "parentKind": "modules",
       "members": [
         {
@@ -236,11 +236,11 @@
         },
         {
           "name": "🕸️dependencies",
-          "kind": "members-of-members-of-modules"
+          "kind": "repo-test-dependencies"
         },
         {
           "name": "🧩️runtime",
-          "kind": "members-of-members-of-members-of-modules"
+          "kind": "repo-dependency-runtime"
         }
       ]
     }

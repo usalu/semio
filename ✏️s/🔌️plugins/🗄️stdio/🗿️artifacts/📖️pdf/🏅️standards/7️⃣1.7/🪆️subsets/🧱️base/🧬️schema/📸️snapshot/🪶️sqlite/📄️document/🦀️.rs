@@ -22,7 +22,7 @@ impl store::ArtifactSqliteSnapshot for PdfSnapshot{
             bound.add(8_192)?;
             for value in &row.values{match value{
                 V::Text(text)=>{bound.repeated(text.len(),16)?;bound.add(256)?;},
-                V::Blob(bytes)=>{bound.repeated(bytes.len(),256)?;bound.add(256)?;},
+                V::Blob(bytes)=>{bound.repeated(bytes.len(),16)?;bound.add(256)?;},
                 V::Integer(_)|V::Real(_)|V::Null=>bound.add(2_048)?,
             }}
         }}

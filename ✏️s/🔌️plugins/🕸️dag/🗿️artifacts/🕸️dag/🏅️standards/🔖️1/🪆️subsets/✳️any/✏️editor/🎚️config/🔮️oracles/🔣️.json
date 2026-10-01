@@ -120,35 +120,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
           "bytes": 54
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:87f4e9a5ed875bd2b6b71cfe97e09fcd599074f0933d73bca1ebee119d8cca22",
           "bytes": 138
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
           "bytes": 54
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:507faf29896754b9a7a3ac3d9d4f918b62408609c5b06a5f797f6f0d0c0a55e7",
           "bytes": 60
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🔄️replace-config/✅️replace-config-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🔄️replace-config/✅️replace/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44
@@ -185,35 +185,35 @@
       "files": [
         {
           "role": "expected-before",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/⬅️before/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/📸️snapshot/⬅️before/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:05e3ebe33b6ba15677d2d2dc6c22627bf1aa9b598fde685b0450463c675b0f07",
           "bytes": 54
         },
         {
           "role": "mutation",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🦠️mutation/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🦠️mutation/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:4a919f231d6b86a95fd68906433202d02a0f7375b7411c6454f6eb554892fc7d",
           "bytes": 91
         },
         {
           "role": "expected-after",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/📸️snapshot/➡️after/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/📸️snapshot/➡️after/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:a1a32eeffd2dfde67a5dbe55760b0df9d9b9bb3cf5b4cd633ba31ad15584b3e1",
           "bytes": 54
         },
         {
           "role": "expected-diff",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🔺️diff/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🔺️diff/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:dba5e78d652768c8229ea25fcb63145419fde0ba45a80c2293787d52cc55b53a",
           "bytes": 60
         },
         {
           "role": "declared-outcome",
-          "path": "../🧫️fixtures/🎥️change-camera/✅️change-camera-applied/🎯️outcome/🔣️.json",
+          "path": "../🧫️fixtures/🎥️change-camera/✅️change/🎯️outcome/🔣️.json",
           "mediaType": "application/json",
           "sha256": "sha256:7a5a7d68df9ad1703f7e5415caa03230228f1a6a4edf85b60d86f8ee5391f8ab",
           "bytes": 44

@@ -57,7 +57,7 @@ fn rectangle_profile() -> Vec<Pnt3> {
 }
 
 /// 📐 A regular hexagon of circumradius 1 in the `z = 0` plane, counter-clockwise about `+Z` — the
-/// `🍄️hexagonal-mushroom-column` example's own profile shape, whose 12 mis-wound cap↔lateral edges
+/// `🍄️hexagonal-mushroom` example's own profile shape, whose 12 mis-wound cap↔lateral edges
 /// were the second signature of the defect.
 fn hexagon_profile() -> Vec<Pnt3> {
     (0..6)

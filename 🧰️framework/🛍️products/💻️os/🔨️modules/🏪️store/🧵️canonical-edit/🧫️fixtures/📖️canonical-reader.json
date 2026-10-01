@@ -7,8 +7,8 @@
     7,
     4096
   ],
-  "expectedByteLength": 4964,
-  "expectedJsonSha256": "c6f612c4cbe854362771a36663b370c076bfc602846f224edb74c8a97a8eb878",
+  "expectedByteLength": 4976,
+  "expectedJsonSha256": "6fa976d6184bc9b931d2efdd6bcce0df1a99581823783eb4b6173c22820699ce",
   "lifecycle": [
     "zero-grant",
     "before-poll-cancel",

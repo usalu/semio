@@ -193,3 +193,10 @@ pub fn canonical_rule_index(snapshot: &Wfc3dSnapshot, id: &str) -> usize {
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🪶️sqlite/🦀️.rs"]
+mod sqlite_tests;
+
+#[path="🪶️sqlite/🦀️.rs"]
+pub mod sqlite;

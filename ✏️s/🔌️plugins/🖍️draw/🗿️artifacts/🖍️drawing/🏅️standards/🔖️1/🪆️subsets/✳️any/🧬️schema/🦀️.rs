@@ -553,14 +553,6 @@ fn segment_to_point(segment: &PathSegment) -> Option<[f64; 2]> {
     }
 }
 
-fn transform_world_point(transform: &DrawingTransform, x: f64, y: f64) -> (f64, f64) {
-    let sx = x * transform.scale_x + y * transform.shear;
-    let sy = y * transform.scale_y;
-    let cos = transform.rotation.cos();
-    let sin = transform.rotation.sin();
-    (transform.x + sx * cos - sy * sin, transform.y + sx * sin + sy * cos)
-}
-
 fn scene_node_for_path(base: &DrawingLayerBase, segments: Vec<PathSegment>) -> DrawingSceneNode {
     DrawingSceneNode {
         id: base.id.clone(),

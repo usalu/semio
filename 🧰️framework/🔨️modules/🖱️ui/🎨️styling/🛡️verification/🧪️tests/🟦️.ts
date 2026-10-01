@@ -41,7 +41,7 @@ export function proveStylingVerificationContractV1(): number {
       const walk = (node: ts.Node): void => { if (ts.isStringLiteralLike(node)) { literals.push(node.text); if (colorSource(path)) colorLiterals.push(node.text); } ts.forEachChild(node, walk); };
       walk(ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX));
     }
-    assert.equal(literals.some(value => value.includes("w-[13px]")), row.expected.px.length > 0, `${row.id}: TypeScript sizing oracle`);
+    assert.equal(literals.some(value => /\[(?:-?(?:[0-9]+(?:\.[0-9]+)?|\.[0-9]+))px\]/u.test(value)), row.expected.px.length > 0, `${row.id}: TypeScript sizing oracle`);
     const colors = colorLiterals.flatMap(value => value.match(/[^\s]*#[^\s]*|\b(?:rgba?|hsla?)\([^)]*\)/g) ?? []);
     assert.equal(colors.some(value => colorString.get(value) !== null), row.expected.color.length > 0, `${row.id}: TypeScript and color-string oracle`);
     for (const kind of ["px", "color"] as const) {
@@ -61,8 +61,11 @@ export function proveStylingVerificationContractV1(): number {
 export async function proveIndependentStylingVerificationContractV1(): Promise<void> {
   const { build } = await import("esbuild");
   const path = resolve(import.meta.dirname, "🟦️.ts");
+  const products = resolve(import.meta.dirname, "../../../../../🛍️products") + "/";
   const program = `import { proveStylingVerificationContractV1 } from ${JSON.stringify(path)}; process.stdout.write(JSON.stringify({ vectors: proveStylingVerificationContractV1() }));`;
-  const result = await build({ stdin: { contents: program, resolveDir: import.meta.dirname, loader: "ts" }, bundle: true, platform: "node", format: "esm", external: ["typescript"], write: false });
+  const result = await build({ stdin: { contents: program, resolveDir: import.meta.dirname, loader: "ts" }, bundle: true, platform: "node", format: "esm", external: ["typescript"], write: false, plugins: [{ name: "framework-product-removal", setup(builder) {
+    builder.onLoad({ filter: /.*/ }, input => input.path.replaceAll("\\", "/").startsWith(products.replaceAll("\\", "/")) ? { errors: [{ text: "General styling imports a concrete framework product: " + input.path }] } : undefined);
+  } }] });
   const node = Bun.spawnSync(["node", "--input-type=module"], { stdin: Buffer.from(result.outputFiles![0]!.text), stdout: "pipe", stderr: "pipe" });
   assert.equal(node.exitCode, 0, Buffer.from(node.stderr).toString());
   assert.deepEqual(JSON.parse(Buffer.from(node.stdout).toString()), { vectors: corpus.scopes.length + corpus.sources.length + corpus.scans.length });

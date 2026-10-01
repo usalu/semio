@@ -1,0 +1,32 @@
+{
+  "case": "log-slider",
+  "kind": "component",
+  "description": "A log-scale Slider over the soft travel 0.1..10 with ticks at 0.25, 0.5, 1, 2 and 4, two fraction digits, and a hard lower limit excluding 0 whose refusal names it.",
+  "outcome": "accept",
+  "limits": null,
+  "tree": {
+    "root": 0,
+    "nodeCount": 1,
+    "shape": [
+      {
+        "id": 0,
+        "key": "#0",
+        "type": "slider",
+        "children": []
+      }
+    ]
+  },
+  "accessibility": [
+    {
+      "id": 0,
+      "label": "Factor",
+      "description": null,
+      "live": "off",
+      "shortcut": null,
+      "hidden": false
+    }
+  ],
+  "actionIds": [
+    "app.setFactor@1"
+  ]
+}

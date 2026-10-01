@@ -4,8 +4,8 @@ import { gltfWireIndex, gltfWireObject, gltfWireRequired } from "../../../📸�
 import { type GltfDiff, type GltfPhase, gltfWirePhase, parseGltfDiff } from "../../../🔺️diff/🟦️.ts";
 
 export interface GltfUnbindNodeChildPayload {
-  parent: number;
-  child: number;
+  parent: bigint;
+  child: bigint;
 }
 
 export type UnbindNodeChildMutation = GltfPhase<GltfUnbindNodeChildPayload, GltfDiff>;

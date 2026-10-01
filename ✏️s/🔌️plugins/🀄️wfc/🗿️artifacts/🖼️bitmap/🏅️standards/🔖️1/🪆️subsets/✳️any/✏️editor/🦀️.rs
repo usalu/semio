@@ -30,7 +30,7 @@ use crate::editor::bitmap::commands::{pin_solution, set_active_example};
 use crate::editor::bitmap::modes::edit;
 use crate::editor::bitmap::modes::edit::tools::fill as fill_tool;
 use crate::editor::bitmap::modes::edit::windows::input::transient::{self as input_transient, BitmapInputWindowTransient, BitmapInputWindowTransientOwner};
-use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_dispatch, bitmap_brush_preview, BitmapStrokePhase, BrushToolRequest};
+use crate::editor::bitmap::modes::edit::windows::input::utilities::brush::{bitmap_brush_dispatch, bitmap_brush_pointer_stroke, bitmap_brush_preview, BitmapBrushPointer, BitmapStrokePhase, BrushToolRequest};
 use crate::editor::bitmap::modes::edit::windows::{input, output};
 use crate::editor::bitmap::transient::{BitmapTransient, BitmapTransientMutation, SetSolve};
 use crate::mutations::{add_palette_color, change_model, change_palette_color, change_seed, pin_pixel, remove_palette_color, resize_input, resize_output, set_input_pixels, unpin_pixel, BitmapStrokePoint};
@@ -87,6 +87,21 @@ pub enum BitmapEditorCommand {
     SetActiveExample { example_id: String },
     #[dsl(key = "pin-solution")]
     PinSolution { pixels: String, contradiction: bool },
+    /// 🖱️ A canvas press in world coordinates: on the input surface, a primary press opens a brush stroke.
+    #[dsl(key = "canvasPointerDown")]
+    CanvasPointerDown { surface_id: String, world_x: Option<f64>, world_y: Option<f64>, button: u32 },
+    /// 🖱️ A batch of canvas samples in world coordinates: streams the open brush stroke, a hover otherwise.
+    #[dsl(key = "canvasPointerMove")]
+    CanvasPointerMove { surface_id: String, world_xs: Vec<f64>, world_ys: Vec<f64> },
+    /// 🖱️ A canvas release in world coordinates: commits the open brush stroke, or aborts it when `cancelled`.
+    #[dsl(key = "canvasPointerUp")]
+    CanvasPointerUp { surface_id: String, world_x: Option<f64>, world_y: Option<f64>, cancelled: bool },
+    /// 🖱️ A canvas double click: declared so it is never refused, inert on every bitmap pane.
+    #[dsl(key = "canvasDoubleClick")]
+    CanvasDoubleClick,
+    /// 🎥️ The canvas host's debounced camera echo: declared and inert, every pointer verb carries world coordinates.
+    #[dsl(key = "setCamera")]
+    SyncCamera,
 }
 
 impl protocol::OpBinary for BitmapEditorCommand {
@@ -123,6 +138,11 @@ pub const BITMAP_TOOL_IDS: &[&str] = &[
     "commit-fill-solve",
     "setActiveExample",
     "pin-solution",
+    "canvasPointerDown",
+    "canvasPointerMove",
+    "canvasPointerUp",
+    "canvasDoubleClick",
+    "setCamera",
 ];
 
 /// 🏷️ The manifest action id one command was declared under — command-log labelling and the
@@ -145,6 +165,25 @@ pub fn bitmap_command_id(command: &BitmapEditorCommand) -> &'static str {
         BitmapEditorCommand::CommitFillSolve { .. } => "commit-fill-solve",
         BitmapEditorCommand::SetActiveExample { .. } => "setActiveExample",
         BitmapEditorCommand::PinSolution { .. } => "pin-solution",
+        BitmapEditorCommand::CanvasPointerDown { .. } => "canvasPointerDown",
+        BitmapEditorCommand::CanvasPointerMove { .. } => "canvasPointerMove",
+        BitmapEditorCommand::CanvasPointerUp { .. } => "canvasPointerUp",
+        BitmapEditorCommand::CanvasDoubleClick => "canvasDoubleClick",
+        BitmapEditorCommand::SyncCamera => "setCamera",
+    }
+}
+
+impl BitmapEditorCommand {
+    /// 🖱️ The brush pointer event a canvas verb on the INPUT surface carries; `None` for every other command and for a
+    /// pointer verb on another pane.
+    pub fn brush_pointer(&self) -> Option<BitmapBrushPointer> {
+        let world = |x: &Option<f64>, y: &Option<f64>| x.zip(*y).map(|(x, y)| [x, y]);
+        match self {
+            Self::CanvasPointerDown { surface_id, world_x, world_y, button } if input::owns_surface(surface_id) => Some(BitmapBrushPointer::Down { world: world(world_x, world_y), button: *button }),
+            Self::CanvasPointerMove { surface_id, world_xs, world_ys } if input::owns_surface(surface_id) => Some(BitmapBrushPointer::Move { samples: world_xs.iter().zip(world_ys).map(|(x, y)| [*x, *y]).collect() }),
+            Self::CanvasPointerUp { surface_id, world_x, world_y, cancelled } if input::owns_surface(surface_id) => Some(BitmapBrushPointer::Up { world: world(world_x, world_y), cancelled: *cancelled }),
+            _ => None,
+        }
     }
 }
 //#endregion 🔖️Command
@@ -177,6 +216,19 @@ mod args_bridge {
     fn flag(args: Option<&dsl::DslValue>, key: &str) -> Option<bool> {
         let value = field(args, key)?;
         value.as_bool().or_else(|| value.as_str()?.parse().ok())
+    }
+
+    /// 🌍️ A canvas move's world samples — `worldSamples` (`[x, y]` pairs, oldest first), else its one `worldX` /
+    /// `worldY` — split into two coordinate columns; a malformed pair is skipped.
+    fn world_samples(args: Option<&dsl::DslValue>) -> (Vec<f64>, Vec<f64>) {
+        let pairs: Vec<(f64, f64)> = match field(args, "worldSamples").and_then(dsl::DslValue::as_array) {
+            Some(rows) => rows.iter().filter_map(|row| match row.as_array() {
+                Some([x, y]) => x.as_f64().zip(y.as_f64()),
+                _ => None,
+            }).collect(),
+            None => number(args, "worldX").zip(number(args, "worldY")).into_iter().collect(),
+        };
+        pairs.into_iter().unzip()
     }
 
     /// 📍️ The stroke points of a `paint-stroke` dispatch — each `{x, y}` or `[x, y]`, non-negative whole cells —
@@ -244,6 +296,14 @@ mod args_bridge {
                 height: u32_or("height", 0),
             },
             "pin-solution" => BitmapEditorCommand::PinSolution { pixels: text(args, "pixels").unwrap_or_default(), contradiction: bool_or("contradiction", false) },
+            "canvasPointerDown" => BitmapEditorCommand::CanvasPointerDown { surface_id: text(args, "surfaceId").unwrap_or_default(), world_x: number(args, "worldX"), world_y: number(args, "worldY"), button: u32_or("button", 0) },
+            "canvasPointerMove" => {
+                let (world_xs, world_ys) = world_samples(args);
+                BitmapEditorCommand::CanvasPointerMove { surface_id: text(args, "surfaceId").unwrap_or_default(), world_xs, world_ys }
+            }
+            "canvasPointerUp" => BitmapEditorCommand::CanvasPointerUp { surface_id: text(args, "surfaceId").unwrap_or_default(), world_x: number(args, "worldX"), world_y: number(args, "worldY"), cancelled: bool_or("cancelled", false) },
+            "canvasDoubleClick" => BitmapEditorCommand::CanvasDoubleClick,
+            "setCamera" => BitmapEditorCommand::SyncCamera,
             _ => return Err(unknown(action)),
         })
     }
@@ -277,11 +337,16 @@ const BITMAP_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[
     artifact_route("pin-pixel"),
     artifact_route("unpin-pixel"),
     window_config_route("set-active-color"),
-    ArtifactToolPublicationContract { tool_id: "paint-stroke", lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] },
+    brush_route("paint-stroke"),
     ArtifactToolPublicationContract { tool_id: "solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     ArtifactToolPublicationContract { tool_id: "commit-fill-solve", lanes: &[ArtifactToolPublicationLane::Transient] },
     artifact_route("setActiveExample"),
     artifact_route("pin-solution"),
+    brush_route("canvasPointerDown"),
+    brush_route("canvasPointerMove"),
+    brush_route("canvasPointerUp"),
+    host_only_route("canvasDoubleClick"),
+    host_only_route("setCamera"),
 ];
 
 const fn artifact_route(tool_id: &'static str) -> ArtifactToolPublicationContract {
@@ -290,6 +355,14 @@ const fn artifact_route(tool_id: &'static str) -> ArtifactToolPublicationContrac
 
 const fn window_config_route(tool_id: &'static str) -> ArtifactToolPublicationContract {
     ArtifactToolPublicationContract { tool_id, lanes: &[ArtifactToolPublicationLane::WindowConfig] }
+}
+
+const fn brush_route(tool_id: &'static str) -> ArtifactToolPublicationContract {
+    ArtifactToolPublicationContract { tool_id, lanes: &[ArtifactToolPublicationLane::Artifact, ArtifactToolPublicationLane::WindowTransient] }
+}
+
+const fn host_only_route(tool_id: &'static str) -> ArtifactToolPublicationContract {
+    ArtifactToolPublicationContract { tool_id, lanes: &[ArtifactToolPublicationLane::HostOnly] }
 }
 
 fn bitmap_retained_contract() -> ToolExecutionContract {
@@ -330,9 +403,15 @@ impl ArtifactCommandWork<EditorApp<BitmapEditor>> for BitmapCommandWork {
         let doc = ArtifactView::with_operation(input.snapshot, input.history, input.operation.clone());
         let cfg = ConfigView { snapshot: input.config, window: input.context.and_then(|context| context.window_config.as_ref()) };
         let view_state = input.context.and_then(|context| context.view_state.as_ref());
-        if let BitmapEditorCommand::PaintStroke { .. } = input.command {
+        let pointer = input.command.brush_pointer();
+        if pointer.is_some() || matches!(input.command, BitmapEditorCommand::PaintStroke { .. }) {
             let window = input_transient::current(input.context.and_then(|context| context.window_transient.as_ref()));
-            let (emit, next) = BitmapEditor::paint_stroke(input.command, &doc, &cfg, &window)?;
+            let stroke = match &pointer {
+                Some(pointer) => BitmapEditor::pointer_stroke(pointer, doc.snapshot, &window),
+                None => Some((input.command.clone(), window.clone())),
+            };
+            let Some((stroke, base)) = stroke else { return Ok(ArtifactCommandWorkStep::Complete(Emit::default())) };
+            let (emit, next) = BitmapEditor::paint_stroke(&stroke, &doc, &cfg, &base)?;
             let window_transient = match view_state {
                 Some(view) if next != window => vec![input_transient::addressed(view, next)?],
                 None if next != window => return Err(Fault::from("wfc-bitmap-view-state-required")),
@@ -610,7 +689,7 @@ impl BitmapOneItemPreparation {
 /// 🧬️ One staged `protocol::Edit` for the bitmap document lane.
 fn bitmap_next_edit(forward: BitmapMutation, inverse: Vec<BitmapMutation>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<BitmapMutation> {
     let id = format!("{BITMAP_STORE_PREFIX}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -762,7 +841,12 @@ impl ArtifactEditor for BitmapEditor {
             "solve",
             "commit-fill-solve",
             "setActiveExample",
-            "pin-solution"
+            "pin-solution",
+            "canvasPointerDown",
+            "canvasPointerMove",
+            "canvasPointerUp",
+            "canvasDoubleClick",
+            "setCamera"
         ]
     }
 
@@ -898,6 +982,7 @@ impl BitmapEditor {
                 BitmapEditorCommand::PinSolution { pixels, contradiction } => pin_solution::handle(&pin_solution::PinSolution { pixels: pixels.clone(), contradiction: *contradiction }, doc),
                 BitmapEditorCommand::Solve => Ok(Emit { effects: vec![fill_tool::start_fill_effect()], description: Some("Solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
                 BitmapEditorCommand::CommitFillSolve { .. } => Ok(Emit { description: Some("Commit fill solve".to_string()), ui_scope: semio_framework::kernel::UiDirtyScope::Full, ..Default::default() }),
+                BitmapEditorCommand::CanvasPointerDown { .. } | BitmapEditorCommand::CanvasPointerMove { .. } | BitmapEditorCommand::CanvasPointerUp { .. } | BitmapEditorCommand::CanvasDoubleClick | BitmapEditorCommand::SyncCamera => Ok(Emit::default()),
                 _ => Err(Fault::from("wfc-bitmap-command-unmapped")),
             };
         };
@@ -940,7 +1025,12 @@ impl BitmapEditor {
             | BitmapEditorCommand::Solve
             | BitmapEditorCommand::CommitFillSolve { .. }
             | BitmapEditorCommand::SetActiveExample { .. }
-            | BitmapEditorCommand::PinSolution { .. } => return None,
+            | BitmapEditorCommand::PinSolution { .. }
+            | BitmapEditorCommand::CanvasPointerDown { .. }
+            | BitmapEditorCommand::CanvasPointerMove { .. }
+            | BitmapEditorCommand::CanvasPointerUp { .. }
+            | BitmapEditorCommand::CanvasDoubleClick
+            | BitmapEditorCommand::SyncCamera => return None,
         })
     }
 
@@ -982,6 +1072,20 @@ impl BitmapEditor {
             None => Emit::default(),
         };
         Ok((emit, next))
+    }
+
+    /// 🖱️ The `paint-stroke` a canvas pointer event on the input surface means for a window holding `window`, in the
+    /// window's armed colour, with the transient the brush resumes from (at rest when a fresh press drops a stroke a
+    /// lost release left open). `None` when the event means nothing to the brush: zero trace, no write.
+    pub fn pointer_stroke(pointer: &BitmapBrushPointer, snapshot: &BitmapSnapshot, window: &BitmapInputWindowTransient) -> Option<(BitmapEditorCommand, BitmapInputWindowTransient)> {
+        let stroke = bitmap_brush_pointer_stroke(pointer, snapshot.input.width, snapshot.input.height, window.brush.is_some())?;
+        let (xs, ys) = stroke.points.iter().map(|point| (point.x, point.y)).unzip();
+        let reason = match stroke.phase {
+            BitmapStrokePhase::Abort(reason) => Some(reason.as_str().to_string()),
+            _ => None,
+        };
+        let base = if stroke.interrupt { BitmapInputWindowTransient::default() } else { window.clone() };
+        Some((BitmapEditorCommand::PaintStroke { xs, ys, color: None, phase: stroke.phase.as_str().map(str::to_string), reason }, base))
     }
 
     /// 🎨️ The active brush colour is per-window-instance state: refused outright when the index is

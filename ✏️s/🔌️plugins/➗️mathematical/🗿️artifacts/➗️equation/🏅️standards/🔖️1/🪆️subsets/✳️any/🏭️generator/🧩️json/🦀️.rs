@@ -8,7 +8,7 @@ use json::JsonValue;
 pub const KINDS: &[&str] = &["change-coefficient"];
 
 /// 🗂️ The reviewed fixture directory each kind's pair is committed under.
-pub const FIXTURE_DIRECTORY_BY_KIND: &[(&str, &str)] = &[("change-coefficient", "🎚️change-coefficient")];
+pub const FIXTURE_DIRECTORY_BY_KIND: &[(&str, &str)] = &[("change-coefficient", "🎚️change")];
 
 fn literal(text: &str) -> JsonValue {
     json::parse(text).expect("a carrier literal is valid JSON")

@@ -1,5 +1,5 @@
-//! ✏️ `change-node-name` implementation case `✏️renames-the-root-f1e002`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/🏷️rename/✏️renames-the-root-f1e002/` holds every corpus law, and the leaf keeps its
+//! ✏️ `change-node-name` implementation case `✏️renames`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/🌳️node/🏷️rename/✏️renames/` holds every corpus law, and the leaf keeps its
 //! language-neutral semantic identity, its apply/restore laws, and its facade decoders.
 use super::*;
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
@@ -122,5 +122,5 @@ fn semantic_identity_matches_the_language_neutral_descriptor() {
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
-    super::super::component::fixture_corpus_tests::assert_case("🌳️node/🏷️rename/✏️renames-the-root-f1e002");
+    super::super::component::fixture_corpus_tests::assert_case("🌳️node/🏷️rename/✏️renames");
 }

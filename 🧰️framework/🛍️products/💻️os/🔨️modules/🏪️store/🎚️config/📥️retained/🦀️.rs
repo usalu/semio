@@ -263,7 +263,7 @@ where
                     *self.active = Some(crate::os_store::retirement::owned_retirement(crate::os_spr::HistoryEdit { meta: Some(metadata), ..source }));
                     return self.reject(ConfigStoreHydrationDiagnostic::Replay);
                 }
-                let edit = Edit {
+                let edit = Edit { line: source.line,
                     id: source.id,
                     actor: source.actor,
                     forwards: Vec::new(),

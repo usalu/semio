@@ -2,7 +2,7 @@
 
 #[path = "🎯️deviation-from-ideal/🦀️.rs"]
 pub mod deviation_from_ideal;
-#[path = "🧽️deviation-from-smoothed-geometry/🦀️.rs"]
+#[path = "🧽️deviation-from-smoothed/🦀️.rs"]
 pub mod deviation_from_smoothed_geometry;
 #[path = "🪨️irregularity/🦀️.rs"]
 pub mod irregularity;

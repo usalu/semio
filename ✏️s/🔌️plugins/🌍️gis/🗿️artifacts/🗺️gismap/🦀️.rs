@@ -416,7 +416,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/💡️adds-lighthouse-position-after-harbor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆕create-position/🧪️tests/💡️adds/🦀️.rs"]
                             mod tests_adds_a_lighthouse_position_after_the_harbor;
                         }
                         #[path = "."]
@@ -429,7 +429,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-position/🧪️tests/🚫️removes-lighthouse-position/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-position/🧪️tests/🚫️removes/🦀️.rs"]
                             mod tests_removes_the_lighthouse_position;
                         }
                         #[path = "."]
@@ -442,7 +442,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/⚓️rewrites-harbor-position-payload/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁replace-position-data/🧪️tests/⚓️rewrites/🦀️.rs"]
                             mod tests_rewrites_the_harbor_position_payload;
                         }
                         #[path = "."]
@@ -455,7 +455,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/⚓️moves-harbor-position-to-end/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀reorder-positions/🧪️tests/⚓️moves/🦀️.rs"]
                             mod tests_moves_the_harbor_position_to_the_end;
                         }
                         #[path = "."]
@@ -468,7 +468,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/🚋️adds-tram-route-after-ferry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛣️create-route/🧪️tests/🚋️adds/🦀️.rs"]
                             mod tests_adds_a_tram_route_after_the_ferry;
                         }
                         #[path = "."]
@@ -494,7 +494,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/⛴️rewrites-ferry-route-payload/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️replace-route-data/🧪️tests/⛴️rewrites/🦀️.rs"]
                             mod tests_rewrites_the_ferry_route_payload;
                         }
                         #[path = "."]
@@ -507,7 +507,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/🚌️moves-bus-route-to-front/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭reorder-routes/🧪️tests/🚌️moves/🦀️.rs"]
                             mod tests_moves_the_bus_route_to_the_front;
                         }
                         #[path = "."]
@@ -520,7 +520,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/🏘️adds-old-town-region-after-harbor-district/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐create-region/🧪️tests/🏘️adds/🦀️.rs"]
                             mod tests_adds_the_old_town_region_after_the_harbor_district;
                         }
                         #[path = "."]
@@ -546,7 +546,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/🏘️rewrites-harbor-district-region-payload/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄replace-region-data/🧪️tests/🏘️rewrites/🦀️.rs"]
                             mod tests_rewrites_the_harbor_district_region_payload;
                         }
                         #[path = "."]
@@ -559,7 +559,7 @@ pub mod standards {
                             pub mod inverse;
                             pub use component::*;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/🌳️moves-park-region-between-2-districts/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃reorder-regions/🧪️tests/🌳️moves/🦀️.rs"]
                             mod tests_moves_the_park_region_between_the_two_districts;
                         }
                     }
@@ -885,7 +885,7 @@ pub mod editor {
                             pub mod layer_weights;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/☑️options/👁️layers/🦀️.rs"]
                             pub mod layers;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/☑️options/🔽️lod-mode/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/☑️options/🔽️lod/🦀️.rs"]
                             pub mod lod_mode;
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🗺️map/☑️options/🖼️render-mode/🦀️.rs"]
                             pub mod render_mode;

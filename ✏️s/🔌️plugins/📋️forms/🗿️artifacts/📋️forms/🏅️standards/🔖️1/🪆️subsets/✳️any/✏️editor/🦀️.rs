@@ -745,7 +745,7 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for FormsBoundedCommand
 //#region 📬️StorePreparation
 fn forms_next_edit<M>(prefix: &str, forward: M, inverse: Vec<M>, description: Option<String>, authority: &store::ArtifactStoreOneItemLiveAuthority) -> protocol::Edit<M> {
     let id = format!("{prefix}-{}", authority.next_sequence_number());
-    protocol::Edit {
+    protocol::Edit { line: authority.line_id().map(str::to_owned),
         id: id.clone(),
         actor: Some(authority.actor().to_string()),
         forwards: vec![forward],
@@ -1436,6 +1436,10 @@ pub fn create_forms_app() -> AppDefinition {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub(crate) mod unit_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🧪️field-transactions/🦀️.rs"]
+mod field_transaction_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

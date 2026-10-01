@@ -325,8 +325,8 @@ fn place_reaction_label(anchor_x: f64, anchor_y: f64, stack_index: usize, conten
 /// nodal-averaged, marching-triangle-banded von-Mises stress contour with a color-swatch legend.
 /// `source_id` selects a `fem2d_solve_all` case/combination id, falling back to the first load case
 /// when `None`/unknown (preserves v0's default behavior).
-fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot, camera: &Viewport2d, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
-    let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, camera, active_utility, window_instance_id);
+fn finish_results_layers(doc: &Fem2dSnapshot, interaction: &crate::editor::fem2d::interaction::Fem2dInteractionSnapshot, layers: Vec<Value>, window_instance_id: Option<&str>, active_utility: &str) -> String {
+    let gumball_meta = crate::editor::fem2d::interaction::gumball::fem2d_gumball_meta_layer(doc, &interaction.selected_ids, active_utility, window_instance_id);
     crate::editor::fem2d::interaction::canvas_gesture::fem2d_finish_canvas_layers_json(layers, window_instance_id, active_utility, gumball_meta)
 }
 
@@ -356,7 +356,7 @@ fn render_static(
         Ok(Err(message)) => return placeholder(Label::data(message)),
         Err(error) => return placeholder(Label::data(format!("Analysis error: {error}"))),
     };
-    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
+    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
@@ -502,7 +502,7 @@ fn render_modal(
         Ok(layers) => layers,
         Err(error) => return placeholder(Label::data(format!("Modal analysis error: {error}"))),
     };
-    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
+    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 
@@ -540,7 +540,7 @@ fn render_buckling(
         Ok(layers) => layers,
         Err(error) => return placeholder(Label::data(format!("Buckling analysis error: {error}"))),
     };
-    let layers_json = finish_results_layers(doc, interaction, camera, layers, window_instance_id, active_utility);
+    let layers_json = finish_results_layers(doc, interaction, layers, window_instance_id, active_utility);
     crate::app_surface::canvas_2d_surface(BODY_KEY, &Canvas2dScene { framing: None, camera_x: camera.x, camera_y: camera.y, zoom: camera.zoom, layers_json, snapshot: None, tool_run_trace: None, lanes: Vec::new() })
 }
 //#endregion 🔖️Render

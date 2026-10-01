@@ -286,6 +286,7 @@ impl FromValue for Atom {
             DslValue::Number(Number::UInt(value)) => Ok(Atom::Integer(value as i64)),
             DslValue::Number(Number::Float(value)) => Ok(Atom::Decimal(value)),
             DslValue::String(s) => Ok(Atom::String(s)),
+            DslValue::Bytes(_) => Err(ValueError::new("expected an atom, found bytes")),
             DslValue::Array(_) | DslValue::Object(_) => Err(ValueError::new("expected an atom, found an array or object")),
         }
     }

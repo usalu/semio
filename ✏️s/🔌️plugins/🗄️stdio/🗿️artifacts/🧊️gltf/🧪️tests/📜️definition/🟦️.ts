@@ -16,5 +16,10 @@ export function runDefinitionChecks(): number {
     source[row.category][0].id = row.identity;
     assert.equal(validate(source), row.accepted, row.id);
   }
-  return fixture.cases.length + 1;
+  const byteSchema = load("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧬️schema/🔣️.json");
+  const byteFixture = load("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/💡️inferences/📝️text/🧫️fixtures/🔣️.json");
+  const validateBytes = ajv.compile(byteSchema);
+  assert.equal(validateBytes(byteFixture), true, JSON.stringify(validateBytes.errors));
+  for (const row of byteFixture.cases) assert.equal(JSON.stringify(row.bytes), row.canonical, row.id);
+  return fixture.cases.length + byteFixture.cases.length + 2;
 }

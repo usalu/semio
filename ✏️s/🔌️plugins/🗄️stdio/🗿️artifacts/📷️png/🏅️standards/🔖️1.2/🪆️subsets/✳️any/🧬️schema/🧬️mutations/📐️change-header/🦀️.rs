@@ -58,8 +58,8 @@ pub fn contribute(base: &PngSnapshot, width: u32, height: u32, bit_depth: u8, co
 
 #[cfg(test)]
 pub(crate) fn test_case() -> PngMutation {
-    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-header/🎯️direct-behavior/🦠️mutation/🔣️.json")).expect("committed change-header payload")
+    dsl::json::from_json_str(include_str!("../../../🧫️fixtures/🧬️mutations/📐️change-header/🎯️direct/🦠️mutation/🔣️.json")).expect("committed change-header payload")
 }
 #[cfg(test)]
-#[path = "🧪️tests/🎯️direct-behavior/🦀️.rs"]
+#[path = "🧪️tests/🎯️direct/🦀️.rs"]
 mod tests_direct_behavior;

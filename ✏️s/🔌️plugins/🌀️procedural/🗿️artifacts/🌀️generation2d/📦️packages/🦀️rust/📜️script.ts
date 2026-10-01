@@ -2,7 +2,10 @@
 /** 📦️ procedural-generation2d Rust artifact package router. */
 import { runArtifactRustPackageMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🦀️rust/🟦️.ts";
 import { generation2dSnapshotFixtureAssetSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🗣️terminology/🧪️tests/🔬️snapshot-fixture-asset/🟦️.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { generation2dGestureLeafTwinSelfTests } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧪️gesture-leaves/🟦️.ts";
+import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative, resolve } from "node:path";
 
@@ -26,6 +29,6 @@ if (segments[0] === "generation2d-window-camera-ownership") {
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation2d", { ...{
   testFeatures: ["component-app-assembly"],
-  twins: [{ name: "generation2d-snapshot-fixture-asset", run: generation2dSnapshotFixtureAssetSelfTests }],
-}, commands: { verify: OwnedVerifyScript } });
+  twins: [{ name: "generation2d-snapshot-fixture-asset", run: generation2dSnapshotFixtureAssetSelfTests }, { name: "generation2d-gesture-leaves", run: generation2dGestureLeafTwinSelfTests }],
+}, snapshotSqliteTestFeatures: [], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"], snapshotSqliteTestBudgetMs: 120000, commands: { verify: OwnedVerifyScript } });
 

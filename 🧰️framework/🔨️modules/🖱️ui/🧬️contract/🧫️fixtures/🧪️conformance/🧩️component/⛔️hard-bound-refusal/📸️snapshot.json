@@ -1,0 +1,50 @@
+{
+  "surface": "conformance.component.hard-bound-refusal",
+  "revision": 0,
+  "root": 0,
+  "nodes": [
+    {
+      "id": 0,
+      "key": "#0",
+      "component": {
+        "type": "input",
+        "kind": "number",
+        "value": "4",
+        "commit": "blur",
+        "step": 0.5,
+        "limits": {
+          "min": {
+            "value": 0.0,
+            "exclusive": true,
+            "refusal": "Must be greater than 0"
+          },
+          "max": {
+            "value": 100.0,
+            "refusal": "Must be at most 100"
+          }
+        }
+      },
+      "layout": {
+        "kind": "leaf",
+        "width": "hug",
+        "height": "hug"
+      },
+      "style": {},
+      "activity": "idle",
+      "accessibility": {
+        "label": "Width"
+      },
+      "bindings": [
+        {
+          "trigger": "commit",
+          "action": {
+            "scope": "app",
+            "name": "setWidth",
+            "version": 1
+          }
+        }
+      ]
+    }
+  ],
+  "layoutEpoch": 0
+}

@@ -23,7 +23,7 @@
 //! is a composed `s.stdio.semio.document` child HANDLE, and its live body is local-only content
 //! owned by that exact handle. `edit-text`'s diff oracle reads the current body to decide whether
 //! the edit is a no-op, so the handler materializes it before applying. The body is the committed payload's OWN `text` — that is
-//! sound for exactly this vector and no other, because `⚠️warns-that-the-brief-body-is-unchanged` is
+//! sound for exactly this vector and no other, because `⚠️warns` is
 //! by construction the case where the payload repeats the body already behind the handle. It is
 //! derived from the committed bytes, never transcribed beside them.
 

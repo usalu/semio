@@ -235,6 +235,10 @@ async fn workflow_operation_op_text_round_trips_every_variant() {
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindInput(UnbindInput { input_id: "in-1".into() }));
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::BindOutput(BindOutput { binding: WorkflowOutputBinding { node_id: "n1".into(), port_id: "n1:out:out".into(), path_template: "out/{node}".into() } }));
     store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::UnbindOutput(UnbindOutput { node_id: "n1".into(), port_id: "n1:out:out".into() }));
+    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["n1".into(), "n2".into()], dx: 40.0, dy: -12.5 }));
+    store::os_store::test_support::assert_op_line_round_trip(&WorkflowMutation::SetNodePositions(SetNodePositions {
+        positions: vec![WorkflowNodePosition { node_id: "n1".into(), x: 120.0, y: 40.0 }, WorkflowNodePosition { node_id: "n2".into(), x: -30.5, y: 260.0 }],
+    }));
 }
 
 #[semio_framework_async_macros::async_test]
@@ -248,6 +252,8 @@ async fn workflow_operation_backwards_restores_pre_state() {
     // own `inverse` law tests avoid it the same way, by only exercising it on singleton lists).
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddNode(AddNode { node: workflow_node("c", Vec::new(), Vec::new()).await })).await;
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNode(MoveNode { node_id: "a".into(), x: 99.0, y: -1.0 })).await;
+    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 })).await;
+    store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::SetNodePositions(SetNodePositions { positions: vec![WorkflowNodePosition { node_id: "a".into(), x: 7.0, y: 8.0 }] })).await;
     store::os_store::test_support::assert_operation_round_trip(&document, WorkflowMutation::AddParameter(AddParameter { parameter: Box::new(WorkflowParameter::Toggle { id: "p9".into(), name: "New".into(), value: true }) })).await;
     store::os_store::test_support::assert_operation_round_trip(
         &document,
@@ -339,3 +345,31 @@ async fn independent_package_fixture_matches_json_oracle() {
     assert_eq!(decoded, document);
     store::os_store::test_support::assert_dsl_pack_equivalence(&document);
 }
+
+//#region 🔖️GestureLeaves
+/// ⚖️ LAW: `move-nodes` moves every addressed node by its offset from the BASE position and inverts to ONE absolute
+/// `set-node-positions` row; missing nodes are a partial Warning, none left is target-missing, a zero offset is a no-op,
+/// and a malformed target list is a Fatal invariant.
+#[semio_framework_async_macros::async_test]
+async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
+    use protocol::{Mutation, SemanticMutation};
+    let document = sample_workflow_snapshot().await;
+    let mutation = WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "b".into()], dx: 40.0, dy: -12.5 });
+    let outcome = mutation.diff(&document);
+    let moved = outcome.diff().apply(&document).expect("the drag applies");
+    for id in ["a", "b"] {
+        let (before, after) = (document.graph.nodes.iter().find(|node| node.id == id).expect("base"), moved.graph.nodes.iter().find(|node| node.id == id).expect("moved"));
+        assert_eq!((after.x, after.y), (before.x + 40.0, before.y - 12.5));
+    }
+    let inverse = mutation.inverse(&document);
+    assert!(matches!(inverse.as_slice(), [WorkflowMutation::SetNodePositions(SetNodePositions { positions })] if positions.len() == 2), "{inverse:?}");
+    let code = |mutation: WorkflowMutation| mutation.diff(&document).messages().first().map(|message| message.code.0.clone());
+    assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "ghost".into()], dx: 1.0, dy: 1.0 })).as_deref(), Some("mutation.partial"));
+    assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["ghost".into()], dx: 1.0, dy: 1.0 })).as_deref(), Some("mutation.target-missing"));
+    assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into()], dx: 0.0, dy: 0.0 })).as_deref(), Some("mutation.no-op"));
+    assert_eq!(code(WorkflowMutation::MoveNodes(MoveNodes { node_ids: vec!["a".into(), "a".into()], dx: 1.0, dy: 1.0 })).as_deref(), Some("mutation.invariant"));
+    let label = mutation.label();
+    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::En), "Move 2 workflow node(s) by (40, -12.5)");
+    assert_eq!(label.resolve(protocol::Terminology::Native, protocol::Locale::De), "2 Arbeitsablaufknoten um (40; -12,5) verschieben");
+}
+//#endregion 🔖️GestureLeaves

@@ -12,8 +12,8 @@ import type { ClearWidgetLayout } from "./🧹clear-widget-layout/🦠️mutatio
 import type { ConnectSynapse } from "./🔗️connect-synapse/🦠️mutation/🟦️.ts";
 import type { CreateWidget } from "./🌱️create-widget/🦠️mutation/🟦️.ts";
 import type { DeleteWidget } from "./🗑️delete-widget/🦠️mutation/🟦️.ts";
-import type { DisconnectSynapse } from "./✂️disconnect-synapse/🦠️mutation/🟦️.ts";
-import type { MoveWidget } from "./📍️move-widget/🦠️mutation/🟦️.ts";
+import type { DisconnectSynapse } from "./✂️disconnect/🦠️mutation/🟦️.ts";
+import type { MoveWidget } from "./📍️move/🦠️mutation/🟦️.ts";
 import type { UpdateCamera } from "./🎛️update-camera/🦠️mutation/🟦️.ts";
 
 export type Generation2dMutation =

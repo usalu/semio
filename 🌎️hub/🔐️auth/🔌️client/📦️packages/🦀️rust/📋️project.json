@@ -1,0 +1,47 @@
+{
+  "name": "@semio-tech/hub-auth-client-rs",
+  "targets": {
+    "check": {
+      "cache": false,
+      "dependsOn": [],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts check",
+        "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "check"
+        ]
+      }
+    },
+    "test": {
+      "cache": false,
+      "dependsOn": [],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test",
+        "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "test"
+        ]
+      }
+    },
+    "test-source": {
+      "cache": false,
+      "dependsOn": [],
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun 📜️script.ts test-source",
+        "cwd": "🌎️hub/🔐️auth/🔌️client/📦️packages/🦀️rust"
+      },
+      "metadata": {
+        "workspaceCommand": [
+          "test-source"
+        ]
+      }
+    }
+  }
+}

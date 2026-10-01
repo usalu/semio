@@ -1,6 +1,6 @@
 /** 🧪️ Ajv (third-party oracle) and the hand-written `rotateLayers` parser agree on the committed fixture and on every hostile variant. */
 import { expect, test } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
 import mutation from "../../../../../🧫️fixtures/🧬️mutations/🧭️rotate-layers/🧭️quarter-turn/🦠️mutation/🔣️.json";
 import { parseRotateLayers } from "../../🦠️mutation/🟦️.ts";

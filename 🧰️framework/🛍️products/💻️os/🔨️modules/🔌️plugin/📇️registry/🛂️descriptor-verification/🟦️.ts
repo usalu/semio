@@ -1,5 +1,4 @@
 import { createHash } from "node:crypto";
-import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor, boundedCatalogDiagnostic, rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🟦️.ts";
@@ -12,8 +11,6 @@ import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️dis
  * regenerated files). Launch freshness is folded in here rather than living in a second, unenforced
  * entry point, so one `check` covers every artifact `generate` produces. */
 //#region 🔖️DescriptorGate
-/** 🦀️ Publication identity never uses the runtime's development-first search order. */
-export const WASM_PUBLICATION_PROFILE = "wasm-release";
 
 
 /** #️⃣ Lowercase hex SHA-256 — same algorithm `semio-framework-plugin-describe` uses for
@@ -24,10 +21,6 @@ export function sha256HexOfFile(path: string): string {
 }
 
 
-/** 🔐 Selects only the canonical publication profile, regardless of other built artifacts. */
-export function publicationWasmPath(repoRoot: string, wasmOut: string): string {
-  return join(cargoTargetDirectory(repoRoot), "wasm32-wasip2", WASM_PUBLICATION_PROFILE, wasmOut);
-}
 
 
 export const INTERACTIVE_JOB_RUST_NAMES: Readonly<Record<string, string>> = { Unclassified: "unclassified", Migrated: "migrated", BatchOnlyPendingRewrite: "batchOnlyPendingRewrite", ForbiddenFromUi: "forbiddenFromUi", Deleted: "deleted" };

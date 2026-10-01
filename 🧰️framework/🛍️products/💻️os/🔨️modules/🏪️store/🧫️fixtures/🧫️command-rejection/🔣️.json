@@ -62,7 +62,7 @@
     {
       "name": "an empty target, a null opIndex and an unknown field read as absent",
       "reason": "rejected",
-      "messages": "[{\"level\":\"info\",\"code\":\"mutation.note\",\"message\":\"n\",\"target\":[],\"opIndex\":null,\"extra\":1}]",
+      "messages": "[{\"level\":\"info\",\"code\":\"mutation.cascade\",\"message\":\"n\",\"target\":[],\"opIndex\":null,\"extra\":1}]",
       "expect": {
         "kind": "rejected",
         "code": "hub.refused",
@@ -70,7 +70,7 @@
         "messages": [
           {
             "level": "info",
-            "code": "mutation.note",
+            "code": "mutation.cascade",
             "message": "n"
           }
         ]

@@ -174,15 +174,15 @@ fn the_committed_vectors_hold_through_the_production_bridge() {
         ($name:literal) => {
             (
                 $name,
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory-page/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory-page/", $name, "/🦠️mutation/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory-page/", $name, "/📸️snapshot/➡️after/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory-page/", $name, "/🔺️diff/🔣️.json")),
-                include_str!(concat!("../../🧫️fixtures/📬️apply-directory-page/", $name, "/🎯️outcome/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/⬅️before/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🦠️mutation/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/📸️snapshot/➡️after/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🔺️diff/🔣️.json")),
+                include_str!(concat!("../../🧫️fixtures/📬️apply-directory/", $name, "/🎯️outcome/🔣️.json")),
             )
         };
     }
-    for (name, before, mutation, after, diff, outcome) in [vector!("✅️apply-directory-page-applied"), vector!("🟰️apply-directory-page-no-op"), vector!("🚫️apply-directory-page-rejected")] {
+    for (name, before, mutation, after, diff, outcome) in [vector!("✅️apply"), vector!("🟰️apply"), vector!("🚫️apply")] {
         let report = pack::parse_json(&home_transient_mutation_report_json(before, mutation, after).expect("bridge report")).expect("report JSON");
         let outcome = pack::parse_json(outcome).expect("outcome JSON");
         assert_eq!(report["snapshot"], report["expectedSnapshot"], "{name}: the applied snapshot is the committed after-snapshot");

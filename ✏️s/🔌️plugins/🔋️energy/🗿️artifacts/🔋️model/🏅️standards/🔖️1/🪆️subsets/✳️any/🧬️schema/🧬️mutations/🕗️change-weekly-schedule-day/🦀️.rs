@@ -1,4 +1,4 @@
-//! 🕗️ Energy model mutation — `ChangeWeeklyScheduleDay`: Points one day of a week at a different daily profile. The address is the pair (schedule id, day index 0–6); a day outside the week and a profile the document does not define are both refused.
+//! 🕗️ Energy model mutation — `ChangeWeeklyScheduleDay`: Points one day of a week at a different daily profile. The address is the pair (schedule id, day index 0 Sunday … 6 Saturday); a day outside the week and a profile the document does not define are both refused.
 
 use crate::diff::EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
@@ -6,7 +6,7 @@ use crate::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
-/// 🕗️ `change-weekly-schedule-day` payload. Points one day of a week at a different daily profile. The address is the pair (schedule id, day index 0–6); a day outside the week and a profile the document does not define are both refused.
+/// 🕗️ `change-weekly-schedule-day` payload. Points one day of a week at a different daily profile. The address is the pair (schedule id, day index 0 Sunday … 6 Saturday); a day outside the week and a profile the document does not define are both refused.
 #[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, dsl::DslRecord, dsl::MutationLeaf)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]

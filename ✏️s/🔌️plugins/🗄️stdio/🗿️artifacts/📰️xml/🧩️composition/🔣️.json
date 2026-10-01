@@ -15,7 +15,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_xml::editor::xml_any::XmlAnyEditor",
       "factory": "semio_s_artifact_stdio_xml::editor::xml_any::create_xml_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "xml_any_editor",
+        "sqliteSnapshot": "sqlite_snapshot_xml_any_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -24,7 +28,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_xml::viewer::xml_any::XmlAnyViewer",
       "factory": "semio_s_artifact_stdio_xml::viewer::xml_any::create_xml_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     },
     {
       "owner": "stdio",
@@ -33,7 +38,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_xml::editor::xml_valid::XmlValidEditor",
       "factory": "semio_s_artifact_stdio_xml::editor::xml_valid::create_xml_valid_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "xml_valid_editor",
+        "sqliteSnapshot": "sqlite_snapshot_xml_valid_editor"
+      }
     },
     {
       "owner": "stdio",
@@ -42,22 +51,8 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_xml::viewer::xml_valid::XmlValidViewer",
       "factory": "semio_s_artifact_stdio_xml::viewer::xml_valid::create_xml_valid_viewer",
-      "mutationRoster": false
-    }
-  ],
-  "nativeReceipts": [
-    {
-      "artifact": "xml",
-      "factory_id": "stdio.native.xml.v1",
-      "descriptor_codec_id": "s.stdio.xml.standard.1-0.codec.native-document.v1",
-      "runtime_capability_id": "s.stdio.xml.standard.1-0.codec.codec-stdio-xml-extension-xml.v1",
-      "artifact_kind": "s.stdio.xml",
-      "artifact_schema": "stdio.xml",
-      "extension": "xml",
-      "protocol_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio",
-      "pack_schema_hash": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
-      "protocol_source_sha256": "874b28c8d55ae58982a4556ae5e01cfb3c70b69648b094b2920b34b742d06e08",
-      "definition_path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json"
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -86,6 +81,43 @@
         "react": 6217,
         "wgpu": 6317
       }
+    }
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "XmlMutation",
+      "snapshot": "semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot",
+      "mutation": "semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::mutations::XmlMutation"
+    },
+    {
+      "name": "XmlValidMutation",
+      "snapshot": "semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::schema::snapshot::XmlSnapshot",
+      "mutation": "semio_s_artifact_stdio_xml::standards::v1_0::subsets::valid::schema::valid_mutations::XmlValidMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "base",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base",
+      "prefix": ""
+    },
+    {
+      "artifact": "s.stdio.xml",
+      "standard": "1.0",
+      "subset": "valid",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/✅️valid",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": [
+    {
+      "factoryId": "stdio.native.xml.v1",
+      "definitionPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/📜️artifact-definition.json",
+      "protocolPath": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📰️xml/🏅️standards/🔖️1.0/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"
     }
   ]
 }

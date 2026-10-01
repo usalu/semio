@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🦀️ `@semio-tech/framework-editor-rs` router: `bun ./📜️script.ts wasm`. */
-import { BROWSER_CANVAS_HOT_CRATES, BundleScript, ScriptRouter, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BROWSER_CANVAS_HOT_CRATES, resolveTestLevel, runCargoTestBudgeted, runWasmPackWebBuild } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class WasmScript extends BundleScript {
   run(): void {
@@ -30,4 +32,4 @@ class TestScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("wasm", WasmScript).register("test", TestScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "wasm" });
+await runScriptMain(router, { defaultCommand: "wasm" });

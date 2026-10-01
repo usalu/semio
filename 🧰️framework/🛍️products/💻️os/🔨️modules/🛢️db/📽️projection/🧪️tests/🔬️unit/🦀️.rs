@@ -170,7 +170,7 @@ async fn envelope(document: &str, operation: &str, seq: u64) -> MutationEnvelope
         diff: protocol::ArtifactDiff { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
         inverse: protocol::InverseMutation { schema: protocol::SchemaId("test".to_string()), payload: Default::default() },
         timestamp: protocol::HybridLogicalTimestamp::new(1, seq),
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     }
 }
 

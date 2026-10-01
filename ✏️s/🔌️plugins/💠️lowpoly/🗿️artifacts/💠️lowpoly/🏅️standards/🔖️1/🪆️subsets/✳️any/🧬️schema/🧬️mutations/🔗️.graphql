@@ -158,6 +158,27 @@ input ApplyPaintStrokeInput {
   points: [[Float!]!]!
 }
 
+input MoveSelectionInput {
+  objectId: String!
+  vertexIds: [Int!]!
+  offset: [Float!]!
+}
+
+input RotateSelectionInput {
+  objectId: String!
+  vertexIds: [Int!]!
+  pivot: [Float!]!
+  axis: [Float!]!
+  angle: Float!
+}
+
+input ScaleSelectionInput {
+  objectId: String!
+  vertexIds: [Int!]!
+  pivot: [Float!]!
+  factor: [Float!]!
+}
+
 "Kebab-case spelling of every LowpolyMutation variant — mirrors the Rust `KINDS` catalog."
 enum LowpolyMutationKind {
   CREATE_OBJECT
@@ -178,6 +199,9 @@ enum LowpolyMutationKind {
   CHANGE_PAINT_LAYER_BLEND_MODE
   EDIT_PAINT_LAYER
   APPLY_PAINT_STROKE
+  MOVE_SELECTION
+  ROTATE_SELECTION
+  SCALE_SELECTION
 }
 
 "Dispatch envelope input — exactly one payload field is set, selected by `kind`."
@@ -201,6 +225,9 @@ input LowpolyMutationInput {
   changePaintLayerBlendMode: ChangePaintLayerBlendModeInput
   editPaintLayer: EditPaintLayerInput
   applyPaintStroke: ApplyPaintStrokeInput
+  moveSelection: MoveSelectionInput
+  rotateSelection: RotateSelectionInput
+  scaleSelection: ScaleSelectionInput
 }
 
 "Output-side dispatch union — one member type per LowpolyMutation variant."
@@ -223,6 +250,9 @@ union LowpolyMutation =
   | ChangePaintLayerBlendModeMutation
   | EditPaintLayerMutation
   | ApplyPaintStrokeMutation
+  | MoveSelectionMutation
+  | RotateSelectionMutation
+  | ScaleSelectionMutation
 
 type CreateObjectMutation {
   mutation: LowpolyMutationKind!
@@ -396,4 +426,37 @@ type ApplyPaintStrokePayload {
   hardness: Float!
   opacity: Float!
   points: [[Float!]!]!
+}
+
+type MoveSelectionMutation {
+  mutation: LowpolyMutationKind!
+  payload: MoveSelectionPayload!
+}
+type MoveSelectionPayload {
+  objectId: String!
+  vertexIds: [Int!]!
+  offset: [Float!]!
+}
+
+type RotateSelectionMutation {
+  mutation: LowpolyMutationKind!
+  payload: RotateSelectionPayload!
+}
+type RotateSelectionPayload {
+  objectId: String!
+  vertexIds: [Int!]!
+  pivot: [Float!]!
+  axis: [Float!]!
+  angle: Float!
+}
+
+type ScaleSelectionMutation {
+  mutation: LowpolyMutationKind!
+  payload: ScaleSelectionPayload!
+}
+type ScaleSelectionPayload {
+  objectId: String!
+  vertexIds: [Int!]!
+  pivot: [Float!]!
+  factor: [Float!]!
 }

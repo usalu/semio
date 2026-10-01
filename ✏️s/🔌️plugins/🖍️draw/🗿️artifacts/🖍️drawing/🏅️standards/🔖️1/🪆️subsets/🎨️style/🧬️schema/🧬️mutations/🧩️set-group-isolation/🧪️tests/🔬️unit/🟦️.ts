@@ -1,12 +1,12 @@
 /** 🧩️ Shared isolation mutation contract checked against Immer and Ajv. */
 import {expect,test} from "bun:test";
 import {produce} from "immer";
-import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import {semioSchemaAjvV1} from "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import {applyGroupIsolationEdit} from "../../🦠️mutation/🟦️.ts";
 import {inverse} from "../../↩️inverse/🟦️.ts";
 import schema from "../../🧬️schema/🔣️.json";
-import before from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/⬅️before/🔣️.json";
-import after from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass-through-to-isolated/📸️snapshot/➡️after/🔣️.json";
+import before from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/⬅️before/🔣️.json";
+import after from "../../../../../🧫️fixtures/🧬️mutations/🧩️set-group-isolation/🧩️pass/📸️snapshot/➡️after/🔣️.json";
 test("isolation is an atomic group-only edit with a reversible authored default",()=>{
   const edit={layerId:"group-a",isolation:true};
   const validate=semioSchemaAjvV1({allErrors:true}).compile(schema);

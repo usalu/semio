@@ -1213,6 +1213,11 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
   }, [sessionEpoch, scene?.activeUtility]);
 
   useEffect(() => {
+    if (!scene) return;
+    applyToSession(sessionRef.current, (session) => session.setHighlightedIdsJson?.(scene.highlightedIdsJson ?? "[]"));
+  }, [sessionEpoch, scene?.highlightedIdsJson]);
+
+  useEffect(() => {
     if (!scene || !board2dHostShellScope) return;
     const updateOptions = () => {
       const mode = board2dHostShellScope.selection.get();
@@ -1737,6 +1742,7 @@ export function Board2dHost({ node, onAction, requestContextMenu }: ComponentSce
       data-board-guest-selection-json={scene.selectionJson}
       data-board-camera-json={scene.cameraJson}
       data-board-hovered-id={scene.hoveredId ?? ""}
+      data-board-highlighted-ids-json={scene.highlightedIdsJson ?? "[]"}
       data-board-active-utility={scene.activeUtility ?? ""}
       data-board-suggestion-menu-json={scene.suggestionMenuJson ?? ""}
       data-suggestion-focus={suggestionFocus === null ? undefined : String(suggestionFocus)}

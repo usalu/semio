@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** 🧭️ Fleet conformance remains an explicit test leaf, separate from kernel unit tests. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, runExactCargoLaws, resolveTestLevel, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runExactCargoLaws, resolveTestLevel, buildBudgetMs } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { assertFixtureSweepLawCoverage, fixtureSweepLawGroup, testFixtureSweepExtraction } from "../../🧪️tests/🔬️ownership/🟦️.ts";
 
 class SourceScript extends BundleScript {
@@ -24,4 +26,4 @@ class TestScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir).register("source-check", SourceScript).register("test", TestScript);
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "source-check" });
+await runScriptMain(router, { defaultCommand: "source-check" });

@@ -2,8 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { cargoProfileDir, getWorkspaceRoot, selectComponentWasmProfile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
-import { publicationWasmPath } from "../../🛂️descriptor-verification/🟦️.ts";
+import { cargoTargetDirectory, publicationWasmPath } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginWasmArtifactPath } from "../../../🖨️describe/🏗️component-build/🟦️.ts";
 
 type GeneratorContract = { readonly previewTarget?: string };

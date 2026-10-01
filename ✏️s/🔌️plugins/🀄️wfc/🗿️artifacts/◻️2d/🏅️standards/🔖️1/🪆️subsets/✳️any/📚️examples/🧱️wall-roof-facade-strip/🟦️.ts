@@ -1,3 +1,4 @@
+import {binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 // 🧱️ Example `wall-roof-facade-strip` — the TypeScript twin of `🦀️.rs`'s builder.
 
 import type { Wfc2dSnapshot } from "../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -9,14 +10,14 @@ export const SEED = 42;
 export const RELATION_BESIDE = "beside";
 export const RELATION_ABOVE = "above";
 
-const slot = (id: string, x: number, y: number, pinnedTileId?: string) => (pinnedTileId === undefined ? { id, x, y, width: 2, height: 2 } : { id, x, y, width: 2, height: 2, pinnedTileId });
+const slot = (id: string, x: number, y: number, pinnedTileId?: string) => (pinnedTileId === undefined ? { id, x: binary64(x), y: binary64(y), width: binary64(2), height: binary64(2) } : { id, x: binary64(x), y: binary64(y), width: binary64(2), height: binary64(2), pinnedTileId });
 const edge = (id: string, fromSlotId: string, toSlotId: string, relation: string) => ({ id, fromSlotId, toSlotId, relation });
 
 /** 🧱️ The authored problem spec, in canonical ascending `id` order. */
 export function document(): Wfc2dSnapshot {
   return {
     schema: WFC_2D_DOCUMENT_SCHEMA,
-    seed: SEED,
+    seed: BigInt(SEED),
     slots: [slot("bay-0-ground", 0, 2), slot("bay-0-top", 0, 0), slot("bay-1-ground", 2, 2), slot("bay-1-top", 2, 0, "roof")],
     edges: [
       edge("edge-bay-0-stack", "bay-0-ground", "bay-0-top", RELATION_ABOVE),
@@ -25,8 +26,8 @@ export function document(): Wfc2dSnapshot {
       edge("edge-top-row", "bay-0-top", "bay-1-top", RELATION_BESIDE),
     ],
     tiles: [
-      { id: "roof", label: "Roof", weight: 1, media: filledSquare({ r: 206, g: 84, b: 62, a: 255 }) },
-      { id: "wall", label: "Wall", weight: 3, media: filledSquare({ r: 122, g: 126, b: 134, a: 255 }) },
+      { id: "roof", label: "Roof", weight: binary64(1), media: filledSquare({ r: 206, g: 84, b: 62, a: 255 }) },
+      { id: "wall", label: "Wall", weight: binary64(3), media: filledSquare({ r: 122, g: 126, b: 134, a: 255 }) },
     ],
     rules: [
       { id: "rule-roof-beside-roof", tileAId: "roof", tileBId: "roof", relation: RELATION_BESIDE, allowed: false },

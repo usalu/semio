@@ -643,6 +643,21 @@ impl protocol::SemanticMutation<RecursiveBranchSnapshot> for RecursiveFixtureMut
     }
 }
 
+impl protocol::SemanticMutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
+    fn kinds() -> &'static [protocol::SemanticDescriptor] {
+        std::slice::from_ref(&RECURSIVE_FIXTURE_SEMANTICS)
+    }
+    fn semantics(&self) -> &'static protocol::SemanticDescriptor {
+        &RECURSIVE_FIXTURE_SEMANTICS
+    }
+    fn label(&self) -> protocol::LocalizedLabel {
+        <Self as protocol::SemanticMutation<RecursiveBranchSnapshot>>::label(self)
+    }
+    fn target(&self) -> Vec<String> {
+        Vec::new()
+    }
+}
+
 struct RecursiveBranchSnapshotOpen {
     request: std::mem::ManuallyDrop<Option<store::MemberOpenRequest>>,
     snapshot: std::mem::ManuallyDrop<Option<RecursiveBranchSnapshot>>,

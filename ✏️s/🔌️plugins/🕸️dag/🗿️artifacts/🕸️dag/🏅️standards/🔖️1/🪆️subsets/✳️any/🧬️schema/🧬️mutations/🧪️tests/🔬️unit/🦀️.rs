@@ -161,7 +161,7 @@ async fn dispatch_registers_semantic_descriptors() {
     for kind in DagMutation::kinds() {
         assert!(protocol::is_approved_verb(kind.verb), "verb '{}' must be in APPROVED_VERBS", kind.verb);
     }
-    assert_eq!(DagMutation::kinds().len(), 14);
+    assert_eq!(DagMutation::kinds().len(), 17);
 }
 //#endregion 🔖️MutationLaws
 
@@ -301,3 +301,125 @@ async fn positional_create_and_connect_insert_where_they_are_told() {
     let reconnected = apply_mutation(&disconnected, &connect_nodes_at(edge.id.clone(), edge.source.clone(), edge.target.clone(), edge.route_style, edge.properties.clone(), 0)).expect("positional connect").0;
     assert_eq!(reconnected.edges().first().map(|entry| entry.id.clone()), Some(edge.id));
 }
+
+//#region 🔖️GestureLeaves
+fn slider_base() -> (DagSnapshot, String) {
+    let base = default_snapshot();
+    let id = "slider-99".to_string();
+    let (forward, _) = apply_mutation(&base, &create_node(crate::schema::default_node_for_kind("slider", &id, 0.0, 0.0))).expect("slider node");
+    (forward, id)
+}
+
+fn slider_numbers(snapshot: &DagSnapshot, id: &str) -> (f64, f64, f64) {
+    match snapshot.nodes().into_iter().find(|node| node.id == id).map(|node| node.kind) {
+        Some(crate::DagNodeKind::Slider { value, min, max, .. }) => (value, min, max),
+        other => panic!("{id} is no slider: {other:?}"),
+    }
+}
+
+/// ⚖️ LAW: `move-nodes` moves every addressed node by the offset from its BASE position, inverts to ONE absolute
+/// `set-node-positions` row (the one-item fold contract), and that row restores the document byte-for-byte.
+#[semio_framework_async_macros::async_test]
+async fn move_nodes_is_relative_and_inverts_to_one_absolute_row() {
+    let base = default_snapshot();
+    let nodes = base.nodes();
+    let ids: Vec<String> = nodes.iter().take(2).map(|node| node.id.clone()).collect();
+    let moved = round_trip(&base, &move_nodes(ids.clone(), 40.0, -12.5));
+    for id in &ids {
+        let (before, after) = (nodes.iter().find(|node| &node.id == id).expect("base node"), moved.nodes().into_iter().find(|node| &node.id == id).expect("moved node"));
+        assert_eq!((after.x, after.y), (before.x + 40.0, before.y - 12.5));
+    }
+    let inverse = move_nodes(ids.clone(), 40.0, -12.5).inverse(&base);
+    assert_eq!(inverse.len(), 1, "a multi-node drag inverts to one row: {inverse:?}");
+    assert!(matches!(&inverse[0], DagMutation::SetNodePositions(payload) if payload.ids() == ids));
+    assert_mutation_inverse_law(&base, &move_nodes(ids, 40.0, -12.5)).await;
+}
+
+/// ⚖️ LAW: the outcome vocabulary of `move-nodes` — missing nodes are a partial Warning, none left is target-missing, a
+/// zero offset is a no-op, a malformed target list or a non-finite offset is a Fatal invariant that never applies.
+#[semio_framework_async_macros::async_test]
+async fn move_nodes_outcomes_follow_the_vocabulary() {
+    let base = default_snapshot();
+    let Some(id) = base.nodes().first().map(|node| node.id.clone()) else { return };
+    let partial = move_nodes(vec![id.clone(), "ghost-node".into()], 5.0, 5.0).diff(&base);
+    assert_eq!((partial.worst_level(), partial.messages()[0].code.0.as_str()), (Some(protocol::Severity::Warning), "mutation.partial"));
+    assert_missing_target_is_error(&base, &move_nodes(vec!["ghost-node".into()], 5.0, 5.0)).await;
+    let zero = move_nodes(vec![id.clone()], 0.0, 0.0).diff(&base);
+    assert_eq!((zero.diff(), zero.messages()[0].code.0.as_str()), (&crate::DagDiff::default(), "mutation.no-op"));
+    for fatal in [move_nodes(Vec::new(), 1.0, 1.0), move_nodes(vec![id.clone(), id.clone()], 1.0, 1.0), move_nodes(vec![id], f64::NAN, 0.0)] {
+        let outcome = fatal.diff(&base);
+        assert_fatal_never_applies(&outcome).await;
+        assert_eq!(outcome.messages()[0].code.0, "mutation.invariant");
+    }
+}
+
+/// ⚖️ LAW: `set-node-positions` is absolute, inverts to itself with the BASE positions, and is a no-op where every node
+/// already sits.
+#[semio_framework_async_macros::async_test]
+async fn set_node_positions_is_absolute_and_self_inverse() {
+    let base = default_snapshot();
+    let nodes = base.nodes();
+    let positions: Vec<DagNodePosition> = nodes.iter().take(2).enumerate().map(|(at, node)| DagNodePosition { id: node.id.clone(), x: 10.0 * at as f64, y: -3.5 }).collect();
+    let placed = round_trip(&base, &set_node_positions(positions.clone()));
+    for position in &positions {
+        let node = placed.nodes().into_iter().find(|node| node.id == position.id).expect("placed node");
+        assert_eq!((node.x, node.y), (position.x, position.y));
+    }
+    assert_mutation_inverse_law(&base, &set_node_positions(positions)).await;
+    let stay: Vec<DagNodePosition> = nodes.iter().take(1).map(|node| DagNodePosition { id: node.id.clone(), x: node.x, y: node.y }).collect();
+    assert_eq!(set_node_positions(stay.clone()).diff(&base).messages()[0].code.0, "mutation.no-op");
+    assert!(set_node_positions(stay).inverse(&base).is_empty(), "a placement that moves nothing has no inverse");
+    let duplicate = set_node_positions(vec![DagNodePosition { id: "a".into(), x: 0.0, y: 0.0 }, DagNodePosition { id: "a".into(), x: 1.0, y: 1.0 }]).diff(&base);
+    assert_fatal_never_applies(&duplicate).await;
+}
+
+/// ⚖️ LAW: `set-slider` writes one absolute slider number, inverts to the old one, clamps a value into the range with a
+/// `mutation.clamped` Warning, refuses crossing bounds and non-sliders with `mutation.target-mismatch`.
+#[semio_framework_async_macros::async_test]
+async fn set_slider_is_absolute_and_follows_the_vocabulary() {
+    let (base, id) = slider_base();
+    let (_, min, max) = slider_numbers(&base, &id);
+    let set = round_trip(&base, &set_slider(id.clone(), DagSliderField::Value, 7.5));
+    assert_eq!(slider_numbers(&set, &id).0, 7.5);
+    assert_mutation_inverse_law(&base, &set_slider(id.clone(), DagSliderField::Max, max + 5.0)).await;
+    let clamped = set_slider(id.clone(), DagSliderField::Value, max + 100.0).diff(&base);
+    assert_eq!((clamped.worst_level(), clamped.messages()[0].code.0.as_str()), (Some(protocol::Severity::Warning), "mutation.clamped"));
+    assert_eq!(slider_numbers(&apply_mutation(&base, &set_slider(id.clone(), DagSliderField::Value, max + 100.0)).expect("clamped").0, &id).0, max);
+    for crossing in [set_slider(id.clone(), DagSliderField::Min, max + 1.0), set_slider(id.clone(), DagSliderField::Max, min - 1.0)] {
+        assert_eq!(crossing.diff(&base).messages()[0].code.0, "mutation.target-mismatch");
+    }
+    let Some(note) = base.nodes().into_iter().find(|node| !matches!(node.kind, crate::DagNodeKind::Slider { .. })).map(|node| node.id) else { return };
+    assert_eq!(set_slider(note, DagSliderField::Value, 1.0).diff(&base).messages()[0].code.0, "mutation.target-mismatch");
+    assert_missing_target_is_error(&base, &set_slider("ghost-node".into(), DagSliderField::Value, 1.0)).await;
+    let fatal = set_slider(id, DagSliderField::Min, f64::INFINITY).diff(&base);
+    assert_fatal_never_applies(&fatal).await;
+}
+
+/// ⚖️ LAW: a snapshot diff expresses position changes as intent — nodes moved by one offset share ONE `move-nodes` leaf
+/// (rounding noise of a host's per-node `before + delta` included), different offsets are different leaves.
+#[test]
+fn snapshot_moves_group_by_offset_into_move_nodes() {
+    let before: Vec<crate::DagNodeSpec> = ["a", "b", "c"].iter().enumerate().map(|(at, id)| crate::schema::default_node_for_kind("note", id, 0.1 + at as f64 * 0.6, 0.7)).collect();
+    let mut after = before.clone();
+    after[0].x += 0.2;
+    after[1].x += 0.2;
+    after[2].y += 5.0;
+    let leaves = dag_move_leaves(&before, &after);
+    assert_eq!(leaves.len(), 2, "{leaves:?}");
+    assert!(matches!(&leaves[0], DagMutation::MoveNodes(payload) if payload.ids == ["a", "b"] && (payload.dx - 0.2).abs() < 1e-12 && payload.dy == 0.0));
+    assert!(matches!(&leaves[1], DagMutation::MoveNodes(payload) if payload.ids == ["c"] && payload.dx == 0.0 && payload.dy == 5.0));
+    assert!(dag_move_leaves(&before, &before).is_empty());
+}
+
+/// 🏷️ Every gesture leaf is labelled in English and German from its payload.
+#[test]
+fn gesture_leaves_label_in_both_languages() {
+    let resolve = |mutation: &DagMutation| {
+        let label = <DagMutation as SemanticMutation<DagSnapshot>>::label(mutation);
+        (label.resolve(protocol::Terminology::Native, protocol::Locale::En).to_string(), label.resolve(protocol::Terminology::Native, protocol::Locale::De).to_string())
+    };
+    assert_eq!(resolve(&move_nodes(vec!["a".into(), "b".into()], 40.0, -12.5)), ("Move 2 node(s) by (40, -12.5)".into(), "2 Knoten um (40; -12,5) verschieben".into()));
+    assert_eq!(resolve(&set_slider("s".into(), DagSliderField::Value, 7.5)), ("Set slider \"s\" value to 7.5".into(), "Wert von Schieberegler \"s\" auf 7,5 setzen".into()));
+    assert_eq!(resolve(&set_node_positions(vec![DagNodePosition { id: "a".into(), x: 1.0, y: 2.0 }])), ("Set the positions of 1 node(s)".into(), "Positionen von 1 Knoten setzen".into()));
+}
+//#endregion 🔖️GestureLeaves

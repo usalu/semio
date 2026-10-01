@@ -207,3 +207,134 @@ Relative-sizing schema/corpus/native prover, styling package script/target and l
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx` (2lines)
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🟦️.tsx` (1lines)
 - `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🟦️.tsx` (3lines)
+
+## Closed Styling Source Identity And Literal Grammar
+
+Added a closed, bounded source manifest: exact duplicate paths are deduplicated; case-colliding, non-NFC, absolute, escaping and undeclared source inputs refuse. Initial new admission route reproduced2missing API behaviors, then the actual registered Bun/independent Node route passed34vectors in995ms. TypeScript parsed all24relative-sizing source files with0syntax diagnostics; this is syntax validation, not a full workspace type-check.
+
+Eight new grammar vectors reproduced eight genuine first-party semantic failures: numeric RGB API calls were misread as CSS, XML references and five-digit hashes were misread as colors, four-digit alpha colors were missed, inline/multiline comments were reported, and encoded color/sizing literals were missed. Added a first-party literal-data reader for TypeScript/Rust/CSS, escape decoding, comments and source-line preservation. Color hash grammar now admits exactly3/4/6/8digits and excludes XML reference context. Indexed candidates include encoded literal sources and four-digit alpha colors. Actual Bun/independently bundled Node contract passed42vectors in10.8s against TypeScript syntax, existing color-string1.9.1 and strict AJV; after bulk text handling it passed42vectors again in7.5s. No external parser/color type is exported or required at runtime.
+
+The full current literal-source scans remained RED299color lines and0pixel lines. The two recorded runs were byte-equivalent despite a concurrent extra source candidate. Their110.384/113.260s elapsed times do not establish a performance regression or gain under concurrent work. A separate phase profile recorded42.399s total:40.450s owner/candidate discovery,405ms sizing,1544ms colors,63ms actual file reads. This identifies discovery as the measured cost in that run.
+
+Changed29actual UI palette-class lines across13files to existing semantic destructive/warning/success/info/primary tokens. Current phase-profile result is270color findings and0pixel findings; content colors remain separate from UI token decisions and are not blindly rewritten. Complete current-color target remains RED (307findings before grammar and class repairs,Nx32.5s); a final registered color rerun remains pending after further actual source repairs. Source identities, literal-reader source and closed language schema are owned changes.
+- `.storybook/preview.tsx` (1lines)
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🔚️Footer/📖️stories/🧪️.story.tsx` (1lines)
+- `🧰️framework/🔨️modules/🖱️ui/🧱️elements/🕰️HistoryTable/🟦️.tsx` (1lines)
+- `🧰️framework/🛍️products/💻️os/📖️stories/🧭️coordination/🟦️.tsx` (4lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/✏️TextEditor/🟦️.tsx` (4lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏘️SpaceBrowser/🟦️.tsx` (2lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🟦️.tsx` (1lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/📡️EventFeedHost/🟦️.tsx` (2lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔄️ShellSync/🟦️.tsx` (2lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔐️HubSignIn/🟦️.tsx` (4lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🚦️AgentPresence/🟦️.tsx` (1lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentApprovals/🟦️.tsx` (2lines)
+- `🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🤖️AgentDelegations/🟦️.tsx` (4lines)
+
+## Video Container Capability Extraction And Remaining Native Verification
+
+Root authored the closed provider inventory/probe-record schema and shared corpus before replacing the container dispatcher. The actual AJV inventory/filter oracle admitted all 20 vectors, including future provider selection, absent and ambiguous providers, invalid inventory identities/capacity, source timing and byte bounds, and owned-record admission. The native law was authored before the runtime change. The first registered preimplementation Cargo execution failed in upstream missing DslValue::Bytes match arms; its subsequent 3m26s attempt failed in the upstream generic HistoryPageStack push Debug bound. Neither execution reached the native provider law, so these are compile blockers rather than claimed semantic test REDs.
+
+The video core now accepts first-party provider callbacks and a single owned VideoProbe record. Its public records contain no AVI/MP4 artifact types; metadata carries an open container identity, optional rational time base, access-unit bytes and owned AVC configuration. It validates the full bounded provider inventory before recognition, refuses missing/ambiguous selection, calls only the uniquely selected probe, and admits its result before frame decoding. Actual AVI and MP4 demux/mux code moved into feature-gated provider topic files. Caller-authored composition supplies the present capabilities. The old Mp4Info/AviInfo record families, VideoProbe container variants, hardwired RIFF/otherwise dispatcher and old format mux functions were removed and actual callers rebound.
+
+The plugin agent authored real video-avi/video-mp4 optional links using the new neutral Cargo capability helper; the default video-containers group derives its current members from physically present owner manifests. Its actual preparation proved two targets and the neutral helper's 12 laws. Root preserved every present-capability codec test, added future-callback/refusal native laws, and registered four native feature configurations through the owned package script and launch seed. The preceding live Nx attempt stopped at a graph inventory read of the concurrently removed old Stdio bridge manifest; a fresh registered matrix execution is pending. No native video or actual physical AVI deletion result is claimed yet.
+
+Owned additional paths: video/🧬️schema/🔌️container-providers/🔣️.json; video/🧫️fixtures/🔌️container-providers/🔣️.json; video/🧪️tests/🔌️container-providers/🟦️.ts; video/🔌️providers/🦀️.rs; video/🔌️providers/📼️avi/🦀️.rs; video/🔌️providers/🎥️mp4/🦀️.rs; video/🦀️.rs; video native unit tests; engine/🦀️.rs; reconstruction/🦀️.rs and native unit tests; import-video-frame-payload source/native unit tests; Remodeling root video provenance documentation; Rust package script/project and launch seed.
+
+## Styling Primitive Repairs
+
+Root additionally changed 31 owned CSS source lines in styling/🖌️ui/🎨️.css: 16 zero-alpha shadows became transparent, 12 opaque mask gradient literals became black, two zero-alpha mask fallbacks became transparent, and the temporary graph edge accent uses the existing semantic primary variable. Native computed-color/mask equivalence remains to be checked. The last measured current styling inventory before these 31 changes had zero pixel findings and 270 color findings; that count is not asserted as the current postchange result. The overall color enforcement gate remains unresolved.
+
+## Current Read-Only Audit And Lexer Regression Proof
+
+The GPT 6.1 Sol Low read-only fleet slot audited the current provider and styling boundaries in 📓️2026-10-01-current-boundary-audit.md. It caught an overbroad video-mp4 guard on the unconditional batch stream-id helper; root removed it and retained gating only for actual MP4-dependent synthesis/tests. It also reproduced a Rust quote-character desynchronization and TypeScript statement-regex false color findings.
+
+Root added three shared corpus cases for the quote character, a control statement regex, and a nested control statement with intervening comment. The correct registered styling test demonstrated all three semantic REDs through the independent Node/esbuild execution. Root fixed character-token masking and tracked actual control-parenthesis closure in the literal reader. The full registered Bun/Node/TypeScript/color-string/AJV gate then passed all 45 vectors in 11.2s. The earlier attempted incorrect project name styling-rs only produced a project-not-found refusal and is not counted as a test execution.
+
+Video portable admission now has 22 oracle vectors, including explicit required nullable metadata fields. The subsequent registered runtime execution admitted all 22 oracle vectors and progressed past owner preparation, but failed before video laws on 19 current OS kernel history interface errors (including a foreign ManuallyDrop IntoIterator implementation and missing canonical branch fields). The framework execution agent owns the actual paged history consumer/interface repair. The plugin execution agent owns removing duplicated native identity facts from lower source selections while retaining real compiled factory comparisons in publication/provider gates. No fabricated receipt or silent hook bypass is used.
+
+The completed Low slot was recycled into GPT 6.1 Sol High strict-boundary execution. Its scope is the actual installed-external versus authored workspace classification, root source-glob discovery for workspace alias protections, and physical Note test/package ownership correction. The earlier fresh strict execution's 18 edges remain a RED record until the current registered strict rerun proves the corrected inventory.
+
+## Actual Native CSS Primitive Verification
+
+The newly registered @semio-tech/ui-styling-tokens:test-color-primitives route passed in 12.7s. Its closed portable corpus has three color equivalence pairs, reproduced by the existing third-party color-string implementation. Actual Chromium measured identical computed color, box shadow and mask-image values for all nine property/pair combinations. The actual owned edge selector follows --color-primary and changed computed stroke correctly for both supplied theme values. Chromium additionally confirmed that the audited escaped-hash CSS example is an invalid color identifier rather than a color bypass. The function returns 12 native assertions and closes the browser in a finally block.
+
+New owned files: verification/🧬️schema/🎭️color-primitives/🔣️.json; verification/🧫️fixtures/🎭️color-primitives/🔣️.json; verification/🧪️tests/🎭️color-primitives/🟦️.ts. The permanent command lives in the existing styling Rust package 📜️script.ts, its project target depends on workspace:deps-browsers, and its launch seed entry is order 900.05680 in the existing gate group. The current full color scan is executing separately; successful primitive checks do not imply that whole-repository color enforcement is green.
+
+## Current Whole-Source Color Gate
+
+The actual registered @semio-tech/ui-styling-tokens:check-no-raw-colors execution finished RED with 239 findings and a 4m0s Nx elapsed time (3m55s task). Its bounded 80-row diagnostic is not a complete per-file inventory. Root is collecting all current first-party findings into a ticket-only generated output before making any further source-color decisions. Successful primitive/lexer tests do not waive these findings. Complete repository color enforcement, native video configurations, retained-parent deletion proofs, native publication and canonical launch regeneration remain incomplete.
+
+## Owner Export Preparation And Retained Parent Proof
+
+The plugin executor observed the current Stdio producer GREEN in 3.4s and its schema-first owner-export contract GREEN with 57 checks in 2.7s. The neutral Cargo compiling-invocation route observed 10 tests and 164 assertions GREEN in 7.9s, including exact machine stdout and preparation diagnostics on stderr. Temporary runtime DEBUG statements were removed afterward; these portable/preparation results do not establish native compiled factory validity. Detailed owned evidence is in 📓️2026-10-01-goal-stdio-execution.md.
+
+The AVI-absent source copy was refreshed with 86,053 current regular files visited, 11,677 updated and 9,294 now-absent source files removed. AVI is the single intentional owner omission and every other Stdio owner remains in the copied tree. Root reviewed the new parent proof guard and found that count equality cannot enforce exact retained identity; the owner executor is adding nine portable vectors and exact identity comparisons, including substitution and partial/symlink refusal. The actual default parent compile remains pending.
+
+Root registered the exact parent-removal target in the existing launch seed (gate order 900.05691), with separate explicit ticket-output and copied-workspace inputs; it never targets the live workspace. Full registry/catalog/launch regeneration is executing through @semio-tech/plugin-registry:generate and its existing repo:generator-inputs prerequisite. Current capability rechecking stopped before laws when the Python Nx worker exited; the earlier observed 12-law capability result remains the only native invocation-independent capability claim.
+
+## Canonical Taxonomy Source Admission And Current Native Frontier
+
+Registered full registry generation first refused an actual publication protocol digest mismatch. The owner producer refreshed current independently hashed publication inputs GREEN in 2.5s (36 contributors,176 apps,30 receipts). The next registered generator-inputs execution then refused strict taxonomy before generation. Root inspected current declaration identities: all188 repeated entries were in the single members-of-tests memberNames array, with zero conflicting kind IDs. Root authored only the exact unique list (1298 current distinct names), preserving parser rejection and every distinct declaration. Fresh strict loadCatalogTaxonomy accepted the actual source in5.1s. No relaxed validation, old-name aliases or general naming exceptions were introduced.
+
+The exact-owner removal contract subsequently passed66 checks in3.9s and neutral capability rerun passed12 laws in1.2s. The actual retained parent route observed35 exact retained owners, prepared35 contributors/174 apps/29 receipts and advanced into native compilation with no dangling AVI/old bridge manifest. That copy preceded the current history source changes; its native completion was not claimed and the owner is refreshing only its private source copy/cache. Native current video matrix and full registry/catalog/launch regeneration are executing again.
+
+The current Note artifact route passed66 native snapshots,33 committed diffs, independent rejection vectors and TypeScript checking. Its own canonical target remains registered. Detailed strict scope/lock proof is in 📓️2026-10-01-strict-boundary-execution.md. Full strict current graph checking remains pending.
+
+Root preserved the complete239-findings source inventory as file counts in 📓️2026-10-01-color-source-inventory.md. Three new Rust formatting vectors reproduced two actual semantic color-lexer REDs through independent Node/esbuild (7.1s registered route). The source-reader correction masks actual standard format fields and preserves escaped literal color data; its48-vector rerun is pending.
+
+## Native Gallery Chrome Customization
+
+Root authored five new closed, language-agnostic gallery border vectors and rendered the actual first-party galleryCardStyle, SwatchGrid and DataTable through existing React server rendering into Chromium. The registered native RED execution failed on actual gray card pixels [129,129,129,77] while a supplied black semantic border required [0,0,0,77]; this was a native behavior RED, not import/preparation failure. Root corrected an initially authored relative import before native execution.
+
+Five actual gallery chrome lines now derive their 30/25/40/40/15 percent alpha from --border-normal-color via CSS color-mix. The registered target passed22 native assertions in7.3s, retaining the previous12 primitive/edge assertions and10 native gallery/theme assertions. Temporary DEBUG runtime output recorded all five actual black and white RGBA pairs: alpha bytes77,64,102,102,38 for both colors. The independent color-string implementation supplied expected named RGB values; strict AJV admitted the shared vector schema. Root removed the temporary DEBUG line afterward and started the final registered rerun. The illustrative checker paint remains a separate unresolved raw source finding; no palette exemption was added.
+
+The full48-vector literal-reader contract independently passed in12.0s after the ordinary/raw Rust formatting field correction. Native video compilation moved through the canonical shared kernel and refused a missing actual JPG baseline mutation path. Root rebound that one declaration to its physically present remove-huffman-table source; the separately present document subset path was preserved. Current matrix retry is running. Full registry generation reached actual output rendering and refused current native descriptor appChannelVersion; native descriptor rebuilding remains required before final launch publication.
+
+
+## Oversized Pixel Exemption Regression
+
+Two desired language-agnostic cases isolated rounded-[9999px] and w-[9999px]. The registered test-verification-contract route reproduced both actual semantic failures through independently bundled Node/esbuild in22.7s; the third-party TypeScript sizing oracle now inspects every numeric pixel bracket instead of a fixed13px example. Removed the silent9999px exception and changed both actual Slider capsule classes to rounded-full. The closed relative-sizing corpus now includes horizontal/vertical tracks and square thumbs, with actual Tailwind+Chromium screenshot equivalence at all three root-font sizes. Existing513 native dimensions remain asserted. Native capsule validation and49-vector checker retry are pending. Previous0-pixel full scans used the exception and therefore did not prove strict enforcement for oversized values.
+
+Final gallery color primitive route passed22 native assertions in19.6s after temporary DEBUG removal.
+
+
+## Neutral Schema Validator Ownership
+
+Before changing source ownership, the registered styling boundary route genuinely refused its Repo-product validator dependency in14.3s. Its independent esbuild admission now refuses loading any actual framework/products module into the styling test bundle. This is dependency-loader refusal evidence, not a physically copied product-tree deletion claim.
+
+The TS owned Draft-07 subset now lives next to its Rust validator in framework/modules/schema/✅validator/🟦️.ts. All11 actual runtime/test callers were rebound, old Repo source physically removed, unused internal helpers made private, and obsolete Repo-kind/workflow-fixture ownership removed. No forwarding module, alias or third-party runtime dependency was introduced. A closed language-neutral corpus of53 subset-admission cases and5 JSON equality cases was authored before extraction. Its new existing-script/Nx/launch route executes the owned result under Bun and independently bundled Node against AJV. This does not assert complete Draft-07 coverage; existing Rust broad validator retains its separate laws.
+
+Strict ownership audit exposed a policy gap allowing generic framework/modules→framework/products. The strict executor is authoring its39th policy and desired portable corpus without tooling/test exceptions; fullcurrent graph and producer/tooling ownership remain unfinished.
+
+The first capsule native test preserved513 size checks and observed8 screenshot-equality cases before refusing the27px square-thumb image at the finalcase. Byte equivalence has not been established. Root is inspecting actual decoded native paint differences without changing expected assertions or adding a tolerance.
+
+
+Native decoded paint diagnosis confirmed the old9999px sentinel differs from rounded-full in exactly6RGB channels (two pixels), maximum8/255, in the27px circle; the other8 rendered cases were byteequal. Exact legacy-image preservation is therefore false. The permanent schema now specifies canonical capsule geometry and excludes the obsolete sentinel. Its independent reference is the exact half-minimum-dimension CSS radius, tested against actual Tailwind rounded-full using strict whole-image byte equality. No image tolerance or assertion-budget increase was added;513dimension assertions and9capsule assertions remain. Canonical geometry run is pending.
+
+
+Registered neutral schema subset target passed58vectors in18.8s through actual Bun, independent Node/esbuild and AJV. Registered styling verifier passed49vectors in19.4s, including both oversized-pixel refusals and the no-framework-product-load law. The first new schema target invocation saw an older in-flight Nx graph and refused task discovery; invocation-local NX_CACHE_PROJECT_GRAPH=false admitted the actual new target without resetting shared caches.
+
+Canonical capsule paint reference also refused full byte equality on fractional20px root sizing. Neither legacy nor geometric-reference image equality is claimed. The shared corpus continues to require canonical capsule shape; the native test now directly compares actual browser pointer clipping for144corner samples and center/bounds to an independent half-minimum-dimension CSS reference. It asserts an admitted clipped corner and reachable center separately. This is an interaction-geometry law, not a paint-equality claim; prior paint REDs and observed two-pixel difference remain retained above. Existing513 native dimension assertions remain unchanged;9geometry scenarios add27assertions. Geometry validation is pending and temporary DEBUG will be removed only after actual observation.
+
+
+The attempted full144sample native pointer equivalence also refused fractional20px roots. Thus exact image/pointer-boundary equality to half-radius CSS is false and is not a final acceptance requirement. The canonical native contract now asserts bounds, reachable center, all four clipped corners and a computed radius at least half the short dimension for each of9root/dimension scenarios. It compares center/corner/bounds to the independent finite-radius reference, preserves all513size assertions, and retains those strict radius assertions separately. Its36new assertions deliberately specify canonical rounded-full behavior, not preservation of obsolete sentinel paint or every floating boundary sample. All earlier RED evidence stays in this report. Final native capsule route is pending.
+
+
+## Actual Neutral Mesh And Capsule Verification
+
+The general mesh transport's existing registered suite first failed on its actual OS deployment import (2 passing laws,1 semantic boundary RED in9.8s). Core now returns its owned root-relative delivery URL and the OS composition publishes that URL explicitly at five call sites across World3dHost, frame-worker and IconRenderHost. No OS-product import or forwarding alias remains in the general mesh source. The final registered suite passed all3 laws/34 assertions in5.3s, using strict AJV, independent Node/esbuild under product-load refusal, native URL admission and the preserved identity/destination/source/traversal/unknown-field refusal tests. Full OS rendering runtime has not yet been observed after this cut; general mesh still owns its delivery catalog composition.
+
+Canonical capsule native validation passed549 assertions in25.9s with temporary DEBUG recording all nine actual bounds across16/20/24px supplied root fonts (128x10/10x128/18x18;160x12.5/12.5x160/22.5x22.5;192x15/15x192/27x27), clipped corners and reachable centers. Temporary DEBUG was removed and the registered final route passed549 assertions again in21.2s. This proves the final bounded interaction/radius contract described above, not whole-image or every sampled pointer-boundary equivalence. The whole current no-pixel gate separately passed in4m19s after removal of the9999px exception; this execution used no Nx task cache.
+
+The actual current root-taxonomy workflow suite refused4 laws in20.5s: extracted validator ownership omitted while the closed schema still requires11 owners/14 contexts, obsolete direct root publication/workflow edges, an unregistered launch route, and a5s semantic-load timeout. Root is replacing ownership with the new neutral owner and binding consumers to their actual current modules, preserving corpus/schema requirements and timeout budget. Full generated launch remains dependent on fresh native publication descriptors.
+
+
+## Neutral Command Routing Ownership
+
+Actual old Repo-owned command-routing route passed9 existing laws and failed the new general-product loader-refusal law in1.7s (53 existing assertions, semantic RED). Its eight closed language-neutral routing cases already compare real owned command/load traces to installed Commander. Root is physically extracting that exact general implementation and owned schema/corpus/tests into framework/modules/process/routing. Eight additional closed entrypoint contribution/default/refusal cases and six paired-marker root ownership cases are authored before extraction; Commander and installed find-up provide independent third-party outputs.
+
+Current source census found422 actual named routing consumers,61 under generic framework modules;96 pure routing consumers (11 generic). Eight authored policy export owners remain specific composition responsibilities. Generic dispatch will have an owned beforeDispatch callback and no Repo policy import; Repo-specific policy composition will be explicitly named runRepoScriptMain. Root will remove old general Repo exports and rebind actual imports, preserving all unrelated command bodies and present concurrent edits. Old implicit missing-root fallback is replaced by exact paired Nx/package marker admission. Current full generated launch remains pending69 fresh native descriptors, and no broad128-edge RED is waived by this routing cut.
+
+
+Correction to routing boundary evidence: inspection of the first1.7s loader-refusal attempt showed a percent-encoded URL pathname and therefore an esbuild resolution error, not a genuine product-load rejection. That initial result is a test setup RED and is not counted as semantic boundary evidence. The independently authored entrypoint corpus genuinely refused desired default and explicit dispatch behavior in1.6s before the old entrypoint's process.exit terminated its test process. The corrected general loader law uses a decoded physical path and executes all16 shared command/entrypoint traces under actual independent Node. Actual generic→product strict graph RED separately established the ownership violation.

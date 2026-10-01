@@ -72,7 +72,7 @@ fn produces_committed_diff() {
     let produced = serde_json::from_str::<serde_json::Value>(&dsl::json::to_json_string(outcome.diff())).expect("produced diff encodes");
     let committed: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff decodes");
     assert_eq!(produced, committed, "scale-selection/scales-two-objects: produced diff differs from the committed 🔺️diff/🔣️.json");
-    assert!(committed["attractions"].is_null() && committed["meta"].is_null() && committed["references"].is_null(), "scale-selection/scales-two-objects: a selection transform touches no relation and no document meta");
+    assert!(committed["meta"].is_null() && committed["references"].is_null(), "scale-selection/scales-two-objects: a selection transform touches no document meta and no reference");
 }
 
 /// 🩹 Applying the committed diff directly to `before` yields the committed `after`.

@@ -500,6 +500,14 @@ impl BoardSession {
         self.state.borrow_mut().host.set_hovered_id_silent(id);
     }
 
+    /// 🔗️ Paints the ids a time-travel draft references highlighted (`Board2dScene.highlightedIdsJson`); `[]` clears them.
+    #[wasm_bindgen(js_name = setHighlightedIdsJson)]
+    pub fn set_highlighted_ids_json_wasm(&mut self, json: &str) -> Result<(), JsValue> {
+        let ids: Vec<String> = serde_json::from_str(json).map_err(|err| JsValue::from_str(&err.to_string()))?;
+        self.state.borrow_mut().host.set_highlighted_ids(ids);
+        Ok(())
+    }
+
     #[wasm_bindgen(js_name = setHoveredKindSilent)]
     pub fn set_hovered_kind_silent_wasm(&mut self, domain: Option<String>, kind_id: Option<String>) {
         self.state.borrow_mut().host.set_hovered_kind_silent(domain, kind_id);

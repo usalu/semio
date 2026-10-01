@@ -40,7 +40,6 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
 fn native_codec() -> store::ArtifactCodec {
     let mut codec = store::ArtifactCodec::bare::<AviSnapshot, AviMutation>(STDIO_AVI_DOCUMENT_SCHEMA);
     codec.extension = "semio";
-    codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.0/🪆️subsets/🎛️hdrl/🧬️schema/📸️snapshot/💾️binary/📡️.protocol.semio"));
     codec
 }
 

@@ -14,7 +14,11 @@
       "role": "editor",
       "type": "semio_s_artifact_stdio_epw::editor::epw::EpwEditor",
       "factory": "semio_s_artifact_stdio_epw::editor::epw::create_epw_editor",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": {
+        "editing": "epw_editor",
+        "sqliteSnapshot": "sqlite_snapshot_epw_editor"
+      }
     },
     {
       "owner": "stdio-binary",
@@ -23,10 +27,10 @@
       "role": "viewer",
       "type": "semio_s_artifact_stdio_epw::viewer::epw::EpwViewer",
       "factory": "semio_s_artifact_stdio_epw::viewer::epw::create_epw_viewer",
-      "mutationRoster": false
+      "mutationRoster": false,
+      "laws": null
     }
   ],
-  "nativeReceipts": [],
   "openTargets": [],
   "catalogFeatures": [],
   "playgrounds": [
@@ -42,5 +46,23 @@
         "wgpu": 6400
       }
     }
-  ]
+  ],
+  "mutationDescriptors": [
+    {
+      "name": "EpwMutation",
+      "snapshot": "semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::snapshot::EpwSnapshot",
+      "mutation": "semio_s_artifact_stdio_epw::standards::energyplus::subsets::any::schema::mutations::EpwMutation"
+    }
+  ],
+  "mutationCoordinates": [
+    {
+      "artifact": "s.stdio.epw",
+      "standard": "energyplus",
+      "subset": "any",
+      "surface": "",
+      "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any",
+      "prefix": ""
+    }
+  ],
+  "nativeFactories": []
 }

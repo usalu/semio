@@ -37,7 +37,11 @@ states.
 
 # region 🔖️Imports
 import base64
+import collections
 import copy
+import ctypes
+import ctypes.util
+import hashlib
 import json
 import math
 
@@ -87,6 +91,9 @@ KINDS = (
     "change-paint-layer-blend-mode",
     "edit-paint-layer",
     "apply-paint-stroke",
+    "move-selection",
+    "rotate-selection",
+    "scale-selection",
 )
 """🏷️ Every kind the catalog declares, in its declared order."""
 
@@ -165,6 +172,103 @@ def stroked(buffer, payload):
                     held[at:at + 3] = bytes(payload["color"][:3])
                     held[at + 3] = min(held[at + 3] + amount, 255)
     return bytes(held)
+
+
+def selection_number(value):
+    """✍️ One float32 as the platform's JSON writer prints it inside a mesh: shortest round-trip digits, fixed
+    notation for a decimal exponent within -5..=15 (a whole number keeps `.0`), exponential otherwise."""
+    v = numpy.float32(value)
+    if v == 0:
+        return "-0.0" if numpy.signbit(v) else "0.0"
+    mantissa, exponent = numpy.format_float_scientific(numpy.abs(v), unique=True, trim="-").split("e")
+    exponent, digits, sign = int(exponent), mantissa.replace(".", ""), "-" if v < 0 else ""
+    if -5 <= exponent <= 15:
+        if exponent >= len(digits) - 1:
+            return sign + digits + "0" * (exponent - (len(digits) - 1)) + ".0"
+        if exponent >= 0:
+            return sign + digits[:exponent + 1] + "." + digits[exponent + 1:]
+        return sign + "0." + "0" * (-exponent - 1) + digits
+    return sign + digits[0] + ("." + digits[1:] if len(digits) > 1 else "") + "e" + ("+" if exponent >= 0 else "") + str(exponent)
+
+
+def selection_json(value):
+    """✍️ The platform's compact JSON of a half-edge mesh value tree, members in declaration order."""
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, float):
+        return selection_number(value)
+    if isinstance(value, list):
+        return "[" + ",".join(selection_json(item) for item in value) + "]"
+    return "{" + ",".join(json.dumps(key) + ":" + selection_json(item) for key, item in value.items()) + "}"
+
+
+def selection_moved(content, payload, kind):
+    """🧲️ A selection leaf's mesh: every named vertex (every vertex when none is named) carried by the motion in float64
+    off its float32 position and stored back as float32 — an offset, a right-handed turn about the normalised axis
+    through the pivot, or per-axis factors about the pivot — then every vertex normal recomputed as the normalised
+    Newell normal of the first face visiting it. Libm's `hypot`, `cos` and `sin`, the platform's own."""
+    f32 = lambda value: float(numpy.float32(value))
+    libm = ctypes.CDLL(ctypes.util.find_library("m"))
+    for name, arity in (("hypot", 2), ("cos", 1), ("sin", 1)):
+        getattr(libm, name).restype = ctypes.c_double
+        getattr(libm, name).argtypes = [ctypes.c_double] * arity
+    mesh = json.loads(content, object_pairs_hook=collections.OrderedDict)
+    count = len(mesh["vertices"])
+    present = sorted({vertex for vertex in (payload["vertexIds"] or range(count)) if vertex < count})
+    if kind == "move-selection":
+        transform = lambda point: [point[axis] + float(payload["offset"][axis]) for axis in range(3)]
+    elif kind == "rotate-selection":
+        pivot, axis = [float(value) for value in payload["pivot"]], [float(value) for value in payload["axis"]]
+        length = libm.hypot(libm.hypot(axis[0], axis[1]), axis[2])
+        x, y, z = (value / length for value in axis)
+        c, s = libm.cos(float(payload["angle"])), libm.sin(float(payload["angle"]))
+        t = 1.0 - c
+
+        def transform(point):
+            px, py, pz = (point[index] - pivot[index] for index in range(3))
+            return [pivot[0] + ((t * x * x + c) * px + (t * x * y - s * z) * py + (t * x * z + s * y) * pz), pivot[1] + ((t * x * y + s * z) * px + (t * y * y + c) * py + (t * y * z - s * x) * pz), pivot[2] + ((t * x * z - s * y) * px + (t * y * z + s * x) * py + (t * z * z + c) * pz)]
+    else:
+        pivot, factor = [float(value) for value in payload["pivot"]], [float(value) for value in payload["factor"]]
+        transform = lambda point: [pivot[axis] + (point[axis] - pivot[axis]) * factor[axis] for axis in range(3)]
+    for vertex in present:
+        mesh["vertices"][vertex]["position"] = [f32(value) for value in transform([float(value) for value in mesh["vertices"][vertex]["position"]])]
+    normalised = lambda vector, length: [0.0, 0.0, 0.0] if length == 0.0 else [f32(float(value) / length) for value in vector]
+    flat = [None] * count
+    for face in mesh["faces"]:
+        ids, edge = [], face["halfedge"]
+        while True:
+            ids.append(mesh["halfedges"][edge]["vertex"])
+            edge = mesh["halfedges"][edge]["next"]
+            if edge == face["halfedge"]:
+                break
+        points = [mesh["vertices"][vertex]["position"] for vertex in ids]
+        origin = points[0]
+        nx = ny = nz = 0.0
+        for index, a in enumerate(points):
+            b = points[(index + 1) % len(points)]
+            ax, ay, az = (float(a[k]) - float(origin[k]) for k in range(3))
+            bx, by, bz = (float(b[k]) - float(origin[k]) for k in range(3))
+            nx += (ay - by) * (az + bz)
+            ny += (az - bz) * (ax + bx)
+            nz += (ax - bx) * (ay + by)
+        newell = normalised([nx, ny, nz], libm.hypot(libm.hypot(nx, ny), nz))
+        normal = normalised(newell, libm.hypot(libm.hypot(newell[0], newell[1]), newell[2]))
+        for vertex in ids:
+            if flat[vertex] is None:
+                flat[vertex] = normal
+    for vertex, normal in zip(mesh["vertices"], flat):
+        vertex["normal"] = normal
+    return selection_json(mesh)
+
+
+def selection_handle(object_id, content):
+    """🆔️ The content-addressed mesh child handle the persisted content hashes to: `mesh-` + the first 16 lowercase hex
+    digits of SHA-256 over the content, aimed at the object's `<id>-mesh` child in the `s.stdio.semio` v1 mesh subset."""
+    return {"childId": "mesh-" + hashlib.sha256(content.encode("utf-8")).hexdigest()[:16], "target": {"artifactId": object_id + "-mesh", "dialect": {"artifactKind": "s.stdio.semio", "standard": "v1", "subset": "mesh"}}}
 
 
 def object_at(document, identity, kind, where):
@@ -246,6 +350,12 @@ def apply_mutation(document, kind, payload):
         record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
         layer = layer_at(record, payload["layerIndex"], kind, "mutate")
         layer["pixels"] = base64.b64encode(stroked(pixels(layer, "mutate-%s" % kind), payload)).decode("ascii")
+    elif kind in ("move-selection", "rotate-selection", "scale-selection"):
+        record = document["objects"][object_at(document, payload["objectId"], kind, "mutate")]
+        if record["mesh"] is None or not record["meshContent"]:
+            raise AssertionError("mutate-%s: object %r carries no mesh" % (kind, payload["objectId"]))
+        record["meshContent"] = selection_moved(record["meshContent"], payload, kind)
+        record["mesh"] = selection_handle(payload["objectId"], record["meshContent"])
     else:
         raise AssertionError("mutate-%s: this implementation declares no verb for that kind" % kind)
     return document
@@ -309,6 +419,9 @@ def inverse_mutation(document, kind, payload):
                 pixel += 1
             runs.append({"offset": start * 4, "bytes": base64.b64encode(buffer[start * 4:pixel * 4]).decode("ascii")})
         return [("edit-paint-layer", {"objectId": payload["objectId"], "layerIndex": payload["layerIndex"], "runs": runs})]
+    if kind in ("move-selection", "rotate-selection", "scale-selection"):
+        record = document["objects"][object_at(document, payload["objectId"], kind, "inverse")]
+        return [("create-mesh", {"id": payload["objectId"], "childId": record["mesh"]["childId"], "target": copy.deepcopy(record["mesh"]["target"]), "meshWorkspace": record["meshContent"]})]
     raise AssertionError("inverse-%s: this implementation declares no inverse for that kind" % kind)
 # endregion 🔖️Verbs
 

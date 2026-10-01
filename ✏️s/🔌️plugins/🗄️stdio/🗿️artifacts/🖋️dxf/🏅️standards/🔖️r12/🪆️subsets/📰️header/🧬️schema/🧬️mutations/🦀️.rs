@@ -686,6 +686,6 @@ mod tests;
 /// `🦀️.rs` stays untouched (`#[path]` on a non-inline module resolves against this file's own
 /// directory).
 #[cfg(test)]
-#[path = "📸️set-snapshot/🧪️tests/⭕️widens-the-circle-entity-radius/🦀️.rs"]
+#[path = "📸️set-snapshot/🧪️tests/⭕️widens/🦀️.rs"]
 mod set_snapshot_widens_the_circle_entity_radius;
 //#endregion 🧪️FixtureCases

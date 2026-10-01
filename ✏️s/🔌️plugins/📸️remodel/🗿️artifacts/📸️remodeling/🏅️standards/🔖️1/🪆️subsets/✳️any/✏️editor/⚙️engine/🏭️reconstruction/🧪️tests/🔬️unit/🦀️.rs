@@ -66,6 +66,7 @@ fn push_frame_stride_and_max_frames_sample() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn push_video_blur_gate_reports_counts() {
     let frames: Vec<Vec<u8>> = (0..9u32)
         .map(|i| {
@@ -73,7 +74,7 @@ fn push_video_blur_gate_reports_counts() {
             remodeling_image::encode_jpeg(&img, 90)
         })
         .collect();
-    let bytes = remodeling_video::write_mp4_mjpeg(&frames, 10.0);
+    let bytes = remodeling_video::container_providers::mp4::write_mjpeg(&frames, 10.0);
     let mut source = FrameSource::new(IngestParams::default());
     let opts = remodeling_video::VideoIngestOptions { stride: 1, max_frames: 0, max_long_edge_px: 0 };
     let report = source.push_video(&bytes, &opts).expect("mjpeg mp4 push_video should succeed");
@@ -384,6 +385,7 @@ fn orbit_sfm_registers_enough_cameras_for_gauge() {
 }
 
 #[test]
+#[cfg(feature = "video-mp4")]
 fn orbit_sfm_survives_jpeg_video_ingest() {
     // 🎞️ The capture `orbit_sfm_registers_enough_cameras_for_gauge` registers from lossless frames
     // (24 views 15° apart at 128 px), so what this test measures is the JPEG/MP4 path alone. At 16
@@ -395,7 +397,7 @@ fn orbit_sfm_survives_jpeg_video_ingest() {
     const RADIUS: f64 = 3.2;
     let (frames, _lo, _hi, _eyes) = orbiting_cube_frames(N_FRAMES, SIZE, HALF, RADIUS);
     let jpegs: Vec<Vec<u8>> = frames.iter().map(|f| remodeling_image::encode_jpeg(f, 92)).collect();
-    let mp4_bytes = remodeling_video::write_mp4_mjpeg(&jpegs, 12.0);
+    let mp4_bytes = remodeling_video::container_providers::mp4::write_mjpeg(&jpegs, 12.0);
     let mut params = tiny_engine_params(HALF, RADIUS);
     params.sequential_window = 6;
     params.match_ratio = 0.85;
@@ -457,6 +459,7 @@ mod long {
     /// before `Unwrap`/texturing legitimately duplicates vertices at UV chart seams, reports
     /// `is_watertight == true`.
     #[test]
+    #[cfg(feature = "video-mp4")]
     fn video_in_yields_watertight_mesh_out() {
         const N_FRAMES: usize = 24;
         const SIZE: u32 = 128;
@@ -465,7 +468,7 @@ mod long {
 
         let (frames, bbox_lo, bbox_hi, true_eyes) = orbiting_cube_frames(N_FRAMES, SIZE, HALF, RADIUS);
         let jpegs: Vec<Vec<u8>> = frames.iter().map(|f| remodeling_image::encode_jpeg(f, 92)).collect();
-        let mp4_bytes = remodeling_video::write_mp4_mjpeg(&jpegs, 12.0);
+        let mp4_bytes = remodeling_video::container_providers::mp4::write_mjpeg(&jpegs, 12.0);
         println!("[long] muxed {} mjpeg frames into {} mp4 bytes", jpegs.len(), mp4_bytes.len());
 
         let mut params = tiny_engine_params(HALF, RADIUS);
@@ -1469,4 +1472,3 @@ fn diagnose_dense_replay() {
         eprintln!("[REPLAY] voxel {voxel_size} trunc {truncation}: trail {trail:?}; extracted {extracted:?} -> {outcome}; {} vertices, surface distance {}, completeness {:.1}%", positions.len(), quantiles(positions.iter().map(|p| surface(*p)).collect()), 100.0 * covered as f64 / truth_points.len() as f64);
     }
 }
-

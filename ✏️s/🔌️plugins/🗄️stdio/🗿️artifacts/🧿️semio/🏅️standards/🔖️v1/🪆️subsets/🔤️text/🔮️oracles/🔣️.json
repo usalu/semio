@@ -63,7 +63,7 @@
           "scenarios": [
             {
               "id": "adds-a-link-mark-ahead-of-the-bold-mark",
-              "directoryName": "🔗️adds-a-link-mark-ahead-of-the-bold-mark"
+              "directoryName": "🔗️adds"
             }
           ]
         },
@@ -74,7 +74,7 @@
           "scenarios": [
             {
               "id": "retags-the-second-run-as-german",
-              "directoryName": "🇩🇪retags-the-second-run-as-german"
+              "directoryName": "🇩retags"
             }
           ]
         },
@@ -85,7 +85,7 @@
           "scenarios": [
             {
               "id": "rewrites-the-marked-runs-content",
-              "directoryName": "✍️rewrites-the-marked-runs-content"
+              "directoryName": "✍️rewrites"
             }
           ]
         },
@@ -96,7 +96,7 @@
           "scenarios": [
             {
               "id": "inserts-a-german-run-between-two-english-runs",
-              "directoryName": "📥️inserts-a-german-run-between-two-english-runs"
+              "directoryName": "📥️inserts"
             }
           ]
         },
@@ -107,7 +107,7 @@
           "scenarios": [
             {
               "id": "detaches-the-italic-mark-from-the-run",
-              "directoryName": "➖️detaches-the-italic-mark-from-the-run"
+              "directoryName": "➖️detaches"
             }
           ]
         },
@@ -118,7 +118,7 @@
           "scenarios": [
             {
               "id": "removes-the-middle-run",
-              "directoryName": "🚫️removes-the-middle-run"
+              "directoryName": "🚫️removes"
             }
           ]
         },
@@ -129,7 +129,7 @@
           "scenarios": [
             {
               "id": "moves-the-first-run-to-the-end",
-              "directoryName": "🧭️moves-the-first-run-to-the-end"
+              "directoryName": "🧭️moves"
             }
           ]
         }

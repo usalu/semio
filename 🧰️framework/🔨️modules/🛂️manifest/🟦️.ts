@@ -232,6 +232,9 @@ import type {
   WindowLayoutNode as GeneratedWindowLayoutNode,
   WindowLayout as GeneratedWindowLayout,
   UiDocumentLimits as GeneratedUiDocumentLimits,
+  UiNumberBound as GeneratedUiNumberBound,
+  UiNumberLimits as GeneratedUiNumberLimits,
+  UiNumberScale as GeneratedUiNumberScale,
   UiContractViolation as GeneratedUiContractViolation,
   PatchRejection as GeneratedPatchRejection,
   QuotaKind as GeneratedQuotaKind,
@@ -321,6 +324,9 @@ export type UiWindowStackCorner = GeneratedWindowStackCorner;
 export type WindowLayoutNode = GeneratedWindowLayoutNode;
 export type UiWindowLayout = GeneratedWindowLayout;
 export type UiDocumentLimits = GeneratedUiDocumentLimits;
+export type UiNumberBound = GeneratedUiNumberBound;
+export type UiNumberLimits = GeneratedUiNumberLimits;
+export type UiNumberScale = GeneratedUiNumberScale;
 export type UiContractViolation = GeneratedUiContractViolation;
 export type PatchRejection = GeneratedPatchRejection;
 export type QuotaKind = GeneratedQuotaKind;

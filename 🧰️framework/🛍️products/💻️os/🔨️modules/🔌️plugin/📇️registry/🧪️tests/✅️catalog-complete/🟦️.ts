@@ -10,7 +10,7 @@ import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts"
 import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
 import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { auditInteractiveJobClassificationDrift, describedComponentFindings, describedComponentPath, publicationWasmPath } from "../../🛂️descriptor-verification/🟦️.ts";
+import { auditInteractiveJobClassificationDrift, describedComponentFindings, describedComponentPath } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { PLUGIN_CATALOG } from "../../🟦️.ts";
@@ -590,3 +590,5 @@ describe("descriptor gate component identity", () => {
     }
   });
 });
+
+import { publicationWasmPath } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";

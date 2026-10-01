@@ -8,6 +8,15 @@
     "family:remodel"
   ],
   "targets": {
+    "verify-video-container-providers": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts verify video-container-providers"
+      }
+    },
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
@@ -55,6 +64,14 @@
             "remodel-window-ownership"
           ]
         }
+      }
+    },
+    "composition-prepare": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "✏️s/🔌️plugins/📸️remodel/🗿️artifacts/📸️remodeling/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts composition prepare"
       }
     }
   }

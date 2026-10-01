@@ -836,7 +836,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏷️rename-model/🧪️tests/✅️renames-the-model/🦀️.rs"]
@@ -852,10 +852,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps-the-version/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/✅️bumps/🦀️.rs"]
                             mod tests_bumps_the_version;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses-a-blank-version/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔢️change-model-version/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_version;
                         }
                         #[path = "."]
@@ -884,10 +884,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses-a-short-year/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_short_year;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets-denver-ground/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌡️update-ground-temperature/🧪️tests/✅️sets/🦀️.rs"]
                             mod tests_sets_denver_ground;
                         }
                         #[path = "."]
@@ -903,7 +903,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/⛔️refuses-month-13/🦀️.rs"]
                             mod tests_refuses_month_13;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens-to-january/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📅️update-run-period/🧪️tests/✅️shortens/🦀️.rs"]
                             mod tests_shortens_to_january;
                         }
                         #[path = "."]
@@ -916,10 +916,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches-a-network/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/✅️attaches/🦀️.rs"]
                             mod tests_attaches_a_network;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses-unpaired-nodes/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫧️replace-airflow-network/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_unpaired_nodes;
                         }
                         #[path = "."]
@@ -932,10 +932,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds-zone-air-temp/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_zone_air_temp;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses-a-duplicate/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📊️add-output-variable/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_duplicate;
                         }
                         #[path = "."]
@@ -948,10 +948,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops-zone-air-temp/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_zone_air_temp;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📉️remove-output-variable/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -964,10 +964,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds-hannover-epw/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/✅️binds/🦀️.rs"]
                             mod tests_binds_hannover_epw;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses-a-bad-uri/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌦️bind-weather-file/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_bad_uri;
                         }
                         #[path = "."]
@@ -980,10 +980,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses-when-unbound/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_when_unbound;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds-the-weather/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌤️unbind-weather-file/🧪️tests/✅️unbinds/🦀️.rs"]
                             mod tests_unbinds_the_weather;
                         }
                         #[path = "."]
@@ -996,26 +996,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects-the-geometry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/✅️connects/🦀️.rs"]
                             mod tests_connects_the_geometry;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses-a-bad-uri/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪢️connect-referenced-model/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_bad_uri;
                         }
                         #[path = "."]
                         pub mod disconnect_referenced_model {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/✅️disconnects-the-geometry/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/🧪️tests/✅️disconnects/🦀️.rs"]
                             mod tests_disconnects_the_geometry;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced-model/🧪️tests/⛔️refuses-when-absent/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✂️disconnect-referenced/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_when_absent;
                         }
                         #[path = "."]
@@ -1028,7 +1028,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏠️rename-zone/🧪️tests/✅️renames-zone-one/🦀️.rs"]
@@ -1044,10 +1044,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses-zero-volume/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero_volume;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️change-zone-volume/🧪️tests/✅️resizes/🦀️.rs"]
                             mod tests_resizes_zone_one;
                         }
                         #[path = "."]
@@ -1060,10 +1060,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses-zero-instances/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero_instances;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks-four-storeys/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✖️change-zone-multiplier/🧪️tests/✅️stacks/🦀️.rs"]
                             mod tests_stacks_four_storeys;
                         }
                         #[path = "."]
@@ -1076,26 +1076,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees-the-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/✅️frees/🦀️.rs"]
                             mod tests_frees_the_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌬️change-zone-conditioned/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                         }
                         #[path = "."]
                         pub mod change_zone_floor_area_participation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/✅️excludes-the-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🧪️tests/✅️excludes/🦀️.rs"]
                             mod tests_excludes_the_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area-participation/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐️change-zone-floor-area/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                         }
                         #[path = "."]
@@ -1143,7 +1143,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️create-space/🧪️tests/✅️adds-a-space/🦀️.rs"]
                             mod tests_adds_a_space;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️create-space/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪑️create-space/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                         }
                         #[path = "."]
@@ -1159,7 +1159,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-space/🧪️tests/✅️deletes-a-free-space/🦀️.rs"]
                             mod tests_deletes_a_free_space;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-space/🧪️tests/⛔️refuses-a-missing-space/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧹️delete-space/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_space;
                         }
                         #[path = "."]
@@ -1172,7 +1172,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️rename-space/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️rename-space/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️rename-space/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔤️rename-space/🧪️tests/✅️renames-a-space/🦀️.rs"]
@@ -1188,10 +1188,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-space-floor-area/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-space-floor-area/🧪️tests/⛔️refuses-negative-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-space-floor-area/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_area;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-space-floor-area/🧪️tests/✅️resizes-a-space/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮️change-space-floor-area/🧪️tests/✅️resizes/🦀️.rs"]
                             mod tests_resizes_a_space;
                         }
                         #[path = "."]
@@ -1207,7 +1207,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️change-space-zone/🧪️tests/✅️moves-a-space/🦀️.rs"]
                             mod tests_moves_a_space;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️change-space-zone/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️change-space-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                         }
                         #[path = "."]
@@ -1223,7 +1223,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️create-surface/🧪️tests/✅️adds-a-south-wall/🦀️.rs"]
                             mod tests_adds_a_south_wall;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️create-surface/🧪️tests/⛔️refuses-two-vertices/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟫️create-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_two_vertices;
                         }
                         #[path = "."]
@@ -1252,7 +1252,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏳️rename-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏳️rename-surface/🧪️tests/⛔️refuses-a-taken-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏳️rename-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_taken_name;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏳️rename-surface/🧪️tests/✅️renames-a-wall/🦀️.rs"]
@@ -1271,7 +1271,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-surface-zone/🧪️tests/✅️moves-a-wall/🦀️.rs"]
                             mod tests_moves_a_wall;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-surface-zone/🧪️tests/⛔️refuses-a-missing-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗜️change-surface-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_zone;
                         }
                         #[path = "."]
@@ -1284,10 +1284,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-surface-class/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-surface-class/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-surface-class/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-surface-class/🧪️tests/✅️turns-a-wall-to-roof/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧩️change-surface-class/🧪️tests/✅️turns/🦀️.rs"]
                             mod tests_turns_a_wall_to_roof;
                         }
                         #[path = "."]
@@ -1300,42 +1300,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices/🧪️tests/✅️narrows-a-wall/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices/🧪️tests/✅️narrows/🦀️.rs"]
                             mod tests_narrows_a_wall;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices/🧪️tests/⛔️refuses-a-line/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔺️replace-surface-vertices/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_line;
                         }
                         #[path = "."]
                         pub mod change_surface_construction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface-construction/🧪️tests/✅️swaps-the-wall-stack/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧰️change-surface/🧪️tests/✅️swaps/🦀️.rs"]
                             mod tests_swaps_the_wall_stack;
                         }
                         #[path = "."]
                         pub mod change_surface_boundary_condition {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/🧪️tests/✅️grounds-a-floor/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/🧪️tests/✅️grounds/🦀️.rs"]
                             mod tests_grounds_a_floor;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary-condition/🧪️tests/⛔️refuses-half-a-union/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚧️change-surface-boundary/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_half_a_union;
                         }
                         #[path = "."]
@@ -1348,26 +1348,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-surface-sun-exposed/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-surface-sun-exposed/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-surface-sun-exposed/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-surface-sun-exposed/🧪️tests/✅️shades-a-wall/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌅️change-surface-sun-exposed/🧪️tests/✅️shades/🦀️.rs"]
                             mod tests_shades_a_wall;
                         }
                         #[path = "."]
                         pub mod change_surface_wind_exposed {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind-exposed/🧪️tests/✅️shelters-a-wall/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍃️change-surface-wind/🧪️tests/✅️shelters/🦀️.rs"]
                             mod tests_shelters_a_wall;
                         }
                         #[path = "."]
@@ -1380,10 +1380,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier/🧪️tests/⛔️refuses-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier/🧪️tests/✅️repeats-a-wall/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔁️change-surface-multiplier/🧪️tests/✅️repeats/🦀️.rs"]
                             mod tests_repeats_a_wall;
                         }
                         #[path = "."]
@@ -1396,10 +1396,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️create-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️create-fenestration/🧪️tests/✅️adds-a-south-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️create-fenestration/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_a_south_window;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️create-fenestration/🧪️tests/⛔️refuses-a-missing-host/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪟️create-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_host;
                         }
                         #[path = "."]
@@ -1412,10 +1412,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️delete-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️delete-fenestration/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️delete-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️delete-fenestration/🧪️tests/✅️removes-a-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚪️delete-fenestration/🧪️tests/✅️removes/🦀️.rs"]
                             mod tests_removes_a_window;
                         }
                         #[path = "."]
@@ -1428,42 +1428,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️rename-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️rename-fenestration/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️rename-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️rename-fenestration/🧪️tests/✅️renames-a-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏁️rename-fenestration/🧪️tests/✅️renames/🦀️.rs"]
                             mod tests_renames_a_window;
                         }
                         #[path = "."]
                         pub mod change_fenestration_surface {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/🧪️tests/⛔️refuses-a-missing-host/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_host;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration-surface/🧪️tests/✅️rehosts-a-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧲️change-fenestration/🧪️tests/✅️rehosts/🦀️.rs"]
                             mod tests_rehosts_a_window;
                         }
                         #[path = "."]
                         pub mod change_fenestration_u_value {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/🧪️tests/⛔️refuses-zero-u/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero_u;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u-value/🧪️tests/✅️swaps-the-glazing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐️change-fenestration-u/🧪️tests/✅️swaps/🦀️.rs"]
                             mod tests_swaps_the_glazing;
                         }
                         #[path = "."]
@@ -1476,10 +1476,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️change-fenestration-shgc/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️change-fenestration-shgc/🧪️tests/✅️dims-the-solar-gain/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️change-fenestration-shgc/🧪️tests/✅️dims/🦀️.rs"]
                             mod tests_dims_the_solar_gain;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️change-fenestration-shgc/🧪️tests/⛔️refuses-shgc-above-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌇️change-fenestration-shgc/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_shgc_above_one;
                         }
                         #[path = "."]
@@ -1492,10 +1492,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt/🧪️tests/✅️dims-the-daylight/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt/🧪️tests/✅️dims/🦀️.rs"]
                             mod tests_dims_the_daylight;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt/🧪️tests/⛔️refuses-negative-vlt/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌈️change-fenestration-vlt/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_vlt;
                         }
                         #[path = "."]
@@ -1508,42 +1508,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️change-fenestration-area/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️change-fenestration-area/🧪️tests/✅️doubles-the-glazing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️change-fenestration-area/🧪️tests/✅️doubles/🦀️.rs"]
                             mod tests_doubles_the_glazing;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️change-fenestration-area/🧪️tests/⛔️refuses-zero-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟥️change-fenestration-area/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero_area;
                         }
                         #[path = "."]
                         pub mod change_fenestration_frame_conductance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/🧪️tests/✅️adds-a-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/🧪️tests/✅️adds-a/🦀️.rs"]
                             mod tests_adds_a_frame;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame-conductance/🧪️tests/⛔️refuses-negative-frame/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️change-fenestration-frame/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_frame;
                         }
                         #[path = "."]
                         pub mod change_fenestration_divider_conductance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/🧪️tests/✅️adds-dividers/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_dividers;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration-divider-conductance/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧷️change-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                         }
                         #[path = "."]
@@ -1556,10 +1556,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-shading-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-shading-surface/🧪️tests/✅️adds-an-awning/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-shading-surface/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_an_awning;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-shading-surface/🧪️tests/⛔️refuses-a-line/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌳️create-shading-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_line;
                         }
                         #[path = "."]
@@ -1572,10 +1572,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️delete-shading-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️delete-shading-surface/🧪️tests/⛔️refuses-a-missing-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️delete-shading-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️delete-shading-surface/🧪️tests/✅️removes-an-awning/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪵️delete-shading-surface/🧪️tests/✅️removes/🦀️.rs"]
                             mod tests_removes_an_awning;
                         }
                         #[path = "."]
@@ -1588,42 +1588,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️rename-shading-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️rename-shading-surface/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️rename-shading-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️rename-shading-surface/🧪️tests/✅️renames-an-awning/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏕️rename-shading-surface/🧪️tests/✅️renames/🦀️.rs"]
                             mod tests_renames_an_awning;
                         }
                         #[path = "."]
                         pub mod replace_shading_surface_vertices {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/🧪️tests/✅️deepens-an-awning/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/🧪️tests/✅️deepens/🦀️.rs"]
                             mod tests_deepens_an_awning;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface-vertices/🧪️tests/⛔️refuses-a-line/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗺️replace-shading-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_line;
                         }
                         #[path = "."]
                         pub mod change_shading_surface_transmittance_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/🧪️tests/✅️lets-light-in/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/🧪️tests/✅️lets/🦀️.rs"]
                             mod tests_lets_light_in;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface-transmittance-schedule/🧪️tests/⛔️refuses-a-ghost/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛱️change-shading-surface/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_ghost;
                         }
                         #[path = "."]
@@ -1639,7 +1639,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-surfaces/🧪️tests/✅️joins-two-walls/🦀️.rs"]
                             mod tests_joins_two_walls;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-surfaces/🧪️tests/⛔️refuses-a-self-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝️connect-surfaces/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_self_pair;
                         }
                         #[path = "."]
@@ -1652,42 +1652,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔️disconnect-surfaces/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔️disconnect-surfaces/🧪️tests/✅️parts-two-walls/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔️disconnect-surfaces/🧪️tests/✅️parts/🦀️.rs"]
                             mod tests_parts_two_walls;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔️disconnect-surfaces/🧪️tests/⛔️refuses-a-missing-pair/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔️disconnect-surfaces/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_missing_pair;
                         }
                         #[path = "."]
                         pub mod bind_fenestration_glazing_construction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/🧪️tests/✅️glazes-a-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/🧪️tests/✅️glazes/🦀️.rs"]
                             mod tests_glazes_a_window;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing-construction/🧪️tests/⛔️refuses-no-stack/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊️bind-fenestration-glazing/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_no_stack;
                         }
                         #[path = "."]
                         pub mod clear_fenestration_glazing_construction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/🧪️tests/⛔️refuses-empty/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_empty;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing-construction/🧪️tests/✅️ungazes-a-window/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫗️clear-fenestration-glazing/🧪️tests/✅️ungazes/🦀️.rs"]
                             mod tests_ungazes_a_window;
                         }
                         #[path = "."]
@@ -1700,90 +1700,90 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️change-fenestration-height/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️change-fenestration-height/🧪️tests/✅️raises-the-head/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️change-fenestration-height/🧪️tests/✅️raises/🦀️.rs"]
                             mod tests_raises_the_head;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️change-fenestration-height/🧪️tests/⛔️refuses-zero-height/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬆️change-fenestration-height/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_zero_height;
                         }
                         #[path = "."]
                         pub mod change_fenestration_sill_height {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/🧪️tests/✅️raises-the-sill/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/🧪️tests/✅️raises/🦀️.rs"]
                             mod tests_raises_the_sill;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill-height/🧪️tests/⛔️refuses-negative-sill/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⬇️change-fenestration-sill/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_sill;
                         }
                         #[path = "."]
                         pub mod change_fenestration_overhang_depth {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/🧪️tests/✅️adds-case-610-shade/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_case_610_shade;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration-overhang-depth/🧪️tests/⛔️refuses-negative-depth/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧢️change-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_depth;
                         }
                         #[path = "."]
                         pub mod change_fenestration_overhang_offset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/🧪️tests/✅️lifts-the-overhang/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/🧪️tests/✅️lifts/🦀️.rs"]
                             mod tests_lifts_the_overhang;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration-overhang-offset/🧪️tests/⛔️refuses-negative-offset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎩️change-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_offset;
                         }
                         #[path = "."]
                         pub mod change_fenestration_fin_depth {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/🧪️tests/✅️adds-case-630-fins/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_case_630_fins;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin-depth/🧪️tests/⛔️refuses-negative-fin/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐬️change-fenestration-fin/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_fin;
                         }
                         #[path = "."]
                         pub mod change_fenestration_fin_offset {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/🧪️tests/⛔️refuses-negative-offset/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_negative_offset;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin-offset/🧪️tests/✅️spreads-the-fins/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐋️change-fenestration-fin/🧪️tests/✅️spreads/🦀️.rs"]
                             mod tests_spreads_the_fins;
                         }
                         #[path = "."]
@@ -1852,18 +1852,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_material_conductivity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material-conductivity/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔥️change-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -1884,66 +1884,66 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_material_specific_heat {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific-heat/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♨️change-material-specific/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_material_thermal_absorptance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal-absorptance/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔆️change-material-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_material_solar_absorptance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar-absorptance/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☀️change-material-solar/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_material_visible_absorptance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible-absorptance/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👁️change-material-visible/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2028,18 +2028,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod reorder_construction_layers {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction-layers/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔀️reorder-construction/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2108,82 +2108,82 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_people_gain_activity_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain-activity-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏃️change-people-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_people_gain_people_per_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people-per-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/👥️change-people-gain-people/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_people_gain_sensible_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain-sensible-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌞️change-people-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_people_gain_latent_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💧️change-people-gain-latent/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_people_gain_radiant_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📡️change-people-gain-radiant/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2236,82 +2236,82 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_lighting_gain_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏱️change-lighting-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_lighting_gain_watts_per_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts-per-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔌️change-lighting-gain-watts/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_lighting_gain_radiant_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain-radiant-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌟️change-lighting-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_lighting_gain_visible_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain-visible-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔅️change-lighting-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_lighting_gain_return_air_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain-return-air-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎐️change-lighting-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2364,66 +2364,66 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_equipment_gain_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⌛️change-equipment-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_equipment_gain_watts_per_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts-per-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚡️change-equipment-gain-watts/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_equipment_gain_radiant_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain-radiant-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌠️change-equipment-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_equipment_gain_latent_fraction {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain-latent-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💦️change-equipment-gain/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2476,50 +2476,50 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_infiltration_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏳️change-infiltration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_infiltration_flow_per_exterior_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow-per-exterior-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌫️change-infiltration-flow/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_infiltration_constant_term_coefficient {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration-constant-term-coefficient/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🅰️change-infiltration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2540,18 +2540,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_infiltration_velocity_term_coefficient {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration-velocity-term-coefficient/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🆎️change-infiltration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2572,82 +2572,82 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod create_mechanical_ventilation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical-ventilation/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌪️create-mechanical/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod delete_mechanical_ventilation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical-ventilation/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚫️delete-mechanical/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_mechanical_ventilation_zone {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical-ventilation-zone/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧭️change-mechanical/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_mechanical_ventilation_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical-ventilation-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📆️change-mechanical/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_mechanical_ventilation_design_flow {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical-ventilation-design-flow/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚿️change-mechanical/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2700,66 +2700,66 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_infiltration_design_flow_ach {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design-flow-ach/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️change-infiltration-design/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_infiltration_effective_leakage_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration-effective-leakage-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕳️change-infiltration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_infiltration_discharge_coefficient {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration-discharge-coefficient/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚰️change-infiltration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_infiltration_stack_height {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack-height/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏭️change-infiltration-stack/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -2772,10 +2772,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩺️create-thermostat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩺️create-thermostat/🧪️tests/✅️controls-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩺️create-thermostat/🧪️tests/✅️controls/🦀️.rs"]
                             mod tests_controls_zone_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩺️create-thermostat/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩺️create-thermostat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
@@ -2791,7 +2791,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛑️delete-thermostat/🧪️tests/✅️frees-zone-one/🦀️.rs"]
                             mod tests_frees_zone_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛑️delete-thermostat/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛑️delete-thermostat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -2804,74 +2804,74 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛖️change-thermostat-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛖️change-thermostat-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛖️change-thermostat-zone/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛖️change-thermostat-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛖️change-thermostat-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
                         pub mod change_thermostat_heating_setpoint_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating-setpoint-schedule/🧪️tests/✅️repoints-heating/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥵️change-thermostat-heating/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_heating;
                         }
                         #[path = "."]
                         pub mod change_thermostat_cooling_setpoint_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling-setpoint-schedule/🧪️tests/✅️repoints-cooling/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🐧️change-thermostat-cooling/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_cooling;
                         }
                         #[path = "."]
                         pub mod change_thermostat_heating_throttle_range {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/🧪️tests/⛔️refuses-a-zero-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_zero_band;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating-throttle-range/🧪️tests/✅️widens-heating-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎚️change-thermostat-heating/🧪️tests/✅️widens/🦀️.rs"]
                             mod tests_widens_heating_band;
                         }
                         #[path = "."]
                         pub mod change_thermostat_cooling_throttle_range {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/🧪️tests/⛔️refuses-a-negative-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative_band;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling-throttle-range/🧪️tests/✅️widens-cooling-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎛️change-thermostat-cooling/🧪️tests/✅️widens/🦀️.rs"]
                             mod tests_widens_cooling_band;
                         }
                         #[path = "."]
@@ -2884,10 +2884,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌂️create-humidistat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌂️create-humidistat/🧪️tests/✅️controls-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌂️create-humidistat/🧪️tests/✅️controls/🦀️.rs"]
                             mod tests_controls_zone_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌂️create-humidistat/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌂️create-humidistat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -2900,10 +2900,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️delete-humidistat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️delete-humidistat/🧪️tests/✅️drops-the-control/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️delete-humidistat/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_control;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️delete-humidistat/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏜️delete-humidistat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -2916,10 +2916,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️change-humidistat-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️change-humidistat-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️change-humidistat-zone/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️change-humidistat-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏙️change-humidistat-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
@@ -2932,58 +2932,58 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/✅️repoints-humidifying/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☔️change-humidistat-humidifying-setpoint-schedule/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_humidifying;
                         }
                         #[path = "."]
                         pub mod change_humidistat_dehumidifying_setpoint_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat-dehumidifying-setpoint/🧪️tests/✅️repoints-drying/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏝️change-humidistat/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_drying;
                         }
                         #[path = "."]
                         pub mod change_humidistat_humidifying_throttle_range {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/🧪️tests/⛔️refuses-a-zero-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_zero_band;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat-humidifying-throttle-range/🧪️tests/✅️widens-the-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌧️change-humidistat/🧪️tests/✅️widens/🦀️.rs"]
                             mod tests_widens_the_band;
                         }
                         #[path = "."]
                         pub mod change_humidistat_dehumidifying_throttle_range {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🧪️tests/⛔️refuses-a-negative-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative_band;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat-dehumidifying-throttle/🧪️tests/✅️widens-the-band/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧻️change-humidistat/🧪️tests/✅️widens/🦀️.rs"]
                             mod tests_widens_the_band;
                         }
                         #[path = "."]
@@ -2996,10 +2996,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️create-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️create-ideal-loads-system/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️create-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️create-ideal-loads-system/🧪️tests/✅️serves-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫁️create-ideal-loads-system/🧪️tests/✅️serves/🦀️.rs"]
                             mod tests_serves_zone_one;
                         }
                         #[path = "."]
@@ -3012,90 +3012,90 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫥️delete-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫥️delete-ideal-loads-system/🧪️tests/✅️drops-the-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫥️delete-ideal-loads-system/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_system;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫥️delete-ideal-loads-system/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫥️delete-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_zone {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏢️change-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_max_heating_supply_air_temp {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🧪️tests/✅️cools-the-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/🧪️tests/✅️cools/🦀️.rs"]
                             mod tests_cools_the_supply;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system-max-heating-supply/🧪️tests/⛔️refuses-a-hot-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔴️change-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_hot_supply;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_min_cooling_supply_air_temp {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🧪️tests/✅️lowers-the-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/🧪️tests/✅️lowers/🦀️.rs"]
                             mod tests_lowers_the_supply;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system-min-cooling-supply/🧪️tests/⛔️refuses-a-cold-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔵️change-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_cold_supply;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_max_heating_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/🧪️tests/✅️caps-the-heating/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/🧪️tests/✅️caps/🦀️.rs"]
                             mod tests_caps_the_heating;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system-max-heating-capacity/🧪️tests/⛔️refuses-a-stray-value/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛽️change-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_stray_value;
                         }
                         #[path = "."]
                         pub mod change_ideal_loads_system_max_cooling_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/🧪️tests/✅️caps-the-cooling/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/🧪️tests/✅️caps/🦀️.rs"]
                             mod tests_caps_the_cooling;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system-max-cooling-capacity/🧪️tests/⛔️refuses-a-stray-value/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟧️change-ideal-loads-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_stray_value;
                         }
                         #[path = "."]
@@ -3108,10 +3108,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/🧪️tests/✅️ventilates-per-head/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧍️change-ideal-loads-system-outdoor-air-per-person/🧪️tests/✅️ventilates/🦀️.rs"]
                             mod tests_ventilates_per_head;
                         }
                         #[path = "."]
@@ -3124,10 +3124,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/🧪️tests/✅️ventilates-per-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔳️change-ideal-loads-system-outdoor-air-per-area/🧪️tests/✅️ventilates/🦀️.rs"]
                             mod tests_ventilates_per_area;
                         }
                         #[path = "."]
@@ -3140,10 +3140,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️create-zone-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️create-zone-equipment/🧪️tests/✅️adds-a-baseboard/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️create-zone-equipment/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_a_baseboard;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️create-zone-equipment/🧪️tests/⛔️refuses-rank-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛠️create-zone-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_rank_zero;
                         }
                         #[path = "."]
@@ -3156,10 +3156,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment/🧪️tests/✅️drops-the-baseboard/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_baseboard;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-zone-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3172,10 +3172,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️change-zone-equipment-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️change-zone-equipment-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️change-zone-equipment-zone/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️change-zone-equipment-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏬️change-zone-equipment-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
@@ -3188,58 +3188,58 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type/🧪️tests/✅️swaps-to-a-fan-coil/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔧️change-zone-equipment-type/🧪️tests/✅️swaps/🦀️.rs"]
                             mod tests_swaps_to_a_fan_coil;
                         }
                         #[path = "."]
                         pub mod change_zone_equipment_priority {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/🧪️tests/✅️demotes-it/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/🧪️tests/✅️demotes-it/🦀️.rs"]
                             mod tests_demotes_it;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment-priority/🧪️tests/⛔️refuses-rank-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎗️change-zone-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_rank_zero;
                         }
                         #[path = "."]
                         pub mod change_zone_equipment_heating_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment-heating-capacity/🧪️tests/✅️uprates-heating/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧇️change-zone-equipment/🧪️tests/✅️uprates/🦀️.rs"]
                             mod tests_uprates_heating;
                         }
                         #[path = "."]
                         pub mod change_zone_equipment_cooling_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment-cooling-capacity/🧪️tests/✅️uprates-cooling/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍧️change-zone-equipment/🧪️tests/✅️uprates/🦀️.rs"]
                             mod tests_uprates_cooling;
                         }
                         #[path = "."]
@@ -3252,10 +3252,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️create-daylight-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️create-daylight-zone/🧪️tests/✅️lights-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️create-daylight-zone/🧪️tests/✅️lights/🦀️.rs"]
                             mod tests_lights_zone_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️create-daylight-zone/🧪️tests/⛔️refuses-a-bad-tau/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔭️create-daylight-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_bad_tau;
                         }
                         #[path = "."]
@@ -3268,10 +3268,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone/🧪️tests/✅️darkens-the-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone/🧪️tests/✅️darkens/🦀️.rs"]
                             mod tests_darkens_the_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌗️delete-daylight-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3284,58 +3284,58 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏫️change-daylight-zone-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏫️change-daylight-zone-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏫️change-daylight-zone-zone/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏫️change-daylight-zone-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏫️change-daylight-zone-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
                         pub mod change_daylight_zone_illuminance_target {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/🧪️tests/✅️dims-the-target/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/🧪️tests/✅️dims/🦀️.rs"]
                             mod tests_dims_the_target;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone-illuminance-target/🧪️tests/⛔️refuses-a-dark-target/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪔️change-daylight-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_dark_target;
                         }
                         #[path = "."]
                         pub mod change_daylight_zone_glare_limit {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone-glare-limit/🧪️tests/✅️tightens-glare/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕶️change-daylight-zone/🧪️tests/✅️tightens/🦀️.rs"]
                             mod tests_tightens_glare;
                         }
                         #[path = "."]
                         pub mod change_daylight_zone_window_transmittance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/🧪️tests/✅️darkens-the-glass/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/🧪️tests/✅️darkens/🦀️.rs"]
                             mod tests_darkens_the_glass;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone-window-transmittance/🧪️tests/⛔️refuses-a-bad-tau/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥃️change-daylight-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_bad_tau;
                         }
                         #[path = "."]
@@ -3348,10 +3348,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️create-sizing-object/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️create-sizing-object/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️create-sizing-object/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️create-sizing-object/🧪️tests/✅️sizes-zone-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📶️create-sizing-object/🧪️tests/✅️sizes/🦀️.rs"]
                             mod tests_sizes_zone_one;
                         }
                         #[path = "."]
@@ -3364,10 +3364,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒️delete-sizing-object/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒️delete-sizing-object/🧪️tests/✅️drops-the-sizing/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒️delete-sizing-object/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_sizing;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒️delete-sizing-object/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪒️delete-sizing-object/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3380,74 +3380,74 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️change-sizing-object-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️change-sizing-object-zone/🧪️tests/✅️moves-to-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️change-sizing-object-zone/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_zone_two;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️change-sizing-object-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏨️change-sizing-object-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                         }
                         #[path = "."]
                         pub mod change_sizing_object_sizing_type {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object-sizing-type/🧪️tests/✅️sizes-for-cooling/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧾️change-sizing-object/🧪️tests/✅️sizes/🦀️.rs"]
                             mod tests_sizes_for_cooling;
                         }
                         #[path = "."]
                         pub mod change_sizing_object_design_day_type {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/🧪️tests/✅️reads-a-hot-day/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/🧪️tests/✅️reads/🦀️.rs"]
                             mod tests_reads_a_hot_day;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object-design-day-type/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌥️change-sizing-object/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                         }
                         #[path = "."]
                         pub mod create_room_air_model_assignment {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/🧪️tests/⛔️refuses-a-second-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_second_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model-assignment/🧪️tests/✅️stratifies-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛏️create-room-air-model/🧪️tests/✅️stratifies/🦀️.rs"]
                             mod tests_stratifies_zone_two;
                         }
                         #[path = "."]
                         pub mod delete_room_air_model_assignment {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/🧪️tests/✅️falls-back/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/🧪️tests/✅️falls-back/🦀️.rs"]
                             mod tests_falls_back;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model-assignment/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧺️delete-room-air-model/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3460,10 +3460,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-room-air-model/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-room-air-model/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-room-air-model/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-room-air-model/🧪️tests/✅️stratifies-the-air/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪭️change-room-air-model/🧪️tests/✅️stratifies/🦀️.rs"]
                             mod tests_stratifies_the_air;
                         }
                         #[path = "."]
@@ -3476,10 +3476,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️create-setpoint-manager/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️create-setpoint-manager/🧪️tests/✅️adds-a-scheduled-spm/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️create-setpoint-manager/🧪️tests/✅️adds/🦀️.rs"]
                             mod tests_adds_a_scheduled_spm;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️create-setpoint-manager/🧪️tests/⛔️refuses-a-bad-kind/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📌️create-setpoint-manager/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_bad_kind;
                         }
                         #[path = "."]
@@ -3492,10 +3492,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄️delete-setpoint-manager/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄️delete-setpoint-manager/🧪️tests/✅️drops-the-spm/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄️delete-setpoint-manager/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_spm;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄️delete-setpoint-manager/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍄️delete-setpoint-manager/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3508,42 +3508,42 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️rename-setpoint-manager/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️rename-setpoint-manager/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️rename-setpoint-manager/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️rename-setpoint-manager/🧪️tests/✅️renames-the-spm/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖇️rename-setpoint-manager/🧪️tests/✅️renames/🦀️.rs"]
                             mod tests_renames_the_spm;
                         }
                         #[path = "."]
                         pub mod replace_setpoint_manager_kind {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/🧪️tests/⛔️refuses-stray-limits/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_stray_limits;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager-kind/🧪️tests/✅️resets-on-outdoor-air/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔃️replace-setpoint-manager/🧪️tests/✅️resets/🦀️.rs"]
                             mod tests_resets_on_outdoor_air;
                         }
                         #[path = "."]
                         pub mod change_setpoint_manager_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager-schedule/🧪️tests/✅️repoints-the-spm/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎼️change-setpoint-manager/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_the_spm;
                         }
                         #[path = "."]
@@ -3559,7 +3559,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛞️create-air-loop/🧪️tests/✅️adds-a-main-loop/🦀️.rs"]
                             mod tests_adds_a_main_loop;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛞️create-air-loop/🧪️tests/⛔️refuses-a-jumbled-list/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛞️create-air-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_jumbled_list;
                         }
                         #[path = "."]
@@ -3575,7 +3575,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥀️delete-air-loop/🧪️tests/✅️drops-the-loop/🦀️.rs"]
                             mod tests_drops_the_loop;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥀️delete-air-loop/🧪️tests/⛔️refuses-a-served-loop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥀️delete-air-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_served_loop;
                         }
                         #[path = "."]
@@ -3588,7 +3588,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-air-loop/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-air-loop/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-air-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📇️rename-air-loop/🧪️tests/✅️renames-the-loop/🦀️.rs"]
@@ -3596,50 +3596,50 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_air_loop_supply_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/🧪️tests/⛔️refuses-node-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_node_zero;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply-node/🧪️tests/✅️repoints-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↗️change-air-loop-supply/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_supply;
                         }
                         #[path = "."]
                         pub mod change_air_loop_return_node {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/🧪️tests/⛔️refuses-node-zero/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_node_zero;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return-node/🧪️tests/✅️repoints-return/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/↘️change-air-loop-return/🧪️tests/✅️repoints/🦀️.rs"]
                             mod tests_repoints_return;
                         }
                         #[path = "."]
                         pub mod change_air_loop_design_supply_air_flow {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/🧪️tests/⛔️refuses-no-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_no_flow;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design-supply-air-flow/🧪️tests/✅️uprates-the-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍥️change-air-loop-design/🧪️tests/✅️uprates/🦀️.rs"]
                             mod tests_uprates_the_flow;
                         }
                         #[path = "."]
@@ -3652,26 +3652,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪺️add-air-loop-terminal-zone/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪺️add-air-loop-terminal-zone/🧪️tests/⛔️refuses-an-absent-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪺️add-air-loop-terminal-zone/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_zone;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪺️add-air-loop-terminal-zone/🧪️tests/✅️serves-zone-two/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪺️add-air-loop-terminal-zone/🧪️tests/✅️serves/🦀️.rs"]
                             mod tests_serves_zone_two;
                         }
                         #[path = "."]
                         pub mod remove_air_loop_terminal_zone {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/🧪️tests/⛔️refuses-an-unserved/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_unserved;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal-zone/🧪️tests/✅️stops-serving-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪹️remove-air-loop-terminal/🧪️tests/✅️stops/🦀️.rs"]
                             mod tests_stops_serving_one;
                         }
                         #[path = "."]
@@ -3687,7 +3687,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️create-plant-loop/🧪️tests/✅️adds-a-hot-loop/🦀️.rs"]
                             mod tests_adds_a_hot_loop;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️create-plant-loop/🧪️tests/⛔️refuses-a-jumbled-list/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚗️create-plant-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_jumbled_list;
                         }
                         #[path = "."]
@@ -3703,7 +3703,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣️delete-plant-loop/🧪️tests/✅️drops-the-loop/🦀️.rs"]
                             mod tests_drops_the_loop;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣️delete-plant-loop/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💣️delete-plant-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
@@ -3716,7 +3716,7 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛️rename-plant-loop/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛️rename-plant-loop/🧪️tests/⛔️refuses-a-blank-name/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛️rename-plant-loop/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_blank_name;
                             #[cfg(test)]
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📛️rename-plant-loop/🧪️tests/✅️renames-the-loop/🦀️.rs"]
@@ -3732,58 +3732,58 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-plant-loop-type/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-plant-loop-type/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-plant-loop-type/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-plant-loop-type/🧪️tests/✅️turns-it-chilled/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♻️change-plant-loop-type/🧪️tests/✅️turns/🦀️.rs"]
                             mod tests_turns_it_chilled;
                         }
                         #[path = "."]
                         pub mod change_plant_loop_supply_temperature {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/🧪️tests/✅️cools-the-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/🧪️tests/✅️cools/🦀️.rs"]
                             mod tests_cools_the_supply;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply-temperature/🧪️tests/⛔️refuses-a-hot-supply/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☕️change-plant-loop-supply/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_hot_supply;
                         }
                         #[path = "."]
                         pub mod change_plant_loop_return_temperature {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/🧪️tests/✅️cools-the-return/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/🧪️tests/✅️cools/🦀️.rs"]
                             mod tests_cools_the_return;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return-temperature/🧪️tests/⛔️refuses-a-cold-return/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫖️change-plant-loop-return/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_cold_return;
                         }
                         #[path = "."]
                         pub mod change_plant_loop_design_flow {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/🧪️tests/⛔️refuses-no-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_no_flow;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design-flow/🧪️tests/✅️uprates-the-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚤️change-plant-loop-design/🧪️tests/✅️uprates/🦀️.rs"]
                             mod tests_uprates_the_flow;
                         }
                         #[path = "."]
@@ -3796,10 +3796,10 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment/🧪️tests/✅️names-equipment/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment/🧪️tests/✅️names/🦀️.rs"]
                             mod tests_names_equipment;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment/🧪️tests/⛔️refuses-the-unset-id/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔩️add-plant-loop-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_the_unset_id;
                         }
                         #[path = "."]
@@ -3812,26 +3812,26 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️remove-plant-loop-equipment/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️remove-plant-loop-equipment/🧪️tests/✅️drops-equipment/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️remove-plant-loop-equipment/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_equipment;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️remove-plant-loop-equipment/🧪️tests/⛔️refuses-an-unlisted/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚙️remove-plant-loop-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_unlisted;
                         }
                         #[path = "."]
                         pub mod create_outdoor_air_system {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/🧪️tests/⛔️refuses-an-absent-loop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_loop;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air-system/🧪️tests/✅️ventilates-the-loop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌲️create-outdoor-air/🧪️tests/✅️ventilates/🦀️.rs"]
                             mod tests_ventilates_the_loop;
                         }
                         #[path = "."]
@@ -3844,170 +3844,170 @@ pub mod standards {
                             #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂️delete-outdoor-air-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂️delete-outdoor-air-system/🧪️tests/✅️drops-the-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂️delete-outdoor-air-system/🧪️tests/✅️drops/🦀️.rs"]
                             mod tests_drops_the_system;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂️delete-outdoor-air-system/🧪️tests/⛔️refuses-an-absent-one/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍂️delete-outdoor-air-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_one;
                         }
                         #[path = "."]
                         pub mod change_outdoor_air_system_air_loop {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/🧪️tests/✅️moves-to-the-spare/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/🧪️tests/✅️moves/🦀️.rs"]
                             mod tests_moves_to_the_spare;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system-air-loop/🧪️tests/⛔️refuses-an-absent-loop/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛓️change-outdoor-air-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_loop;
                         }
                         #[path = "."]
                         pub mod change_outdoor_air_system_min_oa_flow {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/🧪️tests/✅️raises-the-minimum/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/🧪️tests/✅️raises/🦀️.rs"]
                             mod tests_raises_the_minimum;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system-min-oa-flow/🧪️tests/⛔️refuses-a-negative/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🦋️change-outdoor-air-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_negative;
                         }
                         #[path = "."]
                         pub mod change_outdoor_air_system_economizer_enabled {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/🧪️tests/✅️frees-the-cooling/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/🧪️tests/✅️frees/🦀️.rs"]
                             mod tests_frees_the_cooling;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system-economizer-enabled/🧪️tests/⛔️refuses-an-absent-row/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💰️change-outdoor-air-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_an_absent_row;
                         }
                         #[path = "."]
                         pub mod create_electrical_load_center {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load-center/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏦️create-electrical-load/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod delete_electrical_load_center {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load-center/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔻️delete-electrical-load/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod rename_electrical_load_center {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load-center/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖊️rename-electrical-load/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod add_electrical_load_center_pv {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center-pv/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/☄️add-electrical-load-center/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod remove_electrical_load_center_pv {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load-center-pv/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌘️remove-electrical-load/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod add_electrical_load_center_battery {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center-battery/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔋️add-electrical-load-center/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod remove_electrical_load_center_battery {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load-center-battery/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪝️remove-electrical-load/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4044,18 +4044,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_pv_system_dc_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc-capacity/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⚛️change-pv-system-dc/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4108,34 +4108,34 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_pv_system_module_efficiency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎖️change-pv-system-module/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_pv_system_inverter_efficiency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/♌️change-pv-system-inverter/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4204,34 +4204,34 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_battery_max_discharge {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max-discharge/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⏬️change-battery-max/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_battery_round_trip_efficiency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥉️change-battery-round-trip/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4268,34 +4268,34 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_shw_system_heater_capacity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater-capacity/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🍵️change-shw-system-heater/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_shw_system_storage_volume {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage-volume/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🛢️change-shw-system-storage/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4332,114 +4332,114 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod create_solar_thermal_system {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal-system/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌄️create-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod delete_solar_thermal_system {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal-system/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌆️delete-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_solar_thermal_system_collector_area {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal-system-collector-area/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟩️change-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_solar_thermal_system_efficiency {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal-system-efficiency/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏅️change-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_solar_thermal_system_storage_volume {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal-system-storage-volume/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧃️change-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_solar_thermal_system_tilt {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal-system-tilt/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔼️change-solar-thermal/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_solar_thermal_system_azimuth {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system-azimuth/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/⛵️change-solar-thermal-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4460,66 +4460,66 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod delete_refrigeration_system {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration-system/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🫠️delete-refrigeration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_refrigeration_system_case_count {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration-system-case-count/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗄️change-refrigeration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_refrigeration_system_design_load {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration-system-design-load/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🏋️change-refrigeration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_refrigeration_system_defrost_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration-system-defrost-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕑️change-refrigeration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4556,50 +4556,50 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_water_system_fixture_count {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system-fixture-count/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪣️change-water-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_water_system_peak_flow {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak-flow/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚾️change-water-system-peak/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_water_system_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕒️change-water-system/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4636,18 +4636,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_fault_target_equipment {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target-equipment/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎣️change-fault-target/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4684,18 +4684,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_fault_start_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕓️change-fault-start/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4844,18 +4844,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod remove_thermal_enclosure_zone {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure-zone/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔓️remove-thermal-enclosure/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4892,18 +4892,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_constant_schedule_value {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule-value/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕝️change-constant-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -4940,50 +4940,50 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod replace_daily_schedule_hourly_values {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule-hourly-values/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕔️replace-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_daily_schedule_interpolation {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule-interpolation/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕕️change-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_daily_schedule_limits {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule-limits/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕟️change-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -5068,274 +5068,274 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod insert_annual_schedule_rule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule-rule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📗️insert-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod remove_annual_schedule_rule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule-rule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📙️remove-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod reorder_annual_schedule_rules {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule-rules/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗂️reorder-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_annual_schedule_default_daily_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule-default-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎌️change-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_annual_schedule_holiday_daily_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule-holiday-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎄️change-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod add_annual_schedule_holiday {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule-holiday/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎉️add-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod remove_annual_schedule_holiday {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule-holiday/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎊️remove-annual-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod create_time_series_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪗️create-time-series/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod delete_time_series_schedule {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🎞️delete-time-series/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod replace_time_series_schedule_values {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series-schedule-values/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕘️replace-time-series/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_time_series_schedule_timestep {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series-schedule-timestep/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🕙️change-time-series/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod replace_fenestration_vertices {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🧪️tests/✅️shapes-a-gable/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/🧪️tests/✅️shapes/🦀️.rs"]
                             mod tests_shapes_a_gable;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration-vertices/🧪️tests/⛔️refuses-a-line/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔶️replace-fenestration/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses_a_line;
                         }
                         #[path = "."]
                         pub mod change_glazing_material_thickness {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material-thickness/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔷️change-glazing-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_glazing_material_conductivity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material-conductivity/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟠️change-glazing-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_glazing_material_solar_transmittance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material-solar-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟡️change-glazing-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_glazing_material_visible_transmittance {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material-visible-transmittance/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🥽️change-glazing-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
                         pub mod change_glazing_material_infrared_emissivity {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material-infrared-emissivity/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🩻️change-glazing-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]
@@ -5356,18 +5356,18 @@ pub mod standards {
                         }
                         #[path = "."]
                         pub mod change_gas_material_thickness {
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/🦀️.rs"]
                             mod component;
                             pub use component::*;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🔺️diff/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/🔺️diff/🦀️.rs"]
                             pub mod diff;
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/↩️inverse/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/↩️inverse/🦀️.rs"]
                             pub mod inverse;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🧪️tests/✅️applies/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/🧪️tests/✅️applies/🦀️.rs"]
                             mod tests_applies;
                             #[cfg(test)]
-                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material-thickness/🧪️tests/⛔️refuses/🦀️.rs"]
+                            #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟣️change-gas-material/🧪️tests/⛔️refuses/🦀️.rs"]
                             mod tests_refuses;
                         }
                         #[path = "."]

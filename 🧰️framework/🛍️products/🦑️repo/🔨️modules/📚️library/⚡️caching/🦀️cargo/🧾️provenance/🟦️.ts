@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { homedir } from "node:os";
 import { join, posix, win32 } from "node:path";
-import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { cargoDirectories } from "../🟦️.ts";
 
 /**

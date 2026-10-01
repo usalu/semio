@@ -6,7 +6,9 @@ import { join } from "node:path";
 import type { BundleLinter } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { dependencyBoundaryBreachesForBundleDir } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript, ScriptRouter, devToolingEnv, resolveTestLevel, runBundleScriptMain, runBunx, runCmd, runVitest } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { devToolingEnv, resolveTestLevel, runBunx, runCmd, runVitest } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../🏃️process/🧭️routing/🟦️.ts";
+import { runRepoScriptMain } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { defineLint } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 export const policy = defineLint("@semio-tech/ui-react-bundle", (l: BundleLinter) => {
@@ -398,4 +400,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("check-ui-primitives", CheckUiPrimitivesScript)
   .register("check-chrome-i18n", CheckChromeI18nScript);
 
-await runBundleScriptMain(router, import.meta.url);
+await runRepoScriptMain(router, import.meta.url);

@@ -14,7 +14,7 @@ export type { DeleteHandleKind } from "./🗑️delete-handle-kind/🟦️";
 export type { RenameHandleKind } from "./✒️rename-handle-kind/🟦️";
 export type { ChangeHandleKindLabel } from "./🔖️change-handle-kind-label/🟦️";
 export type { ChangeHandleKindColor } from "./🎨️change-handle-kind-color/🟦️";
-export type { ChangeHandleKindDefaultWireKind } from "./🔌️change-handle-kind-default-wire-kind/🟦️";
+export type { ChangeHandleKindDefaultWireKind } from "./🔌️change-handle-kind-default-wire/🟦️";
 export type { CreateHandle } from "./🌿️create-handle/🟦️";
 export type { DeleteHandle } from "./❌️delete-handle/🟦️";
 export type { MoveHandle } from "./📍️move-handle/🟦️";
@@ -42,7 +42,7 @@ export type Block2dMutation =
   | { mutation: "renameHandleKind" } & import("./✒️rename-handle-kind/🟦️").RenameHandleKind
   | { mutation: "changeHandleKindLabel" } & import("./🔖️change-handle-kind-label/🟦️").ChangeHandleKindLabel
   | { mutation: "changeHandleKindColor" } & import("./🎨️change-handle-kind-color/🟦️").ChangeHandleKindColor
-  | { mutation: "changeHandleKindDefaultWireKind" } & import("./🔌️change-handle-kind-default-wire-kind/🟦️").ChangeHandleKindDefaultWireKind
+  | { mutation: "changeHandleKindDefaultWireKind" } & import("./🔌️change-handle-kind-default-wire/🟦️").ChangeHandleKindDefaultWireKind
   | { mutation: "createHandle" } & import("./🌿️create-handle/🟦️").CreateHandle
   | { mutation: "deleteHandle" } & import("./❌️delete-handle/🟦️").DeleteHandle
   | { mutation: "moveHandle" } & import("./📍️move-handle/🟦️").MoveHandle

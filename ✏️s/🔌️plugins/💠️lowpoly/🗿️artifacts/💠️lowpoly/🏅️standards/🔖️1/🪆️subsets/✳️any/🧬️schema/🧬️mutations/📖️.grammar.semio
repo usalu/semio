@@ -9,6 +9,7 @@ mutation = create-object | delete-object | reorder-objects | rename-object | cha
          | insert-paint-layer | remove-paint-layer | rename-paint-layer
          | change-paint-layer-visible | change-paint-layer-opacity | change-paint-layer-blend-mode
          | edit-paint-layer | apply-paint-stroke
+         | move-selection | rotate-selection | scale-selection
 
 create-object = "create-object" {"index" "=" INT}? object-block
 delete-object = "delete-object" "id" "=" IDENT
@@ -30,6 +31,10 @@ change-paint-layer-blend-mode = "change-paint-layer-blend-mode" "object-id" "=" 
 edit-paint-layer = "edit-paint-layer" "object-id" "=" IDENT "layer-index" "=" INT runs-table
 apply-paint-stroke = "apply-paint-stroke" "object-id" "=" IDENT "layer-index" "=" INT "eraser" "=" BOOL "color" "=" "[" INT INT INT INT "]" "radius" "=" FLOAT "hardness" "=" FLOAT "opacity" "=" FLOAT "points" "=" "[" stroke-point+ "]"
 stroke-point = "[" FLOAT FLOAT "]"
+move-selection = "move-selection" "object-id" "=" IDENT "vertex-ids" "=" "[" INT* "]" "offset" "=" vector
+rotate-selection = "rotate-selection" "object-id" "=" IDENT "vertex-ids" "=" "[" INT* "]" "pivot" "=" vector "axis" "=" vector "angle" "=" FLOAT
+scale-selection = "scale-selection" "object-id" "=" IDENT "vertex-ids" "=" "[" INT* "]" "pivot" "=" vector "factor" "=" vector
+vector = "[" FLOAT FLOAT FLOAT "]"
 
 object-block = "object" "{" object-field* "}"
 object-field = {"id" "=" IDENT} | {"name" "=" TEXT} | {"smooth-shading" "=" BOOL} | mesh-handle | object-transform | paint-layers

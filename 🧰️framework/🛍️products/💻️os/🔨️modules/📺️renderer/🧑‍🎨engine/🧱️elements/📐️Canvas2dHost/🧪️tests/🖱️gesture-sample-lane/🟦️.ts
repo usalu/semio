@@ -103,6 +103,22 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     expect(receiver.sent[3]!.args).toMatchObject({ x: 4, y: 4, samples: [[4, 4]] });
   });
 
+  it("stamps every command with its sample's world position under the camera held when it was sampled", async () => {
+    const receiver = manualReceiver();
+    const live = new JsonLayersCanvasSession(() => "[]", { x: 10, y: -5, zoom: 2 }, () => undefined, receiver.dispatch);
+    live.setSize(640, 480, 1);
+    live.pointerDown(320, 240, 0, false, { shift: false, ctrl: false, meta: false, alt: false });
+    live.pointerMove(330, 250);
+    live.pointerMove(340, 260);
+    live.updateCamera({ x: 0, y: 0, zoom: 1 });
+    live.pointerUp(340, 260, { shift: false, ctrl: false, meta: false, alt: false });
+    await receiver.settleAll();
+    expect(receiver.sent.map((entry) => entry.action)).toEqual(["canvasPointerDown", "canvasPointerMove", "canvasPointerUp"]);
+    expect(receiver.sent[0]!.args).toMatchObject({ worldX: 10, worldY: -5 });
+    expect(receiver.sent[1]!.args).toMatchObject({ worldX: 20, worldY: 5, worldSamples: [[15, 0], [20, 5]] });
+    expect(receiver.sent[2]!.args).toMatchObject({ worldX: 20, worldY: 20, cancelled: false });
+  });
+
   it("turns a cancel mid-gesture into canvasPointerUp { cancelled: true } at the last known sample, and ignores one outside a gesture", async () => {
     const receiver = manualReceiver();
     const live = session(receiver.dispatch);
@@ -138,9 +154,9 @@ describe("🖱️ Canvas2dHost gesture sample lane", () => {
     };
     try {
       const lane = createCanvasPointerGestureLane(receiver.dispatch, () => ({ width: 640, height: 480 }));
-      lane.begin(1, [0, 0, {shift:false,ctrl:false,meta:false,alt:false}], { button: 0, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
-      lane.offer([1, 1, {shift:false,ctrl:false,meta:false,alt:false}]);
-      lane.end([2, 2, {shift:false,ctrl:false,meta:false,alt:false}], { shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
+      lane.begin(1, [0, 0, {shift:false,ctrl:false,meta:false,alt:false}, 0, 0], { button: 0, shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
+      lane.offer([1, 1, {shift:false,ctrl:false,meta:false,alt:false}, 1, 1]);
+      lane.end([2, 2, {shift:false,ctrl:false,meta:false,alt:false}, 2, 2], { shift: false, ctrl: false, meta: false, alt: false, width: 640, height: 480 });
       expect(lane.inFlight()).toBe(true);
       await receiver.rejectOne();
       expect(warned.length).toBe(1);

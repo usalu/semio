@@ -59,5 +59,5 @@ pub fn curation_selection_summary(snapshot: &CurationSnapshot) -> String {
     snapshot.curated.iter().map(|item| format!("{}x{}", item.object_id, item.count)).collect::<Vec<_>>().join(" ")
 }
 #[cfg(test)]
-#[path = "../🧪️tests/🪪️document-contract/🦀️.rs"]
+#[path = "../🧪️tests/🪪️document/🦀️.rs"]
 mod document_contract_tests;

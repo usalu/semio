@@ -1352,7 +1352,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes-part-a-and-severs-fastener/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗑️delete-part/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_part_a_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -1378,7 +1378,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry/🧪️tests/🔳️circle-to-rectangle/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧊replace-part2d-geometry/🧪️tests/🔳️circle/🦀️.rs"]
                                     mod tests_circle_to_rectangle;
                                 }
                                 #[path = "."]
@@ -1547,7 +1547,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes-grip-1-and-severs-fastener/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/➖remove-part-grip/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_grip_1_and_severs_fastener;
                                 }
                                 #[path = "."]
@@ -1599,7 +1599,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-fastener-geometry/🧪️tests/📍️repositions-fast-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧮replace-fastener-geometry/🧪️tests/📍️repositions/🦀️.rs"]
                                     mod tests_repositions_fast_1;
                                 }
                                 #[path = "."]
@@ -1638,7 +1638,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/⚙️architecture-to-engineering/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌐change-domain/🧪️tests/⚙️architecture/🦀️.rs"]
                                     mod tests_architecture_to_engineering;
                                 }
                                 #[path = "."]
@@ -1651,7 +1651,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️change-description/🧪️tests/📝️rewrites-description/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🗒️change-description/🧪️tests/📝️rewrites/🦀️.rs"]
                                     mod tests_rewrites_description;
                                 }
                                 #[path = "."]
@@ -1664,7 +1664,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds-grip-pair/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🤝connect-kind-compatibility/🧪️tests/🤝️adds/🦀️.rs"]
                                     mod tests_adds_grip_pair;
                                 }
                                 #[path = "."]
@@ -1677,7 +1677,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes-grip-pair/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/💔disconnect-kind-compatibility/🧪️tests/🚫️removes/🦀️.rs"]
                                     mod tests_removes_grip_pair;
                                 }
                                 #[path = "."]
@@ -1690,7 +1690,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️null-catalogs-is-noop/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📚replace-kind-catalogs/🧪️tests/📇️null/🦀️.rs"]
                                     mod tests_null_catalogs_is_noop;
                                 }
                                 #[path = "."]
@@ -1706,10 +1706,10 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🧊️appends-volume-2/🦀️.rs"]
                                     mod tests_appends_volume_2;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🌲️paints-the-seed-bay/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🌲️paints/🦀️.rs"]
                                     mod tests_paints_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🚫️rejects-a-volume-id-the-model-already-holds/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌍create-target-volume/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_a_volume_id_the_model_already_holds;
                                 }
                                 #[path = "."]
@@ -1725,10 +1725,10 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️removes-volume-1/🦀️.rs"]
                                     mod tests_removes_volume_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🌲️clears-the-seed-bay/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🌲️clears/🦀️.rs"]
                                     mod tests_clears_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️rejects-deleting-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪦delete-target-volume/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_deleting_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1744,10 +1744,10 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/⬆️lifts-volume-1/🦀️.rs"]
                                     mod tests_lifts_volume_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🌲️shifts-the-seed-bay-north/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🌲️shifts/🦀️.rs"]
                                     mod tests_shifts_the_seed_bay_north;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🚫️rejects-moving-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚀move-target-volume/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_moving_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1763,10 +1763,10 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🔄️half-turn-about-z/🦀️.rs"]
                                     mod tests_half_turn_about_z;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🌲️squares-the-seed-bay/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🌲️squares/🦀️.rs"]
                                     mod tests_squares_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🚫️rejects-rotating-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🌀rotate-target-volume/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_rotating_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1785,7 +1785,7 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/🌲️widens-the-seed-bay/🦀️.rs"]
                                     mod tests_widens_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/🚫️rejects-scaling-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📐scale-target-volume/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_scaling_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1798,13 +1798,13 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🙈️hides/🦀️.rs"]
                                     mod tests_hides_volume_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🌲️hides-the-seed-bay/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🌲️hides/🦀️.rs"]
                                     mod tests_hides_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🚫️rejects-hiding-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🙈change-target-volume-hidden/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_hiding_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1817,13 +1817,13 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks-volume-1/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🔒️locks/🦀️.rs"]
                                     mod tests_locks_volume_1;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🌲️locks-the-seed-bay/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🌲️locks/🦀️.rs"]
                                     mod tests_locks_the_seed_bay;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects-locking-a-volume-the-model-never-held/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔐change-target-volume-locked/🧪️tests/🚫️rejects/🦀️.rs"]
                                     mod tests_rejects_locking_a_volume_the_model_never_held;
                                 }
                                 #[path = "."]
@@ -1839,7 +1839,7 @@ mod tests;
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/✋️drags-two-parts/🦀️.rs"]
                                     mod tests_drags_two_parts;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/⚠️skips-locked-volume-ghost/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/⚠️skips/🦀️.rs"]
                                     mod tests_skips_locked_volume_ghost;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✋️drag-selection2d/🧪️tests/🚫️rejects-ghosts/🦀️.rs"]
@@ -1861,7 +1861,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/🚚️drags-part-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/🚚️drags/🦀️.rs"]
                                     mod tests_drags_part_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🚚️drag-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
@@ -1886,7 +1886,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/🔄️turns-part-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/🔄️turns/🦀️.rs"]
                                     mod tests_turns_part_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔄️rotate-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]
@@ -1911,7 +1911,7 @@ mod tests;
                                     mod component;
                                     pub use component::*;
                                     #[cfg(test)]
-                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/🔍️scales-parts-and-volume/🦀️.rs"]
+                                    #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/🔍️scales/🦀️.rs"]
                                     mod tests_scales_parts_and_volume;
                                     #[cfg(test)]
                                     #[path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🔍️scale-selection3d/🧪️tests/⚠️skips-locked-ghost/🦀️.rs"]

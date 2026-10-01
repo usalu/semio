@@ -525,7 +525,7 @@ fn mounted_settings_controls_publish_with_authored_fields() {
         let action = serde_json::from_value(serde_json::json!({ "scope": "fixture", "name": field["action"], "version": 1 })).unwrap();
         let mut control = ui_contract::BuiltNode::try_new(
             format!("{id}.control"),
-            ui_contract::Component::NumberStepper(ui_contract::NumberStepperProps { value: field["value"].as_f64().unwrap(), step: field["step"].as_f64().unwrap(), uniform: false, min: None, max: None, precision: None }),
+            ui_contract::Component::NumberStepper(ui_contract::NumberStepperProps { value: field["value"].as_f64().unwrap(), step: field["step"].as_f64().unwrap(), uniform: false, ..Default::default() }),
         )
         .ok()
         .unwrap();

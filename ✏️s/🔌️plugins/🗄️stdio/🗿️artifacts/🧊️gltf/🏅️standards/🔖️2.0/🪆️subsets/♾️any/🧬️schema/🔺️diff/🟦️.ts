@@ -1,3 +1,4 @@
+import type {Binary64} from "../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🔢️ieee754/🟦️.ts";
 /** 🔺️ GltfDiff twin: the sparse per-field diff with index-keyed collection triples and no full-replace `snapshot` slot,
  * member for member as `🦀️.rs` writes it, the readers that decode it, and the adjacently tagged phase wire every
  * mutation leaf shares.
@@ -81,15 +82,15 @@ export interface GltfDiffDerivation {
 /** 🈳️ `Option<Option<GltfJson>>` on the wire: `absent` clears the slot, `present` sets it (a present JSON null stays distinct). */
 export type GltfJsonPresence = { state: "absent" } | { state: "present"; value: GltfJson };
 export interface GltfModified<D> {
-  index: number;
+  index: bigint;
   diff: D;
 }
 export interface GltfAdded<T> {
-  index: number;
+  index: bigint;
   item: T;
 }
 export interface GltfCollectionDiff<T, D> {
-  removed?: number[];
+  removed?: bigint[];
   modified?: GltfModified<D>[];
   added?: GltfAdded<T>[];
 }
@@ -104,22 +105,22 @@ export interface GltfAssetDiff {
 }
 
 export interface GltfSceneDiff {
-  nodes?: number[];
+  nodes?: bigint[];
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
 
 export interface GltfNodeDiff {
-  children?: number[];
-  mesh?: number | null;
-  camera?: number | null;
-  skin?: number | null;
-  matrix?: number[] | null;
-  translation?: [number, number, number] | null;
-  rotation?: [number, number, number, number] | null;
-  scale?: [number, number, number] | null;
-  weights?: number[];
+  children?: bigint[];
+  mesh?: bigint | null;
+  camera?: bigint | null;
+  skin?: bigint | null;
+  matrix?: Binary64[] | null;
+  translation?: [Binary64, Binary64, Binary64] | null;
+  rotation?: [Binary64, Binary64, Binary64, Binary64] | null;
+  scale?: [Binary64, Binary64, Binary64] | null;
+  weights?: Binary64[];
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
@@ -127,21 +128,21 @@ export interface GltfNodeDiff {
 
 export interface GltfMeshDiff {
   primitives?: GltfPrimitive[];
-  weights?: number[];
+  weights?: Binary64[];
   name?: string | null;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
 
 export interface GltfAccessorDiff {
-  bufferView?: number | null;
-  byteOffset?: number;
+  bufferView?: bigint | null;
+  byteOffset?: bigint;
   componentType?: GltfComponentType;
   normalized?: boolean;
-  count?: number;
+  count?: bigint;
   kind?: GltfAccessorType;
-  max?: number[] | null;
-  min?: number[] | null;
+  max?: Binary64[] | null;
+  min?: Binary64[] | null;
   sparse?: GltfSparseAccessor | null;
   name?: string | null;
   extensions?: GltfJsonPresence;
@@ -154,16 +155,16 @@ export interface GltfMaterialDiff {
   normalTexture?: GltfNormalTextureInfo | null;
   occlusionTexture?: GltfOcclusionTextureInfo | null;
   emissiveTexture?: GltfTextureInfo | null;
-  emissiveFactor?: [number, number, number];
+  emissiveFactor?: [Binary64, Binary64, Binary64];
   alphaMode?: GltfAlphaMode;
-  alphaCutoff?: number;
+  alphaCutoff?: Binary64;
   doubleSided?: boolean;
   extensions?: GltfJsonPresence;
   extras?: GltfJsonPresence;
 }
 
 export interface GltfBufferDiff {
-  byteLength?: number;
+  byteLength?: bigint;
   uri?: string | null;
   name?: string | null;
   extensions?: GltfJsonPresence;
@@ -187,7 +188,7 @@ export type GltfCamerasDiff = GltfCollectionDiff<GltfCamera, GltfCamera>;
 
 export interface GltfDiff {
   asset?: GltfAssetDiff;
-  scene?: number | null;
+  scene?: bigint | null;
   scenes?: GltfScenesDiff;
   nodes?: GltfNodesDiff;
   meshes?: GltfMeshesDiff;

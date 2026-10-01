@@ -65,7 +65,7 @@ fn blank_mask_preparation_is_bounded_and_cancels_without_publication() {
     let RasterLayerNode::Pixel {mask,..}=&mut layer else {panic!("pixel")};
     *mask=Some(RasterLayerMask {enabled:true,linked:true,invert:false,width:None,height:None,image_key:None,transform:Default::default()});
     document.layers.push(layer);
-    let command=EditMask {layer_id:id,expected_mask:dsl::json::to_json_string(layer_mask(&document.layers[0]).unwrap()),operation:r#"{"kind":"alphaStroke","points":[[0.5,0.5]],"size":1,"opacity":1,"hardness":1,"alpha":0}"#.into(),selection:Some("[[0,65536,128]]".into())};
+    let command=EditMask {layer_id:id,expected_mask:dsl::json::to_json_string(layer_mask(&document.layers[0]).unwrap()),operation:r#"{"kind":"alphaFill","alpha":0,"opacity":1}"#.into(),selection:Some("[[0,65536,128]]".into())};
     let mut candidate=prepare(&command,&document).unwrap();
     assert!(candidate.image.pixels.is_empty());
     assert!(!candidate.advance(&document,32768).unwrap());

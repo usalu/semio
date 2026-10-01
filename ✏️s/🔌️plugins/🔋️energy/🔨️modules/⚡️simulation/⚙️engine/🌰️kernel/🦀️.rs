@@ -1995,7 +1995,7 @@ fn schedule_lookup_step(work: &mut Option<ScheduleLookupWork>, schedules: &Sched
             if let Some(schedule) = schedules.weekly.get(cursor.cursor) {
                 cursor.cursor += 1;
                 if schedule.id == requested_id {
-                    cursor.daily_id = Some(schedule.daily_schedule_ids[(context.day_of_week as usize).min(6)]);
+                    cursor.daily_id = Some(schedule.daily_schedule_ids[crate::schedule::weekly_day_slot(context.day_of_week)]);
                     cursor.daily_fallback = ScheduleLookupStage::DirectDaily;
                     cursor.stage = ScheduleLookupStage::ResolveDaily;
                     cursor.cursor = 0;

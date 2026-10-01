@@ -1,0 +1,55 @@
+{
+  "dialect": {
+    "artifactKind": "s.writer.writer",
+    "standard": "1",
+    "subset": "*"
+  },
+  "snapshot": {
+    "schema": "owned writer 世界",
+    "id": "writer-id",
+    "languageId": "typescript",
+    "uri": "file:///世界/input.ts",
+    "text": "Grüße 🌠\u0000\nconst answer = 42;",
+    "document": {
+      "childId": "document-child",
+      "target": {
+        "artifactId": "document-target",
+        "dialect": {
+          "artifactKind": "s.stdio.semio",
+          "standard": "v1",
+          "subset": "document"
+        }
+      }
+    }
+  },
+  "editedText": "Independently edited 世界\u0000",
+  "query": "SELECT d.id AS writer_id,d.language_id,c.child_id,c.target_artifact_id,c.target_artifact_kind,c.target_standard,c.target_subset FROM writer_document d JOIN writer_document_child c ON c.document_id=d.rowid",
+  "result": {
+    "writer_id": "writer-id",
+    "language_id": "typescript",
+    "child_id": "document-child",
+    "target_artifact_id": "document-target",
+    "target_artifact_kind": "s.stdio.semio",
+    "target_standard": "v1",
+    "target_subset": "document"
+  },
+  "invalidDialects": [
+    {
+      "artifactKind": "s.stdio.txt",
+      "standard": "1",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.writer.writer",
+      "standard": "2",
+      "subset": "*"
+    },
+    {
+      "artifactKind": "s.writer.writer",
+      "standard": "1",
+      "subset": "document"
+    }
+  ],
+  "limitedRows": 1,
+  "limitedValueBytes": 64
+}

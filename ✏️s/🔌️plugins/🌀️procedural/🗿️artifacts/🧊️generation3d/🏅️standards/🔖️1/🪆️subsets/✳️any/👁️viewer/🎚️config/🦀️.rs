@@ -95,7 +95,7 @@ pub struct Generation3dViewConfig {
     /// labelled `No example` silently showed one. Measured on the served viewer 2026-09-13: picking
     /// `No example` over `box-fillet-preview` published three meshes, `meshesLen 3641`, the column's
     /// own numbers. The sibling surface's own row was fixed the same way and CLEARS
-    /// (`✏️editor/🎮️commands/🎨️set-active-example`); a label that promises no example must not load
+    /// (`✏️editor/🎮️commands/🎨️set`); a label that promises no example must not load
     /// one on either surface.
     pub active_example_id: Option<String>,
 }

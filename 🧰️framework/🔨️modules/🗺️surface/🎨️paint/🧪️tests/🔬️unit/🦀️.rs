@@ -452,9 +452,8 @@ fn paint_stroke_intent_uses_intrinsic_layer_coordinates_without_mutating_pixels(
         assert!(host.paint_edit().is_none());
         host.pointer_up_screen(x, y);
         let command = host.take_paint_edit().unwrap();
-        let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
-        for index in 0..2 { assert_eq!(operation["points"][0][index].as_f64(), case["pixelPoint"][index].as_f64()); }
-        assert_eq!(command.layer_id, "p");
+        for index in 0..2 { assert_eq!(Some(command.points[0][index]), case["pixelPoint"][index].as_f64()); }
+        assert_eq!((command.action(), command.tool, command.layer_id.as_str()), ("paintStroke", "brush", "p"));
         assert_eq!(host.buffers.paint, before);
     }
 }
@@ -500,22 +499,17 @@ fn paint_cancel_discards_unpublished_intent_and_accepts_another_stroke() {
     assert!(host.take_paint_edit().is_some());
 }
 
+/// 🧽️ The eraser releases its stroke as the eraser tool; the brush itself is the editor session's, never the host's.
 #[test]
-fn native_eraser_preserves_brush_settings_in_the_command() {
+fn native_eraser_releases_an_eraser_stroke() {
     let mut host = two_pixel_layer_host();
     host.sync_interaction(&["back".into()], None);
     host.set_active_utility("paintEraser");
-    host.set_brush_opacity(0.25);
-    host.set_brush_color([10, 20, 30, 255]);
-    host.set_brush_hardness(0.5);
     host.pointer_down_screen(100.0, 100.0, 0);
     host.pointer_up_screen(100.0, 100.0);
     let command = host.take_paint_edit().unwrap();
-    let operation: serde_json::Value = serde_json::from_str(&command.operation).unwrap();
-    assert_eq!(operation["erase"], true);
-    assert_eq!(operation["hardness"], 0.5);
-    assert_eq!(operation["opacity"], 0.25);
-    assert_eq!(operation["color"], serde_json::json!([10, 20, 30, 255]));
+    assert_eq!((command.action(), command.tool, command.target()), ("paintStroke", "eraser", PaintTarget::Pixels));
+    assert!(!command.points.is_empty());
 }
 
 #[test]
@@ -828,9 +822,9 @@ fn paint_mask_stroke_captures_intrinsic_coordinates_and_exact_revision(){
         for (key,asset) in case["assets"].as_object().unwrap(){host.upload_raster_image_key(key,&png_bytes(asset["width"].as_u64().unwrap() as u32,asset["height"].as_u64().unwrap() as u32)).unwrap();}
         host.sync_interaction(&["p".into()],None);host.set_active_utility(if erase {"paintEraser"}else{"paintBrush"});host.set_paint_target(PaintTarget::Mask);host.set_mask_value(96);host.set_brush_size(3.0);host.set_brush_opacity(0.25);host.set_brush_hardness(0.5);
         let before=host.buffers.paint.clone();let (x,y)=host.world_to_screen_point(case["worldPoint"][0].as_f64().unwrap(),case["worldPoint"][1].as_f64().unwrap());host.pointer_down_screen(x,y,0);host.pointer_up_screen(x,y);
-        let command=host.take_paint_edit().expect(case["name"].as_str().unwrap());assert_eq!(command.action(),"editMask");assert_eq!(command.revision_field(),"expectedMask");assert_eq!(command.layer_id,"p");
+        let command=host.take_paint_edit().expect(case["name"].as_str().unwrap());assert_eq!(command.action(),"paintStroke");assert_eq!(command.target(),PaintTarget::Mask);assert_eq!(command.tool,if erase{"eraser"}else{"brush"});assert_eq!(command.layer_id,"p");
         let revision:MaskJson=serde_json::from_str(command.revision_value().unwrap()).unwrap();let expected:MaskJson=serde_json::from_value(case["document"]["layers"][0]["children"][0]["mask"].clone()).unwrap();assert_eq!(revision,expected);
-        let operation:serde_json::Value=serde_json::from_str(&command.operation).unwrap();assert_eq!(operation,serde_json::json!({"kind":"alphaStroke","points":[[case["pixelPoint"][0].as_f64().unwrap(),case["pixelPoint"][1].as_f64().unwrap()]],"size":3.0,"opacity":0.25,"hardness":0.5,"alpha":if erase{0}else{96}}));assert_eq!(host.buffers.paint,before);
+        assert_eq!(command.points,vec![[case["pixelPoint"][0].as_f64().unwrap(),case["pixelPoint"][1].as_f64().unwrap()]]);assert_eq!(host.buffers.paint,before);
     }}
 }
 

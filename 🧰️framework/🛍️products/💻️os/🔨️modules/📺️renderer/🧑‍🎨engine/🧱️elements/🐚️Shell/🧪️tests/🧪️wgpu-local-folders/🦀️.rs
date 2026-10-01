@@ -1,7 +1,7 @@
 //! 🧪️ Laws of the wgpu shell's remembered folder bindings (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, W2-C
 //! follow-up 5): the shared `🧫️local-folder-bindings` corpus (event log, reconnect offer, folder name, copy), the native
-//! lifecycle (attach → edit → restart → reattach restores rows and head; detach → restart → nothing), and the browser's
-//! accessible "Reconnect folder" band.
+//! lifecycle (attach → edit → restart → reattach restores rows and head; detach → restart → nothing), and the accessible
+//! "Reconnect folder" band a failed reattach leaves — React's browser band, which a browser always shows.
 
 use super::*;
 use semio_framework::kernel::{HistoryEntry, HistoryPatch};
@@ -156,7 +156,7 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
     drop(first);
 
     let mut restarted = booted_shell(Some("doc-7"));
-    assert_eq!(restarted.local_folder_reattach, LocalFolderReattach::Direct);
+    assert!(SHELL_DOCUMENT_TRANSPORTS.folder, "the native shell serves folders");
     assert_eq!(restarted.folder_reconnect_offer(), Some(binding.clone()), "the restart remembers the folder for the same document");
     assert_eq!(restarted.direct_reattach_candidate(), Some(binding.clone()), "the native shell takes it up itself");
     assert_eq!(restarted.folder_reconnect_band_offer(), None, "no gesture is asked for");
@@ -180,7 +180,7 @@ fn a_remembered_folder_comes_back_after_a_restart_and_a_detach_forgets_it() {
 }
 //#endregion 🖥️NativeLifecycle
 
-//#region 🌐️GestureBand
+//#region 🌐️ReconnectBand
 fn paint_folder_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>> {
     let mut cursor = ShellChromeChildCursor::default();
     let (mut overlay, mut atlas, mut input, theme) = (DrawList::default(), FontAtlas::builtin(), InputState::<ActionDescriptor>::default(), Theme::light());
@@ -192,18 +192,20 @@ fn paint_folder_band(shell: &mut ShellState) -> Vec<HitTarget<ActionDescriptor>>
     panic!("the folder reconnect band step never completed");
 }
 
-/// ⚖️ LAW (browser, React's `LocalFolderReconnectBand`): a gesture build offers the remembered folder as a polite status
-/// named by its message and described by what it is about, with "Reconnect folder" and "Forget folder" buttons
-/// dispatching the shell's sync verbs for the document — in both locales; "Forget folder" forgets it and the band goes.
+/// ⚖️ LAW (React's `LocalFolderReconnectBand`): once its direct reattach ran and left the document unattached, the shell
+/// offers the remembered folder as a polite status named by its message and described by what it is about, with
+/// "Reconnect folder" and "Forget folder" buttons dispatching the shell's sync verbs for the document — in both locales;
+/// before that reattach ran nothing is offered, and "Forget folder" forgets it and the band goes.
 #[test]
-fn a_gesture_build_offers_an_accessible_reconnect_band_and_forget_retires_it() {
+fn a_failed_reattach_offers_an_accessible_reconnect_band_and_forget_retires_it() {
     TEST_LOCAL_FOLDERS_LOG.with(|slot| *slot.borrow_mut() = None);
     let corpus = corpus();
     let mut shell = booted_shell(Some("doc-7"));
-    shell.local_folder_reattach = LocalFolderReattach::Gesture;
     let binding = session_binding(&shell, "doc-7", "/Users/ada/Documents/drawings");
     shell.remember_local_folder(binding.clone());
-    assert_eq!(shell.direct_reattach_candidate(), None, "a gesture build never reopens a folder by itself");
+    assert!(paint_folder_band(&mut shell).is_empty() && shell.folder_reconnect_band_offer().is_none(), "no band before the shell tried the folder itself");
+    shell.local_folder_reattach_tried = Some("doc-7".into());
+    assert_eq!(shell.direct_reattach_candidate(), None, "a reattach that ran is not retried");
     for (locale, tongue) in [("en", "en"), ("de", "de")] {
         shell.locale_id = locale.into();
         let hits = paint_folder_band(&mut shell);
@@ -224,4 +226,33 @@ fn a_gesture_build_offers_an_accessible_reconnect_band_and_forget_retires_it() {
     assert!(paint_folder_band(&mut shell).is_empty(), "the band is gone");
     assert!(shell.chrome_accessibility_nodes(&[]).iter().all(|node| node.key != FOLDER_RECONNECT_STATUS_ID));
 }
-//#endregion 🌐️GestureBand
+
+/// ⚖️ LAW (React's `max-w-[90vw] flex-wrap` band): on a desktop the reconnect band is one row with its two buttons
+/// right-aligned after the message; on a phone-width viewport it stays within 90 % of the viewport, wraps the message at
+/// its words without losing one, and flows both buttons below it inside the band; above a time-travel band it stacks
+/// just over it.
+#[test]
+fn the_reconnect_band_is_one_row_on_a_desktop_and_wraps_compact_on_a_phone() {
+    let theme = Theme::light();
+    let corpus = corpus();
+    let texts = &corpus["texts"]["de"];
+    let (message, reconnect, forget) = (texts["message"].as_str().expect("message").to_string(), texts["attach"].as_str().expect("attach").to_string(), texts["forget"].as_str().expect("forget").to_string());
+    let wide = folder_reconnect_band_plan(message.clone(), reconnect.clone(), forget.clone(), None, 1280.0, 720.0, &theme);
+    assert_eq!(wide.lines.len(), 1, "one row on a desktop");
+    assert!(wide.lines[0].rect.x + wide.lines[0].rect.w <= wide.buttons[0].3.x && wide.buttons[0].3.x + wide.buttons[0].3.w <= wide.buttons[1].3.x, "message, Reconnect, Forget in reading order");
+    for width in [375.0_f32, 320.0] {
+        let phone = folder_reconnect_band_plan(message.clone(), reconnect.clone(), forget.clone(), None, width, 812.0, &theme);
+        let band = phone.band;
+        assert!(band.x >= 0.0 && band.w <= width * 0.9 + 0.001, "{width}: within 90 % of the viewport");
+        assert!(phone.lines.len() > 1, "{width}: the message wraps: {:?}", phone.lines);
+        assert_eq!(phone.lines.iter().map(|line| line.text.as_str()).collect::<Vec<_>>().join(" "), message, "{width}: every word, in order");
+        let last = phone.lines.last().expect("a line").rect;
+        for (_, _, _, rect) in &phone.buttons {
+            assert!(rect.x >= band.x && rect.x + rect.w <= band.x + band.w + 0.001 && rect.y >= last.y + last.h - 0.001 && rect.y + rect.h <= band.y + band.h + 0.001, "{width}: a button below the message, inside the band");
+        }
+        let below = Rect::new(0.0, 700.0, width, 60.0);
+        let stacked = folder_reconnect_band_plan(message.clone(), reconnect.clone(), forget.clone(), Some(below), width, 812.0, &theme);
+        assert!(stacked.band.y + stacked.band.h <= below.y, "{width}: stacked over the time-travel band");
+    }
+}
+//#endregion 🌐️ReconnectBand

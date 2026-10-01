@@ -12,7 +12,7 @@ import { block2dFromDslText } from "../../📥️import/🧩️deserializers/�
 
 const FIXTURES = [
   { asset: "hexagonal-cut-concrete-forest-left", fixture: "⬅️hexagonal-cut-concrete-forest-left.json", example: "🌲️hexagonal-cut-concrete-forest-left" },
-  { asset: "hexagonal-cut-concrete-forest-right", fixture: "➡️hexagonal-cut-concrete-forest-right.json", example: "➡️hexagonal-cut-concrete-forest-right" },
+  { asset: "hexagonal-cut-concrete-forest-right", fixture: "➡️hexagonal-cut-concrete-forest-right.json", example: "➡️hexagonal-cut-concrete-forest" },
 ] as const;
 
 async function read(path: string): Promise<string> {

@@ -1,7 +1,7 @@
 //! 📝️ Handcrafted CommonMark block, inline and ordered ownership entities.
 use super::*;
 use std::collections::{BTreeMap,BTreeSet};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,Projection,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
 
 #[derive(Clone,Copy)]
 enum BlockOwner{Document,Quote(i64),Item(i64)}
@@ -113,7 +113,50 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
 
 impl ArtifactSqliteSnapshot for MdSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.md"||dialect.standard!="commonmark"||dialect.subset!="*"{return Err(format!("CommonMark does not own semantic subset {}",dialect.to_coordinate()).into());}if database.table("md_document")?.single_row()?.text(1)?!=self.schema{return Err("CommonMark document identity disagrees with its snapshot".to_string().into());}Ok(store::io_schema::IoOutcome::clean(()))}
+ fn preflight_sqlite_snapshot_encoding(&self, _encoding: SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), String> {
+  let mut bound = NativeEncodingBound::new(control)?;
+  bound.add(32768)?;
+  bound.repeated(self.schema.len(), 24)?;
+  let mut frames = vec![WriteFrame::Blocks(&self.blocks, 0, BlockOwner::Document)];
+  while let Some(frame) = frames.pop() {
+   match frame {
+    WriteFrame::Blocks(blocks, index, _) if index < blocks.len() => {
+     bound.add(4096)?;
+     frames.push(WriteFrame::Blocks(blocks, index + 1, BlockOwner::Document));
+     match &blocks[index] {
+      MdBlock::Heading { inlines, .. } | MdBlock::Paragraph { inlines } => frames.push(WriteFrame::Inlines(inlines, 0, InlineOwner::Block(0))),
+      MdBlock::List { items, .. } => frames.push(WriteFrame::Items(items, 0, 0)),
+      MdBlock::CodeBlock { info, literal } => { if let Some(info) = info { bound.repeated(info.len(), 24)?; } bound.repeated(literal.len(), 24)?; }
+      MdBlock::BlockQuote { blocks } => frames.push(WriteFrame::Blocks(blocks, 0, BlockOwner::Document)),
+      MdBlock::HtmlBlock { raw } => bound.repeated(raw.len(), 24)?,
+      MdBlock::ThematicBreak => {},
+     }
+    }
+    WriteFrame::Inlines(inlines, index, _) if index < inlines.len() => {
+     bound.add(4096)?;
+     frames.push(WriteFrame::Inlines(inlines, index + 1, InlineOwner::Block(0)));
+     match &inlines[index] {
+      MdInline::Text { text } => bound.repeated(text.len(), 24)?,
+      MdInline::Emphasis { inlines } | MdInline::Strong { inlines } => frames.push(WriteFrame::Inlines(inlines, 0, InlineOwner::Block(0))),
+      MdInline::Code { literal } => bound.repeated(literal.len(), 24)?,
+      MdInline::Link { text, url, title } => { bound.repeated(url.len(), 24)?; if let Some(title) = title { bound.repeated(title.len(), 24)?; } frames.push(WriteFrame::Inlines(text, 0, InlineOwner::Block(0))); }
+      MdInline::Image { alt, url, title } => { bound.repeated(alt.len(), 24)?; bound.repeated(url.len(), 24)?; if let Some(title) = title { bound.repeated(title.len(), 24)?; } }
+      MdInline::HtmlInline { raw } => bound.repeated(raw.len(), 24)?,
+      MdInline::SoftBreak | MdInline::HardBreak => {},
+     }
+    }
+    WriteFrame::Items(items, index, _) if index < items.len() => {
+     bound.add(2048)?;
+     frames.push(WriteFrame::Items(items, index + 1, 0));
+     frames.push(WriteFrame::Blocks(&items[index], 0, BlockOwner::Document));
+    }
+    WriteFrame::Blocks(_, _, _) | WriteFrame::Inlines(_, _, _) | WriteFrame::Items(_, _, _) => {},
+   }
+  }
+  bound.finish()
+ }
+
+ fn validate_sqlite_snapshot_subset(&self,dialect:&store::io_schema::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->store::io_schema::IoResult<()>{control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,0)?;if dialect.artifact_kind!="s.stdio.md"||dialect.standard!="commonmark"||dialect.subset!="*"{return Err(format!("CommonMark does not own semantic subset {}",dialect.to_coordinate()).into());}let row=database.table("md_document")?.single_row()?;if row.rowid!=1||row.integer(0)?!=1||row.text(1)?!=self.schema{return Err("CommonMark document identity disagrees with its snapshot".to_string().into());}Ok(store::io_schema::IoOutcome::clean(()))}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,String>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,String>{validate_sqlite_database_schema(database,Self::SQLITE_SCHEMA,control.limits()).map_err(|error|error.to_string())?;control.check_database(database,SqliteSnapshotPhase::ReconstructSnapshot)?;let snapshot=reconstruct(database,control)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;Ok(snapshot)}
 }

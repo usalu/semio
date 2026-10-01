@@ -227,7 +227,7 @@ ID_LISTS = {
     "pvIds": (L("PV systems", "PV-Anlagen"), L("Attached PV systems, by id.", "Angebundene PV-Anlagen, per ID."), "member"),
     "batteryIds": (L("Batteries", "Batterien"), L("Attached batteries, by id.", "Angebundene Batterien, per ID."), "member"),
     "terminalZoneIds": (L("Served zones", "Versorgte Zonen"), L("Zone ids in strictly ascending order.", "Zonen-IDs in streng aufsteigender Reihenfolge."), "member"),
-    "dailyScheduleIds": (L("Daily schedules", "Tageszeitpläne"), L("Seven daily profiles by id, one per weekday slot 0 to 6.", "Sieben Tagesprofile per ID, je eines pro Wochentag 0 bis 6."), "schedule"),
+    "dailyScheduleIds": (L("Daily schedules", "Tageszeitpläne"), L("Seven daily profiles by id, Sunday through Saturday. Slot 0 is Sunday and slot 6 is Saturday.", "Sieben Tagesprofile per ID, Sonntag bis Samstag. Platz 0 ist Sonntag, Platz 6 ist Samstag."), "schedule"),
 }
 ID_LIST_OVERRIDES = {
     ("replace-airflow-network", "zoneIds"): (L("Zones", "Zonen"), L("Zones in the network, by id, paired one-to-one with the zone nodes.", "Zonen im Netz, per ID, paarweise den Zonenknoten zugeordnet."), "network"),
@@ -479,7 +479,7 @@ def value_ui(kind, verb, entity, name):
         "month": calendar("Month", "Monat", "calendar", 12),
         "day": calendar("Day", "Tag", "calendar", 31),
         "year": stepper(L("Year", "Jahr"), "calendar", description=L("Calendar year that fixes the weekdays.", "Kalenderjahr, das die Wochentage festlegt.")) if kind == "update-run-period" else stepper(L("Year", "Jahr"), "calendar"),
-        "dayIndex": stepper(L("Weekday slot", "Wochentag"), "calendar", description=L("Slot of the week, 0 to 6.", "Tag der Woche, 0 bis 6."), softMin=0, softMax=6),
+        "dayIndex": stepper(L("Weekday slot", "Wochentag"), "calendar", description=L("Weekday slot, 0 Sunday through 6 Saturday.", "Wochentag, 0 Sonntag bis 6 Samstag."), softMin=0, softMax=6),
         "from": stepper(L("From position", "Von Position"), "order", description=L("Current position of the rule; 0 is first.", "Aktuelle Position der Regel; 0 ist die erste.")),
         "to": stepper(L("To position", "Nach Position"), "order", description=L("New position of the rule; 0 is first.", "Neue Position der Regel; 0 ist die erste.")),
         "hourlyValues": listing(L("Hourly values", "Stundenwerte"), "values", L("Twenty-four values, one per hour of the day.", "Vierundzwanzig Werte, einer je Tagesstunde.")),

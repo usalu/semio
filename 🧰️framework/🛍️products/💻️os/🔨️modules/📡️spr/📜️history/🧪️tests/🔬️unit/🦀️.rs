@@ -26,6 +26,7 @@ fn commit(checkpoint_id: &str, parent_id: Option<&str>, change_id: &str, mutatio
         authors: vec![crate::os_spr::TransitionAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
         message: Some("first checkpoint".to_string()),
         timestamp: "2024-01-15T10:32:00Z".to_string(),
+        line_id: None,
     })
 }
 
@@ -34,18 +35,18 @@ async fn sample_log() -> HistoryLog {
         doc_id: "doc-1".to_string(),
         schema: "org.semio.demo.v1".to_string(),
         edits: vec![
-            HistoryEdit {
+            HistoryEdit { line: None,
                 id: "edit-1".to_string(),
                 actor: Some("alice".to_string()),
                 started_at: "2024-01-15T10:30:00Z".to_string(),
                 finished_at: Some("2024-01-15T10:30:05Z".to_string()),
                 coalesce_key: Some("typing".to_string()),
-                description: Some("first edit".to_string()), verb: None,
+                description: Some("first edit".to_string()), verb: Some("typeText".to_string()),
                 ops: vec![OpPayload { text: Some("set foo=1".to_string()), binary: None }, OpPayload { text: Some("set bar=2".to_string()), binary: None }],
                 inverse: Vec::new(),
                 meta: None, lane: None,
             },
-            HistoryEdit {
+            HistoryEdit { line: None,
                 id: "edit-2".to_string(),
                 actor: None,
                 started_at: "not-a-canonical-timestamp".to_string(),
@@ -83,6 +84,8 @@ async fn sample_log() -> HistoryLog {
         ],
         composition: None,
         conflicts: Vec::new(),
+        viewer_line: None,
+        viewer_checkpoint: None,
     }
 }
 
@@ -309,7 +312,7 @@ async fn op_meta_messages_round_trip_every_severity_and_target_shape() {
             HistoryMessage { level: 3, code: "mutation.invariant".to_string(), message: "broken".to_string(), target: vec!["x".to_string(), "y".to_string(), "z".to_string()], op_index: None },
         ],
     };
-    let edit = HistoryEdit {
+    let edit = HistoryEdit { line: None,
         id: "edit-m".to_string(),
         actor: None,
         started_at: "2024-01-01T00:00:00Z".to_string(),
@@ -501,7 +504,7 @@ async fn edit_payload_round_trips_with_all_optionals_and_meta() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_round_trips_minimal_edit() {
-    let edit = HistoryEdit { id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
+    let edit = HistoryEdit { line: None, id: "edit-x".to_string(), actor: None, started_at: "2024-01-01T00:00:00Z".to_string(), finished_at: None, coalesce_key: None, description: None, verb: None, ops: Vec::new(), inverse: Vec::new(), meta: None, lane: None };
     let mut dict = DictBuilder::new();
     let payload = encode_edit(&edit, &mut dict, |_| None).await.unwrap();
     let mut reader = DictReader::new();
@@ -576,7 +579,7 @@ async fn transition_record_round_trips_its_envelope() {
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_payloads() {
-    let edit = HistoryEdit {
+    let edit = HistoryEdit { line: None,
         id: "edit-y".to_string(),
         actor: Some("bob".to_string()),
         started_at: "2024-02-01T00:00:00Z".to_string(),
@@ -599,7 +602,7 @@ async fn edit_payload_round_trips_a_backwards_section_mixing_text_and_binary_pay
 
 #[semio_framework_async_macros::async_test]
 async fn edit_payload_with_empty_backwards_omits_the_section_and_decodes_empty() {
-    let edit = HistoryEdit {
+    let edit = HistoryEdit { line: None,
         id: "edit-z".to_string(),
         actor: None,
         started_at: "2024-02-01T00:00:00Z".to_string(),
@@ -749,7 +752,7 @@ async fn appended_transitions_decode_in_append_order_across_commits() {
 
 //#region 🔖️Fold
 fn fold_edit(id: &str, op_id: &str, physical_ms: i64) -> HistoryEdit {
-    HistoryEdit {
+    HistoryEdit { line: None,
         id: id.to_string(),
         actor: Some("alice".to_string()),
         started_at: "2024-01-15T10:30:00Z".to_string(),
@@ -774,6 +777,8 @@ fn fold_log() -> HistoryLog {
         ],
         composition: None,
         conflicts: Vec::new(),
+        viewer_line: None,
+        viewer_checkpoint: None,
     }
 }
 
@@ -822,7 +827,7 @@ async fn fold_excludes_edits_quarantined_by_an_unaccepted_conflict() {
         diff: crate::os_spr::ArtifactDiff { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: vec![1] },
         inverse: crate::os_spr::InverseMutation { schema: crate::os_spr::SchemaId("schema-f".to_string()), payload: Vec::new() },
         timestamp: crate::os_spr::HybridLogicalTimestamp { actor: 2, physical_ms: 100, logical: 0 },
-        transaction: None, verb: None,
+        transaction: None, verb: None, line: None,
     };
     let mut envelope = Vec::new();
     crate::os_spr::encode_envelope(&quarantined, &mut envelope);

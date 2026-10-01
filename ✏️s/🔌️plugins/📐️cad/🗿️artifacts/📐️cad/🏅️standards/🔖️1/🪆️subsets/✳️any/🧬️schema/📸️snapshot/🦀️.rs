@@ -16,7 +16,7 @@ use std::collections::BTreeMap;
 ///
 /// 🛡️ `deny_unknown_fields` closes that replacement: a snapshot still carrying the retired inline
 /// `objects`/`shapeGeometry`/`activeModelDefinitionId` keys must FAIL to decode, never decode with
-/// them silently dropped (`🧫️fixtures/🪪️document-contract`'s `invalidDocuments`).
+/// them silently dropped (`🧫️fixtures/🪪️document`'s `invalidDocuments`).
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, ArtifactSchema, dsl::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 #[dsl(extension = "cad")]

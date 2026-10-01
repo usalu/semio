@@ -173,7 +173,7 @@ impl app_store::ArtifactStoreOneItemPreparation<ZipSnapshot, ZipMutation> for Zi
                 let authority = self.authority.as_ref().ok_or_else(|| format!("{}-authority-owner", self.prefix))?;
                 let sequence = authority.next_sequence_number();
                 let id = format!("{}-{sequence}", self.prefix);
-                let edit = protocol::Edit {
+                let edit = protocol::Edit { line: authority.line_id().map(str::to_owned),
                     id: id.clone(),
                     actor: Some(authority.actor().to_string()),
                     forwards: vec![mutation],

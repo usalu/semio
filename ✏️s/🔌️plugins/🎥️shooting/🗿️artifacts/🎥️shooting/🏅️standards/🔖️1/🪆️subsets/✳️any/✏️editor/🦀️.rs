@@ -490,7 +490,6 @@ fn shooting_bounded_reduce(
         return Err(Fault::new(FaultOrigin::App, FaultCode::new("shooting.retained.route"), "the bounded Shooting reducer rejects resumable routes"));
     }
     let mut ctx = ShootingDispatchCtx { selected_asset_ids: interaction.selection.get(SHOOTING_INTERACTION_DOMAIN).map(|selection| selection.ids.clone()).unwrap_or_default() };
-    eprintln!("[DEBUG] shooting retained reduce {} selection {:?}", command.command_id(), interaction.selection);
     command.dispatch(&ArtifactView::with_operation(snapshot, history, operation.clone()), &ConfigView { snapshot: config, window: None }, &mut ctx)
 }
 
@@ -812,12 +811,6 @@ impl ArtifactEditor for ShootingPlayApp {
     fn interaction_topology(doc: &ArtifactView<'_, ShootingSnapshot>, _cfg: &ConfigView<'_, ShootingConfig>) -> semio_framework_plugin::InteractionTopology {
         let ordered = doc.snapshot.assets.iter().map(|asset| semio_framework_plugin::TopologyNode { id: asset.id.clone(), granularity: "asset".into(), parent: None }).collect();
         semio_framework_plugin::InteractionTopology { domains: std::collections::BTreeMap::from([(SHOOTING_INTERACTION_DOMAIN.into(), semio_framework_plugin::DomainTopology { ordered })]) }
-    }
-
-    /// 🏷️ A document op's own localized label, so a gumball transaction's history row reads its leaf — "Drag 2
-    /// assets" / "2 Assets ziehen" — instead of the op's text line.
-    fn mutation_label(op: &ShootingMutation) -> Option<LocalizedLabel> {
-        Some(protocol::SemanticMutation::<ShootingSnapshot>::label(op))
     }
 
     fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Self::Command, Fault> {

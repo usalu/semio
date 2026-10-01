@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 /** 🗄️ Stdio TypeScript composition package router. */
-import { ScriptRouter, runBundleScriptMain } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { StdioArtifactPackageContractScript, StdioArtifactPackageGraphScript } from "../../🏘️composition/🏃️artifact-commands/🟦️.ts";
 import { StdioCompositionBuildScript, StdioCompositionCheckScript, StdioCompositionTestScript } from "../../🏘️composition/🏃️commands/🟦️.ts";
 
@@ -11,4 +12,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("package-contract", StdioArtifactPackageContractScript)
   .register("package-graph", StdioArtifactPackageGraphScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "test" });
+await runScriptMain(router, { defaultCommand: "test" });

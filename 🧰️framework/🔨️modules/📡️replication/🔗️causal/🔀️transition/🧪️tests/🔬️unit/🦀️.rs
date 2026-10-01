@@ -14,6 +14,7 @@ fn every_transition() -> Vec<HistoryTransition> {
             authors: vec![TransitionAuthor { id: "u1".into(), name: "Ada".into(), avatar: None }, TransitionAuthor { id: "u2".into(), name: "Bo".into(), avatar: Some("b.png".into()) }],
             message: Some("first".into()),
             timestamp: "2026-09-19T00:00:00.001Z".into(),
+            line_id: Some("alternative-2".into()),
         }),
         HistoryTransition::Branch { alternative_id: "alt-1".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() },
         HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None },
@@ -88,7 +89,12 @@ fn schema_tag_routes_envelopes() {
 }
 
 fn edit(id: &str, actor: &str, physical_ms: u64) -> FoldEdit {
-    FoldEdit { id: id.into(), actor: Some(actor.into()), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms, logical: 0 }, mutation_ids: vec![MutationId(format!("op-{id}"))] }
+    FoldEdit { id: id.into(), actor: Some(actor.into()), timestamp: HybridLogicalTimestamp { actor: 0, physical_ms, logical: 0 }, mutation_ids: vec![MutationId(format!("op-{id}"))], line: None }
+}
+
+fn on_line(mut edit: FoldEdit, line: &str) -> FoldEdit {
+    edit.line = Some(line.into());
+    edit
 }
 
 fn at(transition: HistoryTransition, actor: &str, physical_ms: u64) -> super::super::MutationEnvelope {
@@ -96,6 +102,10 @@ fn at(transition: HistoryTransition, actor: &str, physical_ms: u64) -> super::su
 }
 
 fn commit(checkpoint_id: &str, parent_id: Option<&str>, operations: &[&str]) -> HistoryTransition {
+    commit_line(checkpoint_id, parent_id, operations, None)
+}
+
+fn commit_line(checkpoint_id: &str, parent_id: Option<&str>, operations: &[&str], line: Option<&str>) -> HistoryTransition {
     HistoryTransition::Commit(TransitionCheckpoint {
         checkpoint_id: checkpoint_id.into(),
         parent_id: parent_id.map(Into::into),
@@ -106,7 +116,12 @@ fn commit(checkpoint_id: &str, parent_id: Option<&str>, operations: &[&str]) -> 
         authors: Vec::new(),
         message: None,
         timestamp: "t".into(),
+        line_id: line.map(str::to_string),
     })
+}
+
+fn head(line: &str, checkpoint: Option<&str>) -> ViewerHead {
+    ViewerHead { line_id: line.into(), checkpoint_id: checkpoint.map(str::to_string) }
 }
 
 fn none() -> std::collections::HashSet<String> {
@@ -163,30 +178,42 @@ fn a_transition_naming_another_actors_operation_is_refused_whole() {
     assert_eq!(fold.refused, vec![stolen.mutation_id.0.clone()]);
 }
 
-/// 🚩️ Commit materializes change/checkpoint facts; checkout restores exactly the checkpoint's edits.
+/// 🚩️ Commit materializes change/checkpoint facts. The canonical head stays at the trunk tip; an explicit
+/// viewer checkpoint shows that checkpoint's live edits.
 #[test]
 fn commit_and_checkout_materialize_facts_and_positions() {
+    let document = ArtifactId("doc".into());
     let edits = [edit("a", "x", 1), edit("b", "x", 3)];
     let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(commit("ck-2", Some("ck-1"), &["b"]), "x", 4), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
-    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
-    assert_eq!(fold.applied, vec!["a"]);
-    assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "b"]);
+    assert_eq!(fold.checkpoint.as_deref(), Some("ck-2"));
+    assert_eq!(fold.alternative, None);
     assert_eq!(fold.checkpoints[1].change_ids, vec!["change-ck-1", "change-ck-2"]);
     assert_eq!(fold.changes[1].edit_ids, vec!["b"]);
+    let pinned = fold_history_for(&document, &edits, &transitions, &none(), &head(&fold.trunk, Some("ck-1"))).expect("pinned");
+    assert_eq!(pinned.applied, vec!["a"]);
+    assert_eq!(pinned.checkpoint.as_deref(), Some("ck-1"));
 }
 
-/// 🔀️ A concurrent edit older than a checkout is subject to it; a newer one lands on top — on every replica.
+/// 👁 A checkout in the log does not move any viewer's head. The trunk tip keeps uncommitted trunk edits
+/// whatever their HLC; an explicit checkpoint hides them. The same events shuffled agree.
 #[test]
 fn checkout_governs_concurrent_edits_by_hlc() {
-    let edits = [edit("a", "x", 1), edit("late-old", "y", 3), edit("late-new", "y", 6)];
+    let document = ArtifactId("doc".into());
+    let edits = [edit("a", "x", 1), edit("late-old", "y", 3), edit("late-new", "y", 6), on_line(edit("branched", "y", 4), "alt")];
     let transitions = [at(commit("ck-1", None, &["a"]), "x", 2), at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 5)];
-    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
-    assert_eq!(fold.applied, vec!["a", "late-new"]);
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.applied, vec!["a", "late-old", "late-new"]);
+    let pinned = fold_history_for(&document, &edits, &transitions, &none(), &head(&fold.trunk, Some("ck-1"))).expect("pinned");
+    assert_eq!(pinned.applied, vec!["a"]);
+    let shuffled = fold_history(&document, &[edit("late-new", "y", 6), edit("a", "x", 1), edit("late-old", "y", 3)], &transitions, &none()).expect("shuffled");
+    assert_eq!(shuffled.applied, fold.applied);
 }
 
-/// 🌳️ The trunk is a first-class alternative: commits made while no branch is active grow its chain and list it first,
-/// a checkout naming it (or none) activates it with only unscoped and trunk-scoped supersessions, switching back to the
-/// branch restores the branch's line, and no branch may claim its id.
+/// 🌳️ The trunk is a first-class alternative: a commit that names no line grows its chain and lists it first.
+/// A checkout event does not select it. A viewer head on a branch sees that branch's chain and its scoped
+/// supersessions; the canonical fold stays on the trunk. No branch may claim the trunk id.
 #[test]
 fn the_trunk_is_a_first_class_alternative() {
     let document = ArtifactId("doc".into());
@@ -196,25 +223,27 @@ fn the_trunk_is_a_first_class_alternative() {
     let mut transitions = vec![
         at(commit("ck-1", None, &["a"]), "x", 2),
         at(HistoryTransition::Branch { alternative_id: "alt".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() }, "x", 3),
-        at(commit("ck-2", Some("ck-1"), &["b"]), "x", 6),
+        at(commit_line("ck-2", Some("ck-1"), &["b"], Some("alt")), "x", 6),
         at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: Some(trunk.clone()) }, "x", 7),
         at(scoped(&trunk, "a"), "x", 8),
         at(scoped("alt", "b"), "x", 9),
     ];
     let on_trunk = fold_history(&document, &edits, &transitions, &none()).expect("fold");
     assert_eq!(on_trunk.trunk, trunk);
-    assert_eq!(on_trunk.alternative, None, "a checkout naming the trunk activates it");
+    assert_eq!(on_trunk.alternative, None);
     assert_eq!(on_trunk.applied, vec!["a"]);
     assert_eq!(on_trunk.alternatives.iter().map(|alternative| (alternative.id.as_str(), alternative.name.as_str(), alternative.checkpoint_ids.clone())).collect::<Vec<_>>(), vec![(trunk.as_str(), "", vec!["ck-1".to_string()]), ("alt", "Variant", vec!["ck-1".to_string(), "ck-2".to_string()])]);
-    assert_eq!(on_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"], "only trunk-scoped and unscoped supersessions apply on the trunk");
-    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-2".into(), alternative_id: Some("alt".into()) }, "x", 10));
-    let on_branch = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(on_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
+    let on_branch = fold_history_for(&document, &edits, &transitions, &none(), &head("alt", None)).expect("branch");
     assert_eq!((on_branch.alternative.as_deref(), on_branch.applied.clone()), (Some("alt"), vec!["a".to_string(), "b".to_string()]));
     assert_eq!(on_branch.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-b"]);
-    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-1".into(), alternative_id: None }, "x", 11));
+    transitions.push(at(HistoryTransition::Checkout { checkpoint_id: "ck-2".into(), alternative_id: Some("alt".into()) }, "x", 10));
+    let still_trunk = fold_history(&document, &edits, &transitions, &none()).expect("checkout does not move the canonical head");
+    assert_eq!(still_trunk.alternative, None);
+    assert_eq!(still_trunk.supersessions.keys().map(|id| id.0.as_str()).collect::<Vec<_>>(), vec!["op-a"]);
     transitions.push(at(commit("ck-3", Some("ck-1"), &[]), "x", 12));
     let grown = fold_history(&document, &edits, &transitions, &none()).expect("fold");
-    assert_eq!(grown.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-3"], "a commit made on the trunk grows its chain");
+    assert_eq!(grown.alternatives[0].checkpoint_ids, vec!["ck-1", "ck-3"]);
     transitions.push(at(HistoryTransition::Branch { alternative_id: trunk.clone(), name: "Stolen".into(), checkpoint_id: "ck-1".into() }, "x", 13));
     assert!(fold_history(&document, &edits, &transitions, &none()).is_err_and(|error| format!("{error:?}").contains("branch claims the trunk alternative")));
     let bare = fold_history(&document, &edits[..1], &[], &none()).expect("fold");
@@ -222,23 +251,28 @@ fn the_trunk_is_a_first_class_alternative() {
     assert_ne!(trunk_alternative_id(&ArtifactId("other".into())), trunk);
 }
 
-/// 🌿️ Branch roots an alternative, commits grow its chain, repin re-identifies the checkpoint everywhere.
+/// 🌿️ Branch registers an alternative. A commit names the line it grows. Repin re-identifies that checkpoint.
+/// The canonical head stays on the trunk tip; the alternative's viewer sees the repinned tip.
 #[test]
 fn branch_commit_and_repin_track_alternative_chains() {
+    let document = ArtifactId("doc".into());
     let edits = [edit("a", "x", 1), edit("b", "x", 4)];
     let transitions = [
         at(commit("ck-1", None, &["a"]), "x", 2),
         at(HistoryTransition::Branch { alternative_id: "alt".into(), name: "Variant".into(), checkpoint_id: "ck-1".into() }, "x", 3),
-        at(commit("ck-2", Some("ck-1"), &["b"]), "x", 5),
+        at(commit_line("ck-2", Some("ck-1"), &["b"], Some("alt")), "x", 5),
         at(HistoryTransition::Repin { checkpoint_id: "ck-2".into(), pinned_checkpoint_id: "ck-2p".into(), pins: vec![TransitionPin { child_uri: "semio://c".into(), checkpoint_id: "c-1".into() }] }, "x", 6),
     ];
-    let fold = fold_history(&ArtifactId("doc".into()), &edits, &transitions, &none()).expect("fold");
-    assert_eq!(fold.alternative.as_deref(), Some("alt"));
+    let fold = fold_history(&document, &edits, &transitions, &none()).expect("fold");
+    assert_eq!(fold.alternative, None);
     assert_eq!(fold.alternatives[1].checkpoint_ids, vec!["ck-1", "ck-2p"]);
-    assert_eq!((fold.alternatives[0].id.as_str(), fold.alternatives[0].checkpoint_ids.clone()), (fold.trunk.as_str(), vec!["ck-1".to_string()]), "the root commit is the trunk's");
-    assert_eq!(fold.checkpoint.as_deref(), Some("ck-2p"));
+    assert_eq!((fold.alternatives[0].id.as_str(), fold.alternatives[0].checkpoint_ids.clone()), (fold.trunk.as_str(), vec!["ck-1".to_string()]));
+    assert_eq!(fold.checkpoint.as_deref(), Some("ck-1"));
     assert_eq!(fold.checkpoints[1].pins.len(), 1);
-    assert_eq!(fold.applied, vec!["a", "b"]);
+    assert_eq!(fold.applied, vec!["a"]);
+    let viewed = fold_history_for(&document, &edits, &transitions, &none(), &head("alt", Some("ck-2"))).expect("repinned explicit checkpoint");
+    assert_eq!(viewed.checkpoint.as_deref(), Some("ck-2p"));
+    assert_eq!(viewed.applied, vec!["a", "b"]);
 }
 
 /// ⚔️ Quarantined edits never become active, even when a checkout names them.
@@ -282,6 +316,7 @@ fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
             authors: json["authors"].as_array().expect("fixture authors").iter().map(|author| TransitionAuthor { id: author["id"].as_str().expect("author id").into(), name: author["name"].as_str().expect("author name").into(), avatar: author["avatar"].as_str().map(str::to_string) }).collect(),
             message: optional("message"),
             timestamp: text("timestamp"),
+            line_id: optional("lineId"),
         }),
         "branch" => HistoryTransition::Branch { alternative_id: text("alternativeId"), name: text("name"), checkpoint_id: text("checkpointId") },
         "checkout" => HistoryTransition::Checkout { checkpoint_id: text("checkpointId"), alternative_id: optional("alternativeId") },
@@ -332,6 +367,7 @@ fn durable_collaborative_redo_fixture_survives_reload_and_hub_restart() {
             actor: Some(row["actor"].as_str().expect("actor").into()),
             timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
             mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+            line: row["line"].as_str().map(str::to_string),
         })
         .collect();
     let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
@@ -504,6 +540,7 @@ fn the_supersede_fold_fixture_matches_the_fold_law() {
             actor: Some(row["actor"].as_str().expect("actor").into()),
             timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
             mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+            line: row["line"].as_str().map(str::to_string),
         })
         .collect();
     let mut transitions: Vec<crate::causal::MutationEnvelope> = Vec::new();
@@ -512,7 +549,11 @@ fn the_supersede_fold_fixture_matches_the_fold_law() {
         match step["kind"].as_str().expect("step kind") {
             "transition" => transitions.push(fixture_step_envelope(&document, step)),
             "expect" => {
-                let fold = fold_history(&document, &edits, &transitions, &none()).unwrap_or_else(|error| panic!("{label}: {error:?}"));
+                let viewer = match step["expect"].get("head").filter(|head| !head.is_null()) {
+                    Some(viewer) => head(viewer["lineId"].as_str().expect("head lineId"), viewer["checkpointId"].as_str()),
+                    None => ViewerHead::canonical_trunk(&document),
+                };
+                let fold = fold_history_for(&document, &edits, &transitions, &none(), &viewer).unwrap_or_else(|error| panic!("{label}: {error:?}"));
                 assert_eq!(fold.alternative, step["expect"]["alternative"].as_str().map(str::to_string), "{label}: alternative");
                 assert_eq!(fold.supersessions, expected_supersessions(&step["expect"]), "{label}: supersessions");
             }
@@ -542,6 +583,7 @@ fn supersessions_are_a_function_of_the_event_set() {
             actor: Some(row["actor"].as_str().expect("actor").into()),
             timestamp: HybridLogicalTimestamp { actor: 0, physical_ms: row["logicalMs"].as_u64().expect("logicalMs"), logical: 0 },
             mutation_ids: row["mutationIds"].as_array().expect("mutationIds").iter().map(|id| MutationId(id.as_str().expect("mutation id").into())).collect(),
+            line: row["line"].as_str().map(str::to_string),
         })
         .collect();
     let transitions: Vec<crate::causal::MutationEnvelope> = fixture["steps"].as_array().expect("steps").iter().filter(|step| step["kind"] == "transition").map(|step| fixture_step_envelope(&document, step)).collect();

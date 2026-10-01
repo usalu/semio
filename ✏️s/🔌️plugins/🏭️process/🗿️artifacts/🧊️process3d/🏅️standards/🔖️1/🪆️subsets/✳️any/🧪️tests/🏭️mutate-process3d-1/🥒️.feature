@@ -77,21 +77,21 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
     Then the applied snapshot, the produced diff and the outcome's diagnostics are exactly what the vector commits, a kind the vector declares observable really moved the projection, and the two implementations agree
     Examples:
       | id                            | dir                           | fixture                                                       |
-      | create-step                   | 🌱create-step                  | 🪚️accepts-a-rip-cut-step-and-inserts-it                      |
-      | delete-step                   | 🗑️delete-step                 | 🚫️accepts-a-step-id-and-removes-it                           |
-      | rename-step                   | 🏷️rename-step                 | 🔤️accepts-a-new-label-and-applies-it                         |
-      | change-step-enabled           | 🔘change-step-enabled          | ⏸️accepts-a-disable-flag-and-applies-it                      |
-      | change-step-origin            | 🧷change-step-origin           | 🏭️accepts-a-machine-provenance-and-applies-it                |
-      | replace-step-measure          | 📐replace-step-measure         | 🕳️accepts-a-bore-measure-and-replaces-it                     |
-      | reorder-steps                 | 🔀reorder-steps                | 🔀️accepts-a-target-index-and-reorders-them                   |
-      | create-machine                | 🏭create-machine               | 🪛️adds-a-drill-press-to-the-workshop                         |
-      | delete-machine                | ❌delete-machine               | ➖️empties-the-workshop-of-the-saw                            |
+      | create-step                   | 🌱create-step                  | 🪚️accepts                      |
+      | delete-step                   | 🗑️delete-step                 | 🚫️accepts                           |
+      | rename-step                   | 🏷️rename-step                 | 🔤️accepts                         |
+      | change-step-enabled           | 🔘change-step-enabled          | ⏸️accepts                      |
+      | change-step-origin            | 🧷change-step-origin           | 🏭️accepts                |
+      | replace-step-measure          | 📐replace-step-measure         | 🕳️accepts                     |
+      | reorder-steps                 | 🔀reorder-steps                | 🔀️accepts                   |
+      | create-machine                | 🏭create-machine               | 🪛️adds                         |
+      | delete-machine                | ❌delete-machine               | ➖️empties                            |
       | rename-machine                | 🔖rename-machine               | 🏷️retitles-the-saw                                           |
-      | change-machine-icon           | 🎨change-machine-icon          | 🪚️swaps-the-saw-icon                                         |
-      | replace-machine-capabilities  | 🔁replace-machine-capabilities | 🕳️trades-the-blade-cut-for-a-gated-pocket-cut                |
-      | move-stock                    | 📍move-stock                   | 🎈️lifts-and-tilts-the-stock                                  |
-      | change-stock-label            | 🔤change-stock-label           | 🔤️relabels-the-oak-beam-as-planed                            |
-      | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues-the-stock-brep-child-handle                       |
+      | change-machine-icon           | 🎨change-machine-icon          | 🪚️swaps                                         |
+      | replace-machine-capabilities  | 🔁replace-machine | 🕳️trades                |
+      | move-stock                    | 📍move-stock                   | 🎈️lifts                                  |
+      | change-stock-label            | 🔤change-stock-label           | 🔤️relabels                            |
+      | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues                       |
 
   @id-inverse
   @level-exhaustive
@@ -105,21 +105,21 @@ Feature: Apply every typed process.process3d mutation to its committed specifica
     Then the snapshot's projection is the before-snapshot's projection again, any divergence is reported by JSON path, and both implementations agree
     Examples:
       | id                            | dir                           | fixture                                                       |
-      | create-step                   | 🌱create-step                  | 🪚️accepts-a-rip-cut-step-and-inserts-it                      |
-      | delete-step                   | 🗑️delete-step                 | 🚫️accepts-a-step-id-and-removes-it                           |
-      | rename-step                   | 🏷️rename-step                 | 🔤️accepts-a-new-label-and-applies-it                         |
-      | change-step-enabled           | 🔘change-step-enabled          | ⏸️accepts-a-disable-flag-and-applies-it                      |
-      | change-step-origin            | 🧷change-step-origin           | 🏭️accepts-a-machine-provenance-and-applies-it                |
-      | replace-step-measure          | 📐replace-step-measure         | 🕳️accepts-a-bore-measure-and-replaces-it                     |
-      | reorder-steps                 | 🔀reorder-steps                | 🔀️accepts-a-target-index-and-reorders-them                   |
-      | create-machine                | 🏭create-machine               | 🪛️adds-a-drill-press-to-the-workshop                         |
-      | delete-machine                | ❌delete-machine               | ➖️empties-the-workshop-of-the-saw                            |
+      | create-step                   | 🌱create-step                  | 🪚️accepts                      |
+      | delete-step                   | 🗑️delete-step                 | 🚫️accepts                           |
+      | rename-step                   | 🏷️rename-step                 | 🔤️accepts                         |
+      | change-step-enabled           | 🔘change-step-enabled          | ⏸️accepts                      |
+      | change-step-origin            | 🧷change-step-origin           | 🏭️accepts                |
+      | replace-step-measure          | 📐replace-step-measure         | 🕳️accepts                     |
+      | reorder-steps                 | 🔀reorder-steps                | 🔀️accepts                   |
+      | create-machine                | 🏭create-machine               | 🪛️adds                         |
+      | delete-machine                | ❌delete-machine               | ➖️empties                            |
       | rename-machine                | 🔖rename-machine               | 🏷️retitles-the-saw                                           |
-      | change-machine-icon           | 🎨change-machine-icon          | 🪚️swaps-the-saw-icon                                         |
-      | replace-machine-capabilities  | 🔁replace-machine-capabilities | 🕳️trades-the-blade-cut-for-a-gated-pocket-cut                |
-      | move-stock                    | 📍move-stock                   | 🎈️lifts-and-tilts-the-stock                                  |
-      | change-stock-label            | 🔤change-stock-label           | 🔤️relabels-the-oak-beam-as-planed                            |
-      | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues-the-stock-brep-child-handle                       |
+      | change-machine-icon           | 🎨change-machine-icon          | 🪚️swaps                                         |
+      | replace-machine-capabilities  | 🔁replace-machine | 🕳️trades                |
+      | move-stock                    | 📍move-stock                   | 🎈️lifts                                  |
+      | change-stock-label            | 🔤change-stock-label           | 🔤️relabels                            |
+      | replace-stock-solid           | 🧊replace-stock-solid          | 🧊️reissues                       |
 
   @id-identity-round-trip
   @level-long

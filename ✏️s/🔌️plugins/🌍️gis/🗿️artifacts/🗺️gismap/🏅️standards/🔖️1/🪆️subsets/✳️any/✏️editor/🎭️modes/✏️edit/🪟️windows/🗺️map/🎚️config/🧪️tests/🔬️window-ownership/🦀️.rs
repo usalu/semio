@@ -16,7 +16,7 @@ fn block_on_gis_map_windows<F: std::future::Future>(future: F) -> F::Output {
 
 #[test]
 fn gis_map_window_ownership_mutations_match_neutral_fixture_and_codecs() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window-ownership/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔬️window/🔣️.json")).unwrap();
     let base: MapWindowConfig = dsl::json::from_json_str(&fixture["baseConfig"].to_string()).unwrap();
     let mut windows = std::collections::BTreeMap::<String, MapWindowConfig>::new();
     for row in fixture["windowInstances"].as_array().unwrap() {

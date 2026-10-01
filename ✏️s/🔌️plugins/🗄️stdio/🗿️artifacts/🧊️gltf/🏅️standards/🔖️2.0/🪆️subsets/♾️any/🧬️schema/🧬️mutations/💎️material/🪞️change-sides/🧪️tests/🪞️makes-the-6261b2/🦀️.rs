@@ -1,11 +1,11 @@
-//! 🪞️ `change-material-double-sided` implementation case `🪞️makes-the-6261b2`: the committed fixture bundle
-//! `♾️any/🧫️fixtures/🧬️mutations/💎️material/🪞️change-sides/🪞️makes-the-6261b2/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
+//! 🪞️ `change-material-double-sided` implementation case `🪞️makes`: the committed fixture bundle
+//! `♾️any/🧫️fixtures/🧬️mutations/💎️material/🪞️change-sides/🪞️makes/` holds every corpus law, and the leaf keeps its language-neutral semantic identity.
 use super::*;
 
 #[test]
 fn committed_case_holds_the_corpus_law() {
     assert_eq!(<ChangeMaterialDoubleSidedMutation as protocol::MutationKind<GltfSnapshot, super::super::GltfMutation>>::SEMANTICS.kind, "change-material-double-sided");
-    super::super::component::fixture_corpus_tests::assert_case("💎️material/🪞️change-sides/🪞️makes-the-6261b2");
+    super::super::component::fixture_corpus_tests::assert_case("💎️material/🪞️change-sides/🪞️makes");
 }
 
 #[semio_framework_async_macros::async_test]

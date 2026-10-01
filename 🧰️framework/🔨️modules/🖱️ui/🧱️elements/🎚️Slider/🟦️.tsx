@@ -15,7 +15,9 @@ import { loadingBorderStateClass, waitingBorderStateClass } from "../../🔨️m
 import { type ElementProps } from "../../🔨️modules/🆔️element-identity/🟦️.ts";
 import { useLabel, useControlAccessibleLabel, Label } from "../🏷️Label/🟦️.tsx";
 import { useInteractionCommands } from "../../🎯️targets/⚛️react/🟦️";
-import { sliderKeyValue, sliderPointerValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
+import { dialAngle, dialPosition, sliderAxisPosition, sliderAxisValue, sliderKeyValue, sliderPointerValue, uiNumberCrossedBound, uiNumberDisplayText, uiNumberTypedValue, type SliderKey } from "../../🧬️contract/🧩️component/🟦️.ts";
+import { formatUiNumber } from "../../🧬️contract/🔢️number-format/🟦️.ts";
+import type { SliderAppearance, UiNumberLimits, UiNumberScale } from "@semio-tech/framework";
 // #endregion 🔌️Adapters
 
 // #region 🏩️Slider
@@ -33,12 +35,18 @@ const sliderTickClassName = cn("bg-element pointer-events-none absolute w-px dat
 
 /** 🎚️ Slider thumb presentation (extent token applied per instance). */
 const sliderThumbBaseClassName = cn(
-  "block shrink-0 rounded-[9999px] bg-element transition-[background-color] outline-hidden",
+  "block shrink-0 rounded-full bg-element transition-[background-color] outline-hidden",
   "hover:bg-emphasized group-hover:bg-emphasized",
   "focus-visible:bg-active-base focus-visible:ring-0",
   "data-[dragging=true]:bg-active-base",
   "disabled:pointer-events-none disabled:opacity-50",
 );
+
+/** 🧭️ Dial knob presentation: a square that holds the rotary face, its detent ticks and needle. */
+const sliderDialClassName = cn("relative aspect-square h-medium shrink-0 rounded-full", "data-[invalid=true]:ring-1 data-[invalid=true]:ring-destructive");
+
+/** ⛔️ Typed-value refusal presentation: the producer's localized message naming the crossed bound. */
+const sliderRefusalClassName = cn("text-destructive block text-xs leading-tight");
 
 /** 🎚️ Slider numeric readout presentation. */
 const sliderValueClassName = cn("text-element w-large text-end text-xs leading-none select-none transition-colors", "hover:text-emphasized group-hover:text-emphasized");
@@ -74,8 +82,18 @@ export interface SliderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 
   onPointerUp?: () => void;
   onPointerCancel?: () => void;
   interactionId?: string;
-  /** 📍️ Detents (`SliderProps.snaps`): a pointer value within the shared radius lands on one, a page key jumps to the next (the shared keyboard law), and each paints a tick. */
+  /** 📍️ Detents (`SliderProps.snaps`): a pointer value within the shared radius lands on one, a page key stops on the first it reaches (the shared keyboard law), and each paints a tick at its axis position. */
   snapValues?: readonly number[];
+  /** 📈️ How the travel maps onto the track (`SliderProps.scale`): evenly, or by ratio on a log axis. */
+  scale?: UiNumberScale;
+  /** 🎡️ How the travel is drawn (`SliderProps.appearance`): a straight track, or a rotary dial (one full counter-clockwise turn, the travel's centre at three o'clock). */
+  appearance?: SliderAppearance;
+  /** 🔁️ The readout, the spoken numbers and a typed value read `stored × displayFactor` (`SliderProps.displayFactor`); a typed value is divided back by the shared law. */
+  displayFactor?: number | null;
+  /** 🎯️ Fraction digits of the readout and a typed value, in display units (`SliderProps.precision`). */
+  precision?: number | null;
+  /** 🚧️ The hard range a typed value must keep (`SliderProps.limits`; the travel itself when absent): a crossing value is refused visibly with the bound's refusal and never dispatched. */
+  limits?: UiNumberLimits | null;
   thumbClassName?: string;
 }
 
@@ -172,6 +190,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     interactionId,
     id,
     snapValues,
+    scale = "linear",
+    appearance = "track",
+    displayFactor = null,
+    precision = null,
+    limits = null,
     step,
     minStepsBetweenThumbs = 0,
     orientation = "horizontal",
@@ -201,6 +224,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   const commands = useInteractionCommands();
   const setActiveInteraction = commands?.setActiveInteraction;
   const doubleClickToEditLabel = useLabel("ui.common.doubleClickToEdit");
+  const [refusal, setRefusal] = reactHostPort.useState<{ readonly message: string | null } | null>(null);
   const range = reactHostPort.useMemo(() => normalizeSliderRange(min, max, step), [max, min, step]);
   const snaps = reactHostPort.useMemo(() => snapValues ?? [], [snapValues]);
   const settle = reactHostPort.useCallback((value: number): number => (snaps.includes(value) ? value : normalizeSliderValue(value, range)), [range, snaps]);
@@ -228,10 +252,13 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   if (thumbIdsRef.current.length > _values.length) thumbIdsRef.current = thumbIdsRef.current.slice(0, _values.length);
 
   const displayValue = _values[0] ?? range.min;
-  const formatReadout = formatDisplayValue ?? formatNumber;
+  const displays = displayFactor != null || precision != null;
+  const formatReadout = formatDisplayValue ?? (displays ? (value: number) => uiNumberDisplayText(value, displayFactor, precision) : formatNumber);
+  const spoken = (value: number): number => (displayFactor == null ? value : Number(formatUiNumber(value * displayFactor)));
+  const axisShare = (value: number): number => sliderAxisPosition(value, range.min, range.max, scale);
   const span = range.max - range.min;
   const readyExtent = ready == null || span <= 0 ? null : Math.min(range.max, Math.max(range.min, ready));
-  const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : ((readyExtent - displayValue) / span) * 100;
+  const readyWidthPct = readyExtent == null || readyExtent <= displayValue || span <= 0 ? 0 : (sliderAxisPosition(readyExtent, range.min, range.max, scale) - sliderAxisPosition(displayValue, range.min, range.max, scale)) * 100;
 
   const publishValues = reactHostPort.useCallback(
     (rawValues: SliderValue, rawThumbIds: readonly string[] = thumbIdsRef.current): SliderValue => {
@@ -305,34 +332,62 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
     setIsEditing(true);
   };
 
+  /** ⌨️ A typed readout reads in display units: unreadable text or a value crossing a hard bound is refused (the draft kept, the
+   * bound's refusal shown); an admitted value — inside the limits, even beyond a soft travel — commits exactly, never clamped. */
+  const commitTyped = (): boolean => {
+    const typed = Number(editValue.trim());
+    if (editValue.trim() === "" || !Number.isFinite(typed)) {
+      setRefusal({ message: null });
+      return false;
+    }
+    const stored = uiNumberTypedValue(typed, displayFactor, precision, [displayValue, ...snaps]);
+    const crossed = uiNumberCrossedBound(stored, range.min, range.max, limits);
+    if (crossed) {
+      setRefusal({ message: crossed.refusal ?? null });
+      return false;
+    }
+    setRefusal(null);
+    if (stored >= range.min && stored <= range.max) {
+      beginGesture();
+      publishValues([stored]);
+      commitGesture();
+    } else {
+      valuesRef.current = [stored];
+      if (controlled) setPendingDraftValues([stored]);
+      else setUncontrolledValues([stored]);
+      onValueChange?.([stored]);
+      onValueCommit?.([stored]);
+    }
+    return true;
+  };
+
   const handleEditKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
-      const newValue = parseFloat(editValue);
-      if (!isNaN(newValue) && newValue >= range.min && newValue <= range.max) {
-        beginGesture();
-        publishValues([newValue]);
-        commitGesture();
-      }
-      setIsEditing(false);
+      if (commitTyped()) setIsEditing(false);
     } else if (e.key === "Escape") {
+      setRefusal(null);
       setIsEditing(false);
     }
   };
 
   const handleEditBlur = () => {
-    setIsEditing(false);
+    if (refusal === null) setIsEditing(false);
   };
 
   const pointerValue = reactHostPort.useCallback(
     (event: React.PointerEvent): number => {
       const rect = trackRef.current?.getBoundingClientRect();
       if (!rect || span <= 0) return range.min;
-      let ratio = orientation === "horizontal" ? (event.clientX - rect.left) / Math.max(1, rect.width) : 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
-      if (orientation === "horizontal" && dir === "rtl") ratio = 1 - ratio;
-      if (inverted) ratio = 1 - ratio;
-      return sliderPointerValue(range.min + Math.min(1, Math.max(0, ratio)) * span, range.min, range.max, range.step, snaps);
+      let ratio: number;
+      if (appearance === "dial") ratio = dialPosition(Math.atan2(rect.top + rect.height / 2 - event.clientY, event.clientX - (rect.left + rect.width / 2)));
+      else {
+        ratio = orientation === "horizontal" ? (event.clientX - rect.left) / Math.max(1, rect.width) : 1 - (event.clientY - rect.top) / Math.max(1, rect.height);
+        if (orientation === "horizontal" && dir === "rtl") ratio = 1 - ratio;
+        if (inverted) ratio = 1 - ratio;
+      }
+      return sliderPointerValue(sliderAxisValue(ratio, range.min, range.max, scale), range.min, range.max, range.step, snaps, scale);
     },
-    [dir, inverted, orientation, range.max, range.min, range.step, snaps, span],
+    [appearance, dir, inverted, orientation, range.max, range.min, range.step, scale, snaps, span],
   );
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
@@ -401,7 +456,7 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
   };
 
   const sliderTitle = useControlAccessibleLabel(id);
-  const valuePercent = (sliderValue: number): number => (span <= 0 ? 0 : ((sliderValue - range.min) / span) * 100);
+  const valuePercent = (sliderValue: number): number => (span <= 0 ? 0 : axisShare(sliderValue) * 100);
   const physicalPercent = (sliderValue: number): number => {
     const logical = valuePercent(sliderValue);
     const physical = orientation === "vertical" ? (inverted ? 100 - logical : logical) : (dir === "rtl") !== inverted ? 100 - logical : logical;
@@ -433,17 +488,33 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
         "has-[[data-slot=slider-thumb][data-dragging=true]]:[&_[data-slot=slider-range]]:bg-active-base",
       )}
     >
+      {appearance === "dial" ? (
+        <div ref={trackRef} data-slot="slider-dial" data-invalid={refusal ? "true" : undefined} className={sliderDialClassName}>
+          <svg viewBox="-1 -1 2 2" aria-hidden="true" className="absolute inset-0 size-full overflow-visible">
+            <circle data-slot="slider-dial-face" cx={0} cy={0} r={0.92} className="fill-muted stroke-element" strokeWidth={0.08} />
+            {snaps.map((snap) => {
+              const angle = dialAngle(axisShare(snap));
+              return <line key={snap} data-slot="slider-tick" data-snap={snap} x1={Math.cos(angle) * 0.62} y1={-Math.sin(angle) * 0.62} x2={Math.cos(angle) * 0.92} y2={-Math.sin(angle) * 0.92} className="stroke-element" strokeWidth={0.08} opacity={0.6} />;
+            })}
+            {(() => {
+              const angle = dialAngle(axisShare(displayValue));
+              return <line data-slot="slider-dial-needle" x1={0} y1={0} x2={Math.cos(angle) * 0.82} y2={-Math.sin(angle) * 0.82} className="stroke-active-base" strokeWidth={0.14} strokeLinecap="round" />;
+            })()}
+          </svg>
+        </div>
+      ) : null}
       <div
         data-slot="slider-track-wrap"
         data-loading={loading ? "true" : undefined}
         data-waiting={waiting ? "true" : undefined}
+        hidden={appearance === "dial" || undefined}
         className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading) || waitingBorderStateClass(waiting))}
       >
         <div
-          ref={trackRef}
+          ref={appearance === "dial" ? undefined : trackRef}
           data-slot="slider-track"
           data-orientation={orientation}
-          className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
+          className={cn("bg-muted relative w-full overflow-hidden rounded-full data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
         >
           <div
             data-slot="slider-range"
@@ -465,21 +536,22 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             />
           ) : null}
         </div>
-        {snaps.map((snap) => (
+        {appearance === "dial" ? null : snaps.map((snap) => (
           <span key={snap} data-slot="slider-tick" data-snap={snap} data-orientation={orientation} aria-hidden="true" className={sliderTickClassName} style={orientation === "horizontal" ? { left: `${physicalPercent(snap)}%` } : { bottom: `${physicalPercent(snap)}%` }} />
         ))}
       </div>
       {_values.map((sliderValue, index) => {
         const thumbId = thumbIdsRef.current[index]!;
+        const dialThumb = appearance === "dial" ? dialAngle(axisShare(sliderValue)) : null;
         return (
           <span
             role="slider"
             tabIndex={disabled ? -1 : 0}
             aria-disabled={disabled || undefined}
             aria-readonly={readOnly || undefined}
-            aria-valuemin={range.min}
-            aria-valuemax={range.max}
-            aria-valuenow={sliderValue}
+            aria-valuemin={spoken(range.min)}
+            aria-valuemax={spoken(range.max)}
+            aria-valuenow={spoken(sliderValue)}
             aria-valuetext={ariaValueText}
             aria-orientation={orientation}
             aria-label={props["aria-label"] ?? sliderTitle}
@@ -491,7 +563,13 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
             data-dragging={isDragging && activeThumbIdRef.current === thumbId ? "true" : undefined}
             key={thumbId}
             className={thumbPresentationClassName}
-            style={orientation === "horizontal" ? { position: "absolute", left: `${physicalValues[index]}%`, transform: "translateX(-50%)" } : { position: "absolute", bottom: `${physicalValues[index]}%`, transform: "translateY(50%)" }}
+            style={
+              dialThumb !== null
+                ? { position: "absolute", left: `calc(var(--size-medium) * ${Number((0.5 + Math.cos(dialThumb) * 0.41).toFixed(6))})`, top: `${Number((50 - Math.sin(dialThumb) * 41).toFixed(6))}%`, transform: "translate(-50%, -50%)" }
+                : orientation === "horizontal"
+                  ? { position: "absolute", left: `${physicalValues[index]}%`, transform: "translateX(-50%)" }
+                  : { position: "absolute", bottom: `${physicalValues[index]}%`, transform: "translateY(50%)" }
+            }
             onFocus={() => {
               activeThumbIdRef.current = thumbId;
             }}
@@ -519,12 +597,15 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
           <Input
             type="number"
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => {
+              setEditValue(e.target.value);
+              setRefusal(null);
+            }}
             onKeyDown={handleEditKeyDown}
             onBlur={handleEditBlur}
             className="w-large min-w-large border-0 px-0 text-end text-xs"
-            min={range.min}
-            max={range.max}
+            aria-invalid={refusal ? true : undefined}
+            aria-describedby={refusal?.message && id ? `${id}-refusal` : undefined}
             autoFocus
             id={id}
           />
@@ -534,6 +615,11 @@ const Slider = React.forwardRef<HTMLDivElement, SliderProps>(function Slider(
           </span>
         )}
       </div>
+      {refusal?.message ? (
+        <span id={id ? `${id}-refusal` : undefined} role="alert" data-slot="slider-refusal" className={sliderRefusalClassName}>
+          {refusal.message}
+        </span>
+      ) : null}
     </div>
   ) : (
     <div data-slot="slider-content" data-detail-panel-control="fill" data-dim className={cn("flex h-full min-w-0 flex-1 items-center", contentClassName)}>

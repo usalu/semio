@@ -11,6 +11,11 @@ message ChangeParameterBinding { string key = 1; google.protobuf.Value new_value
 message RemoveParameterBinding { string key = 1; }
 message ChangeRuleLayoutPoint { string key = 1; RewriteRuleLayoutPoint new_point = 2; }
 message RemoveRuleLayoutPoint { string key = 1; }
+message DragWorkingNodes { repeated string targets = 1; double dx = 2; double dy = 3; }
+message PatchWorkingNodes { repeated string targets = 1; string field = 2; string value = 3; }
+message DragRuleNodes { repeated string targets = 1; double dx = 2; double dy = 3; }
+message RuleLayoutPlacement { string key = 1; double x = 2; double y = 3; }
+message SetRuleLayoutPoints { repeated RuleLayoutPlacement points = 1; repeated string cleared = 2; }
 
 message RewriteRuleMutation {
   oneof mutation {
@@ -21,5 +26,9 @@ message RewriteRuleMutation {
     RemoveParameterBinding remove_parameter_binding = 5;
     ChangeRuleLayoutPoint change_rule_layout_point = 6;
     RemoveRuleLayoutPoint remove_rule_layout_point = 7;
+    DragWorkingNodes drag_working_nodes = 8;
+    PatchWorkingNodes patch_working_nodes = 9;
+    DragRuleNodes drag_rule_nodes = 10;
+    SetRuleLayoutPoints set_rule_layout_points = 11;
   }
 }

@@ -98,8 +98,8 @@
         },
         "receipts": {
           "type": "array",
-          "minItems": 29,
-          "maxItems": 29,
+          "minItems": 0,
+          "maxItems": 1024,
           "items": {
             "$ref": "#/$defs/NativeCodecFactoriesReceipt"
           }
@@ -112,19 +112,11 @@
       "additionalProperties": false,
       "required": [
         "schema",
-        "definitionCount",
-        "codecCount",
         "cases"
       ],
       "properties": {
         "schema": {
           "const": "semio.stdio.native-catalog-surface/v1"
-        },
-        "definitionCount": {
-          "const": 36
-        },
-        "codecCount": {
-          "const": 29
         },
         "cases": {
           "type": "array",

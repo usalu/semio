@@ -1,6 +1,6 @@
 /** 🧬️ Canonical mutation fixtures must agree with the public tagged wire schema. */
 import { expect, it } from "bun:test";
-import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import aggregate from "../../🔣️.json";
 import documentSchema from "../../../🔣️.json";

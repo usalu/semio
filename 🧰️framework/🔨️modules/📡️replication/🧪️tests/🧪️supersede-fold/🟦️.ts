@@ -56,7 +56,10 @@ export async function registerSupersedeFoldTests(vitest: NonNullable<ImportMeta[
       const events: Event[] = [];
       for (const step of fixture.steps as Json[]) {
         if (step.kind === "transition") events.push(event(step));
-        else if (step.kind === "expect") expect(project(foldSupersessions(document, operations, events)), step.label).toEqual(expected(step.expect));
+        else if (step.kind === "expect") {
+          const viewer = step.expect.head ? { lineId: step.expect.head.lineId as string, checkpointId: step.expect.head.checkpointId as string | null } : undefined;
+          expect(project(foldSupersessions(document, operations, events, viewer)), step.label).toEqual(expected(step.expect));
+        }
         else if (step.kind === "reload") expect(project(foldSupersessions(document, operations, events)), step.label).toEqual(project(foldSupersessions(document, operations, events)));
         else if (step.kind === "refuse") expect(() => foldSupersessions(document, operations, [...events, event(step.transition)]), step.label).toThrow(step.detail);
         else throw new Error(`unknown step kind ${step.kind}`);

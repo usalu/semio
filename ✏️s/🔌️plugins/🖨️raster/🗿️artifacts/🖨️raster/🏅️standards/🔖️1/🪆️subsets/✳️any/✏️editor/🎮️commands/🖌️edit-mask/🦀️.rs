@@ -1,4 +1,5 @@
-//! 🖌️ Prepare mask pixels in bounded grants and publish one reversible coverage edit.
+//! 🖌️ Prepare mask pixels in bounded grants and publish one reversible coverage fill. Brush and eraser strokes on a
+//! mask are the parametric `paint-stroke` leaf (`🎮️commands/🖌️paint-stroke`), never a mask image edit.
 use crate::editor::raster::{RasterCommand,RasterPlayApp};
 use crate::editor::raster::config::{RasterConfig,RasterConfigMutation};
 use crate::standards::v1::subsets::any::schema::{find_layer,flatten_raster_layers,layer_node_id};
@@ -68,7 +69,7 @@ fn prepare(command:&EditMask,document:&RasterSnapshot)->Result<Candidate,Fault> 
     if mask!=&expected {return Err(Fault::from("raster.mask-revision-conflict"));}
     if command.operation.len()>100000 {return Err(Fault::from("raster.mask-operation-budget"));}
     let operation=super::edit_pixels::parse_operation(&command.operation)?;
-    if !matches!(operation,PixelOperation::AlphaStroke(_)|PixelOperation::AlphaFill {..}) {return Err(Fault::from("raster.mask-requires-alpha-operation"));}
+    if !matches!(operation,PixelOperation::AlphaFill {..}) {return Err(Fault::from("raster.mask-requires-alpha-fill"));}
     let (width,height)=if let Some(key)=&mask.image_key {
         let image=document.assets.get(key).and_then(|asset|asset.local_owner::<crate::SemioImageSnapshot>()).ok_or_else(||Fault::from("raster.mask-image-unavailable"))?;
         (image.width,image.height)

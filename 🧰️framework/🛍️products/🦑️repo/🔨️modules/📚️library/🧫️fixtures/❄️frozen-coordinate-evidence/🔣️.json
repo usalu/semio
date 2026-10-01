@@ -4,7 +4,7 @@
   "contractId": "cad-draw-projection-vectors-v1",
   "registration": {
     "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧫️fixtures/📐️cad-draw-path-projection/🔣️.json",
-    "sha256": "9264c9dea9b5e43288e4c86cb7c933b5f04be95ea412ba78e447f06b647057bc",
+    "sha256": "8bfd376637c2da7a77f8d94587df54bcdb842628be3d17997c6b44b9539b1697",
     "schemaVersion": 1,
     "coordinates": [
       { "pointer": "/projections/*/sourceRoot", "kind": "source" },

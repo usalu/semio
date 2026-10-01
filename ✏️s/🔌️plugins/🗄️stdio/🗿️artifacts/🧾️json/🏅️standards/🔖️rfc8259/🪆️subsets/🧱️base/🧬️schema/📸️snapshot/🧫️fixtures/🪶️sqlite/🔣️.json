@@ -40,5 +40,53 @@
       "text": "1",
       "hard": false
     }
+  ],
+  "logicalNative": {
+    "schema": "owned JSON 世界\u0000",
+    "depth": 1024,
+    "numberLexemes": [
+      "-0.00e-2",
+      "123456789012345678901234567890.123456789e+42"
+    ],
+    "duplicateKey": "z"
+  },
+  "typedNumberCases": [
+    {
+      "lexeme": "01",
+      "numeric": null
+    },
+    {
+      "lexeme": "NaN",
+      "numeric": null
+    },
+    {
+      "lexeme": "",
+      "numeric": null
+    },
+    {
+      "lexeme": "1e400",
+      "numeric": null
+    },
+    {
+      "lexeme": "1",
+      "repeat": 100000,
+      "numeric": null
+    },
+    {
+      "lexeme": "1",
+      "numeric": 1
+    },
+    {
+      "lexeme": "-0.00e-2",
+      "numeric": 0
+    },
+    {
+      "lexeme": ".1",
+      "numeric": null
+    },
+    {
+      "lexeme": "0.1",
+      "numeric": 0.1
+    }
   ]
 }

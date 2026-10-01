@@ -1,6 +1,8 @@
 #!/usr/bin/env bun
 /** ⚙️ Registers the native UI package and its semantic UI-axis generator commands. */
-import { BundleScript, ScriptRouter, buildBudgetMs, resolveTestLevel, runBundleScriptMain, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { buildBudgetMs, resolveTestLevel, runCargoTestBudgeted, runCmd } from "../../../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { CheckAxesScript, GenerateAxesScript, PreviewGeneratedScript } from "../../🎚️axes/🏃️execution/🟦️.ts";
 
 class TestScript extends BundleScript {
@@ -40,5 +42,5 @@ class CheckWgpuEngineWasmScript extends BundleScript {
 
 if (import.meta.main) {
   const router = new ScriptRouter(import.meta.dir).register("generate", GenerateAxesScript).register("preview-generated", PreviewGeneratedScript).register("check", CheckAxesScript).register("test", TestScript).register("test-wgpu-engine", TestWgpuEngineScript).register("check-wasm", CheckWasmScript).register("check-wgpu-engine-wasm", CheckWgpuEngineWasmScript);
-  await runBundleScriptMain(router, import.meta.url);
+  await runScriptMain(router);
 }

@@ -79,7 +79,7 @@ fn apply_operations(doc: &ArtifactView<'_, Generation3dSnapshot>, sub_operations
     leaves.extend(generation3d_node_drag_leaves(host_snapshot, &records));
     let authoring_seed = doc.operation().map(|operation| operation.authoring_seed.clone()).unwrap_or_default();
     let gesture = records.first().map_or("nodeGraphEdit", |record| record.gesture_id.as_str());
-    match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION_3D_PLAY_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, generation3d_gesture_clock()) {
+    match node_drag_commit(format!("{}#nodeGraphEdit", crate::editor::generation3d::GENERATION3D_EDITOR_APP_ID), protocol::ActorId(authoring_seed.clone()), gesture, leaves, generation3d_gesture_clock()) {
         Some((transaction, leaves)) if !authoring_seed.is_empty() => Emit::commit_transaction(transaction, leaves),
         Some((_, leaves)) => Emit::mutations(leaves),
         None => Emit::default(),

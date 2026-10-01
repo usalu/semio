@@ -31,6 +31,9 @@
       "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/replace-block/schema.json"
     },
     {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-block-field/schema.json"
+    },
+    {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/forms/forms/mutation/change-form-title/schema.json"
     },
     {

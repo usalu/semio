@@ -177,6 +177,7 @@ pub(super) fn authority() -> Arc<ArtifactStoreOneItemLiveAuthority> {
         actor: "actor-1".into(),
         group_id: Some("group-1".into()),
         stamped_edit_id: None,
+        line: None,
     })
 }
 
@@ -366,6 +367,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     Arc::get_mut(&mut authority).unwrap().actor = "actor-🧵".into();
     Arc::get_mut(&mut authority).unwrap().group_id = Some("group-✓".into());
     Arc::get_mut(&mut authority).unwrap().stamped_edit_id = Some("edit-🎟️".into());
+    Arc::get_mut(&mut authority).unwrap().line = Some("alternative-🌿".into());
     let mut retirement = authority.retire();
     let mut released = 0;
     assert!(matches!(retirement.close_step(1, 0).unwrap(), SnapshotRetirementStep::Blocked));
@@ -377,7 +379,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
             }
             SnapshotRetirementStep::Complete => {
                 assert!(retirement.terminal_is_empty());
-                assert_eq!(released, "actor-🧵".len() + "group-✓".len() + "edit-🎟️".len());
+                assert_eq!(released, "actor-🧵".len() + "group-✓".len() + "edit-🎟️".len() + "alternative-🌿".len());
                 return;
             }
             SnapshotRetirementStep::Blocked => panic!("positive retirement grant blocked"),

@@ -245,6 +245,8 @@ export type Board2dWasmSession = {
   cameraJson(): string;
   gpuReady(): boolean;
   setHoveredIdSilent?(id?: string | null): void;
+  /** 🔗️ Paints the ids a time-travel draft references highlighted, as a JSON id array (`[]` clears them). */
+  setHighlightedIdsJson?(json: string): void;
   setActiveUtility?(label: string): void;
   setSelectionOptions?(method: string, mode: string, selectNodes: boolean, selectEdges: boolean, selectHandles: boolean): void;
   setGridVisible?(visible: boolean): void;

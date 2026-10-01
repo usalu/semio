@@ -347,7 +347,9 @@ fn display_list_to_host_layers(list: &crate::editor::layout::engine::scene::Disp
 
 /// 🧭️ The `meta:gumball` layer of the Transform utility: pivot = the centroid of the selected frame centres on the
 /// active page — the very pivot the transform tool records for a turn or scaling, so the overlay's screen math and the
-/// leaf agree.
+/// leaf agree. The page IS the layer space (no `modelToLayer`), and `liveDispatch` asks both hosts to stream the gesture
+/// (`phase` stream/commit/abort): the Blueprint window previews the open transaction from its transient
+/// (`📐️Canvas2dHost/🧬️schema/🔣️gumball-meta`).
 fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction: &LayoutInteractionSnapshot, blueprint: bool) -> Vec<Value> {
     if !blueprint {
         return Vec::new();
@@ -366,9 +368,8 @@ fn gumball_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, interaction
         "role": "meta",
         "gumball": {
             "active": true,
-            "space": "world",
+            "liveDispatch": true,
             "pivotLayer": pivot,
-            "pivotModel": pivot,
             "selectionIds": interaction.ids,
             "config": { "moveAxes": options.move_axes, "rotate": options.rotate, "scaleAxes": options.scale_axes, "scaleUniform": options.scale_uniform }
         }

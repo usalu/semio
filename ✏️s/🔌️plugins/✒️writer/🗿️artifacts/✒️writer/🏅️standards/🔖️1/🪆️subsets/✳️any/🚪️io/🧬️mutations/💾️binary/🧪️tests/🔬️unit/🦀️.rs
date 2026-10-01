@@ -108,7 +108,7 @@ fn drive_writer_edit_tokens(
 
 #[semio_framework_async_macros::async_test]
 async fn writer_edit_history_decoder_uses_begin_mutation_and_faults_malformed_input() {
-    let edit = protocol::Edit {
+    let edit = protocol::Edit { line: None,
         id: "edit-1".into(),
         actor: None,
         forwards: vec![WriterMutation::RenameWriter(schema::mutations::RenameWriter { new_id: "next".into() })],

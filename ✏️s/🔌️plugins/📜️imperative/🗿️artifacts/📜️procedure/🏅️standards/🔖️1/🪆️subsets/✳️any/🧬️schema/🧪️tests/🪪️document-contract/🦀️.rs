@@ -6,7 +6,7 @@ use store::{ArtifactDsl, ArtifactPack};
 
 #[test]
 fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document-contract/🔣️.json")).unwrap();
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).unwrap();
     let source = fixture["document"].to_string();
     let artifact: ProcedureArtifact = dsl::os_pack::json::from_json_str(&source).unwrap();
     let snapshot: ProcedureSnapshot = dsl::os_pack::json::from_json_str(&source).unwrap();

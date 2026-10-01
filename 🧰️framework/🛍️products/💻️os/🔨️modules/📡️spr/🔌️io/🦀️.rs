@@ -131,6 +131,9 @@ mod native {
             if !log.conflicts.is_empty() {
                 appender.append_conflicts(&log.conflicts).await?;
             }
+            if log.viewer_line.is_some() || log.viewer_checkpoint.is_some() {
+                appender.append_viewer(log.viewer_line.as_deref(), log.viewer_checkpoint.as_deref()).await?;
+            }
             appender.commit().await?;
 
             let resume = resume_state_for(path, limits).await?;

@@ -164,23 +164,23 @@ Feature: Apply every typed semio MESH mutation to a real architectural model, ag
     Then each reaches the committed after-snapshot and the two agree
     Examples:
       | id                         | dir                         | slug                                                  |
-      | create-mesh                | 🕸️create-mesh                | 🕸️adds-an-empty-second-mesh-at-the-end                  |
-      | delete-mesh                | 🗑️delete-mesh               | 🚫️removes-the-leading-mesh-and-keeps-the-trailing-one   |
-      | create-primitive           | 🔺create-primitive           | 🔺️adds-a-second-primitive-inside-the-existing-mesh      |
-      | delete-primitive           | ✂️delete-primitive          | 🚫️removes-the-leading-primitive-and-keeps-the-trailing-one |
-      | set-primitive-topology     | 🔀set-primitive-topology     | 🔀️switches-the-primitive-to-a-triangle-strip            |
-      | replace-primitive-geometry | 📐replace-primitive-geometry | 🔲️swaps-the-triangle-for-a-textured-quad                |
-      | set-primitive-material     | 🧲️set-primitive-material     | 🔗️binds-the-primitive-to-the-existing-material          |
-      | create-material            | 🎨create-material            | 🎨️adds-a-second-material-at-the-end                     |
-      | delete-material            | 🚮delete-material            | 🚫️removes-the-leading-material-and-keeps-the-trailing-one |
-      | change-material-base-color | 🌈change-material-base-color | 🔵️repaints-the-material-from-red-to-blue                |
-      | change-material-metallic   | ⚙️change-material-metallic  | 🪙️raises-the-metallic-factor-to-fully-metallic          |
-      | change-material-roughness  | 🧱change-material-roughness  | 🧱️lowers-the-roughness-factor-to-a-quarter              |
-      | create-texture             | 🖼️create-texture            | 🖼️adds-a-second-texture-at-the-end                      |
-      | delete-texture             | 🕳️delete-texture            | 🚫️removes-the-leading-texture-and-keeps-the-trailing-one |
-      | change-texture-mime        | 🏷️change-texture-mime       | 🖼️retags-the-texture-as-jpeg-without-touching-its-bytes  |
-      | replace-texture-bytes      | 📀replace-texture-bytes      | 📀️swaps-the-texture-payload-without-retagging-its-mime   |
-      | move-vertex                | 📍move-vertex                | 🎯️lifts-the-third-vertex-of-the-triangle                |
+      | create-mesh                | 🕸️create-mesh                | 🕸️adds                  |
+      | delete-mesh                | 🗑️delete-mesh               | 🚫️removes   |
+      | create-primitive           | 🔺create-primitive           | 🔺️adds      |
+      | delete-primitive           | ✂️delete-primitive          | 🚫️removes |
+      | set-primitive-topology     | 🔀set-primitive-topology     | 🔀️switches            |
+      | replace-primitive-geometry | 📐replace-primitive-geometry | 🔲️swaps                |
+      | set-primitive-material     | 🧲️set-primitive-material     | 🔗️binds          |
+      | create-material            | 🎨create-material            | 🎨️adds                     |
+      | delete-material            | 🚮delete-material            | 🚫️removes |
+      | change-material-base-color | 🌈change-material-base | 🔵️repaints                |
+      | change-material-metallic   | ⚙️change-material-metallic  | 🪙️raises          |
+      | change-material-roughness  | 🧱change-material-roughness  | 🧱️lowers              |
+      | create-texture             | 🖼️create-texture            | 🖼️adds                      |
+      | delete-texture             | 🕳️delete-texture            | 🚫️removes |
+      | change-texture-mime        | 🏷️change-texture-mime       | 🖼️retags  |
+      | replace-texture-bytes      | 📀replace-texture-bytes      | 📀️swaps   |
+      | move-vertex                | 📍move-vertex                | 🎯️lifts                |
 
   @id-identity-round-trip
   @level-long

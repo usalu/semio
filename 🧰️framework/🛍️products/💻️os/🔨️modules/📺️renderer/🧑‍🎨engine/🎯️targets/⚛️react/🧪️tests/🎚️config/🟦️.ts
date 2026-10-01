@@ -151,7 +151,7 @@ const engineTestSuites = [
   elementSuite("🌐️World3dHost/⏯️tool-run-trace", "🧩️component"),
   elementSuite("🎣️suggestion-submenu", "🧩️component"),
   elementSuite("📐️Canvas2dHost/⏯️tool-run-trace", "🧩️component"),
-  elementSuite("📐️Canvas2dHost", "🔬️gumball-transform-delta"),
+  elementSuite("📐️Canvas2dHost", "🧪️gumball-dispatch"),
   elementSuite("📐️Canvas2dHost", "🖱️gesture-sample-lane"),
   elementSuite("📐️Canvas2dHost", "🖊️path"),
   elementSuite("📐️Canvas2dHost", "🎨️paint"),

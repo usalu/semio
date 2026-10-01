@@ -1,6 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
-import { BundleScript } from "../../../📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { inventory } from "../🧮️composition/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
 

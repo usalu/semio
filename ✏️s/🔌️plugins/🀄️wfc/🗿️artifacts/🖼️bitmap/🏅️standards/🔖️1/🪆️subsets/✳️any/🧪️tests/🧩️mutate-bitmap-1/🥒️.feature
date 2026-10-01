@@ -60,18 +60,18 @@ Feature: Apply every typed bitmap mutation twice — once in Rust, once in Pytho
     And the after-snapshot differs from the before-snapshot, or the committed outcome declares the vector a no-op
     Examples:
       | id                   | vector                                                            |
-      | change-seed          | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                   |
-      | resize-input         | 📐️resize-input/📐️grows-the-sample-to-6-by-4                      |
-      | set-input-pixels     | 🖌️set-input-pixels/🖌️paints-a-2-by-2-block-of-colour-1            |
-      | add-palette-color    | 🎨️add-palette-color/🎨️appends-a-third-colour                     |
-      | change-palette-color | 🖍️change-palette-color/🖍️recolours-the-second-entry               |
-      | remove-palette-color | 🧽️remove-palette-color/🧽️drops-the-unused-third-colour           |
-      | resize-output        | 🖼️resize-output/🖼️shrinks-the-output-and-cascades-a-pin           |
-      | change-model         | ⚙️change-model/⚙️widens-the-window-to-three                       |
-      | pin-pixel            | 📌️pin-pixel/📌️pins-the-origin-cell-to-colour-1                   |
-      | unpin-pixel          | 📍️unpin-pixel/📍️releases-the-pinned-origin-cell                  |
-      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints-a-diagonal-stroke-in-colour-1       |
-      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips-a-stroke-leaving-the-sample          |
+      | change-seed          | 🎲️change-seed/🎲️reseeds                   |
+      | resize-input         | 📐️resize-input/📐️grows                      |
+      | set-input-pixels     | 🖌️set-input-pixels/🖌️paints            |
+      | add-palette-color    | 🎨️add-palette-color/🎨️appends                     |
+      | change-palette-color | 🖍️change-palette-color/🖍️recolours               |
+      | remove-palette-color | 🧽️remove-palette-color/🧽️drops           |
+      | resize-output        | 🖼️resize-output/🖼️shrinks           |
+      | change-model         | ⚙️change-model/⚙️widens                       |
+      | pin-pixel            | 📌️pin-pixel/📌️pins                   |
+      | unpin-pixel          | 📍️unpin-pixel/📍️releases                  |
+      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints       |
+      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips          |
 
   @id-inverse
   @level-exhaustive
@@ -92,23 +92,23 @@ Feature: Apply every typed bitmap mutation twice — once in Rust, once in Pytho
     And every field the committed diff declares actually differs
     Examples:
       | id                   | vector                                                            |
-      | change-seed          | 🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99                   |
-      | resize-input         | 📐️resize-input/📐️grows-the-sample-to-6-by-4                      |
-      | set-input-pixels     | 🖌️set-input-pixels/🖌️paints-a-2-by-2-block-of-colour-1            |
-      | add-palette-color    | 🎨️add-palette-color/🎨️appends-a-third-colour                     |
-      | change-palette-color | 🖍️change-palette-color/🖍️recolours-the-second-entry               |
-      | remove-palette-color | 🧽️remove-palette-color/🧽️drops-the-unused-third-colour           |
-      | resize-output        | 🖼️resize-output/🖼️shrinks-the-output-and-cascades-a-pin           |
-      | change-model         | ⚙️change-model/⚙️widens-the-window-to-three                       |
-      | pin-pixel            | 📌️pin-pixel/📌️pins-the-origin-cell-to-colour-1                   |
-      | unpin-pixel          | 📍️unpin-pixel/📍️releases-the-pinned-origin-cell                  |
-      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints-a-diagonal-stroke-in-colour-1       |
-      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips-a-stroke-leaving-the-sample          |
+      | change-seed          | 🎲️change-seed/🎲️reseeds                   |
+      | resize-input         | 📐️resize-input/📐️grows                      |
+      | set-input-pixels     | 🖌️set-input-pixels/🖌️paints            |
+      | add-palette-color    | 🎨️add-palette-color/🎨️appends                     |
+      | change-palette-color | 🖍️change-palette-color/🖍️recolours               |
+      | remove-palette-color | 🧽️remove-palette-color/🧽️drops           |
+      | resize-output        | 🖼️resize-output/🖼️shrinks           |
+      | change-model         | ⚙️change-model/⚙️widens                       |
+      | pin-pixel            | 📌️pin-pixel/📌️pins                   |
+      | unpin-pixel          | 📍️unpin-pixel/📍️releases                  |
+      | paint-input-stroke   | ✍️paint-input-stroke/✍️paints       |
+      | paint-input-stroke   | ✍️paint-input-stroke/⚠️clips          |
 
   @id-identity-round-trip
   @level-long
   @mode-round-trip
   Scenario: Decode and re-encode the four-by-three two-colour sample
-    Given the committed before-snapshot shared://🧬️mutations/🎲️change-seed/🎲️reseeds-the-solve-from-7-to-99/📸️snapshot/⬅️before/🔣️.json
+    Given the committed before-snapshot shared://🧬️mutations/🎲️change-seed/🎲️reseeds/📸️snapshot/⬅️before/🔣️.json
     When its base64 pixel buffer is decoded and re-encoded by an implementation written from RFC 4648 §4
     Then the buffer is byte-identical and its length is exactly the input width times the input height

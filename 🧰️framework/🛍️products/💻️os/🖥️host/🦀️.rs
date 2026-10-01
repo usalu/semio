@@ -506,6 +506,7 @@ pub mod host {
             conflicts: document.conflicts.clone(),
             transitions: document.transitions.clone(),
             history_shape: protocol::HistoryShape::Document,
+            open_transaction: None,
         })
     }
 
@@ -817,6 +818,7 @@ pub mod host {
                 conflicts: document.conflicts,
                 transitions: document.transitions,
                 history_shape: protocol::HistoryShape::Document,
+                open_transaction: None,
             });
             let inner = resolve_kernel_future(ArtifactStore::new(envelope))?;
             Ok(Self { inner, name: document.name })

@@ -44,6 +44,15 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/disconnect-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/move-nodes/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/set-node-positions/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/dag/dag/mutation/set-slider/schema.json"
     }
   ]
 }

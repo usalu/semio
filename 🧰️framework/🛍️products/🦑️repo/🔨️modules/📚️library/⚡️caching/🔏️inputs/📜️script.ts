@@ -2,7 +2,7 @@
 import { createHash } from "node:crypto";
 import { join } from "node:path";
 import { readFileSync } from "node:fs";
-import { BundleScript, ScriptRouter } from "../../🏃️process/🧭️routing/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { publishGeneratorInputReceipt } from "./🟦️.ts";
 
 /** 📇️ Scans catalog membership and exact source bytes once before Nx hashes the resulting receipt. */

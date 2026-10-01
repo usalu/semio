@@ -6,10 +6,12 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { type ValidateFunction } from "ajv";
 import Ajv2020 from "ajv/dist/2020.js";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runCargo, resolveTestLevel, runCargoTestBudgeted, runTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, resolveTestLevel, runCargoTestBudgeted, runTestBudgeted, runExactCargoLaws } from "../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runNestedCargoPackageAdapter } from "../../../🦑️repo/🔨️modules/📚️library/📽️projection/🧩️package-adapter/📦️publication/🟦️.ts";
 import { blake3Hex } from "../../../../🔨️modules/🔏️hash/🟦️.ts";
-import { semioSchemaAjvV1 } from "../../🧪️tests/🧬️schema-oracle/🟦️.ts";
+import { semioSchemaAjvV1 } from "../../../../🔨️modules/🧬️schema/🔮️oracles/✅️validator/🟦️.ts";
 
 /** 🧬️ A compiled owned-schema export, typed as a boolean runtime check so `assert` never narrows its validated subject to `unknown`. */
 type SchemaCheck = ((data: unknown) => boolean) & Pick<ValidateFunction, "errors">;
@@ -40,6 +42,52 @@ function exactCargoStageEnvironments() {
     env: { ...process.env, RUST_MIN_STACK: process.env.SEMIO_BUILD_RUST_MIN_STACK ?? "33554432" },
     nativeEnv: { RUST_MIN_STACK: "268435456" },
   };
+}
+
+/** ↔️ Admits portable paged traversal and independently checks array/deque ordering. */
+class PagedHistoryStackScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length > 1 || (args.length && args[0] !== "--native")) throw Error("paged-history-stack-check accepts only --native");
+    const owner = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs");
+    const fixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/📸️paged-history-stack/🔣️.json"), "utf8"));
+    const schema = JSON.parse(readFileSync(join(owner, "🧬️schema/📸️paged-history-stack/🔣️.json"), "utf8"));
+    const admit = semioSchemaAjvV1({ strict: true, allErrors: true }).compile(schema);
+    assert(admit(fixture), JSON.stringify(admit.errors));
+    for (const vector of fixture.vectors) {
+      const values = Array.from({ length: vector.pushes }, (_, i) => String(i));
+      if (vector.removeLogical !== null) values.splice(vector.removeLogical, 1);
+      if (vector.replacement !== null) values.push(vector.replacement);
+      assert.deepEqual(values, vector.forward);
+      assert.deepEqual([...values].reverse(), vector.reverse);
+      assert.deepEqual(vector.directions.map((direction: string) => (direction === "front" ? values.shift() : values.pop()) ?? null), vector.expected);
+      assert.deepEqual(values, vector.remaining);
+    }
+    const branchSchema = JSON.parse(readFileSync(join(owner, "🧬️schema/🌿️branch-provenance/🔣️.json"), "utf8"));
+    const branchFixture = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🌿️branch-provenance/🔣️.json"), "utf8"));
+    const branchAjv = semioSchemaAjvV1({ strict: true, allErrors: true });
+    assert(branchAjv.compile(branchSchema)(branchFixture));
+    const editCheck = branchAjv.compile(branchSchema.$defs.Edit);
+    for (const vector of branchFixture.vectors) {
+      assert.equal(editCheck(vector.edit), vector.valid, vector.id);
+      assert.equal(Object.hasOwn(vector.edit, "line") && (vector.edit.line === null || typeof vector.edit.line === "string"), vector.valid, vector.id);
+    }
+    const { testCanonicalEditFixtures } = await import("../../🔨️modules/🏪️store/🧪️tests/🧵️canonical-edit/🟦️.ts");
+    const { storeCanonicalEditSealerSelfTests } = await import("../../🔨️modules/🏪️store/🧵️canonical-edit/🧪️tests/🔬️store-canonical-edit-sealer/🟦️.ts");
+    testCanonicalEditFixtures();
+    const canonical = storeCanonicalEditSealerSelfTests();
+    console.log("paged-history-canonical-oracles: " + JSON.stringify(canonical));
+    if (args[0] === "--native") {
+      const receipts = await runExactCargoLaws({ cwd: this.repoRoot, ...exactCargoStageEnvironments(),
+        groups: [{ package: "semio-framework-os-kernel", target: { kind: "lib", name: "semio_framework_os_kernel" }, laws: [
+          "os_vcs::tests::paged_history_stack_traversal_follows_the_portable_deque_vectors",
+          "os_vcs::tests::history_branch_provenance_follows_portable_required_wire_vectors",
+          "os_store::component::canonical_edit::tests::edit_digest_chains_match_the_neutral_vectors_and_extend_incrementally",
+          "os_store::component::canonical_edit::tests::canonical_authority_final_unicode_strings_retire_under_single_byte_grants",
+        ] }], artifactDir: process.env.SEMIO_TEST_ARTIFACT_DIR, buildBudgetMs: 3_600_000, listBudgetMs: 60_000, lawBudgetMs: 120_000 });
+      for (const receipt of receipts) console.log("paged-history-stack-native-receipt: " + JSON.stringify(receipt));
+    }
+    console.log(`paged-history-stack-check: vectors=${fixture.vectors.length} independent-array/Ajv=passed`);
+  }
 }
 
 /** 📜️ Verifies history-result publication and exact replay-owner retirement. */
@@ -2001,6 +2049,13 @@ class NativeTestScript extends BundleScript {
   }
 }
 
+class SnapshotNativeAdmissionTestScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const { rest } = resolveTestLevel(segments);
+    await runCargoTestBudgeted(["semio-framework-os-kernel"], this.repoRoot, ["--test", "sqlite_snapshot_native_admission", ...rest]);
+  }
+}
+
 class DirectoryRuntimeSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("test-directory-runtime-source accepts no arguments");
@@ -2472,6 +2527,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("preview-generated", PreviewGeneratedScript)
   .register("check-jco-package-adapter", CheckJcoPackageAdapterScript)
   .register("test-native", NativeTestScript)
+  .register("test-snapshot-native-admission", SnapshotNativeAdmissionTestScript)
   .register("test-directory-runtime-source", DirectoryRuntimeSourceScript)
   .register("directory-session-authority-check", DirectorySessionAuthorityCheckScript)
   .register("directory-event-page-contract-check", DirectoryEventPageContractCheckScript)
@@ -2484,6 +2540,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-member-dialect-source", MemberDialectSourceScript)
   .register("member-dialect-check", MemberDialectCheckScript);
 
+router.register("paged-history-stack-check", PagedHistoryStackScript);
 router.register("wal-recovery-check", WalRecoveryCheckScript);
 router.register("wal-capacity-check", WalCapacityCheckScript);
 router.register("wal-committed-transactions-check", WalCommittedTransactionsCheckScript);
@@ -2500,4 +2557,4 @@ router.register("durable-owned-group-decision-check", DurableOwnedGroupDecisionC
 router.register("durable-group-journal-check", DurableGroupJournalCheckScript);
 router.register("reopen-storm-check", ReopenStormCheckScript);
 
-await runBundleScriptMain(router, import.meta.url, { defaultCommand: "check" });
+await runScriptMain(router, { defaultCommand: "check" });

@@ -1,0 +1,9 @@
+{
+  "operation": "moveNodes",
+  "nodeIds": [
+    "n1",
+    "n2"
+  ],
+  "dx": 40.0,
+  "dy": -12.5
+}

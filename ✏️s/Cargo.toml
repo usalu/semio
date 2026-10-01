@@ -137,7 +137,7 @@ members = [
     "🧑‍💻dev/🌊️flow/📦️packages/🦀️rust",
     "🧑‍💻dev/💡️services/📦️packages/🦀️rust",
     "🧑‍💻dev/📐️cad/📦️packages/🦀️rust",
-    "🧑‍💻dev/🧩️composition-laws/📦️packages/🦀️rust",
+    "🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
     "🧑‍💻dev/🧹️fixture-sweep/📦️packages/🦀️rust",
 ]
 exclude = ["**/🏅️standards/**", "**/🔮️oracles/**", "**/👽️guest/**"]

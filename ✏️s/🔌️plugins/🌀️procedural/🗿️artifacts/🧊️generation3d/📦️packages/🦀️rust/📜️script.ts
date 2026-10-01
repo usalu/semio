@@ -8,7 +8,8 @@ import { generation3dWidgetCreationSelfTests } from "../../🏅️standards/🔖
 import { resolve } from "node:path";
 import { testGeneration3dIoInputContracts } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🗿️artifact-surface/🟦️.ts";
 import { testGeneration3dIoAuthorityFixture } from "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔁️round-trip/🛡️authority/🟦️.ts";
-import { BundleScript, ScriptRouter, runBundleScriptMain } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { BundleScript, ScriptRouter } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { runScriptMain } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { runCmd, runCargo, runVitest } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { dirname, extname, join, relative } from "node:path";
@@ -55,6 +56,8 @@ if (process.argv[2] === "canonical-io") {
   await runArtifactRustTests("semio-s-artifact-procedural-generation3d", resolve(import.meta.dir, "../../../../../../.."), ["quick", "--locked", "--test", "io-round-trip"]);
 } else await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-procedural-generation3d", { ...{
   testFeatures: ["component-app-assembly"],
+  snapshotSqliteTestFeatures: [], snapshotSqliteTests: ["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/🧪️tests/🪶️sqlite/🟦️.ts"],
+  snapshotSqliteTestBudgetMs: 120000,
   twins: [
     { name: "generation3d-widget-creation", run: generation3dWidgetCreationSelfTests },
     { name: "generation3d-terminology", run: generation3dTerminologySelfTests },
