@@ -5,9 +5,34 @@
  * @see ../../README.md — the views and the leaderboard ordering
  * @see ./🦀️.rs — the Rust twin
  */
-import type { Catalog, CatalogView, CrowdCount, CrowdItem, CrowdTask, CrowdView, Leaderboard, LeaderboardRow, LearnerView, Quiz, RunResult, RunView, Score, TaskResult } from "../../🧬️schema/🟦️.ts";
+import {
+  CROWD_SCORE_BINS,
+  LEADERBOARD_TOP,
+  type Catalog,
+  type CatalogView,
+  type CrowdCount,
+  type CrowdItem,
+  type CrowdScores,
+  type CrowdTask,
+  type CrowdView,
+  type Id,
+  type Identity,
+  type Leaderboard,
+  type LeaderboardPeriod,
+  type LeaderboardRow,
+  type LeaderboardWindow,
+  type LearnerView,
+  type Quiz,
+  type RunResult,
+  type RunView,
+  type Score,
+  type Slug,
+  type Task,
+  type TaskResult,
+  type Timestamp,
+} from "../../🧬️schema/🟦️.ts";
 import { fnv1a32 } from "../🎲️randomness/🟦️.ts";
-import { sheetOf } from "../🃏️sheet/🟦️.ts";
+import { iconOf, sheetOf } from "../🃏️sheet/🟦️.ts";
 import type { LearnerState, LoadedQuiz, RunState } from "../🧾️lifecycle/🟦️.ts";
 import { compareCodePoints } from "../✅️validation/🟦️.ts";
 
@@ -22,24 +47,36 @@ export function catalogView(catalog: Catalog, quizzes: readonly Quiz[]): Catalog
     id: catalog.id,
     title: catalog.title,
     introduction: catalog.introduction,
-    quizzes: quizzes.map((quiz) => ({ id: quiz.id, emoji: quiz.emoji, title: quiz.title, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title })) })),
+    quizzes: quizzes.map((quiz) => ({ id: quiz.id, emoji: quiz.emoji, title: quiz.title, description: quiz.description, tasks: quiz.tasks.map((task) => ({ id: task.id, kind: task.kind, title: task.title, ...iconOf(task) })) })),
     badges: catalog.badges.map((badge) => ({ id: badge.id, emoji: badge.emoji, label: badge.label, description: badge.description })),
   };
 }
 
+/** 📨️ One submitted run as a standing counts it: its quiz, its score and when it was submitted. */
+export type TranscriptRun = { readonly quiz: Slug; readonly score: Score; readonly at: Timestamp };
+
+/** 🎗️ One badge as a standing counts it: the quiz of the run that earned it and when. */
+export type TranscriptBadge = { readonly badge: Slug; readonly quiz: Slug; readonly at: Timestamp };
+
+/** 📜️ What every standing of a learner is made of: the tag and identity, the submitted runs in submission order and the badges in award order. It carries the learner id, which breaks the last tie and finds the caller and never leaves the proctor. */
+export type Transcript = { readonly learner: Id; readonly tag: string; readonly identity: Identity; readonly runs: readonly TranscriptRun[]; readonly badges: readonly TranscriptBadge[] };
+
 /** 📬️ The submitted runs of a learner in submission order (submittedAt, ties by start order). */
-function submittedRuns(state: LearnerState): (RunState & { readonly result: NonNullable<RunState["result"]>; readonly submittedAt: number })[] {
-  return state.runs.filter((run): run is RunState & { readonly result: NonNullable<RunState["result"]>; readonly submittedAt: number } => run.status === "submitted" && run.result !== undefined && run.submittedAt !== undefined).sort((left, right) => left.submittedAt - right.submittedAt);
+function submittedRuns(state: LearnerState): TranscriptRun[] {
+  return state.runs
+    .filter((run): run is RunState & { readonly result: NonNullable<RunState["result"]>; readonly submittedAt: number } => run.status === "submitted" && run.result !== undefined && run.submittedAt !== undefined)
+    .sort((left, right) => left.submittedAt - right.submittedAt)
+    .map((run) => ({ quiz: run.quiz, score: run.result.score, at: run.submittedAt }));
 }
 
-/** 🥇️ The best submitted score per quiz id and when the last best was raised. */
-function bests(state: LearnerState): { readonly best: Record<string, Score>; readonly reachedAt: number | undefined } {
+/** 🥇️ The best score per quiz id over `runs` in submission order and when the last best was raised. */
+function bests(runs: readonly TranscriptRun[]): { readonly best: Record<string, Score>; readonly reachedAt: number | undefined } {
   const best: Record<string, Score> = {};
   let reachedAt: number | undefined;
-  for (const run of submittedRuns(state)) {
-    if (Object.hasOwn(best, run.quiz) && best[run.quiz]! >= run.result.score) continue;
-    best[run.quiz] = run.result.score;
-    reachedAt = run.submittedAt;
+  for (const run of runs) {
+    if (Object.hasOwn(best, run.quiz) && best[run.quiz]! >= run.score) continue;
+    best[run.quiz] = run.score;
+    reachedAt = run.at;
   }
   return { best: sortedRecord(best), reachedAt };
 }
@@ -52,7 +89,7 @@ function total(best: Readonly<Record<string, Score>>, catalog: CatalogView): num
 /** 👤️ A registered learner's runs (newest first), badges, bests and total; `undefined` before registration. */
 export function learnerView(state: LearnerState, catalog: CatalogView): LearnerView | undefined {
   if (!state.identity) return undefined;
-  const { best } = bests(state);
+  const { best } = bests(submittedRuns(state));
   const runs = [...state.runs].reverse().map((run) => ({ run: run.run, quiz: run.quiz, status: run.status, ...(run.result ? { score: run.result.score } : {}), startedAt: run.startedAt, ...(run.submittedAt !== undefined ? { submittedAt: run.submittedAt } : {}) }));
   return { learner: state.learner, identity: state.identity, runs, badges: state.badges, best, total: total(best, catalog) };
 }
@@ -79,15 +116,99 @@ export function learnerTag(learner: string): string {
   return fnv1a32(learner).toString(16).padStart(8, "0");
 }
 
-/** 🏆️ Every learner with a submitted run, ordered by total ↓, badge count ↓, reachedAt ↑, learner id ↑ and ranked by position; rows carry the learner tag, never the id. */
-export function leaderboard(states: readonly LearnerState[], catalog: CatalogView): Leaderboard {
-  const rows = states.flatMap((state): { readonly learner: string; readonly row: Omit<LeaderboardRow, "rank"> }[] => {
-    const { best, reachedAt } = bests(state);
-    if (!state.identity || reachedAt === undefined) return [];
-    return [{ learner: state.learner, row: { tag: learnerTag(state.learner), identity: state.identity, total: total(best, catalog), reachedAt, best, badges: state.badges.map((award) => award.badge), runs: submittedRuns(state).length, lastActivity: state.lastActivity ?? reachedAt } }];
+/** 📜️ The transcript of a registered learner with a submitted run, `undefined` otherwise; it changes only when the learner submits a run, earns a badge or registers. A badge whose run is unknown is left out. */
+export function transcript(state: LearnerState): Transcript | undefined {
+  const runs = submittedRuns(state);
+  if (!state.identity || runs.length === 0) return undefined;
+  const badges = state.badges.flatMap((award): TranscriptBadge[] => {
+    const run = state.runs.find((candidate) => candidate.run === award.run);
+    return run ? [{ badge: award.badge, quiz: run.quiz, at: award.at }] : [];
   });
-  rows.sort((left, right) => right.row.total - left.row.total || right.row.badges.length - left.row.badges.length || left.row.reachedAt - right.row.reachedAt || compareCodePoints(left.learner, right.learner));
-  return { rows: rows.map(({ row }, index) => ({ rank: index + 1, ...row })) };
+  return { learner: state.learner, tag: learnerTag(state.learner), identity: state.identity, runs, badges };
+}
+
+const DAY = 86_400_000;
+
+/** 📆️ The day (days since the Unix epoch) on which the month of `day` begins and the one on which the next month does, in the proleptic Gregorian calendar: the years are counted from March inside their 400-year era, so the leap day is the last of a year.
+ *
+ * @see https://howardhinnant.github.io/date_algorithms.html#civil_from_days */
+function monthOf(day: number): readonly [number, number] {
+  const dayOfEra = (day + 719_468) % 146_097;
+  const yearOfEra = Math.floor((dayOfEra - Math.floor(dayOfEra / 1460) + Math.floor(dayOfEra / 36_524) - Math.floor(dayOfEra / 146_096)) / 365);
+  const dayOfYear = dayOfEra - (365 * yearOfEra + Math.floor(yearOfEra / 4) - Math.floor(yearOfEra / 100));
+  const month = Math.floor((5 * dayOfYear + 2) / 153);
+  const leap = yearOfEra % 4 === 3 && (yearOfEra % 100 !== 99 || yearOfEra === 399);
+  const begins = (index: number): number => (index === 12 ? (leap ? 366 : 365) : Math.floor((153 * index + 2) / 5));
+  return [day - dayOfYear + begins(month), day - dayOfYear + begins(month + 1)];
+}
+
+/** 🪟️ The window of `period` that contains the instant `at`: its day, its ISO week (from Monday) or its month in UTC — half-open, never starting before the epoch — and none for `all-time`. */
+export function periodWindow(period: LeaderboardPeriod, at: Timestamp): LeaderboardWindow | undefined {
+  const day = Math.floor(at / DAY);
+  switch (period) {
+    case "daily":
+      return { from: day * DAY, until: (day + 1) * DAY };
+    case "weekly": {
+      const until = day + 7 - ((day + 3) % 7);
+      return { from: Math.max(0, until - 7) * DAY, until: until * DAY };
+    }
+    case "monthly": {
+      const [from, until] = monthOf(day);
+      return { from: from * DAY, until: until * DAY };
+    }
+    case "all-time":
+      return undefined;
+  }
+}
+
+/** 🔭️ Which runs a leaderboard counts: those submitted inside `window` (every run without one), of `quiz` only when it names one. */
+export type BoardScope = { readonly window?: LeaderboardWindow; readonly quiz?: Slug };
+
+/** 🔭️ The scope of the leaderboard of `period` — of `quiz` only when it names one — at the instant `at`. */
+export function boardScope(period: LeaderboardPeriod, quiz: Slug | undefined, at: Timestamp): BoardScope {
+  const window = periodWindow(period, at);
+  return { ...(window ? { window } : {}), ...(quiz === undefined ? {} : { quiz }) };
+}
+
+function counts(scope: BoardScope, quiz: Slug, at: Timestamp): boolean {
+  return (scope.quiz === undefined || scope.quiz === quiz) && (scope.window === undefined || (scope.window.from <= at && at < scope.window.until));
+}
+
+/** 🧍️ One learner's unranked leaderboard row together with the learner id that breaks the last tie and finds the caller; the id never leaves the proctor. */
+export type Standing = { readonly learner: Id } & Omit<LeaderboardRow, "rank">;
+
+/** 📈️ The standing of a transcript in `scope`, made of the runs in scope only — their bests, their count, the last of them and the badges they earned; `undefined` when no run is in scope. */
+export function standing(transcript: Transcript, catalog: CatalogView, scope: BoardScope = {}): Standing | undefined {
+  const runs = transcript.runs.filter((run) => counts(scope, run.quiz, run.at));
+  const { best, reachedAt } = bests(runs);
+  const last = runs[runs.length - 1];
+  if (reachedAt === undefined || last === undefined) return undefined;
+  const badges = transcript.badges.filter((award) => counts(scope, award.quiz, award.at)).map((award) => award.badge);
+  return { learner: transcript.learner, tag: transcript.tag, identity: transcript.identity, total: total(best, catalog), reachedAt, best, badges, runs: runs.length, lastActivity: last.at };
+}
+
+/** 🥈️ The order of the leaderboard: total ↓, badge count ↓, reachedAt ↑, learner id ↑. */
+export function compareStandings(left: Standing, right: Standing): number {
+  return right.total - left.total || right.badges.length - left.badges.length || left.reachedAt - right.reachedAt || compareCodePoints(left.learner, right.learner);
+}
+
+/** 🏆️ The leaderboard of `board` at the instant `at` over every transcript: the top {@link LEADERBOARD_TOP} rows by rank of the standings in scope, how many learners are ranked, how many runs were submitted in all, and the row of `caller` when that learner is ranked (also inside the top); rows carry the learner tag, never the id. */
+export function leaderboard(transcripts: readonly Transcript[], catalog: CatalogView, board: { readonly period: LeaderboardPeriod; readonly quiz?: Slug }, at: Timestamp, caller?: Id): Leaderboard {
+  const scope = boardScope(board.period, board.quiz, at);
+  const ranked = transcripts
+    .flatMap((candidate) => standing(candidate, catalog, scope) ?? [])
+    .sort(compareStandings)
+    .map(({ learner, ...row }, index) => ({ learner, row: { rank: index + 1, ...row } }));
+  const own = caller === undefined ? undefined : ranked.find((entry) => entry.learner === caller)?.row;
+  return {
+    period: board.period,
+    ...(scope.quiz === undefined ? {} : { quiz: scope.quiz }),
+    ...(scope.window ? { window: scope.window } : {}),
+    rows: ranked.slice(0, LEADERBOARD_TOP).map((entry) => entry.row),
+    learners: ranked.length,
+    submissions: transcripts.reduce((sum, candidate) => sum + candidate.runs.length, 0),
+    ...(own ? { own } : {}),
+  };
 }
 
 /** 🔣️ The key of a value in crowd counts: its ECMAScript `Number::toString` text, the shortest round-trip JSON number (`0.12`, `250`, `1e+21`, `1e-7`; `-0` → `0`) — Rust `value_key`. */
@@ -110,7 +231,29 @@ function answeredTasks<K extends TaskResult["kind"]>(results: readonly RunResult
   });
 }
 
-/** 👪️ What the learners answered in the submitted results of one quiz: classification counts per assigned category, sorting mean normalized position (position / (len − 1), 0 for a single item) summed in result order, matching counts per assigned value key per dimension, counts keys ascending by code point; tasks, dimensions and items in definition order, unanswered items left out, results of other quizzes ignored. */
+/** 🪣️ The bin of a score among the {@link CROWD_SCORE_BINS}: a tenth of its whole percent ⌊score · 100 + ½⌋, rounded down, the last bin closed (`[90, 100]`). */
+export function scoreBin(score: Score): number {
+  return Math.max(0, Math.min(CROWD_SCORE_BINS - 1, Math.floor(Math.floor(score * 100 + 0.5) / 10)));
+}
+
+/** 📉️ How many of `scores` fall into each score bin. */
+function binned(scores: readonly Score[]): CrowdScores {
+  const bins = new Array<number>(CROWD_SCORE_BINS).fill(0);
+  for (const score of scores) bins[scoreBin(score)]! += 1;
+  return bins;
+}
+
+/** 🎪️ How many items a sheet of `task` presents: `draw` when it is set and smaller than the item count, else every item. */
+export function presented(task: Task): number {
+  return task.draw !== undefined && task.draw < task.items.length ? task.draw : task.items.length;
+}
+
+/** 🪑️ The place among `places` presented ones that `position` in a learner's order of `length` items counts for: `position · (places − 1) / (length − 1)` rounded half up in integer arithmetic — the position itself when `length` equals `places`, place 0 for an order of fewer than two items, never beyond the last place. */
+export function placeBin(position: number, length: number, places: number): number {
+  return length < 2 || places < 1 ? 0 : Math.min(places - 1, Math.floor((2 * position * (places - 1) + (length - 1)) / (2 * (length - 1))));
+}
+
+/** 👪️ What the learners answered and scored in the submitted results of one quiz: the run scores per score bin; per task the scores of the results that count for it (per dimension the dimension's scores for a matching), classification counts per assigned category, sorting mean normalized position (position / (len − 1), 0 for a single item) summed in result order beside the count per presented place ({@link placeBin}), matching counts per assigned value key per dimension, counts keys ascending by code point; tasks, dimensions and items in definition order, unanswered items left out, results of other quizzes ignored. */
 export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView {
   const runs = results.filter((result) => result.quiz === quiz.id);
   const tasks = quiz.tasks.flatMap((task): CrowdTask[] => {
@@ -121,18 +264,22 @@ export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView 
           const assigned = answered.flatMap((result) => result.items.find((candidate) => candidate.item === item.id)?.assigned ?? []);
           return assigned.length === 0 ? [] : [{ item: item.id, answers: assigned.length, counts: counted(assigned) }];
         });
-        return [{ task: task.id, kind: task.kind, items }];
+        return [{ task: task.id, kind: task.kind, scores: binned(answered.map((result) => result.score)), items }];
       }
       case "sorting": {
         const answered = answeredTasks(runs, task.id, "sorting");
+        const count = presented(task);
         const items = task.items.flatMap((item): CrowdItem[] => {
-          const positions = answered.flatMap((result) => {
+          const orders = answered.flatMap((result) => {
             const found = result.items.find((candidate) => candidate.item === item.id);
-            return found === undefined ? [] : [result.items.length > 1 ? found.position / (result.items.length - 1) : 0];
+            return found === undefined ? [] : [{ position: found.position, length: result.items.length }];
           });
-          return positions.length === 0 ? [] : [{ item: item.id, answers: positions.length, meanPosition: positions.reduce((sum, position) => sum + position, 0) / positions.length }];
+          if (orders.length === 0) return [];
+          const places = new Array<number>(count).fill(0);
+          for (const { position, length } of orders) if (count > 0) places[placeBin(position, length, count)]! += 1;
+          return [{ item: item.id, answers: orders.length, meanPosition: orders.reduce((sum, { position, length }) => sum + (length > 1 ? position / (length - 1) : 0), 0) / orders.length, places }];
         });
-        return [{ task: task.id, kind: task.kind, items }];
+        return [{ task: task.id, kind: task.kind, scores: binned(answered.map((result) => result.score)), items }];
       }
       case "matching": {
         const answered = answeredTasks(runs, task.id, "matching");
@@ -145,10 +292,10 @@ export function crowdView(quiz: Quiz, results: readonly RunResult[]): CrowdView 
             });
             return assigned.length === 0 ? [] : [{ item: item.id, answers: assigned.length, counts: counted(assigned) }];
           });
-          return { task: task.id, kind: task.kind, dimension: dimension.id, items };
+          return { task: task.id, kind: task.kind, dimension: dimension.id, scores: binned(results.map((result) => result.score)), items };
         });
       }
     }
   });
-  return { quiz: quiz.id, runs: runs.length, tasks };
+  return { quiz: quiz.id, runs: runs.length, scores: binned(runs.map((result) => result.score)), tasks };
 }

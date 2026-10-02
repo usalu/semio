@@ -1,0 +1,10 @@
+{
+  "title": "Quiz Sorting Numeric Guesses",
+  "emoji": "🔢",
+  "status": "closed",
+  "description": "For every sorting task of a quiz, let the learner type a numeric guess per item; the unit is shown automatically (SI-prefix aware) and the items reorder by their guesses.",
+  "goal": "🎯runningframework🎯runningproducts",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP failed to connect (CONNECTION_CLOSED) on 2026-10-02. Closed manually on 2026-10-02 (repo MCP still down).",
+  "summary": "Every sorting task takes a typed numeric guess per item: the field shows the unit, reads an optional SI prefix (2 kW, 1,5 MWh, 1e3 kW) and shows what it reads as, and on commit the guessed items order themselves by their guesses among the places they occupy; moving a guessed item by hand removes its guess, guesses never change a score, and the results show a 'Your guess' column. Contract (SortingAnswer.guesses in the base unit, thinking drafts), both cores, the Python reference, the React client, the texts in English and German and the product README moved together as 📓️design.md says. The session that built it left the ticket open; ticket TEACHING-ARCHITECTURE-DEPLOY-READY verified it on 2026-10-02 (unit tests 640 and 297, parity 108/108, end-to-end 36/36 in both topologies, and the staged site in Chromium: both physics sortings ordered by typed guesses alone, 100 %, two 'Your guess' columns), removed the left-over tool output and closed it."
+}

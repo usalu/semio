@@ -1,0 +1,80 @@
+{
+  "name": "@semio-tech/pets-react",
+  "$schema": "../../../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📖️stories/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🏗️builder/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧪️tests/*/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧫️fixtures/*/🔣️.json"
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    },
+    "dev": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+        "command": "bun ./📜️script.ts dev",
+        "env": {
+          "NODE_OPTIONS": "",
+          "NX_NATIVE_COMMAND_RUNNER": "false",
+          "NX_TASKS_RUNNER_DYNAMIC_OUTPUT": "false",
+          "NX_TUI": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        },
+        "forwardAllArgs": true
+      },
+      "cache": false,
+      "continuous": true
+    }
+  }
+}

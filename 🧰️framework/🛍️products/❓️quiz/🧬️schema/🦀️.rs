@@ -21,6 +21,10 @@ pub type Slug = String;
 /// 🆔️ 32 lowercase hex characters (128 random bits) naming a learner, run or command.
 pub type Id = String;
 
+/// ✒️ A handle as registered and shown: 1…64 code points of Latin letters, ASCII digits, `'` `.` `_`
+/// `-` and single spaces between words, with at least one letter or digit; always in NFC.
+pub type Handle = String;
+
 /// 🕰️ Milliseconds since the Unix epoch.
 pub type Timestamp = u64;
 
@@ -75,6 +79,8 @@ pub struct Quantity {
 pub struct Dimension {
     pub id: Slug,
     pub quantity: Quantity,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
 }
 
 /// 🧭️ One spoke of a profile (spider diagram); values normalise to `(value − min) / (max − min)`.
@@ -88,12 +94,35 @@ pub struct Axis {
     pub max: f64,
 }
 
+/// 🎞️ The looping microanimation of an icon, still for learners who prefer reduced motion.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum Motion {
+    Bounce,
+    Pulse,
+    Spin,
+    Sway,
+    Float,
+    Flip,
+}
+
+/// 🖼️ The icon of a task, an item, a category or a dimension (shown on its value cards): one emoji
+/// grapheme picturing it and the [`Motion`] it plays.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Icon {
+    pub emoji: String,
+    pub motion: Motion,
+}
+
 /// 🗂️ A category of a classification task, optionally with a profile on the task axes.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Category {
     pub id: Slug,
     pub label: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub description: Option<Text>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -106,6 +135,8 @@ pub struct Category {
 pub struct ClassificationItem {
     pub id: Slug,
     pub label: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub category: Slug,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<Text>,
@@ -117,6 +148,8 @@ pub struct ClassificationItem {
 pub struct SortingItem {
     pub id: Slug,
     pub label: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub value: f64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<Text>,
@@ -128,6 +161,8 @@ pub struct SortingItem {
 pub struct MatchingItem {
     pub id: Slug,
     pub label: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub values: BTreeMap<Slug, f64>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<Text>,
@@ -141,6 +176,8 @@ pub struct ClassificationTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub axes: Option<Vec<Axis>>,
     pub categories: Vec<Category>,
@@ -156,6 +193,8 @@ pub struct SortingTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub quantity: Quantity,
     pub items: Vec<SortingItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -170,6 +209,8 @@ pub struct MatchingTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub dimensions: Vec<Dimension>,
     pub items: Vec<MatchingItem>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -208,9 +249,16 @@ impl Task {
             Self::Classification(ClassificationTask { title, .. }) | Self::Sorting(SortingTask { title, .. }) | Self::Matching(MatchingTask { title, .. }) => title,
         }
     }
+
+    /// 🖼️ The task icon, when the task has one.
+    pub fn icon(&self) -> Option<&Icon> {
+        match self {
+            Self::Classification(ClassificationTask { icon, .. }) | Self::Sorting(SortingTask { icon, .. }) | Self::Matching(MatchingTask { icon, .. }) => icon.as_ref(),
+        }
+    }
 }
 
-/// 🎓️ A quiz: an ordered set of tasks. A run presents them randomized and is scored only as a whole.
+/// 🎓️ A quiz: an ordered set of tasks. A run keeps the first task first, randomizes the rest and is scored only as a whole.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Quiz {
@@ -286,6 +334,8 @@ pub struct Catalog {
 pub struct SheetItem {
     pub id: Slug,
     pub label: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
 }
 
 /// 🫙️ A classification task as presented: shuffled categories, drawn items in presentation order.
@@ -295,6 +345,8 @@ pub struct SheetClassificationTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub axes: Option<Vec<Axis>>,
     pub categories: Vec<Category>,
@@ -308,6 +360,8 @@ pub struct SheetSortingTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub quantity: Quantity,
     pub items: Vec<SheetItem>,
 }
@@ -318,6 +372,8 @@ pub struct SheetSortingTask {
 pub struct SheetDimension {
     pub id: Slug,
     pub quantity: Quantity,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub cards: Vec<f64>,
 }
 
@@ -328,6 +384,8 @@ pub struct SheetMatchingTask {
     pub id: Slug,
     pub title: Text,
     pub prompt: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
     pub dimensions: Vec<SheetDimension>,
     pub items: Vec<SheetItem>,
 }
@@ -380,11 +438,14 @@ pub struct ClassificationAnswer {
     pub assignments: BTreeMap<Slug, Slug>,
 }
 
-/// ↕️ Item ids, smallest first.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// ↕️ Item ids, smallest first, with the learner's optional numeric guess per item id in the quantity's base
+/// unit; guessed items stand in `order` in non-decreasing guess order and guesses never influence scoring.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SortingAnswer {
     pub order: Vec<Slug>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub guesses: BTreeMap<Slug, f64>,
 }
 
 /// 🧲️ Per dimension id: the card index per item id.
@@ -395,7 +456,7 @@ pub struct MatchingAnswer {
 }
 
 /// ✍️ A learner's answer to one task, tagged by `kind`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case")]
 pub enum Answer {
     Classification(ClassificationAnswer),
@@ -487,21 +548,49 @@ pub struct RunResult {
 
 //#region 🔖️Lifecycle
 /// 🎭️ How a learner appears. Anonymous learners are always new; pseudonyms and names share one
-/// handle namespace and are recalled without a password.
+/// handle namespace and are recalled without a password. The handle is the normalized display.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum Identity {
     Anonymous,
-    Pseudonym { handle: String },
-    Name { handle: String },
+    Pseudonym { handle: Handle },
+    Name { handle: Handle },
+}
+
+/// 🖋️ An identity as a learner asks for it: the handle as typed (at most 256 code points), which the
+/// proctor normalizes or refuses. Same shape as [`Identity`]; only the handle's state differs.
+pub type IdentityClaim = Identity;
+
+/// 🧢️ The caps a proctor decides with, so that no learner and no client grows its state without bound.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
+pub struct Limits {
+    pub learners: u64,
+    pub runs_per_quiz: u64,
+    pub runs: u64,
+    pub answers_per_run: u64,
+}
+
+/// 🛟️ The caps of a proctor nobody configured: far beyond a real class (300 learners playing every
+/// quiz dozens of times). The registrations are sized against what they cost a proctor to keep — a
+/// few kilobytes of disk each — and against the pace one client address may register at, so that
+/// the cap is weeks away from any one of them.
+pub const DEFAULT_LIMITS: Limits = Limits { learners: 100_000, runs_per_quiz: 200, runs: 1_000, answers_per_run: 2_000 };
+
+impl Default for Limits {
+    /// 🧯️ [`DEFAULT_LIMITS`].
+    fn default() -> Self {
+        DEFAULT_LIMITS
+    }
 }
 
 /// 📨️ Learner intent. Every command carries a client-generated id so a retry after a connection
-/// shortage is applied exactly once.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+/// shortage is applied exactly once. `identify-learner` registers a learner: an anonymous one in its
+/// own stream, a pseudonym or name in the stream of its handle key.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum Command {
-    IdentifyLearner { id: Id, learner: Id, identity: Identity },
+    IdentifyLearner { id: Id, learner: Id, identity: IdentityClaim },
     StartRun { id: Id, learner: Id, run: Id, quiz: Slug },
     RecordAnswer { id: Id, learner: Id, run: Id, task: Slug, answer: Answer },
     SubmitRun { id: Id, learner: Id, run: Id },
@@ -547,6 +636,12 @@ pub enum Rejection {
     AnswerInvalid,
     QuizRevised,
     HandleInvalid,
+    HandleClaimed,
+    IdInvalid,
+    LearnerExists,
+    RosterFull,
+    RunsExhausted,
+    AnswersExhausted,
 }
 
 impl Rejection {
@@ -563,6 +658,12 @@ impl Rejection {
             Self::AnswerInvalid => "answer-invalid",
             Self::QuizRevised => "quiz-revised",
             Self::HandleInvalid => "handle-invalid",
+            Self::HandleClaimed => "handle-claimed",
+            Self::IdInvalid => "id-invalid",
+            Self::LearnerExists => "learner-exists",
+            Self::RosterFull => "roster-full",
+            Self::RunsExhausted => "runs-exhausted",
+            Self::AnswersExhausted => "answers-exhausted",
         }
     }
 }
@@ -572,7 +673,6 @@ impl Rejection {
 #[serde(tag = "type", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum Event {
     LearnerRegistered { learner: Id, identity: Identity, at: Timestamp },
-    LearnerRecalled { learner: Id, at: Timestamp },
     RunStarted { learner: Id, run: Id, quiz: Slug, revision: String, seed: u32, at: Timestamp },
     RunVoided { learner: Id, run: Id, at: Timestamp },
     AnswerRecorded { learner: Id, run: Id, task: Slug, answer: Answer, at: Timestamp },
@@ -585,7 +685,6 @@ impl Event {
     pub fn learner(&self) -> &Id {
         match self {
             Self::LearnerRegistered { learner, .. }
-            | Self::LearnerRecalled { learner, .. }
             | Self::RunStarted { learner, .. }
             | Self::RunVoided { learner, .. }
             | Self::AnswerRecorded { learner, .. }
@@ -598,7 +697,6 @@ impl Event {
     pub fn at(&self) -> Timestamp {
         match self {
             Self::LearnerRegistered { at, .. }
-            | Self::LearnerRecalled { at, .. }
             | Self::RunStarted { at, .. }
             | Self::RunVoided { at, .. }
             | Self::AnswerRecorded { at, .. }
@@ -611,7 +709,6 @@ impl Event {
     pub fn type_name(&self) -> &'static str {
         match self {
             Self::LearnerRegistered { .. } => "learner-registered",
-            Self::LearnerRecalled { .. } => "learner-recalled",
             Self::RunStarted { .. } => "run-started",
             Self::RunVoided { .. } => "run-voided",
             Self::AnswerRecorded { .. } => "answer-recorded",
@@ -623,13 +720,15 @@ impl Event {
 //#endregion 🔖️Lifecycle
 
 //#region 🔖️Views
-/// 🗒️ A task as the catalog lists it: id, kind and title only.
+/// 🗒️ A task as the catalog lists it: id, kind, title and icon only.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CatalogTaskView {
     pub id: Slug,
     pub kind: TaskKind,
     pub title: Text,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon: Option<Icon>,
 }
 
 /// 📘️ A quiz as the catalog lists it, without items or solutions.
@@ -726,7 +825,8 @@ pub struct LearnerView {
 }
 
 /// 📈️ One public leaderboard row. It never carries the learner id — without passwords that id is the
-/// learner's only credential — but its `tag`: FNV-1a of the id as 8 lowercase hex digits.
+/// learner's only credential — but its `tag`: FNV-1a of the id as 8 lowercase hex digits. `runs`
+/// counts the submitted runs in the scope of the leaderboard, `last_activity` is the last of them.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LeaderboardRow {
@@ -741,23 +841,97 @@ pub struct LeaderboardRow {
     pub last_activity: Timestamp,
 }
 
-/// 🏵️ Every learner with at least one submitted run, ordered by total descending, then badge count
-/// descending, then `reachedAt` ascending, then learner id ascending; rank is the 1-based position.
+/// 🔝️ How many rows a [`Leaderboard`] carries at most.
+pub const LEADERBOARD_TOP: usize = 100;
+
+/// 🗓️ Which runs a leaderboard counts by when they were submitted: those of the current day, ISO week
+/// (from Monday) or month — calendar periods in UTC around the proctor's clock — or all of them.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum LeaderboardPeriod {
+    Daily,
+    Weekly,
+    Monthly,
+    AllTime,
+}
+
+/// 🗓️ Every [`LeaderboardPeriod`] in the order they are offered.
+pub const LEADERBOARD_PERIODS: [LeaderboardPeriod; 4] = [LeaderboardPeriod::Daily, LeaderboardPeriod::Weekly, LeaderboardPeriod::Monthly, LeaderboardPeriod::AllTime];
+
+/// 🪟️ The time a leaderboard period spans: a run counts when it was submitted at or after `from` and
+/// before `until`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct LeaderboardWindow {
+    pub from: Timestamp,
+    pub until: Timestamp,
+}
+
+/// 🏵️ One leaderboard: the learners with at least one submitted run in its scope — the runs submitted
+/// inside `window` (every run when there is none), of `quiz` only when it names one — ordered by total
+/// descending, then badge count descending, then `reachedAt` ascending, then learner id ascending;
+/// rank is the 1-based position. Every row is made of the runs in scope only. `rows` holds the top
+/// [`LEADERBOARD_TOP`] only, `learners` counts every ranked learner, `submissions` every run submitted
+/// in the catalog whatever the period and quiz, and `own` is the caller's row when the query names a
+/// ranked learner — also when it is inside the top.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Leaderboard {
+    pub period: LeaderboardPeriod,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub quiz: Option<Slug>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub window: Option<LeaderboardWindow>,
     pub rows: Vec<LeaderboardRow>,
+    pub learners: usize,
+    pub submissions: usize,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub own: Option<LeaderboardRow>,
 }
 
-/// 🔭️ The reads a proctor answers.
+/// 🔦️ Who holds a handle: the normalized display of the asked handle and, when it is claimed, its holder.
+/// Recalling a handle is this read; it writes nothing.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HandleView {
+    pub display: Handle,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub holder: Option<HandleHolder>,
+}
+
+/// 🤝️ The learner holding a handle and the identity it registered.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HandleHolder {
+    pub learner: Id,
+    pub identity: Identity,
+}
+
+/// 🔭️ The reads a proctor answers; `leaderboard` names its period, may name the one quiz it counts and
+/// the caller, `handle` carries the handle as typed.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "type", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum Query {
     Catalog,
-    Learner { learner: Id },
-    Run { run: Id },
-    Leaderboard,
-    Crowd { quiz: Slug },
+    Learner {
+        learner: Id,
+    },
+    Run {
+        run: Id,
+    },
+    Leaderboard {
+        period: LeaderboardPeriod,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        quiz: Option<Slug>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        learner: Option<Id>,
+    },
+    Crowd {
+        quiz: Slug,
+    },
+    Handle {
+        handle: String,
+    },
 }
 
 impl Query {
@@ -767,8 +941,9 @@ impl Query {
             Self::Catalog => "catalog",
             Self::Learner { .. } => "learner",
             Self::Run { .. } => "run",
-            Self::Leaderboard => "leaderboard",
+            Self::Leaderboard { .. } => "leaderboard",
             Self::Crowd { .. } => "crowd",
+            Self::Handle { .. } => "handle",
         }
     }
 }
@@ -783,7 +958,8 @@ pub struct CrowdCount {
 }
 
 /// 🙌️ How often an item was answered and how: counts in ascending key order, or for sortings the mean normalized
-/// position (0 smallest … 1 largest).
+/// position (0 smallest … 1 largest) beside `places`, how often the learners put it at each place a sheet of the
+/// task presents (sums to `answers`).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct CrowdItem {
@@ -793,9 +969,18 @@ pub struct CrowdItem {
     pub counts: Option<Vec<CrowdCount>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub mean_position: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub places: Option<Vec<usize>>,
 }
 
-/// 🧶️ The crowd of one task (one per dimension for matching), its answered items in definition order.
+/// 🔟️ How many bins a [`CrowdScores`] has: `[0, 10)`, `[10, 20)`, … `[80, 90)`, `[90, 100]` in whole percent.
+pub const CROWD_SCORE_BINS: usize = 10;
+
+/// 📉️ How many scores fell into each of the [`CROWD_SCORE_BINS`] bins, lowest bin first.
+pub type CrowdScores = [usize; CROWD_SCORE_BINS];
+
+/// 🧶️ The crowd of one task (one per dimension for matching): the scores of the results that count for it (the
+/// dimension's scores for a matching) and its answered items in definition order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CrowdTask {
@@ -803,15 +988,18 @@ pub struct CrowdTask {
     pub kind: TaskKind,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub dimension: Option<Slug>,
+    pub scores: CrowdScores,
     pub items: Vec<CrowdItem>,
 }
 
-/// 🌈️ What the learners answered in the submitted runs of one quiz, aggregated per task (and dimension) and item.
+/// 🌈️ What the learners answered and scored in the submitted runs of one quiz: the run scores (summing to `runs`),
+/// then aggregated per task (and dimension) and item.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CrowdView {
     pub quiz: Slug,
     pub runs: usize,
+    pub scores: CrowdScores,
     pub tasks: Vec<CrowdTask>,
 }
 //#endregion 🔖️Views

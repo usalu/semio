@@ -1,27 +1,40 @@
 @capability-quiz-learner-lifecycle
 @oracle-quiz-python-reference
 @comparison-quiz-score-v1
-Feature: Identification, runs, answers and submissions decide the same events and rejections everywhere
-  The proctor wraps two pure deciders that both cores share (design §8). The roster decides
-  identify-learner: an anonymous learner is always new; a pseudonym or name is normalised — trimmed,
-  inner whitespace runs collapsed to one space, 1…64 characters, else `handle-invalid` — and its
-  lowercased key recalls the learner that claimed it (`learner-recalled`) or registers a new one with
-  the display handle; pseudonyms and names share one key space. The learner decides start-run,
-  record-answer and submit-run against the current quizzes and their revisions: unknown learners and
-  quizzes are rejected, an open run of the current revision blocks a new one while a stale one is
-  voided first, answers are checked against the run's sheet (`unknown-task`, `answer-invalid`, the
-  latest answer per task wins) and refused on a revised quiz (`quiz-revised`), and a submission is
-  voided on a revised quiz, refused while incomplete (`run-incomplete`), and otherwise emits
-  `run-submitted` with the scored result followed by one `badge-awarded` per newly earned badge.
+Feature: Registrations, runs, answers and submissions decide the same events and rejections everywhere
+  The proctor wraps two pure deciders that both cores share (design §8). A handle decides identify-learner
+  for a pseudonym or name: every handle key has a stream of its own, a free handle registers the command's
+  learner under the normalized display (`learner-registered`), a claimed one is refused (`handle-claimed`)
+  — recalling a handle is a read and writes nothing — and a handle outside the policy, a handle of another
+  key and an anonymous identity are `handle-invalid`. The learner decides its own commands: an anonymous
+  identify-learner registers the learner once (`learner-exists` afterwards), start-run, record-answer and
+  submit-run run against the current quizzes and their revisions: unknown learners and quizzes are
+  rejected, an open run of the current revision blocks a new one while a stale one is voided first,
+  answers are checked against the run's sheet (`unknown-task`, `answer-invalid`, the latest answer per
+  task wins) and refused on a revised quiz (`quiz-revised`), and a submission is voided on a revised quiz,
+  refused while incomplete (`run-incomplete`), and otherwise emits `run-submitted` with the scored result
+  followed by one `badge-awarded` per newly earned badge. Every decision first holds the command to its id
+  and slug shapes (`id-invalid`) and to its own learner (`unknown-learner`), and to the caps of `Limits`:
+  a registration beyond the cap of learners is `roster-full` (`registrationRejection`), a start after the
+  cap of submitted runs — per quiz or in total — `runs-exhausted`, an answer after the cap of recorded
+  answers of a run `answers-exhausted`.
 
   THE REFERENCE is `🐍️.py` beside this file: a second implementation of §3–§8 written in Python from
-  the design text alone (sheet over numpy's MT19937, answer rules, scoring, badges, deciders, folding,
-  views). Only decisions and schema views are projected — never a core's private state — so each
-  subject replays the committed `given` events and steps through its own `decide`/`evolve`
-  (`@semio-tech/quiz`: `normalizeHandle`, `decideRoster`/`evolveRoster`, `emptyLearnerState`,
-  `decideLearner`/`evolveLearner`, `learnerView`, `runView`; the snake_case twins of the `quiz` crate).
-  Every step carries its decision time `now`; a step may revise a quiz from then on, the way a
-  redeployed quiz file changes its revision. Scores inside `run-submitted` compare under `quiz-score-v1`.
+  the design text alone (the handle policy over `unicodedata`, sheet over numpy's MT19937, answer rules,
+  scoring, badges, deciders, folding, views). Only decisions and schema views are projected — never a
+  core's private state — so each subject replays the committed `given` events and steps through its own
+  `decide`/`evolve` (`@semio-tech/quiz`: `decideHandle`/`evolveHandle`, `registrationRejection`,
+  `emptyLearnerState`, `decideLearner`/`evolveLearner`, `learnerView`, `runView`; the snake_case twins of
+  the `quiz` crate). Every step carries its decision time `now`; a step may revise a quiz from then on, the
+  way a redeployed quiz file changes its revision; a sequence may carry its own caps. Scores inside
+  `run-submitted` compare under `quiz-score-v1`.
+
+  The last scenario plays the catalog a site actually serves, read from the repository at run time
+  (`🎓️teaching/🏛️architecture/❓️quiz/🔣️.json` and the quizzes it lists): a learner who answers every
+  sheet task of every quiz perfectly — whatever items the run draws — earns every badge of the catalog,
+  "Heating Expert", "Numerical Brain" and "Pattern Seer" among them, and a learner who makes exactly one
+  mistake in one task earns every badge but those that depend on that task. Every implementation builds
+  the answers from the quiz definitions and its own sheets.
 
   Command idempotency by command id is a property of the proctor's framework deciders, not of these
   pure functions, so every committed command id is distinct.
@@ -31,28 +44,20 @@ Feature: Identification, runs, answers and submissions decide the same events an
   `.venv/Scripts/python.exe .🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️28/QUIZ-PRODUCT-AND-TEACHING-PROCTOR/generate_quiz_vectors.py`
   (`.venv/bin/python` outside Windows).
 
-  @id-handles
+  @id-registrations
   @level-fundamental
   @mode-differential
-  Scenario: Handles normalise to a display form and a lowercase key, or are invalid
+  Scenario: identify-learner registers a handle once, refuses a second claim, and the cap of learners refuses registrations
     Given the committed vectors shared://🧾️learner-lifecycle/🔣️.json
-    When every committed handle is normalised
-    Then every implementation projects the same display and key per handle, or none for an empty or over-long handle
-
-  @id-roster
-  @level-fundamental
-  @mode-differential
-  Scenario: identify-learner registers, recalls or rejects in one handle key space
-    Given the committed vectors shared://🧾️learner-lifecycle/🔣️.json
-    When every committed roster sequence is decided and folded from an empty roster
-    Then every implementation projects the same decision per step
+    When every committed sequence is decided and folded from its unclaimed handle key and every committed learner count is held to its cap
+    Then every implementation projects the same decision per step and the same rejection per count
 
   @id-learner-decisions
   @level-fundamental
   @mode-differential
-  Scenario: start-run, record-answer and submit-run decide the committed events and rejections
+  Scenario: Anonymous registration, start-run, record-answer and submit-run decide the committed events and rejections
     Given the committed vectors shared://🧾️learner-lifecycle/🔣️.json
-    When every committed learner sequence folds its given events and then decides and folds every step
+    When every committed learner sequence folds its given events and then decides and folds every step under its caps
     Then every implementation projects the same decision per step, scores within 1e-12
 
   @id-learner-views
@@ -62,3 +67,13 @@ Feature: Identification, runs, answers and submissions decide the same events an
     Given the committed vectors shared://🧾️learner-lifecycle/🔣️.json
     When every committed sequence of a registered learner is replayed and viewed against the final quizzes
     Then every implementation projects the same learner view and the same view of every committed run
+
+  @id-site-catalog
+  @level-fundamental
+  @mode-differential
+  Scenario: Perfect runs of the site catalog earn every badge and a single mistake withholds the badges of its task
+    Given the site catalog 🎓️teaching/🏛️architecture/❓️quiz/🔣️.json and its quizzes, read from the repository
+    And the committed plays of shared://🧾️learner-lifecycle/🔣️.json
+    When every play starts, answers and submits its runs — perfectly, or with one mistake in the named task
+    Then every implementation projects the same score per run, the same badges per submission and the same badges held at the end
+    And a perfect tour holds every badge of the catalog, a flawed one every badge but those its task decides

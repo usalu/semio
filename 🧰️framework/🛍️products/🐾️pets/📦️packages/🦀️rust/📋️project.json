@@ -1,0 +1,66 @@
+{
+  "name": "@semio-tech/pets-rs",
+  "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "root": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+  "sourceRoot": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+  "projectType": "library",
+  "tags": [
+    "lang:rust",
+    "role:product",
+    "family:pets"
+  ],
+  "namedInputs": {
+    "default": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/**/*.rs",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧫️fixtures/**/*",
+      "{projectRoot}/**/*"
+    ]
+  },
+  "targets": {
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "outputs": [
+        "{projectRoot}/dist/build"
+      ]
+    },
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

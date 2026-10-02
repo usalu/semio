@@ -3,11 +3,6 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🃏️sheet/🟦️.ts
  */
-/** 🃏️ Subject adapter of the sheet-assembly case: `sheetOf` of `@semio-tech/quiz` for every committed quiz and seed.
- *
- * @see ./🥒️.feature
- * @see ../../🔨️modules/🃏️sheet/🟦️.ts
- */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type Quiz, sheetOf } from "../../📦️packages/🟦️typescript/🟦️.ts";
 

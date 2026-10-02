@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/teaching/architecture/quiz/deploy/schema.json",
+  "title": "Deployment",
+  "description": "Where the architecture quiz is deployed: the host a CDN serves the static site at, and the host, image repository and container port of the proctor stack. The one authored source every deployment file is checked against.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["site", "proctor"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "site": {
+      "description": "The static site on the CDN.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host"],
+      "properties": {
+        "host": { "$ref": "#/$defs/Host", "description": "The host the CDN serves the site at; `https://` + this host is the one browser origin the proctor grants." },
+        "legal": {
+          "description": "The legal pages the site links in its footer; a page that is not set is not linked.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "imprint": { "$ref": "#/$defs/Link", "description": "The imprint of the site's publisher." },
+            "privacy": { "$ref": "#/$defs/Link", "description": "The privacy notice covering the site and the proctor." }
+          }
+        }
+      }
+    },
+    "proctor": {
+      "description": "The proctor API behind the TLS-terminating proxy of the Docker stack.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "image", "port"],
+      "properties": {
+        "host": { "$ref": "#/$defs/Host", "description": "The host the stack serves the proctor at; `https://` + this host is the origin a release build of the site bakes in." },
+        "image": { "description": "The registry repository every proctor image tag lives under, without a tag.", "type": "string", "pattern": "^[a-z0-9.-]+(?::[0-9]+)?(?:/[a-z0-9]+(?:[._-][a-z0-9]+)*)+$" },
+        "port": { "description": "The port the proctor binds inside its container.", "type": "integer", "minimum": 1024, "maximum": 65535 }
+      }
+    }
+  },
+  "$defs": {
+    "Host": {
+      "description": "A fully qualified DNS name in lower case, without scheme, port or trailing dot.",
+      "type": "string",
+      "maxLength": 253,
+      "pattern": "^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$"
+    },
+    "Link": {
+      "description": "An absolute HTTPS URL.",
+      "type": "string",
+      "pattern": "^https://[^\\s]+$"
+    }
+  }
+}

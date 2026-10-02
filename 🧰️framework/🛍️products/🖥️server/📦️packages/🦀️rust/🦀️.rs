@@ -31,6 +31,9 @@ pub mod policy;
 #[path = "../../🔨️modules/🎭️authority/🦀️.rs"]
 pub mod authority;
 
+#[path = "../../🔨️modules/🚦️throttle/🦀️.rs"]
+pub mod throttle;
+
 #[macro_use]
 #[path = "../../🔨️modules/📡️gateway/🦀️.rs"]
 pub mod gateway;

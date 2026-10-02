@@ -10,11 +10,21 @@
 //! `required`, `property-unknown`, `integer-invalid`, `value-invalid` of enums) surface here as serde
 //! deserialization errors instead.
 //!
+//! **Ids and handles.** [`is_id`] and [`is_slug`] are the shapes every id of a command or query must
+//! have ([`command_rejection`], [`query_rejection`]). The handle policy ([`normalize_handle`]) owns its
+//! tables: the `White_Space` set and the Latin letters of `$defs/Handle` are written out as code point
+//! ranges, so both cores accept the same handles whatever Unicode version their runtime ships. `std`
+//! has no normalizer and none is needed: every string over the handle alphabet is in Normalization
+//! Form C (no combining mark, no character whose canonical decomposition recomposes differently), so
+//! refusing everything outside the alphabet refuses every non-NFC spelling. The unit tests hold the
+//! tables to the `unicode-normalization` crate and the conformance case to Python's `unicodedata`.
+//!
 //! @see <https://www.rfc-editor.org/rfc/rfc6901> — JSON Pointer
+//! @see <https://www.unicode.org/reports/tr15/> — Unicode normalization forms
 //! @see ../../🧬️schema/🔣️.json — the constraints mirrored here
 //! @see ../✅️validation/🟦️.ts — the TypeScript twin
 
-use crate::schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, MatchingItem, MatchingTask, Quantity, Quiz, Rejection, Scale, SheetItem, SheetTask, SortingTask, Task, Text};
+use crate::schema::{Answer, Axis, Badge, BadgeRule, Catalog, Category, ClassificationTask, Command, MatchingItem, MatchingTask, Quantity, Query, Quiz, Rejection, Scale, SheetItem, SheetTask, SortingTask, Task, Icon, Text};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -59,6 +69,7 @@ pub enum IssueCode {
     QuizOutsideRun,
     TaskWithoutRun,
     TooMany,
+    HandleInvalid,
 }
 
 impl IssueCode {
@@ -96,6 +107,7 @@ impl IssueCode {
             Self::QuizOutsideRun => "quiz-outside-run",
             Self::TaskWithoutRun => "task-without-run",
             Self::TooMany => "too-many",
+            Self::HandleInvalid => "handle-invalid",
         }
     }
 }
@@ -171,12 +183,20 @@ pub fn catalog_issues(catalog: &Catalog, quizzes: &[Quiz]) -> Vec<ValidationIssu
 
 /// 🚧️ `answer-invalid` unless the answer fits the sheet task: the kind matches, every referenced
 /// item, category and dimension exists, card indices are in range and unique per dimension, and a
-/// sorting order is a permutation of the sheet items. Partial classification and matching answers
-/// are valid.
+/// sorting order is a permutation of the sheet items whose guesses name sheet items, are finite
+/// (positive on a logarithmic quantity) and stand in non-decreasing order along `order` (ties allowed,
+/// unguessed items unconstrained). Partial classification and matching answers are valid.
 pub fn answer_rejection(sheet_task: &SheetTask, answer: &Answer) -> Option<Rejection> {
     let valid = match (sheet_task, answer) {
         (SheetTask::Classification(task), Answer::Classification(answer)) => answer.assignments.iter().all(|(item, category)| presented(&task.items, item) && task.categories.iter().any(|candidate| &candidate.id == category)),
-        (SheetTask::Sorting(task), Answer::Sorting(answer)) => answer.order.len() == task.items.len() && answer.order.iter().collect::<BTreeSet<_>>().len() == answer.order.len() && answer.order.iter().all(|item| presented(&task.items, item)),
+        (SheetTask::Sorting(task), Answer::Sorting(answer)) => {
+            let guessed = answer.order.iter().filter_map(|item| answer.guesses.get(item)).collect::<Vec<_>>();
+            answer.order.len() == task.items.len()
+                && answer.order.iter().collect::<BTreeSet<_>>().len() == answer.order.len()
+                && answer.order.iter().all(|item| presented(&task.items, item))
+                && answer.guesses.iter().all(|(item, guess)| presented(&task.items, item) && guess.is_finite() && (task.quantity.scale == Scale::Linear || *guess > 0.0))
+                && guessed.windows(2).all(|pair| pair[0] <= pair[1])
+        }
         (SheetTask::Matching(task), Answer::Matching(answer)) => answer.assignments.iter().all(|(dimension, assignment)| {
             task.dimensions.iter().find(|candidate| &candidate.id == dimension).is_some_and(|dimension| {
                 let mut used = BTreeSet::new();
@@ -202,6 +222,136 @@ pub fn answer_complete(sheet_task: &SheetTask, answer: Option<&Answer>) -> bool 
 /// 🐍️ Whether `value` is a slug: `^[a-z0-9]+(?:-[a-z0-9]+)*$` and at most 64 characters.
 pub fn is_slug(value: &str) -> bool {
     value.len() <= 64 && value.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()))
+}
+
+/// 🪪️ Whether `value` is an id: exactly 32 lowercase hex characters.
+pub fn is_id(value: &str) -> bool {
+    value.len() == 32 && value.bytes().all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+}
+
+/// 🛃️ `id-invalid` unless every id a command carries has its shape: the command, learner and run ids
+/// are ids, the quiz and task ids slugs.
+pub fn command_rejection(command: &Command) -> Option<Rejection> {
+    let valid = match command {
+        Command::IdentifyLearner { id, learner, .. } => is_id(id) && is_id(learner),
+        Command::StartRun { id, learner, run, quiz } => is_id(id) && is_id(learner) && is_id(run) && is_slug(quiz),
+        Command::RecordAnswer { id, learner, run, task, .. } => is_id(id) && is_id(learner) && is_id(run) && is_slug(task),
+        Command::SubmitRun { id, learner, run } => is_id(id) && is_id(learner) && is_id(run),
+    };
+    (!valid).then_some(Rejection::IdInvalid)
+}
+
+/// 🧐️ `id-invalid` for a query whose learner or run is no id or whose quiz is no slug, `handle-invalid`
+/// for a `handle` query outside the handle policy.
+pub fn query_rejection(query: &Query) -> Option<Rejection> {
+    match query {
+        Query::Catalog => None,
+        Query::Learner { learner } => (!is_id(learner)).then_some(Rejection::IdInvalid),
+        Query::Run { run } => (!is_id(run)).then_some(Rejection::IdInvalid),
+        Query::Leaderboard { quiz, learner, .. } => (learner.as_deref().is_some_and(|learner| !is_id(learner)) || quiz.as_deref().is_some_and(|quiz| !is_slug(quiz))).then_some(Rejection::IdInvalid),
+        Query::Crowd { quiz } => (!is_slug(quiz)).then_some(Rejection::IdInvalid),
+        Query::Handle { handle } => normalize_handle(handle).is_none().then_some(Rejection::HandleInvalid),
+    }
+}
+
+/// 📏️ The most code points a handle holds.
+pub const HANDLE_MAX: usize = 64;
+
+/// 🧵️ The most code points a handle may be typed with before it is normalized.
+pub const HANDLE_INPUT_MAX: usize = 256;
+
+/// ⬜️ The Unicode `White_Space` code points as inclusive ranges: what collapses to one space between
+/// the words of a handle.
+pub const WHITE_SPACE: [(u32, u32); 10] = [(0x0009, 0x000D), (0x0020, 0x0020), (0x0085, 0x0085), (0x00A0, 0x00A0), (0x1680, 0x1680), (0x2000, 0x200A), (0x2028, 0x2029), (0x202F, 0x202F), (0x205F, 0x205F), (0x3000, 0x3000)];
+
+/// 🔤️ The letters of a handle as inclusive code point ranges: the upper- and lowercase letters of
+/// Basic Latin, Latin-1 Supplement, Latin Extended-A, Latin Extended-B and Latin Extended Additional
+/// without a compatibility decomposition.
+pub const HANDLE_LETTERS: [(u32, u32); 14] = [
+    (0x0041, 0x005A),
+    (0x0061, 0x007A),
+    (0x00C0, 0x00D6),
+    (0x00D8, 0x00F6),
+    (0x00F8, 0x0131),
+    (0x0134, 0x013E),
+    (0x0141, 0x0148),
+    (0x014A, 0x017E),
+    (0x0180, 0x01BA),
+    (0x01BC, 0x01BF),
+    (0x01CD, 0x01F0),
+    (0x01F4, 0x024F),
+    (0x1E00, 0x1E99),
+    (0x1E9C, 0x1EFF),
+];
+
+/// ❜️ The punctuation of a handle: apostrophe, hyphen-minus, full stop, underscore.
+pub const HANDLE_PUNCTUATION: [char; 4] = ['\'', '-', '.', '_'];
+
+/// 🪞️ A handle as displayed and as keyed (the display lowercased); pseudonyms and names share one
+/// key space.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct NormalizedHandle {
+    pub display: String,
+    pub key: String,
+}
+
+fn within(ranges: &[(u32, u32)], point: u32) -> bool {
+    ranges.iter().any(|&(low, high)| (low..=high).contains(&point))
+}
+
+/// 🧽️ The display handle and its key, or `None` for a handle outside the policy of `$defs/Handle`.
+///
+/// `White_Space` runs collapse to one space and are trimmed, the typographic apostrophe U+2019 becomes
+/// `'`; what remains must be 1…[`HANDLE_MAX`] code points of [`HANDLE_LETTERS`], ASCII digits,
+/// [`HANDLE_PUNCTUATION`] and single spaces, with at least one letter or digit. Control and format
+/// characters, combining marks (so every NFD spelling), other scripts and input over
+/// [`HANDLE_INPUT_MAX`] code points are refused. The key is the lowercased display.
+pub fn normalize_handle(handle: &str) -> Option<NormalizedHandle> {
+    if handle.len() > 4 * HANDLE_INPUT_MAX || handle.chars().count() > HANDLE_INPUT_MAX {
+        return None;
+    }
+    let mut display = String::new();
+    let (mut length, mut gap, mut worded) = (0, false, false);
+    for typed in handle.chars() {
+        if within(&WHITE_SPACE, u32::from(typed)) {
+            gap = length > 0;
+            continue;
+        }
+        let character = if typed == '\u{2019}' { '\'' } else { typed };
+        let word = within(&HANDLE_LETTERS, u32::from(character)) || character.is_ascii_digit();
+        if !word && !HANDLE_PUNCTUATION.contains(&character) {
+            return None;
+        }
+        if gap {
+            display.push(' ');
+            length += 1;
+        }
+        gap = false;
+        worded |= word;
+        display.push(character);
+        length += 1;
+    }
+    (worded && length <= HANDLE_MAX).then(|| NormalizedHandle { key: display.to_lowercase(), display })
+}
+
+/// 🪝️ The id of the actor that holds a handle key: the lowercase hex of the key's UTF-8 bytes.
+pub fn handle_actor_id(key: &str) -> String {
+    key.bytes().map(|byte| format!("{byte:02x}")).collect()
+}
+
+/// 🔓️ The handle key an actor id names — the inverse of [`handle_actor_id`] — or `None` for anything
+/// but lowercase hex of well-formed UTF-8.
+pub fn handle_key_of(actor: &str) -> Option<String> {
+    let digit = |byte: u8| match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        _ => None,
+    };
+    if actor.is_empty() || !actor.len().is_multiple_of(2) {
+        return None;
+    }
+    let bytes: Option<Vec<u8>> = actor.as_bytes().chunks(2).map(|pair| Some(digit(pair[0])? << 4 | digit(pair[1])?)).collect();
+    String::from_utf8(bytes?).ok()
 }
 
 /// 🪡️ `base` extended by one JSON Pointer reference token (RFC 6901 escaping of `~` and `/`).
@@ -248,6 +398,12 @@ impl Issues {
         self.length(format!("{base}/de"), &text.de, 1, usize::MAX);
     }
 
+    fn icon(&mut self, base: &str, icon: Option<&Icon>) {
+        if let Some(icon) = icon {
+            self.length(format!("{base}/icon/emoji"), &icon.emoji, 1, 16);
+        }
+    }
+
     fn optional_text(&mut self, base: &str, text: Option<&Text>) {
         if let Some(text) = text {
             self.text(base, text);
@@ -275,19 +431,20 @@ impl Issues {
         self.length(format!("{base}/unit"), &quantity.unit, 1, 32);
     }
 
-    fn head(&mut self, base: &str, id: &str, label: &Text, explanation: Option<&Text>) {
+    fn head(&mut self, base: &str, id: &str, label: &Text, icon: Option<&Icon>, explanation: Option<&Text>) {
         self.slug(format!("{base}/id"), id);
         self.text(&format!("{base}/label"), label);
+        self.icon(base, icon);
         self.optional_text(&format!("{base}/explanation"), explanation);
     }
 
-    fn items_and_draw<'a>(&mut self, base: &str, draw: Option<usize>, heads: impl ExactSizeIterator<Item = (&'a str, &'a Text, Option<&'a Text>)> + Clone) {
+    fn items_and_draw<'a>(&mut self, base: &str, draw: Option<usize>, heads: impl ExactSizeIterator<Item = (&'a str, &'a Text, Option<&'a Icon>, Option<&'a Text>)> + Clone) {
         let count = heads.len();
         self.at_least(format!("{base}/items"), count, 2, IssueCode::ItemsTooFew);
-        for (index, (id, label, explanation)) in heads.clone().enumerate() {
-            self.head(&format!("{base}/items/{index}"), id, label, explanation);
+        for (index, (id, label, icon, explanation)) in heads.clone().enumerate() {
+            self.head(&format!("{base}/items/{index}"), id, label, icon, explanation);
         }
-        self.unique(&format!("{base}/items"), heads.map(|(id, _, _)| id));
+        self.unique(&format!("{base}/items"), heads.map(|(id, _, _, _)| id));
         match draw {
             Some(draw) if draw < 2 => self.push(format!("{base}/draw"), IssueCode::BelowMinimum),
             Some(draw) if draw > count => self.push(format!("{base}/draw"), IssueCode::DrawExceedsItems),
@@ -298,6 +455,7 @@ impl Issues {
     fn classification(&mut self, base: &str, task: &ClassificationTask) {
         self.text(&format!("{base}/title"), &task.title);
         self.text(&format!("{base}/prompt"), &task.prompt);
+        self.icon(base, task.icon.as_ref());
         let axes: &[Axis] = task.axes.as_deref().unwrap_or_default();
         if task.axes.is_some() {
             self.at_least(format!("{base}/axes"), axes.len(), 3, IssueCode::ItemsTooFew);
@@ -326,12 +484,13 @@ impl Issues {
                 self.push(path, IssueCode::CategoryUnknown);
             }
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn category(&mut self, base: &str, category: &Category, has_axes: bool, axis_ids: &BTreeSet<&str>, ranges: &BTreeMap<&str, (f64, f64)>) {
         self.slug(format!("{base}/id"), &category.id);
         self.text(&format!("{base}/label"), &category.label);
+        self.icon(base, category.icon.as_ref());
         self.optional_text(&format!("{base}/description"), category.description.as_ref());
         let Some(profile) = &category.profile else { return };
         let path = format!("{base}/profile");
@@ -358,22 +517,25 @@ impl Issues {
     fn sorting(&mut self, base: &str, task: &SortingTask) {
         self.text(&format!("{base}/title"), &task.title);
         self.text(&format!("{base}/prompt"), &task.prompt);
+        self.icon(base, task.icon.as_ref());
         self.quantity(&format!("{base}/quantity"), &task.quantity);
         if task.quantity.scale == Scale::Logarithmic {
             for (index, _) in task.items.iter().enumerate().filter(|(_, item)| item.value <= 0.0) {
                 self.push(format!("{base}/items/{index}/value"), IssueCode::ValueNotPositive);
             }
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn matching(&mut self, base: &str, task: &MatchingTask) {
         self.text(&format!("{base}/title"), &task.title);
         self.text(&format!("{base}/prompt"), &task.prompt);
+        self.icon(base, task.icon.as_ref());
         self.at_least(format!("{base}/dimensions"), task.dimensions.len(), 1, IssueCode::ItemsTooFew);
         let mut scales: BTreeMap<&str, Scale> = BTreeMap::new();
         for (index, dimension) in task.dimensions.iter().enumerate() {
             self.quantity(&format!("{base}/dimensions/{index}/quantity"), &dimension.quantity);
+            self.icon(&format!("{base}/dimensions/{index}"), dimension.icon.as_ref());
             if self.slug(format!("{base}/dimensions/{index}/id"), &dimension.id) {
                 scales.entry(&dimension.id).or_insert(dimension.quantity.scale);
             }
@@ -382,7 +544,7 @@ impl Issues {
         for (index, item) in task.items.iter().enumerate() {
             self.values(&format!("{base}/items/{index}/values"), item, &scales);
         }
-        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.explanation.as_ref())));
+        self.items_and_draw(base, task.draw, task.items.iter().map(|item| (item.id.as_str(), &item.label, item.icon.as_ref(), item.explanation.as_ref())));
     }
 
     fn values(&mut self, path: &str, item: &MatchingItem, scales: &BTreeMap<&str, Scale>) {

@@ -1,0 +1,29 @@
+{
+  "schema": "semio.quiz.language-choice/v1",
+  "description": "No default language. A quiz client offers its languages in a fixed order (English, then German). The language it speaks is the learner's stored choice; without one, the first tag of the browser's language list (BCP 47, preference order, case-insensitive) whose primary language subtag is offered is preselected; when the list names no offered language nothing is assumed: the client shows only a chooser with every offered language in its own language, the document names no language (no `lang` on the root element, each part tagged) and the title is the word for language in every offered language joined by ' · '. Once a language is known, the root element's `lang`, the document title ('<screen> · <catalog title>', the loading text until the catalog arrived) and every text follow it.",
+  "offered": ["en", "de"],
+  "preselections": [
+    { "browser": ["de-CH", "en-US"], "locale": "de" },
+    { "browser": ["fr-FR", "en-GB", "de"], "locale": "en" },
+    { "browser": ["en"], "locale": "en" },
+    { "browser": ["DE"], "locale": "de" },
+    { "browser": ["de-Latn-AT", "en"], "locale": "de" },
+    { "browser": ["fr", "it-CH", "de-CH"], "locale": "de" },
+    { "browser": ["fr-FR", "it"], "locale": null },
+    { "browser": ["nds-DE", "sv"], "locale": null },
+    { "browser": ["den", "eng"], "locale": null },
+    { "browser": [], "locale": null }
+  ],
+  "neutral": {
+    "title": "Language · Sprache",
+    "choices": [
+      { "locale": "en", "name": "English", "invitation": "Choose your language." },
+      { "locale": "de", "name": "Deutsch", "invitation": "Wähle deine Sprache." }
+    ]
+  },
+  "titles": [
+    { "screen": "waiting", "en": "Loading…", "de": "Wird geladen…" },
+    { "screen": "introduction", "en": "Welcome to the test catalog · Test catalog", "de": "Willkommen im Testkatalog · Testkatalog" },
+    { "screen": "identity", "en": "How do you want to appear? · Test catalog", "de": "Wie möchtest du erscheinen? · Testkatalog" }
+  ]
+}

@@ -11,14 +11,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧬️schema/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🔨️modules/**/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/🟦️.ts",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/📐️quantity-formatting/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🕷️radar-geometry/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/📬️outbox-delivery/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/⌨️task-keyboard/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️learner-journey/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/🗣️translation-completeness/🟦️.tsx",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/📐️quantity-formatting/🔣️.json",
-      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/🕷️radar-geometry/🔣️.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧪️tests/*/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/❓️quiz/🧫️fixtures/*/🔣️.json",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🔨️modules/**/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🟦️.tsx",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🎨️.css",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/**/*"
     ]
   },
   "targets": {
@@ -56,7 +57,14 @@
     },
     "typecheck": {
       "executor": "nx:run-commands",
-      "dependsOn": [],
+      "dependsOn": [
+        "@semio-tech/framework-rs:generate",
+        "@semio-tech/ui-contract-rs:generate",
+        "@semio-tech/ui-rs:generate",
+        "@semio-tech/framework-actor-rs:typegen",
+        "@semio-tech/ui-styling-tokens:generate",
+        "@semio-tech/assets:build"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts typecheck",

@@ -3,8 +3,9 @@
 //! @see ../../🦀️.rs — the implementation under test
 
 use super::*;
-use crate::schema::{BadgeRule, ClassificationAnswer, Introduction, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind};
+use crate::schema::{BadgeRule, ClassificationAnswer, Introduction, LeaderboardPeriod, MatchingAnswer, SheetClassificationTask, SheetDimension, SheetMatchingTask, SheetSortingTask, SortingAnswer, TaskKind};
 use crate::sheet::tests::{quantity, quiz, text};
+use unicode_normalization::{is_nfc, UnicodeNormalization};
 
 fn issue(path: &str, code: IssueCode) -> ValidationIssue {
     ValidationIssue { path: path.to_string(), code }
@@ -196,16 +197,16 @@ fn issues_serialize_as_path_and_kebab_code() {
 }
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id) }).collect()
+    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), icon: None }).collect()
 }
 
 fn classification_sheet() -> SheetTask {
     let Task::Classification(task) = &quiz().tasks[0] else { unreachable!() };
-    SheetTask::Classification(SheetClassificationTask { id: "c".to_string(), title: text("c"), prompt: text("c"), axes: None, categories: task.categories.clone(), items: items(&["a", "b"]) })
+    SheetTask::Classification(SheetClassificationTask { id: "c".to_string(), title: text("c"), prompt: text("c"), icon: None, axes: None, categories: task.categories.clone(), items: items(&["a", "b"]) })
 }
 
 fn matching_sheet() -> SheetTask {
-    SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), cards: vec![1.0, 2.0] }], items: items(&["x", "y"]) })
+    SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), icon: None, dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), icon: None, cards: vec![1.0, 2.0] }], items: items(&["x", "y"]) })
 }
 
 fn classify(pairs: &[(&str, &str)]) -> Answer {
@@ -213,7 +214,7 @@ fn classify(pairs: &[(&str, &str)]) -> Answer {
 }
 
 fn order(ids: &[&str]) -> Answer {
-    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect() })
+    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: BTreeMap::new() })
 }
 
 fn assign(dimensions: &[(&str, &[(&str, usize)])]) -> Answer {
@@ -235,13 +236,42 @@ fn classification_answers_must_reference_the_sheet() {
 
 #[test]
 fn sorting_answers_must_be_a_bijection_onto_the_sheet_items() {
-    let sheet = SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), quantity: quantity("W", Scale::Linear), items: items(&["a", "b", "c"]) });
+    let sheet = SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", Scale::Linear), items: items(&["a", "b", "c"]) });
     assert_eq!(answer_rejection(&sheet, &order(&["c", "a", "b"])), None);
     for invalid in [&["a", "b"][..], &["a", "b", "b"], &["a", "b", "c", "a"], &["a", "b", "d"]] {
         assert_eq!(answer_rejection(&sheet, &order(invalid)), Some(Rejection::AnswerInvalid), "{invalid:?}");
     }
     assert!(answer_complete(&sheet, Some(&order(&["c", "a", "b"]))));
     assert!(!answer_complete(&sheet, Some(&classify(&[]))));
+}
+
+fn guessed(ids: &[&str], guesses: &[(&str, f64)]) -> Answer {
+    Answer::Sorting(SortingAnswer { order: ids.iter().map(|id| (*id).to_string()).collect(), guesses: guesses.iter().map(|(item, guess)| ((*item).to_string(), *guess)).collect() })
+}
+
+#[test]
+fn sorting_guesses_must_name_items_be_finite_and_ascend_along_the_order() {
+    let sorting = |scale| SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", scale), items: items(&["a", "b", "c"]) });
+    let (linear, logarithmic) = (sorting(Scale::Linear), sorting(Scale::Logarithmic));
+    let rejected = |sheet: &SheetTask, answer: Answer| assert_eq!(answer_rejection(sheet, &answer), Some(Rejection::AnswerInvalid));
+    for valid in [guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 2.0), ("c", 3.0)]), guessed(&["a", "b", "c"], &[("a", 1.0), ("b", 1.0), ("c", 1.0)]), guessed(&["c", "a", "b"], &[("c", 0.5), ("b", 9.0)]), guessed(&["c", "a", "b"], &[("a", 7.0)]), guessed(&["a", "b", "c"], &[])] {
+        assert_eq!(answer_rejection(&linear, &valid), None, "{valid:?}");
+        assert_eq!(answer_rejection(&logarithmic, &valid), None, "{valid:?}");
+        assert!(answer_complete(&linear, Some(&valid)));
+    }
+    assert_eq!(answer_rejection(&linear, &guessed(&["a", "b", "c"], &[("a", -3.0), ("b", 0.0), ("c", 1.0)])), None, "a linear quantity may be guessed at or below zero");
+    rejected(&logarithmic, guessed(&["a", "b", "c"], &[("a", 0.0)]));
+    rejected(&logarithmic, guessed(&["a", "b", "c"], &[("c", -1.0)]));
+    rejected(&linear, guessed(&["a", "b", "c"], &[("a", 1.0), ("d", 2.0)]));
+    rejected(&linear, guessed(&["a", "b", "c"], &[("a", 3.0), ("b", 2.0)]));
+    rejected(&linear, guessed(&["a", "b", "c"], &[("a", 3.0), ("c", 2.0)]));
+    rejected(&linear, guessed(&["c", "a", "b"], &[("a", 1.0), ("c", 2.0)]));
+    for guess in [f64::NAN, f64::INFINITY, f64::NEG_INFINITY] {
+        rejected(&linear, guessed(&["a", "b", "c"], &[("b", guess)]));
+    }
+    rejected(&linear, guessed(&["a", "b"], &[("a", 1.0), ("b", 2.0)]));
+    assert!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "sorting", "order": ["a"], "guesses": {"a": "1"}})).is_err());
+    assert!(serde_json::from_value::<Answer>(serde_json::json!({"kind": "sorting", "order": ["a"], "guesses": [1]})).is_err());
 }
 
 #[test]
@@ -258,6 +288,10 @@ fn shared_answer_vectors_of_the_python_reference_hold() {
         if let Some(complete) = vector["expected"]["complete"].as_bool() {
             assert_eq!(answer_complete(sheet_task, answer.as_ref()), complete, "{}", vector["id"]);
         }
+    }
+    for vector in entries(&vectors["malformed"]) {
+        assert!(serde_json::from_value::<Answer>(vector["answer"].clone()).is_err(), "{} violates the schema, so serde refuses it", vector["id"]);
+        assert_eq!(vector["expected"]["rejection"].as_str(), Some(Rejection::AnswerInvalid.as_str()), "{}", vector["id"]);
     }
 }
 
@@ -297,4 +331,109 @@ fn matching_answers_use_each_card_once_per_dimension() {
     assert!(answer_complete(&sheet, Some(&assign(&[("load", &[("x", 1), ("y", 0)])]))));
     assert!(!answer_complete(&sheet, Some(&assign(&[("load", &[("x", 1)])]))));
     assert!(!answer_complete(&sheet, Some(&assign(&[]))));
+}
+
+#[test]
+fn handles_are_trimmed_collapsed_folded_and_keyed_in_lowercase() {
+    let normalized = |display: &str, key: &str| Some(NormalizedHandle { display: display.to_string(), key: key.to_string() });
+    assert_eq!(normalize_handle("  Ada \t Lovelace\u{3000}"), normalized("Ada Lovelace", "ada lovelace"));
+    assert_eq!(normalize_handle("\u{2003}ÄRGER\u{a0}"), normalized("ÄRGER", "ärger"));
+    assert_eq!(normalize_handle("GROẞ Straße"), normalized("GROẞ Straße", "groß straße"));
+    assert_eq!(normalize_handle("O\u{2019}Brien"), normalized("O'Brien", "o'brien"));
+    assert_eq!(normalize_handle("Anna-Lena_2 jr."), normalized("Anna-Lena_2 jr.", "anna-lena_2 jr."));
+    assert_eq!(normalize_handle("\u{130}pek"), normalized("\u{130}pek", "i\u{307}pek"));
+    assert_eq!(normalize_handle(&"x".repeat(HANDLE_MAX)).map(|handle| handle.key.len()), Some(64));
+    assert_eq!(normalize_handle(&format!("{}a", " ".repeat(HANDLE_INPUT_MAX - 1))).map(|handle| handle.display), Some("a".to_string()));
+    for refused in ["", " \n ", "'", "...", "' -", &"ü".repeat(HANDLE_MAX + 1), &format!("{}a", " ".repeat(HANDLE_INPUT_MAX))] {
+        assert_eq!(normalize_handle(refused), None, "{refused:?}");
+    }
+}
+
+#[test]
+fn handles_refuse_invisible_bidirectional_control_and_combining_characters_and_other_scripts() {
+    for point in [0x00u32, 0x07, 0x1B, 0x1F, 0x7F, 0x80, 0xAD, 0x180E, 0x200B, 0x200C, 0x200D, 0x200E, 0x200F, 0x202A, 0x202E, 0x2060, 0x2066, 0x2069, 0xFEFF, 0x0301, 0x0308, 0x0430, 0x03BF, 0xFF21, 0x1D400, 0x1F98A] {
+        let character = char::from_u32(point).unwrap_or_else(|| unreachable!());
+        assert_eq!(normalize_handle(&format!("Ada{character}Lovelace")), None, "U+{point:04X}");
+    }
+    let decomposed: String = "André".nfd().collect();
+    assert_eq!(normalize_handle(&decomposed), None);
+    assert_eq!(normalize_handle(&decomposed.nfc().collect::<String>()).map(|handle| handle.key), Some("andré".to_string()));
+}
+
+#[test]
+fn the_handle_tables_are_the_ones_the_unicode_data_derives() {
+    let blocks = [(0x0000u32, 0x024Fu32), (0x1E00, 0x1EFF)];
+    for character in (0..=0x10FFFFu32).filter_map(char::from_u32) {
+        let point = u32::from(character);
+        assert_eq!(within(&WHITE_SPACE, point), character.is_whitespace(), "white space U+{point:04X}");
+        let letter = within(&blocks, point) && (character.is_uppercase() || character.is_lowercase()) && std::iter::once(character).nfkc().eq(std::iter::once(character));
+        assert_eq!(within(&HANDLE_LETTERS, point), letter, "letter U+{point:04X}");
+    }
+}
+
+#[test]
+fn the_handle_alphabet_spells_only_nfc() {
+    let members: Vec<char> = (0..=0x10FFFFu32).filter_map(char::from_u32).filter(|character| normalize_handle(&format!("a{character}a")).is_some_and(|handle| handle.display == format!("a{character}a"))).collect();
+    assert_eq!(members.len(), 681 + 10 + 1 + 4);
+    for &member in &members {
+        assert!(is_nfc(&member.to_string()), "U+{:04X}", u32::from(member));
+    }
+    let mut pair = String::new();
+    for &first in &members {
+        for &second in &members {
+            pair.clear();
+            pair.push(first);
+            pair.push(second);
+            assert!(is_nfc(&pair), "U+{:04X} U+{:04X}", u32::from(first), u32::from(second));
+        }
+    }
+}
+
+#[test]
+fn handle_streams_are_named_by_the_hex_of_the_key_and_back() {
+    assert_eq!(handle_actor_id("ada"), "616461");
+    assert_eq!(handle_actor_id("jürgen müller"), "6ac3bc7267656e206dc3bc6c6c6572");
+    assert_eq!(handle_key_of(&handle_actor_id("groß straße")).as_deref(), Some("groß straße"));
+    for refused in ["", "6", "6G", "C3", "c3", "c328", "ff", "616461 "] {
+        assert_eq!(handle_key_of(refused), None, "{refused:?}");
+    }
+}
+
+#[test]
+fn ids_are_32_lowercase_hex_and_commands_and_queries_are_held_to_them() {
+    let id = "0123456789abcdef0123456789abcdef";
+    assert!(is_id(id));
+    for refused in ["0123456789ABCDEF0123456789ABCDEF", &id[1..], &format!("{id}0"), &format!("{id}\n"), &format!(" {}", &id[1..]), &"g".repeat(32), "", "enroll:architecture:roster:1"] {
+        assert!(!is_id(refused), "{refused:?}");
+    }
+    let start = |run: &str, quiz: &str| Command::StartRun { id: id.to_string(), learner: id.to_string(), run: run.to_string(), quiz: quiz.to_string() };
+    assert_eq!(command_rejection(&start(id, "cooling-basics")), None);
+    assert_eq!(command_rejection(&start("run-1", "cooling-basics")), Some(Rejection::IdInvalid));
+    assert_eq!(command_rejection(&start(id, "Cooling")), Some(Rejection::IdInvalid));
+    assert_eq!(command_rejection(&Command::SubmitRun { id: "x".repeat(4096), learner: id.to_string(), run: id.to_string() }), Some(Rejection::IdInvalid));
+    assert_eq!(command_rejection(&Command::RecordAnswer { id: id.to_string(), learner: id.to_string(), run: id.to_string(), task: "../loads".to_string(), answer: Answer::Sorting(SortingAnswer { order: Vec::new(), guesses: BTreeMap::new() }) }), Some(Rejection::IdInvalid));
+    let board = |quiz: Option<&str>, learner: Option<&str>| Query::Leaderboard { period: LeaderboardPeriod::Weekly, quiz: quiz.map(str::to_string), learner: learner.map(str::to_string) };
+    assert_eq!(query_rejection(&board(None, None)), None);
+    assert_eq!(query_rejection(&board(Some("cooling-basics"), Some(id))), None);
+    assert_eq!(query_rejection(&board(None, Some("0d07d623"))), Some(Rejection::IdInvalid));
+    assert_eq!(query_rejection(&board(Some("Cooling"), Some(id))), Some(Rejection::IdInvalid));
+    assert_eq!(query_rejection(&Query::Run { run: id.to_uppercase() }), Some(Rejection::IdInvalid));
+    assert_eq!(query_rejection(&Query::Crowd { quiz: "Cooling".to_string() }), Some(Rejection::IdInvalid));
+    assert_eq!(query_rejection(&Query::Handle { handle: " Ada ".to_string() }), None);
+    assert_eq!(query_rejection(&Query::Handle { handle: "A\u{200b}da".to_string() }), Some(Rejection::HandleInvalid));
+}
+
+#[test]
+fn shared_identity_shapes_of_the_python_reference_hold() {
+    use crate::schema::tests::{assert_close, entries, fixture, json, typed};
+    let vectors = fixture("identity-shapes");
+    assert!(!entries(&vectors["handles"]).is_empty() && !entries(&vectors["shapes"]).is_empty());
+    for vector in entries(&vectors["handles"]) {
+        let normalized = normalize_handle(vector["handle"].as_str().unwrap_or_default()).map(|handle| serde_json::json!({ "display": handle.display, "key": handle.key, "actor": handle_actor_id(&handle.key) }));
+        assert_close(&format!("handles/{}", vector["id"]), &normalized.unwrap_or(serde_json::Value::Null), &vector["expected"]);
+    }
+    for vector in entries(&vectors["shapes"]) {
+        let rejection = if vector["definition"] == "Command" { command_rejection(&typed::<Command>(&vector["document"])) } else { query_rejection(&typed::<Query>(&vector["document"])) };
+        assert_close(&format!("shapes/{}", vector["id"]), &json(&rejection), &vector["expected"]);
+    }
 }

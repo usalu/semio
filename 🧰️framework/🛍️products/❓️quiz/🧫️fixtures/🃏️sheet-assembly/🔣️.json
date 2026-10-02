@@ -25,6 +25,10 @@
             "en": "Assign every installation to its heating system.",
             "de": "Ordne jede Anlage ihrem Heizsystem zu."
           },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "float"
+          },
           "axes": [
             {
               "id": "seasonal-efficiency",
@@ -288,6 +292,10 @@
           "prompt": {
             "en": "Order by recommended temperature, lowest first.",
             "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+          },
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
           },
           "quantity": {
             "label": {
@@ -678,6 +686,264 @@
           ]
         }
       ]
+    },
+    {
+      "schema": "semio.quiz/v1",
+      "id": "icon-demo",
+      "emoji": "🖼️",
+      "title": {
+        "en": "Icon demo",
+        "de": "Symbolbeispiel"
+      },
+      "description": {
+        "en": "Every task, item, category and dimension carries an icon.",
+        "de": "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."
+      },
+      "tasks": [
+        {
+          "kind": "classification",
+          "id": "sources",
+          "title": {
+            "en": "Sources",
+            "de": "Quellen"
+          },
+          "prompt": {
+            "en": "Assign every source.",
+            "de": "Ordne jede Quelle zu."
+          },
+          "icon": {
+            "emoji": "⚡",
+            "motion": "pulse"
+          },
+          "categories": [
+            {
+              "id": "renewable",
+              "label": {
+                "en": "Renewable",
+                "de": "Erneuerbar"
+              },
+              "icon": {
+                "emoji": "♻️",
+                "motion": "spin"
+              }
+            },
+            {
+              "id": "fossil",
+              "label": {
+                "en": "Fossil",
+                "de": "Fossil"
+              },
+              "icon": {
+                "emoji": "🛢️",
+                "motion": "sway"
+              }
+            }
+          ],
+          "items": [
+            {
+              "id": "sunlight",
+              "label": {
+                "en": "Sunlight",
+                "de": "Sonnenlicht"
+              },
+              "icon": {
+                "emoji": "☀️",
+                "motion": "spin"
+              },
+              "category": "renewable"
+            },
+            {
+              "id": "wind",
+              "label": {
+                "en": "Wind",
+                "de": "Wind"
+              },
+              "icon": {
+                "emoji": "🌬️",
+                "motion": "sway"
+              },
+              "category": "renewable"
+            },
+            {
+              "id": "coal",
+              "label": {
+                "en": "Coal",
+                "de": "Kohle"
+              },
+              "icon": {
+                "emoji": "🪨",
+                "motion": "bounce"
+              },
+              "category": "fossil"
+            },
+            {
+              "id": "gas",
+              "label": {
+                "en": "Natural gas",
+                "de": "Erdgas"
+              },
+              "icon": {
+                "emoji": "🔥",
+                "motion": "float"
+              },
+              "category": "fossil"
+            }
+          ],
+          "draw": 3
+        },
+        {
+          "kind": "sorting",
+          "id": "masses",
+          "title": {
+            "en": "Masses",
+            "de": "Massen"
+          },
+          "prompt": {
+            "en": "Smallest first.",
+            "de": "Das Kleinste zuerst."
+          },
+          "icon": {
+            "emoji": "⚖️",
+            "motion": "sway"
+          },
+          "quantity": {
+            "label": {
+              "en": "Mass",
+              "de": "Masse"
+            },
+            "unit": "kg",
+            "scale": "logarithmic",
+            "prefixed": true
+          },
+          "items": [
+            {
+              "id": "feather",
+              "label": {
+                "en": "Feather",
+                "de": "Feder"
+              },
+              "icon": {
+                "emoji": "🪶",
+                "motion": "float"
+              },
+              "value": 0.001
+            },
+            {
+              "id": "brick",
+              "label": {
+                "en": "Brick",
+                "de": "Backstein"
+              },
+              "icon": {
+                "emoji": "🧱",
+                "motion": "flip"
+              },
+              "value": 2.5
+            },
+            {
+              "id": "car",
+              "label": {
+                "en": "Car",
+                "de": "Auto"
+              },
+              "icon": {
+                "emoji": "🚗",
+                "motion": "bounce"
+              },
+              "value": 1500
+            }
+          ]
+        },
+        {
+          "kind": "matching",
+          "id": "appliances",
+          "title": {
+            "en": "Appliances",
+            "de": "Geräte"
+          },
+          "prompt": {
+            "en": "Match every appliance.",
+            "de": "Ordne jedem Gerät zu."
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "bounce"
+          },
+          "dimensions": [
+            {
+              "id": "power",
+              "quantity": {
+                "label": {
+                  "en": "Power",
+                  "de": "Leistung"
+                },
+                "unit": "W",
+                "scale": "linear",
+                "prefixed": true
+              },
+              "icon": {
+                "emoji": "⚡",
+                "motion": "pulse"
+              }
+            },
+            {
+              "id": "lifespan",
+              "quantity": {
+                "label": {
+                  "en": "Lifespan",
+                  "de": "Lebensdauer"
+                },
+                "unit": "a",
+                "scale": "linear",
+                "prefixed": false
+              }
+            }
+          ],
+          "items": [
+            {
+              "id": "toaster",
+              "label": {
+                "en": "Toaster",
+                "de": "Toaster"
+              },
+              "icon": {
+                "emoji": "🍞",
+                "motion": "bounce"
+              },
+              "values": {
+                "power": 800,
+                "lifespan": 8
+              }
+            },
+            {
+              "id": "kettle",
+              "label": {
+                "en": "Kettle",
+                "de": "Wasserkocher"
+              },
+              "values": {
+                "power": 2200,
+                "lifespan": 5
+              }
+            },
+            {
+              "id": "oven",
+              "label": {
+                "en": "Oven",
+                "de": "Backofen"
+              },
+              "icon": {
+                "emoji": "♨️",
+                "motion": "pulse"
+              },
+              "values": {
+                "power": 3000,
+                "lifespan": 15
+              }
+            }
+          ]
+        }
+      ]
     }
   ],
   "sheets": [
@@ -698,204 +964,6 @@
         },
         "tasks": [
           {
-            "kind": "sorting",
-            "id": "power-ratings",
-            "title": {
-              "en": "Power ratings",
-              "de": "Leistungen"
-            },
-            "prompt": {
-              "en": "Order by rated power, smallest first.",
-              "de": "Ordne nach Nennleistung, die kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Power",
-                "de": "Leistung"
-              },
-              "unit": "W",
-              "scale": "logarithmic",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "nuclear-plant",
-                "label": {
-                  "en": "Nuclear power plant",
-                  "de": "Kernkraftwerk"
-                }
-              },
-              {
-                "id": "laptop",
-                "label": {
-                  "en": "Laptop",
-                  "de": "Laptop"
-                }
-              },
-              {
-                "id": "tea-light",
-                "label": {
-                  "en": "Tea light",
-                  "de": "Teelicht"
-                }
-              },
-              {
-                "id": "kettle",
-                "label": {
-                  "en": "Kettle",
-                  "de": "Wasserkocher"
-                }
-              },
-              {
-                "id": "wind-turbine",
-                "label": {
-                  "en": "Wind turbine",
-                  "de": "Windturbine"
-                }
-              },
-              {
-                "id": "wallbox",
-                "label": {
-                  "en": "Wallbox",
-                  "de": "Wallbox"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "sorting",
-            "id": "room-temperatures",
-            "title": {
-              "en": "Room temperatures",
-              "de": "Raumtemperaturen"
-            },
-            "prompt": {
-              "en": "Order by recommended temperature, lowest first.",
-              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Temperature",
-                "de": "Temperatur"
-              },
-              "unit": "°C",
-              "scale": "linear",
-              "prefixed": false
-            },
-            "items": [
-              {
-                "id": "bedroom",
-                "label": {
-                  "en": "Bedroom",
-                  "de": "Schlafzimmer"
-                }
-              },
-              {
-                "id": "bathroom",
-                "label": {
-                  "en": "Bathroom",
-                  "de": "Badezimmer"
-                }
-              },
-              {
-                "id": "living-room",
-                "label": {
-                  "en": "Living room",
-                  "de": "Wohnzimmer"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "matching",
-            "id": "energy-carriers",
-            "title": {
-              "en": "Energy carriers",
-              "de": "Energieträger"
-            },
-            "prompt": {
-              "en": "Match every carrier with its energy density and its CO₂ factor.",
-              "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
-            },
-            "dimensions": [
-              {
-                "id": "energy-density",
-                "quantity": {
-                  "label": {
-                    "en": "Energy density",
-                    "de": "Energiedichte"
-                  },
-                  "unit": "MJ/kg",
-                  "scale": "logarithmic",
-                  "prefixed": false
-                },
-                "cards": [
-                  120,
-                  29,
-                  15,
-                  50,
-                  42.6
-                ]
-              },
-              {
-                "id": "co2-factor",
-                "quantity": {
-                  "label": {
-                    "en": "CO₂ factor",
-                    "de": "CO₂-Faktor"
-                  },
-                  "unit": "kg/kWh",
-                  "scale": "linear",
-                  "prefixed": false
-                },
-                "cards": [
-                  0.27,
-                  0.2,
-                  0.027,
-                  0,
-                  0.34
-                ]
-              }
-            ],
-            "items": [
-              {
-                "id": "natural-gas",
-                "label": {
-                  "en": "Natural gas",
-                  "de": "Erdgas"
-                }
-              },
-              {
-                "id": "hydrogen",
-                "label": {
-                  "en": "Hydrogen",
-                  "de": "Wasserstoff"
-                }
-              },
-              {
-                "id": "firewood",
-                "label": {
-                  "en": "Firewood",
-                  "de": "Stückholz"
-                }
-              },
-              {
-                "id": "heating-oil",
-                "label": {
-                  "en": "Heating oil",
-                  "de": "Heizöl"
-                }
-              },
-              {
-                "id": "coal",
-                "label": {
-                  "en": "Hard coal",
-                  "de": "Steinkohle"
-                }
-              }
-            ]
-          },
-          {
             "kind": "classification",
             "id": "heating-systems",
             "title": {
@@ -905,6 +973,10 @@
             "prompt": {
               "en": "Assign every installation to its heating system.",
               "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
             },
             "axes": [
               {
@@ -1040,6 +1112,208 @@
                 }
               }
             ]
+          },
+          {
+            "kind": "sorting",
+            "id": "power-ratings",
+            "title": {
+              "en": "Power ratings",
+              "de": "Leistungen"
+            },
+            "prompt": {
+              "en": "Order by rated power, smallest first.",
+              "de": "Ordne nach Nennleistung, die kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "nuclear-plant",
+                "label": {
+                  "en": "Nuclear power plant",
+                  "de": "Kernkraftwerk"
+                }
+              },
+              {
+                "id": "laptop",
+                "label": {
+                  "en": "Laptop",
+                  "de": "Laptop"
+                }
+              },
+              {
+                "id": "tea-light",
+                "label": {
+                  "en": "Tea light",
+                  "de": "Teelicht"
+                }
+              },
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "wind-turbine",
+                "label": {
+                  "en": "Wind turbine",
+                  "de": "Windturbine"
+                }
+              },
+              {
+                "id": "wallbox",
+                "label": {
+                  "en": "Wallbox",
+                  "de": "Wallbox"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                }
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                }
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "energy-carriers",
+            "title": {
+              "en": "Energy carriers",
+              "de": "Energieträger"
+            },
+            "prompt": {
+              "en": "Match every carrier with its energy density and its CO₂ factor.",
+              "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+            },
+            "dimensions": [
+              {
+                "id": "energy-density",
+                "quantity": {
+                  "label": {
+                    "en": "Energy density",
+                    "de": "Energiedichte"
+                  },
+                  "unit": "MJ/kg",
+                  "scale": "logarithmic",
+                  "prefixed": false
+                },
+                "cards": [
+                  120,
+                  29,
+                  15,
+                  50,
+                  42.6
+                ]
+              },
+              {
+                "id": "co2-factor",
+                "quantity": {
+                  "label": {
+                    "en": "CO₂ factor",
+                    "de": "CO₂-Faktor"
+                  },
+                  "unit": "kg/kWh",
+                  "scale": "linear",
+                  "prefixed": false
+                },
+                "cards": [
+                  0.27,
+                  0.2,
+                  0.027,
+                  0,
+                  0.34
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "natural-gas",
+                "label": {
+                  "en": "Natural gas",
+                  "de": "Erdgas"
+                }
+              },
+              {
+                "id": "hydrogen",
+                "label": {
+                  "en": "Hydrogen",
+                  "de": "Wasserstoff"
+                }
+              },
+              {
+                "id": "firewood",
+                "label": {
+                  "en": "Firewood",
+                  "de": "Stückholz"
+                }
+              },
+              {
+                "id": "heating-oil",
+                "label": {
+                  "en": "Heating oil",
+                  "de": "Heizöl"
+                }
+              },
+              {
+                "id": "coal",
+                "label": {
+                  "en": "Hard coal",
+                  "de": "Steinkohle"
+                }
+              }
+            ]
           }
         ]
       }
@@ -1061,6 +1335,156 @@
         },
         "tasks": [
           {
+            "kind": "classification",
+            "id": "heating-systems",
+            "title": {
+              "en": "Heating systems",
+              "de": "Heizsysteme"
+            },
+            "prompt": {
+              "en": "Assign every installation to its heating system.",
+              "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
+            },
+            "axes": [
+              {
+                "id": "seasonal-efficiency",
+                "label": {
+                  "en": "Seasonal efficiency",
+                  "de": "Jahresnutzungsgrad"
+                },
+                "unit": "%",
+                "min": 0,
+                "max": 400
+              },
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              },
+              {
+                "id": "emissions",
+                "label": {
+                  "en": "Emissions",
+                  "de": "Emissionen"
+                },
+                "unit": "g/kWh",
+                "min": 0,
+                "max": 300
+              }
+            ],
+            "categories": [
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Gas boiler",
+                  "de": "Gaskessel"
+                },
+                "profile": {
+                  "seasonal-efficiency": 95,
+                  "investment": 12000,
+                  "emissions": 250
+                }
+              },
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Heat pump",
+                  "de": "Wärmepumpe"
+                },
+                "profile": {
+                  "seasonal-efficiency": 350,
+                  "investment": 30000,
+                  "emissions": 40
+                }
+              },
+              {
+                "id": "electric-resistance",
+                "label": {
+                  "en": "Direct electric heating",
+                  "de": "Elektrodirektheizung"
+                },
+                "description": {
+                  "en": "Resistance heaters without storage or pump.",
+                  "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+                }
+              },
+              {
+                "id": "wood-pellets",
+                "label": {
+                  "en": "Wood pellets",
+                  "de": "Holzpellets"
+                },
+                "profile": {
+                  "seasonal-efficiency": 85,
+                  "investment": 25000,
+                  "emissions": 30
+                }
+              },
+              {
+                "id": "district-heating",
+                "label": {
+                  "en": "District heating",
+                  "de": "Fernwärme"
+                },
+                "description": {
+                  "en": "Heat delivered through a network.",
+                  "de": "Wärme aus einem Netz."
+                },
+                "profile": {
+                  "seasonal-efficiency": 90,
+                  "investment": 18000,
+                  "emissions": 120
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "night-storage-heater",
+                "label": {
+                  "en": "Night storage heater",
+                  "de": "Nachtspeicherofen"
+                }
+              },
+              {
+                "id": "condensing-gas",
+                "label": {
+                  "en": "Condensing boiler on the gas grid",
+                  "de": "Brennwertkessel am Gasnetz"
+                }
+              },
+              {
+                "id": "air-source",
+                "label": {
+                  "en": "Outdoor fan unit",
+                  "de": "Aussengerät mit Ventilator"
+                }
+              },
+              {
+                "id": "pellet-stove",
+                "label": {
+                  "en": "Silo with automatic feed",
+                  "de": "Silo mit automatischer Förderung"
+                }
+              },
+              {
+                "id": "lake-water-network",
+                "label": {
+                  "en": "Lake water network connection",
+                  "de": "Anschluss an ein Seewassernetz"
+                }
+              }
+            ]
+          },
+          {
             "kind": "sorting",
             "id": "room-temperatures",
             "title": {
@@ -1070,6 +1494,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -1257,152 +1685,6 @@
                 }
               }
             ]
-          },
-          {
-            "kind": "classification",
-            "id": "heating-systems",
-            "title": {
-              "en": "Heating systems",
-              "de": "Heizsysteme"
-            },
-            "prompt": {
-              "en": "Assign every installation to its heating system.",
-              "de": "Ordne jede Anlage ihrem Heizsystem zu."
-            },
-            "axes": [
-              {
-                "id": "seasonal-efficiency",
-                "label": {
-                  "en": "Seasonal efficiency",
-                  "de": "Jahresnutzungsgrad"
-                },
-                "unit": "%",
-                "min": 0,
-                "max": 400
-              },
-              {
-                "id": "investment",
-                "label": {
-                  "en": "Investment",
-                  "de": "Investition"
-                },
-                "unit": "CHF",
-                "min": 0,
-                "max": 40000
-              },
-              {
-                "id": "emissions",
-                "label": {
-                  "en": "Emissions",
-                  "de": "Emissionen"
-                },
-                "unit": "g/kWh",
-                "min": 0,
-                "max": 300
-              }
-            ],
-            "categories": [
-              {
-                "id": "gas-boiler",
-                "label": {
-                  "en": "Gas boiler",
-                  "de": "Gaskessel"
-                },
-                "profile": {
-                  "seasonal-efficiency": 95,
-                  "investment": 12000,
-                  "emissions": 250
-                }
-              },
-              {
-                "id": "heat-pump",
-                "label": {
-                  "en": "Heat pump",
-                  "de": "Wärmepumpe"
-                },
-                "profile": {
-                  "seasonal-efficiency": 350,
-                  "investment": 30000,
-                  "emissions": 40
-                }
-              },
-              {
-                "id": "electric-resistance",
-                "label": {
-                  "en": "Direct electric heating",
-                  "de": "Elektrodirektheizung"
-                },
-                "description": {
-                  "en": "Resistance heaters without storage or pump.",
-                  "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
-                }
-              },
-              {
-                "id": "wood-pellets",
-                "label": {
-                  "en": "Wood pellets",
-                  "de": "Holzpellets"
-                },
-                "profile": {
-                  "seasonal-efficiency": 85,
-                  "investment": 25000,
-                  "emissions": 30
-                }
-              },
-              {
-                "id": "district-heating",
-                "label": {
-                  "en": "District heating",
-                  "de": "Fernwärme"
-                },
-                "description": {
-                  "en": "Heat delivered through a network.",
-                  "de": "Wärme aus einem Netz."
-                },
-                "profile": {
-                  "seasonal-efficiency": 90,
-                  "investment": 18000,
-                  "emissions": 120
-                }
-              }
-            ],
-            "items": [
-              {
-                "id": "night-storage-heater",
-                "label": {
-                  "en": "Night storage heater",
-                  "de": "Nachtspeicherofen"
-                }
-              },
-              {
-                "id": "condensing-gas",
-                "label": {
-                  "en": "Condensing boiler on the gas grid",
-                  "de": "Brennwertkessel am Gasnetz"
-                }
-              },
-              {
-                "id": "air-source",
-                "label": {
-                  "en": "Outdoor fan unit",
-                  "de": "Aussengerät mit Ventilator"
-                }
-              },
-              {
-                "id": "pellet-stove",
-                "label": {
-                  "en": "Silo with automatic feed",
-                  "de": "Silo mit automatischer Förderung"
-                }
-              },
-              {
-                "id": "lake-water-network",
-                "label": {
-                  "en": "Lake water network connection",
-                  "de": "Anschluss an ein Seewassernetz"
-                }
-              }
-            ]
           }
         ]
       }
@@ -1424,71 +1706,6 @@
         },
         "tasks": [
           {
-            "kind": "sorting",
-            "id": "power-ratings",
-            "title": {
-              "en": "Power ratings",
-              "de": "Leistungen"
-            },
-            "prompt": {
-              "en": "Order by rated power, smallest first.",
-              "de": "Ordne nach Nennleistung, die kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Power",
-                "de": "Leistung"
-              },
-              "unit": "W",
-              "scale": "logarithmic",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "led-bulb",
-                "label": {
-                  "en": "LED bulb",
-                  "de": "LED-Lampe"
-                }
-              },
-              {
-                "id": "wind-turbine",
-                "label": {
-                  "en": "Wind turbine",
-                  "de": "Windturbine"
-                }
-              },
-              {
-                "id": "tea-light",
-                "label": {
-                  "en": "Tea light",
-                  "de": "Teelicht"
-                }
-              },
-              {
-                "id": "wallbox",
-                "label": {
-                  "en": "Wallbox",
-                  "de": "Wallbox"
-                }
-              },
-              {
-                "id": "nuclear-plant",
-                "label": {
-                  "en": "Nuclear power plant",
-                  "de": "Kernkraftwerk"
-                }
-              },
-              {
-                "id": "kettle",
-                "label": {
-                  "en": "Kettle",
-                  "de": "Wasserkocher"
-                }
-              }
-            ]
-          },
-          {
             "kind": "classification",
             "id": "heating-systems",
             "title": {
@@ -1498,6 +1715,10 @@
             "prompt": {
               "en": "Assign every installation to its heating system.",
               "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
             },
             "axes": [
               {
@@ -1630,6 +1851,71 @@
                 "label": {
                   "en": "Outdoor fan unit",
                   "de": "Aussengerät mit Ventilator"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "power-ratings",
+            "title": {
+              "en": "Power ratings",
+              "de": "Leistungen"
+            },
+            "prompt": {
+              "en": "Order by rated power, smallest first.",
+              "de": "Ordne nach Nennleistung, die kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "led-bulb",
+                "label": {
+                  "en": "LED bulb",
+                  "de": "LED-Lampe"
+                }
+              },
+              {
+                "id": "wind-turbine",
+                "label": {
+                  "en": "Wind turbine",
+                  "de": "Windturbine"
+                }
+              },
+              {
+                "id": "tea-light",
+                "label": {
+                  "en": "Tea light",
+                  "de": "Teelicht"
+                }
+              },
+              {
+                "id": "wallbox",
+                "label": {
+                  "en": "Wallbox",
+                  "de": "Wallbox"
+                }
+              },
+              {
+                "id": "nuclear-plant",
+                "label": {
+                  "en": "Nuclear power plant",
+                  "de": "Kernkraftwerk"
+                }
+              },
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
                 }
               }
             ]
@@ -1734,6 +2020,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -1787,115 +2077,6 @@
         },
         "tasks": [
           {
-            "kind": "sorting",
-            "id": "power-ratings",
-            "title": {
-              "en": "Power ratings",
-              "de": "Leistungen"
-            },
-            "prompt": {
-              "en": "Order by rated power, smallest first.",
-              "de": "Ordne nach Nennleistung, die kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Power",
-                "de": "Leistung"
-              },
-              "unit": "W",
-              "scale": "logarithmic",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "wind-turbine",
-                "label": {
-                  "en": "Wind turbine",
-                  "de": "Windturbine"
-                }
-              },
-              {
-                "id": "led-bulb",
-                "label": {
-                  "en": "LED bulb",
-                  "de": "LED-Lampe"
-                }
-              },
-              {
-                "id": "nuclear-plant",
-                "label": {
-                  "en": "Nuclear power plant",
-                  "de": "Kernkraftwerk"
-                }
-              },
-              {
-                "id": "hair-dryer",
-                "label": {
-                  "en": "Hair dryer",
-                  "de": "Haartrockner"
-                }
-              },
-              {
-                "id": "wallbox",
-                "label": {
-                  "en": "Wallbox",
-                  "de": "Wallbox"
-                }
-              },
-              {
-                "id": "kettle",
-                "label": {
-                  "en": "Kettle",
-                  "de": "Wasserkocher"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "sorting",
-            "id": "room-temperatures",
-            "title": {
-              "en": "Room temperatures",
-              "de": "Raumtemperaturen"
-            },
-            "prompt": {
-              "en": "Order by recommended temperature, lowest first.",
-              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Temperature",
-                "de": "Temperatur"
-              },
-              "unit": "°C",
-              "scale": "linear",
-              "prefixed": false
-            },
-            "items": [
-              {
-                "id": "living-room",
-                "label": {
-                  "en": "Living room",
-                  "de": "Wohnzimmer"
-                }
-              },
-              {
-                "id": "bathroom",
-                "label": {
-                  "en": "Bathroom",
-                  "de": "Badezimmer"
-                }
-              },
-              {
-                "id": "bedroom",
-                "label": {
-                  "en": "Bedroom",
-                  "de": "Schlafzimmer"
-                }
-              }
-            ]
-          },
-          {
             "kind": "classification",
             "id": "heating-systems",
             "title": {
@@ -1905,6 +2086,10 @@
             "prompt": {
               "en": "Assign every installation to its heating system.",
               "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
             },
             "axes": [
               {
@@ -2037,6 +2222,119 @@
                 "label": {
                   "en": "Borehole with brine circuit",
                   "de": "Erdsonde mit Solekreislauf"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "power-ratings",
+            "title": {
+              "en": "Power ratings",
+              "de": "Leistungen"
+            },
+            "prompt": {
+              "en": "Order by rated power, smallest first.",
+              "de": "Ordne nach Nennleistung, die kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Power",
+                "de": "Leistung"
+              },
+              "unit": "W",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "wind-turbine",
+                "label": {
+                  "en": "Wind turbine",
+                  "de": "Windturbine"
+                }
+              },
+              {
+                "id": "led-bulb",
+                "label": {
+                  "en": "LED bulb",
+                  "de": "LED-Lampe"
+                }
+              },
+              {
+                "id": "nuclear-plant",
+                "label": {
+                  "en": "Nuclear power plant",
+                  "de": "Kernkraftwerk"
+                }
+              },
+              {
+                "id": "hair-dryer",
+                "label": {
+                  "en": "Hair dryer",
+                  "de": "Haartrockner"
+                }
+              },
+              {
+                "id": "wallbox",
+                "label": {
+                  "en": "Wallbox",
+                  "de": "Wallbox"
+                }
+              },
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                }
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                }
+              },
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
                 }
               }
             ]
@@ -2160,6 +2458,10 @@
               "en": "Assign every installation to its heating system.",
               "de": "Ordne jede Anlage ihrem Heizsystem zu."
             },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
+            },
             "axes": [
               {
                 "id": "seasonal-efficiency",
@@ -2305,6 +2607,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -2513,6 +2819,156 @@
         },
         "tasks": [
           {
+            "kind": "classification",
+            "id": "heating-systems",
+            "title": {
+              "en": "Heating systems",
+              "de": "Heizsysteme"
+            },
+            "prompt": {
+              "en": "Assign every installation to its heating system.",
+              "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
+            },
+            "axes": [
+              {
+                "id": "seasonal-efficiency",
+                "label": {
+                  "en": "Seasonal efficiency",
+                  "de": "Jahresnutzungsgrad"
+                },
+                "unit": "%",
+                "min": 0,
+                "max": 400
+              },
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              },
+              {
+                "id": "emissions",
+                "label": {
+                  "en": "Emissions",
+                  "de": "Emissionen"
+                },
+                "unit": "g/kWh",
+                "min": 0,
+                "max": 300
+              }
+            ],
+            "categories": [
+              {
+                "id": "electric-resistance",
+                "label": {
+                  "en": "Direct electric heating",
+                  "de": "Elektrodirektheizung"
+                },
+                "description": {
+                  "en": "Resistance heaters without storage or pump.",
+                  "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+                }
+              },
+              {
+                "id": "district-heating",
+                "label": {
+                  "en": "District heating",
+                  "de": "Fernwärme"
+                },
+                "description": {
+                  "en": "Heat delivered through a network.",
+                  "de": "Wärme aus einem Netz."
+                },
+                "profile": {
+                  "seasonal-efficiency": 90,
+                  "investment": 18000,
+                  "emissions": 120
+                }
+              },
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Heat pump",
+                  "de": "Wärmepumpe"
+                },
+                "profile": {
+                  "seasonal-efficiency": 350,
+                  "investment": 30000,
+                  "emissions": 40
+                }
+              },
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Gas boiler",
+                  "de": "Gaskessel"
+                },
+                "profile": {
+                  "seasonal-efficiency": 95,
+                  "investment": 12000,
+                  "emissions": 250
+                }
+              },
+              {
+                "id": "wood-pellets",
+                "label": {
+                  "en": "Wood pellets",
+                  "de": "Holzpellets"
+                },
+                "profile": {
+                  "seasonal-efficiency": 85,
+                  "investment": 25000,
+                  "emissions": 30
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "lake-water-network",
+                "label": {
+                  "en": "Lake water network connection",
+                  "de": "Anschluss an ein Seewassernetz"
+                }
+              },
+              {
+                "id": "night-storage-heater",
+                "label": {
+                  "en": "Night storage heater",
+                  "de": "Nachtspeicherofen"
+                }
+              },
+              {
+                "id": "air-source",
+                "label": {
+                  "en": "Outdoor fan unit",
+                  "de": "Aussengerät mit Ventilator"
+                }
+              },
+              {
+                "id": "condensing-gas",
+                "label": {
+                  "en": "Condensing boiler on the gas grid",
+                  "de": "Brennwertkessel am Gasnetz"
+                }
+              },
+              {
+                "id": "ground-source",
+                "label": {
+                  "en": "Borehole with brine circuit",
+                  "de": "Erdsonde mit Solekreislauf"
+                }
+              }
+            ]
+          },
+          {
             "kind": "sorting",
             "id": "room-temperatures",
             "title": {
@@ -2522,6 +2978,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -2706,152 +3166,6 @@
                 "label": {
                   "en": "Firewood",
                   "de": "Stückholz"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "classification",
-            "id": "heating-systems",
-            "title": {
-              "en": "Heating systems",
-              "de": "Heizsysteme"
-            },
-            "prompt": {
-              "en": "Assign every installation to its heating system.",
-              "de": "Ordne jede Anlage ihrem Heizsystem zu."
-            },
-            "axes": [
-              {
-                "id": "seasonal-efficiency",
-                "label": {
-                  "en": "Seasonal efficiency",
-                  "de": "Jahresnutzungsgrad"
-                },
-                "unit": "%",
-                "min": 0,
-                "max": 400
-              },
-              {
-                "id": "investment",
-                "label": {
-                  "en": "Investment",
-                  "de": "Investition"
-                },
-                "unit": "CHF",
-                "min": 0,
-                "max": 40000
-              },
-              {
-                "id": "emissions",
-                "label": {
-                  "en": "Emissions",
-                  "de": "Emissionen"
-                },
-                "unit": "g/kWh",
-                "min": 0,
-                "max": 300
-              }
-            ],
-            "categories": [
-              {
-                "id": "electric-resistance",
-                "label": {
-                  "en": "Direct electric heating",
-                  "de": "Elektrodirektheizung"
-                },
-                "description": {
-                  "en": "Resistance heaters without storage or pump.",
-                  "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
-                }
-              },
-              {
-                "id": "district-heating",
-                "label": {
-                  "en": "District heating",
-                  "de": "Fernwärme"
-                },
-                "description": {
-                  "en": "Heat delivered through a network.",
-                  "de": "Wärme aus einem Netz."
-                },
-                "profile": {
-                  "seasonal-efficiency": 90,
-                  "investment": 18000,
-                  "emissions": 120
-                }
-              },
-              {
-                "id": "heat-pump",
-                "label": {
-                  "en": "Heat pump",
-                  "de": "Wärmepumpe"
-                },
-                "profile": {
-                  "seasonal-efficiency": 350,
-                  "investment": 30000,
-                  "emissions": 40
-                }
-              },
-              {
-                "id": "gas-boiler",
-                "label": {
-                  "en": "Gas boiler",
-                  "de": "Gaskessel"
-                },
-                "profile": {
-                  "seasonal-efficiency": 95,
-                  "investment": 12000,
-                  "emissions": 250
-                }
-              },
-              {
-                "id": "wood-pellets",
-                "label": {
-                  "en": "Wood pellets",
-                  "de": "Holzpellets"
-                },
-                "profile": {
-                  "seasonal-efficiency": 85,
-                  "investment": 25000,
-                  "emissions": 30
-                }
-              }
-            ],
-            "items": [
-              {
-                "id": "lake-water-network",
-                "label": {
-                  "en": "Lake water network connection",
-                  "de": "Anschluss an ein Seewassernetz"
-                }
-              },
-              {
-                "id": "night-storage-heater",
-                "label": {
-                  "en": "Night storage heater",
-                  "de": "Nachtspeicherofen"
-                }
-              },
-              {
-                "id": "air-source",
-                "label": {
-                  "en": "Outdoor fan unit",
-                  "de": "Aussengerät mit Ventilator"
-                }
-              },
-              {
-                "id": "condensing-gas",
-                "label": {
-                  "en": "Condensing boiler on the gas grid",
-                  "de": "Brennwertkessel am Gasnetz"
-                }
-              },
-              {
-                "id": "ground-source",
-                "label": {
-                  "en": "Borehole with brine circuit",
-                  "de": "Erdsonde mit Solekreislauf"
                 }
               }
             ]
@@ -3202,6 +3516,729 @@
       }
     },
     {
+      "id": "icons-1",
+      "quiz": "icon-demo",
+      "seed": 1,
+      "sheet": {
+        "quiz": "icon-demo",
+        "seed": 1,
+        "title": {
+          "en": "Icon demo",
+          "de": "Symbolbeispiel"
+        },
+        "description": {
+          "en": "Every task, item, category and dimension carries an icon.",
+          "de": "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."
+        },
+        "tasks": [
+          {
+            "kind": "classification",
+            "id": "sources",
+            "title": {
+              "en": "Sources",
+              "de": "Quellen"
+            },
+            "prompt": {
+              "en": "Assign every source.",
+              "de": "Ordne jede Quelle zu."
+            },
+            "icon": {
+              "emoji": "⚡",
+              "motion": "pulse"
+            },
+            "categories": [
+              {
+                "id": "renewable",
+                "label": {
+                  "en": "Renewable",
+                  "de": "Erneuerbar"
+                },
+                "icon": {
+                  "emoji": "♻️",
+                  "motion": "spin"
+                }
+              },
+              {
+                "id": "fossil",
+                "label": {
+                  "en": "Fossil",
+                  "de": "Fossil"
+                },
+                "icon": {
+                  "emoji": "🛢️",
+                  "motion": "sway"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "gas",
+                "label": {
+                  "en": "Natural gas",
+                  "de": "Erdgas"
+                },
+                "icon": {
+                  "emoji": "🔥",
+                  "motion": "float"
+                }
+              },
+              {
+                "id": "wind",
+                "label": {
+                  "en": "Wind",
+                  "de": "Wind"
+                },
+                "icon": {
+                  "emoji": "🌬️",
+                  "motion": "sway"
+                }
+              },
+              {
+                "id": "coal",
+                "label": {
+                  "en": "Coal",
+                  "de": "Kohle"
+                },
+                "icon": {
+                  "emoji": "🪨",
+                  "motion": "bounce"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Appliances",
+              "de": "Geräte"
+            },
+            "prompt": {
+              "en": "Match every appliance.",
+              "de": "Ordne jedem Gerät zu."
+            },
+            "icon": {
+              "emoji": "🔌",
+              "motion": "bounce"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "linear",
+                  "prefixed": true
+                },
+                "icon": {
+                  "emoji": "⚡",
+                  "motion": "pulse"
+                },
+                "cards": [
+                  2200,
+                  800,
+                  3000
+                ]
+              },
+              {
+                "id": "lifespan",
+                "quantity": {
+                  "label": {
+                    "en": "Lifespan",
+                    "de": "Lebensdauer"
+                  },
+                  "unit": "a",
+                  "scale": "linear",
+                  "prefixed": false
+                },
+                "cards": [
+                  5,
+                  15,
+                  8
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              },
+              {
+                "id": "toaster",
+                "label": {
+                  "en": "Toaster",
+                  "de": "Toaster"
+                },
+                "icon": {
+                  "emoji": "🍞",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "oven",
+                "label": {
+                  "en": "Oven",
+                  "de": "Backofen"
+                },
+                "icon": {
+                  "emoji": "♨️",
+                  "motion": "pulse"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "masses",
+            "title": {
+              "en": "Masses",
+              "de": "Massen"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "icon": {
+              "emoji": "⚖️",
+              "motion": "sway"
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                },
+                "icon": {
+                  "emoji": "🧱",
+                  "motion": "flip"
+                }
+              },
+              {
+                "id": "car",
+                "label": {
+                  "en": "Car",
+                  "de": "Auto"
+                },
+                "icon": {
+                  "emoji": "🚗",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                },
+                "icon": {
+                  "emoji": "🪶",
+                  "motion": "float"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "icons-7",
+      "quiz": "icon-demo",
+      "seed": 7,
+      "sheet": {
+        "quiz": "icon-demo",
+        "seed": 7,
+        "title": {
+          "en": "Icon demo",
+          "de": "Symbolbeispiel"
+        },
+        "description": {
+          "en": "Every task, item, category and dimension carries an icon.",
+          "de": "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."
+        },
+        "tasks": [
+          {
+            "kind": "classification",
+            "id": "sources",
+            "title": {
+              "en": "Sources",
+              "de": "Quellen"
+            },
+            "prompt": {
+              "en": "Assign every source.",
+              "de": "Ordne jede Quelle zu."
+            },
+            "icon": {
+              "emoji": "⚡",
+              "motion": "pulse"
+            },
+            "categories": [
+              {
+                "id": "renewable",
+                "label": {
+                  "en": "Renewable",
+                  "de": "Erneuerbar"
+                },
+                "icon": {
+                  "emoji": "♻️",
+                  "motion": "spin"
+                }
+              },
+              {
+                "id": "fossil",
+                "label": {
+                  "en": "Fossil",
+                  "de": "Fossil"
+                },
+                "icon": {
+                  "emoji": "🛢️",
+                  "motion": "sway"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "sunlight",
+                "label": {
+                  "en": "Sunlight",
+                  "de": "Sonnenlicht"
+                },
+                "icon": {
+                  "emoji": "☀️",
+                  "motion": "spin"
+                }
+              },
+              {
+                "id": "gas",
+                "label": {
+                  "en": "Natural gas",
+                  "de": "Erdgas"
+                },
+                "icon": {
+                  "emoji": "🔥",
+                  "motion": "float"
+                }
+              },
+              {
+                "id": "coal",
+                "label": {
+                  "en": "Coal",
+                  "de": "Kohle"
+                },
+                "icon": {
+                  "emoji": "🪨",
+                  "motion": "bounce"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "masses",
+            "title": {
+              "en": "Masses",
+              "de": "Massen"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "icon": {
+              "emoji": "⚖️",
+              "motion": "sway"
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                },
+                "icon": {
+                  "emoji": "🧱",
+                  "motion": "flip"
+                }
+              },
+              {
+                "id": "car",
+                "label": {
+                  "en": "Car",
+                  "de": "Auto"
+                },
+                "icon": {
+                  "emoji": "🚗",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                },
+                "icon": {
+                  "emoji": "🪶",
+                  "motion": "float"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Appliances",
+              "de": "Geräte"
+            },
+            "prompt": {
+              "en": "Match every appliance.",
+              "de": "Ordne jedem Gerät zu."
+            },
+            "icon": {
+              "emoji": "🔌",
+              "motion": "bounce"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "linear",
+                  "prefixed": true
+                },
+                "icon": {
+                  "emoji": "⚡",
+                  "motion": "pulse"
+                },
+                "cards": [
+                  800,
+                  2200,
+                  3000
+                ]
+              },
+              {
+                "id": "lifespan",
+                "quantity": {
+                  "label": {
+                    "en": "Lifespan",
+                    "de": "Lebensdauer"
+                  },
+                  "unit": "a",
+                  "scale": "linear",
+                  "prefixed": false
+                },
+                "cards": [
+                  8,
+                  15,
+                  5
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "toaster",
+                "label": {
+                  "en": "Toaster",
+                  "de": "Toaster"
+                },
+                "icon": {
+                  "emoji": "🍞",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "oven",
+                "label": {
+                  "en": "Oven",
+                  "de": "Backofen"
+                },
+                "icon": {
+                  "emoji": "♨️",
+                  "motion": "pulse"
+                }
+              },
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "icons-20261002",
+      "quiz": "icon-demo",
+      "seed": 20261002,
+      "sheet": {
+        "quiz": "icon-demo",
+        "seed": 20261002,
+        "title": {
+          "en": "Icon demo",
+          "de": "Symbolbeispiel"
+        },
+        "description": {
+          "en": "Every task, item, category and dimension carries an icon.",
+          "de": "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."
+        },
+        "tasks": [
+          {
+            "kind": "classification",
+            "id": "sources",
+            "title": {
+              "en": "Sources",
+              "de": "Quellen"
+            },
+            "prompt": {
+              "en": "Assign every source.",
+              "de": "Ordne jede Quelle zu."
+            },
+            "icon": {
+              "emoji": "⚡",
+              "motion": "pulse"
+            },
+            "categories": [
+              {
+                "id": "renewable",
+                "label": {
+                  "en": "Renewable",
+                  "de": "Erneuerbar"
+                },
+                "icon": {
+                  "emoji": "♻️",
+                  "motion": "spin"
+                }
+              },
+              {
+                "id": "fossil",
+                "label": {
+                  "en": "Fossil",
+                  "de": "Fossil"
+                },
+                "icon": {
+                  "emoji": "🛢️",
+                  "motion": "sway"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "coal",
+                "label": {
+                  "en": "Coal",
+                  "de": "Kohle"
+                },
+                "icon": {
+                  "emoji": "🪨",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "gas",
+                "label": {
+                  "en": "Natural gas",
+                  "de": "Erdgas"
+                },
+                "icon": {
+                  "emoji": "🔥",
+                  "motion": "float"
+                }
+              },
+              {
+                "id": "wind",
+                "label": {
+                  "en": "Wind",
+                  "de": "Wind"
+                },
+                "icon": {
+                  "emoji": "🌬️",
+                  "motion": "sway"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliances",
+            "title": {
+              "en": "Appliances",
+              "de": "Geräte"
+            },
+            "prompt": {
+              "en": "Match every appliance.",
+              "de": "Ordne jedem Gerät zu."
+            },
+            "icon": {
+              "emoji": "🔌",
+              "motion": "bounce"
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "linear",
+                  "prefixed": true
+                },
+                "icon": {
+                  "emoji": "⚡",
+                  "motion": "pulse"
+                },
+                "cards": [
+                  3000,
+                  2200,
+                  800
+                ]
+              },
+              {
+                "id": "lifespan",
+                "quantity": {
+                  "label": {
+                    "en": "Lifespan",
+                    "de": "Lebensdauer"
+                  },
+                  "unit": "a",
+                  "scale": "linear",
+                  "prefixed": false
+                },
+                "cards": [
+                  8,
+                  5,
+                  15
+                ]
+              }
+            ],
+            "items": [
+              {
+                "id": "toaster",
+                "label": {
+                  "en": "Toaster",
+                  "de": "Toaster"
+                },
+                "icon": {
+                  "emoji": "🍞",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "oven",
+                "label": {
+                  "en": "Oven",
+                  "de": "Backofen"
+                },
+                "icon": {
+                  "emoji": "♨️",
+                  "motion": "pulse"
+                }
+              },
+              {
+                "id": "kettle",
+                "label": {
+                  "en": "Kettle",
+                  "de": "Wasserkocher"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
+            "id": "masses",
+            "title": {
+              "en": "Masses",
+              "de": "Massen"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "icon": {
+              "emoji": "⚖️",
+              "motion": "sway"
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "logarithmic",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                },
+                "icon": {
+                  "emoji": "🧱",
+                  "motion": "flip"
+                }
+              },
+              {
+                "id": "car",
+                "label": {
+                  "en": "Car",
+                  "de": "Auto"
+                },
+                "icon": {
+                  "emoji": "🚗",
+                  "motion": "bounce"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                },
+                "icon": {
+                  "emoji": "🪶",
+                  "motion": "float"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "id": "rotation-both-rotated",
       "quiz": "rotation-demo",
       "seed": 24,
@@ -3218,6 +4255,43 @@
           "de": "Zwei Sortieraufgaben, klein genug, um in ihre Lösung gemischt zu werden."
         },
         "tasks": [
+          {
+            "kind": "sorting",
+            "id": "pair",
+            "title": {
+              "en": "Pair",
+              "de": "Paar"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "linear",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                }
+              }
+            ]
+          },
           {
             "kind": "sorting",
             "id": "triple",
@@ -3258,43 +4332,6 @@
                 "label": {
                   "en": "Apple",
                   "de": "Apfel"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "sorting",
-            "id": "pair",
-            "title": {
-              "en": "Pair",
-              "de": "Paar"
-            },
-            "prompt": {
-              "en": "Smallest first.",
-              "de": "Das Kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Mass",
-                "de": "Masse"
-              },
-              "unit": "kg",
-              "scale": "linear",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "brick",
-                "label": {
-                  "en": "Brick",
-                  "de": "Backstein"
-                }
-              },
-              {
-                "id": "feather",
-                "label": {
-                  "en": "Feather",
-                  "de": "Feder"
                 }
               }
             ]
@@ -3321,6 +4358,43 @@
         "tasks": [
           {
             "kind": "sorting",
+            "id": "pair",
+            "title": {
+              "en": "Pair",
+              "de": "Paar"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "linear",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
             "id": "triple",
             "title": {
               "en": "Triple",
@@ -3359,43 +4433,6 @@
                 "label": {
                   "en": "Melon",
                   "de": "Melone"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "sorting",
-            "id": "pair",
-            "title": {
-              "en": "Pair",
-              "de": "Paar"
-            },
-            "prompt": {
-              "en": "Smallest first.",
-              "de": "Das Kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Mass",
-                "de": "Masse"
-              },
-              "unit": "kg",
-              "scale": "linear",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "brick",
-                "label": {
-                  "en": "Brick",
-                  "de": "Backstein"
-                }
-              },
-              {
-                "id": "feather",
-                "label": {
-                  "en": "Feather",
-                  "de": "Feder"
                 }
               }
             ]
@@ -3422,6 +4459,43 @@
         "tasks": [
           {
             "kind": "sorting",
+            "id": "pair",
+            "title": {
+              "en": "Pair",
+              "de": "Paar"
+            },
+            "prompt": {
+              "en": "Smallest first.",
+              "de": "Das Kleinste zuerst."
+            },
+            "quantity": {
+              "label": {
+                "en": "Mass",
+                "de": "Masse"
+              },
+              "unit": "kg",
+              "scale": "linear",
+              "prefixed": true
+            },
+            "items": [
+              {
+                "id": "brick",
+                "label": {
+                  "en": "Brick",
+                  "de": "Backstein"
+                }
+              },
+              {
+                "id": "feather",
+                "label": {
+                  "en": "Feather",
+                  "de": "Feder"
+                }
+              }
+            ]
+          },
+          {
+            "kind": "sorting",
             "id": "triple",
             "title": {
               "en": "Triple",
@@ -3460,43 +4534,6 @@
                 "label": {
                   "en": "Pear",
                   "de": "Birne"
-                }
-              }
-            ]
-          },
-          {
-            "kind": "sorting",
-            "id": "pair",
-            "title": {
-              "en": "Pair",
-              "de": "Paar"
-            },
-            "prompt": {
-              "en": "Smallest first.",
-              "de": "Das Kleinste zuerst."
-            },
-            "quantity": {
-              "label": {
-                "en": "Mass",
-                "de": "Masse"
-              },
-              "unit": "kg",
-              "scale": "linear",
-              "prefixed": true
-            },
-            "items": [
-              {
-                "id": "brick",
-                "label": {
-                  "en": "Brick",
-                  "de": "Backstein"
-                }
-              },
-              {
-                "id": "feather",
-                "label": {
-                  "en": "Feather",
-                  "de": "Feder"
                 }
               }
             ]

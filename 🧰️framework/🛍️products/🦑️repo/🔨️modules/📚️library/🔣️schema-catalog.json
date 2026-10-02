@@ -7615,6 +7615,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "CrowdScores": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "CrowdTask": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -7643,11 +7647,23 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "Handle": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "HandleView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "Id": {
           "file": "🔣️.json",
           "facet": "schema"
         },
         "Identity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "IdentityClaim": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -7659,11 +7675,23 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "LeaderboardPeriod": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "LeaderboardRow": {
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "LeaderboardWindow": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "LearnerView": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Limits": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -7680,6 +7708,10 @@
           "facet": "schema"
         },
         "MatchingTask": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Motion": {
           "file": "🔣️.json",
           "facet": "schema"
         },
@@ -7791,6 +7823,10 @@
           "file": "🔣️.json",
           "facet": "schema"
         },
+        "TaskIcon": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
         "TaskKind": {
           "file": "🔣️.json",
           "facet": "schema"
@@ -7822,9 +7858,9 @@
       },
       "dependsOn": [],
       "hashes": {
-        "🔣️.json": "f7ba2e3238aa4677b7bdf16665fa6cf14019ad646649adfbe2cb3ed99239cc9d",
-        "🟦️.ts": "f4e2e7539f3d33a45885b21dcbe30dbae9fdb3799a0dca9b54a34da9c16b2d7b",
-        "🦀️.rs": "684e20454537b605f7350be1492f76bf6e99a85644a2c99497dd82bf74a1756f"
+        "🔣️.json": "b031a31f45a723ce5d8ddadf6134ff2f0a32559f05fea41f7c3efb53f7643d2f",
+        "🟦️.ts": "b7e35e00ccda9224fbb9aeef65ea36b16073751b990191b8ec42304fde14a9a8",
+        "🦀️.rs": "0a59ad1badee889f7c69e24774cb2acf899f7e7f43619973aa2ce946abb3ed81"
       }
     },
     "framework.public-invocation": {
@@ -101237,6 +101273,252 @@
       "dependsOn": [],
       "hashes": {
         "🔣️.json": "f563b5eebdf932d21a868d1f2d3cf09b8240da9512d37a95cfb3065d9d97e9f5"
+      }
+    },
+    "framework.product.pets": {
+      "path": "🧰️framework/🛍️products/🐾️pets/🧬️schema",
+      "level": "product-root",
+      "facetKind": "🧬️data",
+      "formats": {
+        "🦀️rust": "🦀️.rs",
+        "🟦️typescript": "🟦️.ts",
+        "🔣️jsonschema": "🔣️.json"
+      },
+      "exports": {
+        "Activity": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Actor": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "ActorFrame": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Bond": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Bone": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Cast": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Channel": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Clip": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Color": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Degrees": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Ease": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "EllipseShape": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Ensemble": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Eye": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "EyeFrame": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Face": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Frame": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Gait": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Gaze": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Glanced": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Hushed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Key": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "LineShape": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Locomotion": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Menagerie": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Mouth": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Needs": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Paint": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Palette": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Part": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PathShape": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Perch": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "PetMode": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Point": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Pointed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Poked": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Rapport": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Rect": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "RectShape": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Repertoire": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Shape": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Size": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Slug": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Species": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Stage": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "StageEvent": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Summoned": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Surface": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Surveyed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Temperament": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Text": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Ticked": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Ticks": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Track": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Tuned": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Turns": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        },
+        "Unpointed": {
+          "file": "🔣️.json",
+          "facet": "schema"
+        }
+      },
+      "dependsOn": [],
+      "hashes": {
+        "🔣️.json": "defebf17657a6fe61bd4e3db2a417e252f5fe5ce5198acf0469d53872b9c854f",
+        "🟦️.ts": "9a7e21d5638fd63326234a777db2fa69ca9626398605b9e152f98836499d2dc4",
+        "🦀️.rs": "a1c4b823d19f67d4d314ab08e27ffa4220d7d56c3a198f4c68692ee8d4bb2de4"
       }
     }
   }

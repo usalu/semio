@@ -260,17 +260,25 @@ pub struct PresenceEntry {
 }
 
 /// @emoji 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining
-/// session, its colour and the whole roster, itself included) and a per-tick `batch` (the sessions
-/// whose state changed since the last tick, and those that left) travel server → client; `state`
-/// (the sender's latest state, latest wins) travels client → server; `refused` answers a frame the
-/// server dropped while the socket stays open. A second `welcome` on the same socket replaces the
-/// roster wholesale — the resynchronization a lagging subscriber receives.
+/// session, its colour and the roster, led by the session itself) and a `batch` at most once per
+/// tick (the sessions whose state changed since the socket's last frame, and those that left)
+/// travel server → client; `state` (the sender's latest state, latest wins) travels client →
+/// server; `refused` answers a frame the server dropped while the socket stays open. A second
+/// `welcome` on the same socket replaces the roster wholesale — the resynchronization a socket that
+/// fell too far behind receives.
+///
+/// Server frames are bounded: a roster larger than one frame may carry begins in the `welcome` and
+/// continues in the `batch` frames that follow it, and a burst of changes larger than a frame is
+/// spread over the next ticks, every changed session once before any twice. A client therefore
+/// applies every frame as it comes — `welcome` replaces, `batch` removes `left` and upserts
+/// `entries` — and holds the whole room once the frames have caught up.
 ///
 /// Watching is read-only presence in other rooms: `watch` (client → server) replaces the set of
 /// scopes the socket watches and the interval it wants their changes at (an empty set stops
-/// watching); `watched` (server → client) carries one watched scope's changes since the last
-/// interval, or — flagged `snapshot` — its whole roster, sent when the scope becomes watched and
-/// whenever the watcher fell behind, replacing what the client held for that scope.
+/// watching); `watched` (server → client) carries changes of one watched scope since the socket was
+/// last sent that scope, or — flagged `snapshot` — the beginning of its roster, sent when the scope
+/// becomes watched and whenever the watcher fell too far behind, replacing what the client held for
+/// that scope. `watched` frames are bounded the same way, over all watched scopes per interval.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", tag = "type")]
 pub enum PresenceFrame {
@@ -403,6 +411,15 @@ impl ServerInstanceDefinition {
     /// 📴️ The offline policy declared for `kind`; unknown kinds are authority-only by default.
     pub fn offline_policy(&self, kind: &str) -> OfflinePolicy {
         self.command(kind).map_or(OfflinePolicy::AuthorityRequired, |command| command.offline)
+    }
+
+    /// 🪟️ What this instance says of itself to a caller it does not know: its identity and, per
+    /// module, what a client addresses — the command and query kinds, the read models they answer
+    /// from and the actor kinds they reach. How the instance authorizes (its policy templates) is
+    /// left out; the shape stays the definition's own, so one decoder reads both.
+    pub fn public(&self) -> Self {
+        let modules = self.modules.iter().map(|module| ModuleManifest { policies: Vec::new(), ..module.clone() }).collect();
+        Self { id: self.id.clone(), version: self.version.clone(), modules }
     }
 }
 //#endregion 🔖️Module

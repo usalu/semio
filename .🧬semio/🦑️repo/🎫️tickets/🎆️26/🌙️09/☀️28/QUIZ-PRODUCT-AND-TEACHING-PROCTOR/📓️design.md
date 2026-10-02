@@ -187,7 +187,11 @@ for every other GET path (SPA fallback to `index.html`); the dev site (vite) pro
   apply locally at once; commands go through an outbox coalesced per (run, task), retried with
   `retryWithJitteredBackoff`, idempotent by command id; the connection state is visible; submission shows progress and
   can be cancelled.
-- i18n: `en` and `de` everywhere (no default; browser language, English on ties; explicit choice persisted).
+- i18n: `en` and `de` everywhere, offered in that order, no default. The explicit choice is persisted. Without one, the
+  browser's language list may only preselect among the offered languages (its first offered entry; the language switch
+  shows and changes it). When the list names no offered language nothing is assumed: the document carries no `lang`, its
+  title, loading text and `<noscript>` are given in every language, and the client asks "Language · Sprache" before
+  anything else (`📓️ui-hardening-report.md`, decision 1).
 - Customization: theme (light/dark/system) and text size via CSS custom properties on the semio palette.
 
 ## 11. Core API (identical vocabulary in both cores; Rust uses snake_case)
@@ -392,3 +396,191 @@ them, a leaderboard that keeps updating, …). This supersedes the §15 rule "ne
 - Thinking-state bounds (both cores, conformance): at most 64 tasks per state and 64 entries per answer or dimension
   (`too-many`), no repeated item in a sorting draft (`duplicate-id`), matching values finite numbers (`type-invalid`),
   card indices refused in drafts; the presence socket's 2 KiB state cap applies on top.
+
+## 18. Revision 2026-10-02 — public hardening, one dev command, deploy readiness
+
+Requirement: everything works end to end; one dev entry starts backend and frontend; everything is ready to be
+deployed. Three audits (`📓️audit-deploy-security.md`, `📓️audit-final-requirements.md`, `📓️audit-final-i18n-a11y.md`)
+drove the changes. This section supersedes the parts of §8, §9, §9a and §15 it contradicts: the roster actor, the event
+`learner-recalled`, client-side handle normalization, the unbounded leaderboard, one presence batch per room and tick.
+
+### Threat model (owner's decision kept: no passwords)
+- A pseudonym or name is public and is the only thing needed to continue as that learner. The identity step says so and
+  recommends a pseudonym. The learner id stays a bearer credential and appears in no public payload (leaderboard, crowd,
+  presence carry the tag); the quizzes and the leaderboard are for fun.
+- Protection goal: a single script can neither read credentials, nor take the service or the host down, nor lock real
+  learners out. A lecture hall of about 300 learners behind one NAT address must never be throttled.
+
+### Identity
+- `Id` = `^[0-9a-f]{32}$`, `Slug` = `^[a-z0-9]+(?:-[a-z0-9]+)*$` (≤ 64); rejection `id-invalid`; validated before an
+  actor is placed, in the deciders and in every query.
+- Handles are normalized by the server (both cores bit-identical): White_Space runs collapse, `’` becomes `'`, 1…64
+  code points of Latin letters (Basic Latin to Latin Extended Additional), ASCII digits, `'` `.` `_` `-` and single
+  spaces, at least one letter or digit; anything else is `handle-invalid` (control, format, zero-width, bidi, combining
+  marks, other scripts, emoji). The alphabet has no combining mark, so accepted input is NFC without a library.
+- No roster actor. A handle is the stream `quiz-handle/<hex of the key>` with exactly one event; an anonymous learner
+  registers on its own `quiz-learner` stream. Recall is the read `{ type: "handle", handle }` → `HandleView { display,
+  holder? }` and writes nothing. Rejections added: `handle-claimed`, `learner-exists`, `roster-full`, `runs-exhausted`,
+  `answers-exhausted`.
+- Caps (core `Limits`, proctor environment): registrations, 1 000 submitted runs per learner, 200 per quiz, one open
+  run per learner and quiz, 2 000 recorded answers per run. Sign-ups have their own allowance per address (§ below).
+
+### Leaderboard
+`Leaderboard { rows (top ≤ 100 by rank), learners (total ranked), own? (the caller's row) }`; the caller is named in the
+query (`{ type: "leaderboard", learner? }`). The projection keeps one standing per learner in rank order and rewrites it
+only on registration, submission or badge, never on an answer. `lastActivity` is the last submission.
+
+### Edge (framework server, domain-neutral; configured by the proctor)
+- Idempotency receipts are keyed per principal and answered only for the same target (`idempotency-key-conflict`
+  otherwise): no receipt of another caller can be read or pre-occupied.
+- `ServerModule::command_admission` runs before receipt lookup, policy and placement; revision-0 activations are never
+  kept; the actor directory is a 2 048-entry LRU with snapshots every 64 events.
+- Request body ≤ 16 384 bytes (largest real command 2 952), taken at the edge within 10 s (`413`, `408`).
+- Token buckets per client address and class (commands, reads, socket upgrades, sign-ups), `429` with `Retry-After`;
+  address = last `X-Forwarded-For` entry in proxy mode, the peer otherwise, IPv6 per /64; caps on sockets per address
+  and in total and on requests in flight (`503`). Defaults in the proctor README ("Limits at the edge").
+- WebSocket message and frame limits at the protocol layer (presence 4 096 bytes, event stream 1 024); presence is read
+  by cursor with a bounded frame and a total send budget; only the core routes are mounted; public error bodies are
+  fixed texts; no `Access-Control-Allow-Credentials`.
+- Commits are grouped (one flush per batch of commands); queries read without the global bus lock; read-your-writes is
+  kept by a single-flight relay/settle that is skipped when nothing was committed.
+- Capacity gate `@teaching/proctor:capacity`: 300 learners from one address alone and beside an abusive script; budget
+  p95 250 / p99 500 ms alone, 500 / 1 500 ms beside the script, no error, no refusal, ≤ 512 MiB.
+
+### Operations
+- Image: distroless, uid 65532, read-only root, pinned bases, health by `proctor health`, catalog validated in the
+  build, stack files (`compose.yaml`, `Caddyfile`) inside the image — a host needs no clone.
+- Verbs: `proctor health`, `backup <directory/|file|->` (online, `VACUUM INTO`), `restore <file|->` (refuses while
+  serving), `erase (--handle|--tag|--learner) [--dry-run]` (the name leaves log, projections and receipts; scores go
+  with it), `prune` for registrations that never submitted. Storage format v2 refuses v1 files (no migration).
+- Compose: read-only services, dropped capabilities, log rotation, resource limits, optional `.env`; Caddy with body
+  cap, timeouts, security headers and a retry window across a proctor restart.
+- Site: Content-Security-Policy as a `meta` tag with hashes and `connect-src` = the proctor origin (https + wss);
+  `publish` verifies the CDN artifact; `site.legal { imprint?, privacy? }` in `🚀️deploy/🔣️.json` feeds the footer.
+- Workflow: `main` only, actions pinned to commits, least privilege, image checked before the push, immutable
+  `sha-<commit>` tag beside `<version>` and `latest`.
+- Gates: `@teaching/architecture-quiz:deploy-check` (drift, typecheck, catalog, release build and artifact, image build,
+  image check, stack check, end-to-end rehearsal), `:test-e2e` (Playwright, topologies `dev` and `rehearsal`).
+
+### Development
+`bun nx run @teaching/architecture-quiz:dev` (launch row `🛠️dev🏛️architektur-und-technologie❓️quizze`) starts the proctor,
+waits until it is ready, then starts the site; one stop ends both; a proctor already answering on its port is reused and
+never stopped. `dev-site` is the site alone, `@teaching/proctor:dev` the proctor alone.
+
+### Client
+No default language (document language, title and loading text follow the choice); identity wording as above;
+confirmation before an anonymous learner switches identity; footer with a built-in privacy notice and the configured
+legal links; `429`/`503` are transient shortages with bounded, jittered backoff; forced-colors rules; keyboard fixes in
+matching and sorting; the crowd's lines reserve their space so the page never shifts.
+
+## 19. Revision 2026-10-02 — the overview is exactly the overview of play and the demonstrator
+
+Requirement (owner, twice the same day; the second wording decides): exactly like semio-tech play and the mit-bestand
+demonstrator, nothing new. Two layers. In front, fixed cards arranged on a grid. Behind the glass, the individual pages,
+each the size of the screen. Hovering a card moves the background camera to that page and makes it crisp. Moving the
+mouse between the cards moves the background, under the glass. This section supersedes the live grid backdrop of §17
+("`LayeredOverview` gains a rest mode `grid`") and `📓️layered-overview-report.md` §00. Report:
+`📓️overview-camera-report.md`.
+
+### Framework (`LayeredOverview`, domain-neutral)
+- One mechanism for every landing: the strip of container-sized pages (percent geometry), one glass, the app's card
+  grid; pointer pan between the cards (`pointerOffset`, clamped to occupied columns), 500 ms cubic glide to the page of
+  a hovered or focused card with the hole cut from the current offset, glass back on leave. The grid rest and
+  everything that served it are removed: props `rest`, `gridTracks`, the overlay variables `--layered-columns` /
+  `--layered-rows`, `data-rest`, and the geometry `LayeredRect`, `LayeredTracks`, `LAYERED_VIEW`, `trackSpans`,
+  `trackTemplate`, `restRect`, `lerpRect`, `glideRect`, `viewRect`, `coverPlacement`, `spanAxisBounds`, `veilForRect`
+  with their vectors.
+- Kept from the same day: the pan follows by elapsed time — `followFactor(ms) = 1 − 0.88^(ms / (1000/60))`, 12 % of
+  the gap per 60 Hz frame — so it takes the same time at every refresh rate and under a browser that paints slowly
+  (oracle: three.js `MathUtils.damp`); `data-pan="pointer" | "none"` on the root says whether the mouse pans (not with
+  `pan="none"`, not in the list, not for an app that asked for stillness); a warm pace of zero boots the next page at
+  once instead of waiting for an idle moment.
+- Motion (third wording of the day: "the background stays frozen to the last page, not smooth like play"): the pan and
+  the glide run **whatever the device says about motion**. `reducedMotion` defaults to `"never"`; `"auto"` (give way
+  to `prefers-reduced-motion`) and `"always"` remain for an app that wants them. Cause of the freeze: the owner's
+  workstation is a Remote Desktop session, every browser in it reports `prefers-reduced-motion: reduce`, and the
+  element's former default `"auto"` then switched pan and glide off — the original landings of play and the
+  demonstrator never looked at that signal, which is why they were remembered as smooth.
+
+### Quiz
+- Home uses the element as play does: `cells` = the cells of the card grid (desktop 3 × 3, tablet 2 × 5 with the
+  leaderboard alone on its row), pan and motion at their defaults, lifecycle `{ budget: pages, warmStartMs: 0,
+  warmIntervalMs: 0 }` — the pages are cheap DOM, so all are live at once and never released (presence inside them and
+  the live leaderboard of §17 stay).
+- The card grid keeps its tracks (the leaderboard's cell the larger one); home hands them to its stylesheet as
+  `--quiz-home-columns` / `--quiz-home-rows` (`homeTrackTemplate`).
+- No preference for the pan and no `reducedMotion` passed: the overview moves on every device, as on play.
+
+## 20. Revision 2026-10-02 — the others show after submission, on request before, and everything is plotted
+
+Requirement: by default the results of the others show only after a quiz is submitted; the learner can explicitly ask
+to see the distribution before; everything is plotted, nicely and visually. This section supersedes the parts of §17
+that show the crowd during a run by default ("during the run as the crowd layer") and the boolean preference
+"Show what others think". Report: `📓️crowd-plots-report.md`.
+
+### Crowd view (schema, both cores, proctor)
+The persisted crowd carries whole distributions, so every figure is drawn from data the proctor already aggregated.
+
+- `CROWD_SCORE_BINS` = 10. `scoreBin(score) = min(9, ⌊points / 10⌋)` with `points = ⌊score · 100 + ½⌋` (the whole
+  percent the client prints): bins `[0, 10)`, `[10, 20)`, … `[80, 90)`, `[90, 100]` in percent.
+- `CrowdView.scores` (required, exactly 10 integers ≥ 0): the run scores of the counted results; sums to `runs`.
+- `CrowdTask.scores` (required, exactly 10 integers ≥ 0): the scores of the results that count for the task — the task
+  score for a classification or sorting, the dimension's score for a matching's crowd task (a result counts for a
+  dimension when its first task result of the task and kind holds that dimension).
+- `CrowdItem.places` (sorting only, beside `meanPosition`; integers ≥ 0): one count per place a sheet of the task
+  presents, `m = presented(task) = min(draw, items)` (all items without `draw`); a position `i` in a learner's order of
+  `n` items counts for place `placeBin(i, n, m) = n < 2 ? 0 : ⌊(2 · i · (m − 1) + (n − 1)) / (2 · (n − 1))⌋` (integer
+  arithmetic: `i · (m − 1) / (n − 1)` rounded half up, `i` itself when `n = m`); sums to `answers`.
+- Core functions in both cores (same vocabulary; Rust snake_case): `scoreBin`, `placeBin`, `presented`; `crowdView`
+  fills the new members. Empty crowd: ten zeros per `scores`, no items.
+- Proctor: the tally keeps the score bins per quiz, per task and per matching dimension, and per sorting item the
+  count per `(n, i)`, independent of the definition; the view bins them against the current definition. The tally
+  folded one result at a time still equals `crowd_view` over all results bit for bit. `PROJECTOR_REVISION` 5 rebuilds
+  the read models (4 was taken by the leaderboard periods the same day); the storage format stays v2. `placeBin`
+  never returns beyond the last place and `scoreBin` never below the first, so a malformed result cannot make the
+  projector fail; for valid input both equal the formulas above.
+- Reference: the Python reference recounts score bins with `numpy.histogram` over the whole percents (edges
+  0, 10, …, 90, 101) and places with `collections.Counter`; vectors add scores on bin edges (0, 0.095, 0.1, 0.895,
+  0.9, 0.995, 1) and an order shorter and one longer than the presented count.
+
+### When the others show (client)
+- Persisted local-only preference `others: "never" | "submitted" | "always"` (default `submitted`) replaces
+  `showAnswers`: segmented choice "Others' answers: Never · After I submit · Always" / "Antworten der anderen: Nie ·
+  Nach dem Abgeben · Immer".
+- Ephemeral local-only `QuizState.asked` (quiz ids): the learner asked to see the others of that quiz now. Events
+  `crowd-asked { quiz }`, `crowd-unasked { quiz }`; a submitted or voided run of the quiz and a new learner end the
+  ask, so the next run starts closed again. `session.askCrowd(quiz)` also refreshes the crowd; `unaskCrowd(quiz)`.
+- `crowdGate(others, place, { asked, submitted })` → `"open" | "asked" | "locked" | "off"`:
+  `never` → off everywhere; `always` → open everywhere; `submitted` → results: open; quiz page: open once the learner
+  has a submitted run of the quiz; else (a run, or a quiz page before that) asked when the learner asked, locked
+  otherwise. `crowdShown(gate)` = open or asked.
+- Locked: the button "Show it now" and the line "You see what the others answered once you have submitted this quiz.";
+  asked: the same button, now "Hide it again" — one button, first in its row, so it keeps the focus and stays under the
+  pointer. The crowd is still loaded when a run opens, so an ask shows at once and without a connection (local-first).
+- Presence is unchanged: a learner's own drafts are still published to the thinking room, cursors still show.
+
+### Figures (client, owned SVG-free HTML/CSS marks; no runtime library)
+One form per job, one hue: bars in the de-emphasis tone, the learner's own answer in the accent (emphasis), never
+colour alone (● you, ✓ correct, and every number is text). Others thinking right now are dots in their presence
+colours on the same figure. Every figure is a real table (row and column headers, counts as text), so it is its own
+table view.
+
+- **Answer figure** per task (per dimension for a matching): rows = the items of the learner's sheet, columns = the
+  categories (classification, sheet order), the places 1…m (sorting) or the values given, ascending (matching). A cell
+  holds a column that rises with the share of the item's answers that chose it, the percentage on its cap, the dots
+  of the learners thinking it now, ● on the learner's own choice and — on results only — ✓ on the correct one. A
+  sorting row ends with the average place.
+- **Score figure**: the ten score bins as columns over a percent axis (0, 50, 100), the bin of the learner's own score
+  in the accent with "You: 73 %". Results: the run's scores in the summary card, each task's scores in its card (per
+  dimension for a matching). Quiz page: the run scores beside the learner's best.
+- A matching whose quantity keeps one unit names it once, in the caption ("U-value (W/(m²·K))"), and heads its columns
+  with the bare numbers (the unit follows each for assistive technology); one with SI prefixes heads them with the
+  prefixed quantities ("8 W", "2 kW").
+- Pure model `📊️plot` (`columnShare`, `peakOf`, `formatShare`, the `Column` mark) and `🗳️crowd` (`answerFigure`,
+  `scoreFigure`, `crowdGate`) with the shared fixture `💭️crowd-client`; oracles `d3-scale` (`scaleLinear`, clamped)
+  for every share and height, `lodash` for columns, thinkers and totals, `colord` for the paint (≥ 3 : 1 on both
+  surfaces: the others' tone is ink mixed half with the surface, the learner's the active colour).
+- Where: run — below the task's interaction (so nothing above moves when it opens); results — below each task's
+  table, the "Everyone" column of the tables is gone; quiz page — the crowd card.
+- Motion: columns grow from the baseline once (240 ms) unless the device asks for reduced motion; forced colours draw
+  the columns in `CanvasText` and the learner's own in `Highlight`.

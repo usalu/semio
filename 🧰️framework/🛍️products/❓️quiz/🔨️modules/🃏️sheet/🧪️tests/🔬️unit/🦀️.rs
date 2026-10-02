@@ -17,12 +17,13 @@ pub(crate) fn quantity(unit: &str, scale: Scale) -> Quantity {
 
 pub(crate) fn classification(id: &str, draw: Option<usize>) -> ClassificationTask {
     let axis = |id: &str| Axis { id: id.to_string(), label: text(id), unit: "u".to_string(), min: 0.0, max: 10.0 };
-    let category = |id: &str, profile: [f64; 3]| Category { id: id.to_string(), label: text(id), description: None, profile: Some(BTreeMap::from([("heat".to_string(), profile[0]), ("cool".to_string(), profile[1]), ("cost".to_string(), profile[2])])) };
-    let item = |id: &str, category: &str| ClassificationItem { id: id.to_string(), label: text(id), category: category.to_string(), explanation: Some(text(&format!("{id} is {category}"))) };
+    let category = |id: &str, profile: [f64; 3]| Category { id: id.to_string(), label: text(id), icon: None, description: None, profile: Some(BTreeMap::from([("heat".to_string(), profile[0]), ("cool".to_string(), profile[1]), ("cost".to_string(), profile[2])])) };
+    let item = |id: &str, category: &str| ClassificationItem { id: id.to_string(), label: text(id), icon: None, category: category.to_string(), explanation: Some(text(&format!("{id} is {category}"))) };
     ClassificationTask {
         id: id.to_string(),
         title: text(id),
         prompt: text("classify"),
+        icon: None,
         axes: Some(vec![axis("heat"), axis("cool"), axis("cost")]),
         categories: vec![category("passive", [1.0, 2.0, 9.0]), category("low", [3.0, 3.0, 6.0]), category("old", [10.0, 6.0, 1.0])],
         items: vec![item("a", "passive"), item("b", "low"), item("c", "old"), item("d", "low")],
@@ -35,8 +36,9 @@ pub(crate) fn sorting(id: &str, values: &[f64], scale: Scale, draw: Option<usize
         id: id.to_string(),
         title: text(id),
         prompt: text("sort"),
+        icon: None,
         quantity: quantity("W", scale),
-        items: values.iter().enumerate().map(|(index, &value)| SortingItem { id: format!("s{index}"), label: text(&format!("s{index}")), value, explanation: None }).collect(),
+        items: values.iter().enumerate().map(|(index, &value)| SortingItem { id: format!("s{index}"), label: text(&format!("s{index}")), icon: None, value, explanation: None }).collect(),
         draw,
     }
 }
@@ -46,8 +48,9 @@ pub(crate) fn matching(id: &str, rows: &[(f64, f64)], draw: Option<usize>) -> Ma
         id: id.to_string(),
         title: text(id),
         prompt: text("match"),
-        dimensions: vec![Dimension { id: "load".to_string(), quantity: quantity("W/m²", Scale::Linear) }, Dimension { id: "demand".to_string(), quantity: quantity("kWh/(m²a)", Scale::Logarithmic) }],
-        items: rows.iter().enumerate().map(|(index, &(load, demand))| MatchingItem { id: format!("m{index}"), label: text(&format!("m{index}")), values: BTreeMap::from([("load".to_string(), load), ("demand".to_string(), demand)]), explanation: None }).collect(),
+        icon: None,
+        dimensions: vec![Dimension { id: "load".to_string(), quantity: quantity("W/m²", Scale::Linear), icon: None }, Dimension { id: "demand".to_string(), quantity: quantity("kWh/(m²a)", Scale::Logarithmic), icon: None }],
+        items: rows.iter().enumerate().map(|(index, &(load, demand))| MatchingItem { id: format!("m{index}"), label: text(&format!("m{index}")), icon: None, values: BTreeMap::from([("load".to_string(), load), ("demand".to_string(), demand)]), explanation: None }).collect(),
         draw,
     }
 }
@@ -80,12 +83,14 @@ fn sheet_is_a_pure_function_of_quiz_and_seed() {
 }
 
 #[test]
-fn sheet_copies_the_quiz_header_and_permutes_the_tasks() {
+fn sheet_copies_the_quiz_header_and_keeps_the_first_task_first() {
     let sheet = sheet_of(&quiz(), 3);
     assert_eq!((sheet.quiz.as_str(), sheet.seed, &sheet.title, &sheet.description), ("energy", 3, &text("Energy"), &text("About energy")));
-    let mut presented: Vec<&str> = sheet.tasks.iter().map(|task| task.id().as_str()).collect();
-    presented.sort_unstable();
-    assert_eq!(presented, ["buildings", "power", "standards"]);
+    let presented: Vec<&str> = sheet.tasks.iter().map(|task| task.id().as_str()).collect();
+    assert_eq!(presented[0], "standards");
+    let mut remaining = presented[1..].to_vec();
+    remaining.sort_unstable();
+    assert_eq!(remaining, ["buildings", "power"]);
 }
 
 #[test]
@@ -93,7 +98,8 @@ fn sheet_follows_the_rng_consumption_order() {
     let quiz = quiz();
     let seed = 12_345;
     let mut random = Mt19937::new(seed);
-    let order = shuffle(&mut random, &[0usize, 1, 2]);
+    let shuffled_order = shuffle(&mut random, &[0usize, 1, 2]);
+    let order: Vec<usize> = std::iter::once(0).chain(shuffled_order.into_iter().filter(|&index| index != 0)).collect();
     let classification_items = shuffle(&mut random, &[0usize, 1, 2, 3]);
     let categories = shuffle(&mut random, &["passive", "low", "old"]);
     let sorting_items = shuffle(&mut random, &[0usize, 1, 2, 3, 4]);
@@ -125,6 +131,17 @@ fn sheet_follows_the_rng_consumption_order() {
             }
         }
     }
+}
+
+#[test]
+fn first_defined_task_stays_first_while_remaining_tasks_are_shuffled() {
+    let mut orders = std::collections::BTreeSet::new();
+    for seed in 0..100 {
+        let sheet = sheet_of(&quiz(), seed);
+        assert_eq!(sheet.tasks[0].id(), "standards");
+        orders.insert(sheet.tasks[1..].iter().map(|task| task.id().to_string()).collect::<Vec<_>>());
+    }
+    assert!(orders.len() > 1);
 }
 
 #[test]

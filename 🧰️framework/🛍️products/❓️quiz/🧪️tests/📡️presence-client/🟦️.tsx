@@ -31,6 +31,7 @@ import {
   WATCH_INTERVAL_MS,
   cursorAt,
   homeWatchScopes,
+  PEER_LABEL_CLEARANCE_PX,
   placePeers,
   presencePlace,
   presenceView,
@@ -47,6 +48,8 @@ import {
   type QuizState,
   type QuizStep,
 } from "@semio-tech/quiz-react";
+import semioCursor from "../../../../🔨️modules/🖼️assets/👆️cursor/🖱️default/☀️light.svg?raw";
+import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
 import vectors from "../../🧫️fixtures/📡️presence-client/🔣️.json";
 
 //#region 🔌️FakeSockets
@@ -148,6 +151,7 @@ function row(rank: number, learner: string, handle: string): LeaderboardRow {
 
 const STATE: QuizState = {
   step: { screen: "home" },
+  trail: { back: [], forward: [] },
   introduced: true,
   learner: { id: ME, identity: { kind: "pseudonym", handle: "Ada" } },
   catalog: CATALOG,
@@ -155,7 +159,9 @@ const STATE: QuizState = {
   runs: {},
   awards: {},
   crowds: {},
-  leaderboard: { board: { rows: [row(1, MIRA, "Mira K."), row(2, BEN, "Ben"), row(3, ME, "Ada")] }, at: Date.UTC(2026, 8, 29, 12) },
+  asked: [],
+  board: { period: "all-time" },
+  leaderboards: { "all-time": { board: { period: "all-time", rows: [row(1, MIRA, "Mira K."), row(2, BEN, "Ben"), row(3, ME, "Ada")], learners: 3, submissions: 3, own: row(3, ME, "Ada") }, at: Date.UTC(2026, 8, 29, 12) } },
 };
 
 type Members<S> = readonly { readonly session: string; readonly colour: number; readonly state: S }[];
@@ -676,6 +682,7 @@ describe("👁️ what the screens show", () => {
     expect(cursor.hidden).toBe(false);
     expect(cursor.style.transform).toBe("translate(550px, 150px)");
     expect(cursor.textContent).toBe("Mira K.");
+    expect([...cursor.querySelectorAll(".quiz-peer-arrow path")].map((path) => path.getAttribute("d"))).toEqual([...semioCursor.matchAll(/\sd="([^"]+)"/gu)].map((match) => match[1]));
     expect((cursor.parentElement as HTMLElement).style.getPropertyValue("--quiz-peer")).toBe("var(--presence-3)");
     const focus = layer.querySelector<HTMLElement>('[data-peer="focus"]')!;
     expect([focus.style.transform, focus.style.width, focus.style.height]).toEqual(["translate(10px, 20px)", "100px", "50px"]);
@@ -752,6 +759,38 @@ describe("👁️ what the screens show", () => {
     elsewhere.remove();
   });
 
+  it("hides a name label that would cover the focused control or come closer than its clearance, and shows it again elsewhere", () => {
+    const anchor = document.createElement("section");
+    anchor.dataset.presenceAnchor = "task:masses";
+    box(anchor, { left: 0, top: 0, width: 1000, height: 600 });
+    const control = document.createElement("button");
+    box(control, { left: 400, top: 300, width: 120, height: 24 });
+    const layer = document.createElement("div");
+    layer.innerHTML = '<div data-peer="cursor" data-anchor="task:masses" data-x="0.41" data-y="0.5" hidden><span class="quiz-peer-label">Mira K.</span></div><div data-peer="cursor" data-anchor="task:masses" data-x="0.9" data-y="0.9" hidden><span class="quiz-peer-label">Ben</span></div>';
+    for (const label of layer.querySelectorAll(".quiz-peer-label")) {
+      Object.defineProperty(label, "offsetWidth", { value: 60 });
+      Object.defineProperty(label, "offsetHeight", { value: 18 });
+    }
+    document.body.append(anchor, control, layer);
+    const [near, far] = [...layer.querySelectorAll<HTMLElement>("[data-peer]")];
+    placePeers(layer);
+    expect([near!.hasAttribute("data-shy"), far!.hasAttribute("data-shy")]).toEqual([false, false]);
+    control.focus();
+    placePeers(layer);
+    expect([near!.hidden, near!.hasAttribute("data-shy"), far!.hasAttribute("data-shy")]).toEqual([false, true, false]);
+    near!.dataset.x = String((400 - 16 - 60 - PEER_LABEL_CLEARANCE_PX - 2) / 1000);
+    placePeers(layer);
+    expect(near!.hasAttribute("data-shy")).toBe(false);
+    near!.dataset.x = String((400 - 16 - 60 - PEER_LABEL_CLEARANCE_PX + 2) / 1000);
+    placePeers(layer);
+    expect(near!.hasAttribute("data-shy")).toBe(true);
+    control.blur();
+    placePeers(layer);
+    expect(near!.hasAttribute("data-shy")).toBe(false);
+    expect(stylesheet).toMatch(/\[data-shy\] > \.quiz-peer-label \{\s*visibility: hidden;/u);
+    for (const element of [anchor, control, layer]) element.remove();
+  });
+
   it("shows who is where on the learner card, learners in a quiz on its card and online marks in the leaderboard", () => {
     const view: PresenceView = presenceView(snapshot(ROSTER), quizText("en"));
     const common = { session: stubSession() as unknown as QuizSession, state: STATE, text: quizText("en"), locale: "en" as const };
@@ -777,8 +816,9 @@ describe("👁️ what the screens show", () => {
     ).toEqual(["onlineAda (you)– on the overview", "onlineBen– on the leaderboard (away)", "onlineMira K.– working on Quiz heating"]);
     const heating = screen.getByRole("region", { name: "Quiz heating" });
     expect(heating.getAttribute("data-presence-anchor")).toBe("home:quiz:heating");
-    expect(within(heating).getByText("Learning now: 1")).toBeTruthy();
-    expect(within(screen.getByRole("region", { name: "Quiz cooling" })).queryByText(/Learning now/u)).toBeNull();
+    expect(within(heating).getByText("Learning now: 1").getAttribute("aria-hidden")).toBeNull();
+    const nobody = within(screen.getByRole("region", { name: "Quiz cooling" })).getByText("Learning now: 0");
+    expect([nobody.getAttribute("aria-hidden"), nobody.classList.contains("invisible")]).toEqual(["true", true]);
     const table = screen.getAllByRole("table")[1]!;
     const names = within(table)
       .getAllByRole("rowheader")
@@ -802,6 +842,6 @@ describe("👁️ what the screens show", () => {
     const box = screen.getByRole("checkbox", { name: "Cursor der anderen anzeigen" }) as HTMLInputElement;
     expect(box.checked).toBe(false);
     fireEvent.click(box);
-    expect(onChange).toHaveBeenLastCalledWith({ theme: "dark", textSize: "large", showCursors: true, showAnswers: true, locale: undefined });
+    expect(onChange).toHaveBeenLastCalledWith({ theme: "dark", textSize: "large", showCursors: true, others: "submitted", animateIcons: true, pets: "calm", petsLiveliness: "calm", petsChosen: false, locale: undefined });
   });
 });

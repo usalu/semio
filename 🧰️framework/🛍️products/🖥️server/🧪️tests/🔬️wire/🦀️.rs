@@ -18,6 +18,7 @@ use serde_json::Value;
 use server::contract::{CommandEnvelope, CommandOutcome, CommandReceipt, EphemeralFrame, EventRecord, HybridLogicalClock, PresenceFrame, Principal, QueryConsistency, QueryEnvelope, QueryResult, Rejection, ServerInstanceDefinition, TraceContext};
 use protocol::causal::FrontierSummary;
 use server::contract::ActorKey;
+use server::gateway::{ErrorBody, ServerError};
 
 /// 🧫️ The shared contract document, read from the product root rather than copied into this target.
 const FIXTURE: &str = include_str!("../../🧫️fixtures/🔌️wire/🔣️.json");
@@ -67,6 +68,7 @@ fn every_wire_vector_round_trips_through_its_contract_type() {
             "queryResult" => round_trip::<QueryResult>(name, json),
             "serverInstanceDefinition" => round_trip::<ServerInstanceDefinition>(name, json),
             "presenceFrame" => round_trip::<PresenceFrame>(name, json),
+            "errorBody" => round_trip::<ErrorBody>(name, json),
             other => panic!("{name}: the fixture names a wire type this crate does not serve: {other}"),
         }
         covered.push(kind.to_string());
@@ -74,7 +76,32 @@ fn every_wire_vector_round_trips_through_its_contract_type() {
 
     covered.sort();
     covered.dedup();
-    assert_eq!(covered.len(), 16, "every contract type carried by a route needs at least one vector");
+    assert_eq!(covered.len(), 17, "every contract type carried by a route needs at least one vector");
+}
+
+#[test]
+fn every_error_the_gateway_answers_with_is_one_error_body() {
+    use axum::response::IntoResponse;
+    use std::time::Duration;
+    let errors = [
+        (ServerError::Unauthorized("no session".into()), 401, "unauthorized"),
+        (ServerError::Forbidden("no grant".into()), 403, "forbidden"),
+        (ServerError::NotFound("no blob".into()), 404, "notFound"),
+        (ServerError::Conflict("hash mismatch".into()), 409, "conflict"),
+        (ServerError::BadRequest("not json".into()), 400, "badRequest"),
+        (ServerError::Internal("disk".into()), 500, "internal"),
+        (ServerError::PayloadTooLarge, 413, "payloadTooLarge"),
+        (ServerError::Stalled, 408, "stalled"),
+        (ServerError::Throttled { wait: Duration::from_millis(250), allowance: None }, 429, "throttled"),
+        (ServerError::Overloaded(Duration::from_secs(1)), 503, "overloaded"),
+    ];
+    let declared: Vec<(u64, String)> = fixture()["errors"].as_array().expect("errors is an array").iter().map(|error| (error["status"].as_u64().expect("status"), error["kind"].as_str().expect("kind").to_string())).collect();
+    let answered: Vec<(u64, String)> = errors.iter().map(|(error, status, kind)| {
+        assert_eq!((error.status().as_u16(), error.kind()), (*status, *kind));
+        assert_eq!(error.clone().into_response().status().as_u16(), *status);
+        (u64::from(*status), (*kind).to_string())
+    }).collect();
+    assert_eq!(answered, declared, "the fixture's error table is the gateway's");
 }
 
 #[test]
@@ -101,24 +128,34 @@ fn vector_names_are_unique_so_a_failure_names_one_document() {
 #[test]
 fn the_declared_route_table_is_the_router_the_gateway_mounts() {
     let document = fixture();
-    let declared: Vec<(String, String)> = document["routes"]
+    let declared: Vec<(String, String, String)> = document["routes"]
         .as_array()
         .expect("routes is an array")
         .iter()
-        .map(|route| (route["method"].as_str().expect("method").to_string(), route["path"].as_str().expect("path").to_string()))
+        .map(|route| (route["method"].as_str().expect("method").to_string(), route["path"].as_str().expect("path").to_string(), route["group"].as_str().expect("group").to_string()))
         .collect();
 
     let body = GATEWAY.split_once("fn base_router<I: ServerInstance>").expect("the gateway declares base_router").1;
     let block = body.split_once("\n}").expect("base_router has a body").0;
-    let mut mounted: Vec<(String, String)> = Vec::new();
-    for line in block.lines().filter(|line| line.contains(".route(\"")) {
+    let mut mounted: Vec<(String, String, String)> = Vec::new();
+    let mut group = "core".to_string();
+    for line in block.lines() {
+        if let Some(condition) = line.trim().strip_prefix("if ").and_then(|rest| rest.strip_suffix(" {")) {
+            group = match condition.strip_prefix("groups.") {
+                Some(named) => named.to_string(),
+                None => "documents".to_string(),
+            };
+        }
+        if !line.contains(".route(\"") {
+            continue;
+        }
         let path = line.split_once(".route(\"").expect("a route call").1.split_once('"').expect("a quoted path").0.to_string();
         let verbs = line.split_once(&format!("{path}\"")).expect("the verbs follow the path").1;
         for verb in ["get", "post", "put", "head"] {
             let mut rest = verbs;
             while let Some((before, after)) = rest.split_once(&format!("{verb}(")) {
                 if !before.ends_with(|character: char| character.is_alphanumeric() || character == '_') {
-                    mounted.push((verb.to_uppercase(), path.clone()));
+                    mounted.push((verb.to_uppercase(), path.clone(), group.clone()));
                 }
                 rest = after;
             }
@@ -129,4 +166,6 @@ fn the_declared_route_table_is_the_router_the_gateway_mounts() {
     for entry in &declared {
         assert!(mounted.contains(entry), "base_router does not mount {entry:?}");
     }
+    let core: Vec<&str> = declared.iter().filter(|(_, _, group)| group == "core").map(|(_, path, _)| path.as_str()).collect();
+    assert_eq!(core, ["/instance", "/commands", "/queries", "/scopes/{scope}/presence/ws", "/actors/{tenant}/{kind}/{id}/events", "/actors/{tenant}/{kind}/{id}/events/ws"], "the routes every instance answers");
 }

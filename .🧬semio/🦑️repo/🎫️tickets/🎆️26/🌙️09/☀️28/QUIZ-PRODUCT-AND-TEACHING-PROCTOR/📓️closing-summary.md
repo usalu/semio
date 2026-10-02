@@ -119,3 +119,131 @@ at 1440 × 900: at rest the learner page is blurred behind the veil and nine com
 hovering the leaderboard glides the strip to the centre cell, hides the veil and shows the full leaderboard crisp;
 hovering "Heizen" shows the heating quiz page (description, both tasks) crisp; leaving restores the veil; fresh tab
 without console errors.
+
+## Revision 2026-09-29 (night) — sharing inside the quizzes and a live grid backdrop
+
+Design `📓️design.md` §17 (supersedes the §15 rule "never share answers or drags"); reports `📓️core-ts-report.md`,
+`📓️core-rust-report.md`, `📓️conformance-report.md` (`📊️crowd-view`), `📓️proctor-report.md` (watch, crowd),
+`📓️layered-overview-report.md` §00 (grid rest), `📓️react-report.md` (night section).
+
+- **What the others think, live**: thinking room `<catalog>/quiz/<quiz>/thinking` with `ThinkingState { tag, answers }`,
+  drafts published at most twice a second and aggregated by item id, because every learner's sheet is shuffled
+  differently. Classification shows counts per category, sorting shows the others' places and their mean, matching shows
+  the values given (`ThinkingMatchingAnswer`: values, never the publisher's card indices). Cursors in the quiz room
+  anchor to `item:<id>` / `category:<id>` and carry `drag { item }`. Bounds in both cores: 64 tasks and 64 entries,
+  no repeated sorting item, finite values.
+- **What everyone answered, persisted**: projection `CrowdView` per quiz over all submitted results (query
+  `quiz.crowd`, core `crowdView` in both cores, count keys in code-point order). Shown on the quiz page, in the run when
+  nobody else is thinking along, and as an "Everyone" column on the results page. Preference "Show what others think"
+  / "Zeigen, was die anderen denken".
+- **Live grid backdrop**: `LayeredOverview` rest mode `"grid"` with `gridTracks` (quiz 1 : 1.5 : 1 × 1 : 1.4 : 1; play and
+  demonstrator keep `"panorama"`). At rest all nine pages are mounted, live and inert, each behind its card's cell under
+  the glass; revealing a card zooms its page to full size. The framework presence socket gained `watch` (≤ 16 scopes,
+  interval ≥ tick, `watched` frames with snapshots, read-only, admission per watched scope). The home joins its room
+  and watches the page, quiz and thinking rooms at 4 Hz, so every backdrop page draws the others on its own anchors.
+- **Coordinator fix**: home asked for each quiz's crowd once at mount, so "What everyone answered" in the backdrop went
+  stale after someone else submitted. The crowds now refresh whenever the polled leaderboard counts a new submitted
+  run. Test added to `🧪️tests/🏠️home-grid`.
+- Shared fix by the react owner: `WindowChrome` silhouettes measure in the element's own pixels, so cards inside scaled
+  pages are no longer cut off.
+
+Verification (coordinator):
+- nx `test` passes for all 7 projects (quiz, quiz-react 230, quiz-rs, proctor, site, framework-server TS and Rust).
+- Parity 93/93, level exhaustive.
+- Taxonomy clean (0 errors, 0 warnings) for `❓️quiz` and `🎓️teaching`.
+- The hub still compiles against the framework `watch` change (old build-dir layout, private dir).
+- Built-in browser, two devices (`localhost` / `127.0.0.1`), 1440 × 900:
+  - all nine `[data-layered-pane]` are mounted with real content at `data-rest="grid"`; the physics backdrop page
+    shows "Learning now: 1" while the peer is in a run;
+  - in the same quiz, device 1 shows "What others think now · Thinking along: 1" with the peer's draft places per item.
+    Place 9 on the peer is shown as "⌀ place 9" on device 1's place 4; items outside device 1's draw show no hint;
+  - the peer's cursor is drawn on the same item's handle across different shuffles;
+  - after each submission, device 1's leaderboard card and backdrop page updated without a reload, and so did the
+    backdrop crowd (runs 2 → 3, after the fix);
+  - the peer's cursor is drawn inside device 1's backdrop leaderboard page and on the matching home card;
+  - results show "What everyone answered · Submitted runs: n";
+  - a fresh tab has no console errors, and the proctor log has no errors.
+- The Browser pane was hidden during the walk, so the page reported `visibilityState: hidden` and polling paused (by
+  design); the walk made it visible by overriding `document.visibilityState` in the page, for debugging only.
+
+## Revision 2026-10-02 — one dev command, end to end, ready to deploy
+
+Owner request: "Make sure that everything works end to end. Add a dev architekturundtechnologie quizze which starts
+both backend and frontend. Have everything ready to be deployed." Design `📓️design.md` §18; plan
+`📓️deploy-readiness-plan.md`.
+
+### Audits (read-only, before any change)
+
+| Report | Result |
+|---|---|
+| `📓️audit-final-requirements.md` | 12 of 15 requirements met, 3 partly (no `clip` leaf yet; nothing published; no presence before identity); 5 defects |
+| `📓️audit-deploy-security.md` | 3 blockers: learner ids readable through idempotency receipts, client ids never validated, no flood protection; 13 should, 12 notes |
+| `📓️audit-final-i18n-a11y.md` | 7 defects, 25 improvements; key sets of both languages identical |
+
+### What was built (one report per work package)
+
+- **Dev command and end-to-end gate** (`📓️dev-e2e-report.md`): `bun nx run @teaching/architecture-quiz:dev` starts the
+  proctor, waits until it is ready, then the site; one stop ends both; a proctor already running is reused. Launch row
+  `🛠️dev🏛️architektur-und-technologie❓️quizze`; site alone `…:dev-site`; the compound row is gone. `…:test-e2e` drives the
+  real site with Playwright in a dev topology and a cross-origin release rehearsal (production-mode proctor, sealed
+  Content-Security-Policy).
+- **Edge hardening** (`📓️edge-hardening-report.md`, `📓️signup-allowance-report.md`): receipts keyed per principal;
+  admission before placement; 16 KiB bodies; token buckets per address for commands, reads, socket upgrades and
+  sign-ups (1 200 at once + 100 per hour); socket and in-flight caps; WebSocket frame limits; bounded, fairly shared
+  presence; grouped commits; only the core routes; fixed public error texts. Capacity gate `@teaching/proctor:capacity`.
+- **Domain hardening** (`📓️domain-hardening-report.md`): ids and slugs validated at every door; handles normalized by the
+  server (Latin alphabet, no invisible or look-alike characters); no roster actor — one stream per handle, recall is a
+  read; caps (100 000 registrations, 1 000 runs per learner, 200 per quiz, 2 000 answers per run); leaderboard
+  `{ rows ≤ 100, learners, own? }` updated only by submissions, badges and registrations; `proctor health`, `backup`,
+  `restore`, `erase`, `prune`; undecodable events fail loudly; the real catalog's seven badges tested. Storage format v2.
+- **Deploy** (`📓️deploy-readiness-report.md`): distroless image (31.5 MB, uid 65532, read-only root, pinned bases,
+  catalog validated in the build, stack files inside); compose with dropped capabilities, limits and log rotation;
+  Caddy with body cap, timeouts, security headers and a retry window; workflow on `main` only with pinned actions and
+  an immutable `sha-<commit>` tag; Content-Security-Policy on the site; drift check and JSON Schema for
+  `🚀️deploy/🔣️.json`; readiness gate `…:deploy-check` (8 steps); runbook in the site README, section "Deploy".
+- **UI** (`📓️ui-hardening-report.md`, `📓️ui-polish-report.md`): no default language; matching and sorting keyboard
+  fixes; forced-colors rules and label contrast; confirmation before an anonymous learner switches identity; honest
+  identity wording; footer with a privacy notice and `site.legal` links; `429`/`503` as transient shortages; refused
+  sign-ups explained; no layout shift from the crowd; reflow at 200/400 % and largest text; two typecheck gates.
+- Found on the way: the site did not build from a fresh clone (two git-ignored generated sources; now dependencies of
+  the targets); `@semio-tech/assets:build` failed on Windows; the image build can crash in rustc (the Dockerfile tries
+  twice); old dev data in storage format v1 is moved aside by the dev launcher with one clear line.
+
+### Verification by the coordinator on the final tree (2026-10-02, 09:30–11:00 local time)
+
+| Gate | Result |
+|---|---|
+| `nx run-many -t test` for quiz, quiz-react, quiz-rs, proctor, site, framework-server (TS and Rust) | 7 of 7 projects pass |
+| `@semio-tech/quiz-react:typecheck`, `@teaching/architecture-quiz:typecheck` | both exit 0 |
+| Parity, level exhaustive, owner `❓️quiz` | 105/105 |
+| Taxonomy `❓️quiz`, `🎓️teaching`, `🖥️server` | clean, 0 errors, 0 warnings each |
+| `cargo check -p semio-hub --tests` (old build-dir layout) | exit 0 against the final server crate |
+| `…:deploy-check`, all 8 steps (drift, typecheck, catalog, CDN artifact, image build, image check, stack check, end-to-end gate), last run 11:10–11:32 | **pass**: `ready to deploy`, end-to-end 31 passed in the rehearsal and 31 in the dev topology; two warnings: `site.legal.imprint` and `site.legal.privacy` are not set |
+| `…:test-e2e` history of the morning | earlier runs were red because of 3–4 specs of `🧪️tests/🐕️pet-walk` (ticket QUIZ-PETS, another session), which sat in the `desktop` project and made Playwright skip `presence` and `shortage`; that session moved them into a project of their own and fixed them. This ticket's specs passed in every run except one dev-topology run that hit `net::ERR_NO_BUFFER_SPACE` (the host ran out of socket buffers while several sessions ran gates) |
+| `@teaching/proctor:capacity` (300 learners beside an abusive script, default cap) | 2 of 3 runs pass; in one run 2 of 3 162 presence joins of the hall were reset before their welcome beside the socket flood (a client reconnects; the gate counts it) |
+
+Browser walk through the new dev command (`.claude/launch.json` `architektur-und-technologie-quizze`), two devices:
+- the command moved the v1 dev data aside with one message, built and started the proctor, waited for it, started the
+  site; stopping left no process and no port;
+- a stale learner id in the browser fell back to the introduction; a Cyrillic look-alike handle was refused with the
+  character named; `"  prüferin   MÜLLER "` on the second device continued as "Prüferin Müller" with the open run;
+- an anonymous learner switching identity is told the progress cannot be continued by anyone;
+- English and German each set the document language, the title and the number format;
+- in the same quiz, device 1 saw device 2's draft values per item; when device 2 left, 0 of 10 items moved;
+- device 2's answers survived a server restart and a reload; its submission (39.7 %) reached device 1's leaderboard
+  card and page without a reload ("Learners in total: 1");
+- a fresh tab had no console error; the proctor logged no error.
+The dev server reloaded the page whenever the other session saved a file of the pets module (it is in the quiz's
+module graph); the walk therefore ran with `TEACHING_ARCHITECTURE_QUIZ_WATCH=off` (`…-steady` entry).
+
+### Not done, and what only the owner can do
+
+- Nothing was published: no `docker push`, no workflow run, no DNS. Never built: `linux/arm64`.
+- Owner steps, in order (runbook: site README "Deploy"): imprint and privacy URLs into `site.legal` of
+  `🚀️deploy/🔣️.json`; DNS for both hosts and the GitHub Pages verification record; Pages source "GitHub Actions" with
+  the custom domain; push to `main`, run the workflow, make the GHCR package public; four lines on a `linux/amd64`
+  Docker host; the verify table; the daily backup line and an uptime probe.
+- Known limits: several addresses together can fill the registration cap faster than one (41 days / addresses; `prune`
+  removes registrations nobody played under); one flooding address can halve the presence budget of a hall; plain TCP
+  connections are bounded by Caddy, not by the proctor; high-contrast mode was checked by computed styles, not by eye;
+  the navbar title ends in an ellipsis at 320 px with the largest text.

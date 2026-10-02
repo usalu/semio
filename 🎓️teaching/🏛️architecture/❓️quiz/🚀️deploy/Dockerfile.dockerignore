@@ -1,0 +1,32 @@
+# 🐳️ The build context of `Dockerfile` beside this file (BuildKit prefers `<Dockerfile>.dockerignore` over the root
+# `.dockerignore`): nothing but what the proctor build reads. Cargo needs the manifest of every workspace member, the
+# lock file of the proctor's workspace and the Rust sources; the image carries the quiz content and the stack files.
+# Everything else in the repository — the web code, the assets, the documents — stays out, so the context is small and
+# the compile layer survives every change that is not Rust. The exclusions after the admissions win over them:
+# host-local state and build output hold Rust files too.
+*
+!Cargo.toml
+!🎓️teaching/Cargo.lock
+!rust-toolchain.toml
+!.cargo
+!**/Cargo.toml
+!**/*.rs
+!🎓️teaching/**/❓️quiz/🔣️.json
+!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/compose.yaml
+!🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Caddyfile
+.git
+.jj
+.nx
+.venv
+.🧬semio
+.tmp*
+**/node_modules
+**/target
+**/🎯️target
+**/🎯️target-*
+**/📤️dist
+**/dist
+**/pkg
+**/temp
+**/🗑️generated
+♻️mit-bestand/🔎️recherche

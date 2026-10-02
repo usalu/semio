@@ -39,6 +39,11 @@ semio-framework-dispatch-macros = { path = "../../../../🔨️modules/🔀️di
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+# 🔮️ Third-party oracle of the throttle's token bucket: an independent implementation of the generic
+# cell rate algorithm, run over the same schedules as `🧫️fixtures/🚦️throttle/🔣️.json`.
+governor = { version = "0.10", default-features = false, features = ["std"] }
+# 🧪️ Drives the built router request by request in the gateway's own tests, without a listener.
+tower = { version = "0.5", features = ["util"] }
 
 # 🔒️ The cross-crate half of the `dyn_enum_close!` recipe: an integration test links `server` the
 # way hub does, so closing a set of any of the eight `impl Future + Send` ports is gated here.

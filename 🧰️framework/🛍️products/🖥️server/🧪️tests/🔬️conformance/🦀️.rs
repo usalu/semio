@@ -16,7 +16,7 @@
 
 use crate::authority::{Saga, SagaRunner};
 use crate::contract::{ActorKey, CommandEnvelope, CommandId, CommandReceipt, DeviceId, EventRecord, HybridLogicalClock, IdempotencyKey, Principal, Revision, Scope, SessionId, TenantId, TraceContext};
-use crate::storage::{content_hash, AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError};
+use crate::storage::{content_hash, AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError, TurnCommit};
 
 //#region 🔖️Fixtures
 /// 🎭️ One actor of the fixed test tenant and the `artifact` kind.
@@ -99,6 +99,47 @@ pub async fn outbox_delivers_each_entry_exactly_once(store: &mut impl AuthorityS
     store.mark_outbox_delivered(&[1, 2]).await.unwrap();
     assert!(store.pending_outbox(10).await.unwrap().is_empty());
     assert_eq!(store.mark_outbox_delivered(&[99]).await, Err(StorageError::NotFound));
+}
+
+/// 🧾️ A batch of turns lands in order with everything each turn carries — events, outbox rows,
+/// receipt, snapshot — and a turn the store refuses leaves nothing of itself behind, whether the
+/// backend commits the batch atomically (every turn answers alike) or turn by turn.
+pub async fn a_committed_batch_lands_every_turn_whole_and_a_refused_turn_not_at_all(store: &mut impl AuthorityStore) {
+    let (first, second) = (actor_key("doc-1"), actor_key("doc-2"));
+    let key = |name: &str| IdempotencyKey(name.into());
+    let (early, other, late) = ([event_record(&first, 1), event_record(&first, 2)], [event_record(&second, 1)], [event_record(&first, 3)]);
+    let queued = [OutboxEntry::pending(first.clone(), early[1].clone())];
+    let (first_receipt, second_receipt, third_receipt) = (receipt_for(&first, 2), receipt_for(&second, 1), receipt_for(&first, 3));
+    let (first_key, second_key, third_key) = (key("k1"), key("k2"), key("k3"));
+    let fates = store
+        .commit(&[
+            TurnCommit { actor: &first, events: &early, outbox: &queued, receipt: Some((&first_key, &first_receipt)), snapshot: None },
+            TurnCommit { actor: &second, events: &other, outbox: &[], receipt: Some((&second_key, &second_receipt)), snapshot: Some((Revision(1), &[7, 7])) },
+            TurnCommit { actor: &first, events: &late, outbox: &[], receipt: Some((&third_key, &third_receipt)), snapshot: None },
+        ])
+        .await;
+    assert_eq!(fates, [Ok(()), Ok(()), Ok(())]);
+    assert_eq!(store.events_since(&first, 0).await.unwrap().iter().map(|record| record.seq).collect::<Vec<_>>(), [1, 2, 3], "a later turn of the batch appends after an earlier one");
+    assert_eq!(store.last_seq(&second).await.unwrap(), 1);
+    assert_eq!(store.receipt(&third_key).await.unwrap(), Some(third_receipt));
+    assert_eq!(store.receipt(&second_key).await.unwrap(), Some(second_receipt));
+    assert_eq!(store.snapshot(&second).await.unwrap(), Some((Revision(1), vec![7, 7])));
+    assert_eq!(store.pending_outbox(10).await.unwrap().iter().map(|entry| entry.event.as_ref().map(|event| event.seq)).collect::<Vec<_>>(), [Some(2)]);
+
+    let (fourth, gap) = ([event_record(&first, 4)], [event_record(&second, 5)]);
+    let (fourth_receipt, gap_receipt) = (receipt_for(&first, 4), receipt_for(&second, 5));
+    let (fourth_key, gap_key) = (key("k4"), key("k5"));
+    let fates = store
+        .commit(&[TurnCommit { actor: &first, events: &fourth, outbox: &[], receipt: Some((&fourth_key, &fourth_receipt)), snapshot: None }, TurnCommit { actor: &second, events: &gap, outbox: &[], receipt: Some((&gap_key, &gap_receipt)), snapshot: None }])
+        .await;
+    assert_eq!(fates.len(), 2);
+    assert!(fates[1].is_err(), "a turn that is not contiguous with its stream is refused");
+    assert_eq!(store.last_seq(&second).await.unwrap(), 1);
+    assert_eq!(store.receipt(&gap_key).await.unwrap(), None, "a refused turn binds no receipt");
+    match &fates[0] {
+        Ok(()) => assert_eq!((store.last_seq(&first).await.unwrap(), store.receipt(&fourth_key).await.unwrap()), (4, Some(fourth_receipt)), "a turn answered durable is wholly there"),
+        Err(_) => assert_eq!((store.last_seq(&first).await.unwrap(), store.receipt(&fourth_key).await.unwrap()), (3, None), "a turn answered refused left nothing"),
+    }
 }
 
 /// 🎟️ Taking a lease from another holder bumps the epoch and fences the previous one out for good.

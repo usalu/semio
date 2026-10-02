@@ -56,13 +56,13 @@ fn presence_states_are_admitted_only_with_a_tag_a_valid_handle_and_a_complete_pl
     for bad in ["", "0a1b2c3", "0A1B2C3D", "0a1b2c3g", "0a1b2c3d4"] {
         assert_eq!(presence_problem(&presence(bad, Identity::Anonymous, place(Screen::Home, None, None))), Some(problem("/tag", IssueCode::TagInvalid)), "{bad}");
     }
-    for handle in [String::new(), "ü".repeat(65)] {
-        assert_eq!(presence_problem(&presence(&tag, Identity::Pseudonym { handle }, place(Screen::Home, None, None))), Some(problem("/identity/handle", IssueCode::LengthInvalid)));
+    for handle in [String::new(), "ü".repeat(65), " Ada".to_string(), "A\u{200b}da".to_string(), "\u{202e}adA".to_string(), "Ade\u{301}".to_string(), "\u{410}da".to_string()] {
+        assert_eq!(presence_problem(&presence(&tag, Identity::Pseudonym { handle }, place(Screen::Home, None, None))), Some(problem("/identity/handle", IssueCode::HandleInvalid)));
     }
     assert_eq!(presence_problem(&presence(&tag, Identity::Anonymous, place(Screen::Results, Some("Physics"), None))), Some(problem("/place/quiz", IssueCode::SlugInvalid)));
     assert_eq!(presence_problem(&presence(&tag, Identity::Anonymous, place(Screen::Run, Some("physics"), Some("Power")))), Some(problem("/place/task", IssueCode::SlugInvalid)));
     assert_eq!(presence_problem(&presence(&tag, Identity::Anonymous, place(Screen::Run, None, Some("power")))), Some(problem("/place/quiz", IssueCode::Required)));
-    assert_eq!(presence_problem(&presence("nope", Identity::Name { handle: String::new() }, place(Screen::Run, None, None))), Some(problem("/identity/handle", IssueCode::LengthInvalid)));
+    assert_eq!(presence_problem(&presence("nope", Identity::Name { handle: String::new() }, place(Screen::Run, None, None))), Some(problem("/identity/handle", IssueCode::HandleInvalid)));
 }
 
 #[test]
@@ -208,6 +208,27 @@ fn thinking_states_share_draft_answers_within_bounds() {
     }
     assert_eq!(thinking_issues(&infinite), [problem("/answers/buildings/values/load/m1", IssueCode::TypeInvalid), problem("/answers/buildings/values/load/m2", IssueCode::TypeInvalid)]);
     assert!(serde_json::from_value::<ThinkingState>(json!({"tag": "0a1b2c3d", "answers": {"buildings": {"kind": "matching", "assignments": {"load": {"m0": 0}}}}})).is_err(), "card indices are publisher-local and never shared");
+}
+
+#[test]
+fn thinking_sorting_drafts_carry_guesses_validated_like_values() {
+    let guessed = thinking(&json!({"power": {"kind": "sorting", "order": ["s1", "s0"], "guesses": {"s0": 90, "s1": 4.5}}}));
+    assert_eq!(thinking_problem(&guessed), None, "the order of guesses is not checked on drafts");
+    assert_eq!(thinking_problem(&thinking(&json!({"power": {"kind": "sorting", "order": [], "guesses": {}}}))), None);
+    let slugs = thinking(&json!({"power": {"kind": "sorting", "order": ["s0"], "guesses": {"S0": 1, "s-1": 2}}}));
+    assert_eq!(thinking_issues(&slugs), [problem("/answers/power/guesses/S0", IssueCode::SlugInvalid)]);
+    let mut infinite = thinking(&json!({"power": {"kind": "sorting", "order": ["s0"], "guesses": {"s0": 1}}}));
+    if let Some(ThinkingAnswer::Sorting(answer)) = infinite.answers.get_mut("power") {
+        answer.guesses.insert("s1".to_string(), f64::NAN);
+        answer.guesses.insert("s2".to_string(), f64::NEG_INFINITY);
+    }
+    assert_eq!(thinking_issues(&infinite), [problem("/answers/power/guesses/s1", IssueCode::TypeInvalid), problem("/answers/power/guesses/s2", IssueCode::TypeInvalid)]);
+    let many: serde_json::Map<String, serde_json::Value> = (0..=THINKING_LIMIT).map(|index| (format!("s{index}"), json!(index as f64 * 1.5))).collect();
+    assert_eq!(thinking_issues(&thinking(&json!({"power": {"kind": "sorting", "order": [], "guesses": many}}))), [problem("/answers/power/guesses", IssueCode::TooMany)]);
+    let at_limit: serde_json::Map<String, serde_json::Value> = (0..THINKING_LIMIT).map(|index| (format!("s{index}"), json!(index as f64 * 1.5))).collect();
+    assert_eq!(thinking_problem(&thinking(&json!({"power": {"kind": "sorting", "order": [], "guesses": at_limit}}))), None);
+    assert!(serde_json::from_value::<ThinkingState>(json!({"tag": "0a1b2c3d", "answers": {"power": {"kind": "sorting", "order": [], "guesses": {"s0": "9"}}}})).is_err());
+    assert!(serde_json::from_value::<ThinkingState>(json!({"tag": "0a1b2c3d", "answers": {"power": {"kind": "classification", "assignments": {}, "guesses": {}}}})).is_err());
 }
 
 #[test]

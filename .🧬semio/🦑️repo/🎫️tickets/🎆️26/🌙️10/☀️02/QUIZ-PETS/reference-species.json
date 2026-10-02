@@ -1,0 +1,85 @@
+{
+  "id": "blobby",
+  "name": { "en": "Blobby, the blob", "de": "Blobby, der Klecks" },
+  "thing": { "en": "blob", "de": "Klecks" },
+  "grounds": ["reference rig of the QUIZ-PETS ticket; not part of any menagerie"],
+  "size": { "width": 40, "height": 30 },
+  "palette": { "body": "#1e9b8d", "accent": "#34d1bf", "detail": "#fa9500" },
+  "bones": [
+    { "id": "root", "x": 0, "y": 0 },
+    { "id": "body", "parent": "root", "x": 0, "y": -16 },
+    { "id": "leg-left", "parent": "body", "x": -6, "y": 9 },
+    { "id": "leg-right", "parent": "body", "x": 6, "y": 9 },
+    { "id": "arm-left", "parent": "body", "x": -13, "y": 0, "rotation": 20 },
+    { "id": "arm-right", "parent": "body", "x": 13, "y": 0, "rotation": -20 },
+    { "id": "tuft", "parent": "body", "x": 0, "y": -13 }
+  ],
+  "parts": [
+    { "id": "leg-left", "bone": "leg-left", "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 0, "y2": 6 }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
+    { "id": "leg-right", "bone": "leg-right", "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 0, "y2": 6 }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
+    { "id": "arm-left", "bone": "arm-left", "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": -6, "y2": 0 }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
+    { "id": "arm-right", "bone": "arm-right", "shape": { "kind": "line", "x1": 0, "y1": 0, "x2": 6, "y2": 0 }, "fill": "none", "stroke": "ink", "strokeWidth": 3 },
+    { "id": "tuft", "bone": "tuft", "shape": { "kind": "path", "d": "M -3 0 Q -2 -6 0 -2 Q 2 -7 3 0 Z" }, "fill": "detail", "stroke": "ink", "strokeWidth": 1.5 },
+    { "id": "body", "bone": "body", "shape": { "kind": "ellipse", "cx": 0, "cy": 0, "rx": 14, "ry": 12 }, "fill": "body", "stroke": "ink" },
+    { "id": "belly", "bone": "body", "shape": { "kind": "ellipse", "cx": 0, "cy": 5, "rx": 7, "ry": 4 }, "fill": "accent", "stroke": "none" }
+  ],
+  "face": {
+    "eyes": [
+      { "id": "eye-left", "bone": "body", "x": -5, "y": -3, "radius": 3.5, "pupil": 1.6 },
+      { "id": "eye-right", "bone": "body", "x": 5, "y": -3, "radius": 3.5, "pupil": 1.6 }
+    ],
+    "mouth": { "bone": "body", "x": 0, "y": 3, "width": 6 }
+  },
+  "clips": [
+    {
+      "id": "breathe",
+      "seconds": 3,
+      "loop": true,
+      "tracks": [
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 1.05, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 1 }] },
+        { "bone": "body", "channel": "scaleX", "keys": [{ "at": 0, "value": 1, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 0.98, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 1 }] }
+      ]
+    },
+    {
+      "id": "stroll",
+      "seconds": 0.6,
+      "loop": true,
+      "tracks": [
+        { "bone": "leg-left", "channel": "rotation", "keys": [{ "at": 0, "value": 28 }, { "at": 0.5, "value": -28 }, { "at": 1, "value": 28 }] },
+        { "bone": "leg-right", "channel": "rotation", "keys": [{ "at": 0, "value": -28 }, { "at": 0.5, "value": 28 }, { "at": 1, "value": -28 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 0 }, { "at": 0.25, "value": -1.5 }, { "at": 0.5, "value": 0 }, { "at": 0.75, "value": -1.5 }, { "at": 1, "value": 0 }] },
+        { "bone": "arm-left", "channel": "rotation", "keys": [{ "at": 0, "value": -15 }, { "at": 0.5, "value": 15 }, { "at": 1, "value": -15 }] },
+        { "bone": "arm-right", "channel": "rotation", "keys": [{ "at": 0, "value": -15 }, { "at": 0.5, "value": 15 }, { "at": 1, "value": -15 }] }
+      ]
+    },
+    {
+      "id": "wiggle",
+      "seconds": 1.2,
+      "loop": false,
+      "tracks": [
+        { "bone": "body", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.2, "value": -9 }, { "at": 0.5, "value": 9 }, { "at": 0.8, "value": -5 }, { "at": 1, "value": 0 }] },
+        { "bone": "tuft", "channel": "rotation", "keys": [{ "at": 0, "value": 0 }, { "at": 0.3, "value": 20 }, { "at": 0.6, "value": -20 }, { "at": 1, "value": 0 }] }
+      ]
+    },
+    {
+      "id": "wave",
+      "seconds": 1.4,
+      "loop": false,
+      "tracks": [
+        { "bone": "arm-right", "channel": "rotation", "keys": [{ "at": 0, "value": 0, "ease": [0.3, 0, 0.2, 1] }, { "at": 0.25, "value": -70 }, { "at": 0.45, "value": -40 }, { "at": 0.65, "value": -70 }, { "at": 0.85, "value": -40, "ease": [0.3, 0, 0.2, 1] }, { "at": 1, "value": 0 }] }
+      ]
+    },
+    {
+      "id": "doze",
+      "seconds": 5,
+      "loop": true,
+      "tracks": [
+        { "bone": "body", "channel": "scaleY", "keys": [{ "at": 0, "value": 0.94, "ease": [0.4, 0, 0.6, 1] }, { "at": 0.5, "value": 0.99, "ease": [0.4, 0, 0.6, 1] }, { "at": 1, "value": 0.94 }] },
+        { "bone": "body", "channel": "y", "keys": [{ "at": 0, "value": 1.5 }, { "at": 1, "value": 1.5 }] }
+      ]
+    }
+  ],
+  "repertoire": { "idle": ["breathe"], "walk": ["stroll"], "fidget": ["wiggle"], "greet": ["wave"], "sleep": ["doze"] },
+  "locomotion": { "gait": "walk", "speed": 36 },
+  "temperament": { "energy": 0.6, "sociability": 0.7, "curiosity": 0.6 }
+}

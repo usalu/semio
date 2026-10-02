@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../../../../🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": { "tsBuildInfoFile": "./🗑️generated/deploy-retarget.tsbuildinfo" },
+  "include": [
+    "../../../../../../../🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📜️script.ts",
+    "../../../../../../../🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/**/*.ts",
+    "../../../../../../../🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🧪️deploy/**/*.ts"
+  ]
+}

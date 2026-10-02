@@ -157,6 +157,18 @@ impl OutboxEntry {
     }
 }
 
+/// ✅️ Everything one accepted turn makes durable: the events appended to its actor's stream, the
+/// outbox rows they queue, the receipt bound to the command's idempotency key (when it carries one)
+/// and, when the actor is due one, the snapshot of its state at the new revision.
+#[derive(Clone, Copy, Debug)]
+pub struct TurnCommit<'a> {
+    pub actor: &'a ActorKey,
+    pub events: &'a [EventRecord],
+    pub outbox: &'a [OutboxEntry],
+    pub receipt: Option<(&'a IdempotencyKey, &'a CommandReceipt)>,
+    pub snapshot: Option<(Revision, &'a [u8])>,
+}
+
 /// 🏛️ The authoritative state of a server: command inbox, per-actor event streams, snapshots,
 /// transactional outbox and actor leases. The one role whose data cannot be regenerated.
 /// **Send futures, declared not inferred.** Every method of this port returns
@@ -182,6 +194,30 @@ pub trait AuthorityStore: Send + Sync {
     /// must carry `actor` as its stream and a sequence exactly one past its predecessor, starting at
     /// `last_seq + 1`; anything else is a [`StorageError::SequenceGap`] and nothing is written.
     fn append_events(&mut self, actor: &ActorKey, events: &[EventRecord], outbox: &[OutboxEntry]) -> impl Future<Output = Result<u64, StorageError>> + Send;
+
+    /// 🧾️ Makes a batch of turns durable, in order, and answers each turn's fate. A backend that
+    /// can, writes the whole batch as ONE atomic, durable write — every turn answers alike, and a
+    /// burst of commands costs one flush instead of one per command; that is what an authority
+    /// under load needs, and a durable backend should override this method for it. The provided
+    /// body commits turn by turn through the other methods: events and outbox, then the receipt,
+    /// then the snapshot (an accelerator, whose refusal fails nothing); a later turn of an actor
+    /// whose earlier turn failed fails on its sequence gap.
+    fn commit(&mut self, turns: &[TurnCommit<'_>]) -> impl Future<Output = Vec<Result<(), StorageError>>> + Send {
+        async move {
+            let mut fates = Vec::with_capacity(turns.len());
+            for turn in turns {
+                let mut fate = self.append_events(turn.actor, turn.events, turn.outbox).await.map(|_| ());
+                if let (Ok(()), Some((key, receipt))) = (&fate, turn.receipt) {
+                    fate = self.record_receipt(key, receipt).await;
+                }
+                if let (Ok(()), Some((revision, bytes))) = (&fate, turn.snapshot) {
+                    let _ = self.put_snapshot(turn.actor, revision, bytes.to_vec()).await;
+                }
+                fates.push(fate);
+            }
+            fates
+        }
+    }
 
     /// 📜️ Every event of `actor` with a sequence strictly greater than `since`, in order.
     fn events_since(&self, actor: &ActorKey, since: u64) -> impl Future<Output = Result<Vec<EventRecord>, StorageError>> + Send;

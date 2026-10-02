@@ -9,15 +9,21 @@ import {
   catalogIssues,
   catalogView,
   decideLearner,
-  decideRoster,
+  commandRejection,
+  decideHandle,
   earnedBadges,
   emptyLearnerState,
-  emptyRosterState,
+  emptyHandleState,
   evolveLearner,
-  evolveRoster,
+  evolveHandle,
+  handleActorId,
+  queryRejection,
+  registrationRejection,
+  transcript,
   fnv1a32,
   leaderboard,
   learnerView,
+  periodWindow,
   normalizeHandle,
   quizIssues,
   runSeed,
@@ -41,6 +47,11 @@ import {
   type Event,
   type IdentifyLearnerCommand,
   type LearnerState,
+  type Limits,
+  type Query,
+  type Transcript,
+  type LeaderboardPeriod,
+  LEADERBOARD_PERIODS,
   type LoadedQuiz,
   type Quiz,
   type RunResult,
@@ -157,14 +168,40 @@ describe("🏅️badge-rules", () => {
 });
 
 describe("🏆️leaderboard", () => {
-  const fixture = vectors<{ catalog: Catalog; quizzes: Quiz[]; vectors: { id: string; learners: { learner: string; events: Event[] }[]; expected: { learnerViews: Record<string, unknown>; leaderboard: unknown } }[] }>("🏆️leaderboard");
+  type Caller = { id: string; learner?: string };
+  type Board = { id: string; period: LeaderboardPeriod; quiz?: string; at: number };
+  const fixture = vectors<{
+    catalog: Catalog;
+    quizzes: Quiz[];
+    windows: { id: string; at: number; expected: Record<LeaderboardPeriod, unknown> }[];
+    vectors: { id: string; learners: { learner: string; events: Event[] }[]; callers: Caller[]; boards: Board[]; expected: { learnerViews: Record<string, unknown>; leaderboards: Record<string, Record<string, unknown>> } }[];
+    crowd: { transcripts: Transcript[]; board: Board; cuts: { id: string; learners: number; callers: Caller[]; expected: Record<string, { rows: string[]; learners: number; own: string | null }> }[] };
+  }>("🏆️leaderboard");
   const view = catalogView(fixture.catalog, fixture.quizzes);
 
-  it("reproduces every committed learner view and leaderboard", () => {
+  it("reproduces every committed learner view and every committed leaderboard as every committed caller is answered", () => {
     for (const vector of fixture.vectors) {
       const states = vector.learners.map((learner) => learner.events.reduce(evolveLearner, emptyLearnerState(learner.learner)));
       for (const state of states) expectClose(learnerView(state, view), vector.expected.learnerViews[state.learner], `${vector.id}/${state.learner}`);
-      expectClose(leaderboard(states, view), vector.expected.leaderboard, vector.id);
+      const transcripts = states.flatMap((state) => transcript(state) ?? []);
+      expect(vector.boards.length).toBeGreaterThan(0);
+      for (const board of vector.boards) for (const caller of vector.callers) expectClose(leaderboard(transcripts, view, board, board.at, caller.learner), vector.expected.leaderboards[board.id]![caller.id], `${vector.id}/${board.id}/${caller.id}`);
+    }
+  });
+
+  it("spans the committed window of every period around every committed instant", () => {
+    expect(fixture.windows.length).toBeGreaterThan(0);
+    for (const vector of fixture.windows) for (const period of LEADERBOARD_PERIODS) expect(periodWindow(period, vector.at) ?? null, `${vector.id}/${period}`).toEqual(vector.expected[period]);
+  });
+
+  it("cuts every committed crowd at the top rows, counts its learners and finds every committed caller", () => {
+    expect(fixture.crowd.cuts.length).toBeGreaterThan(0);
+    for (const vector of fixture.crowd.cuts) {
+      for (const caller of vector.callers) {
+        const board = leaderboard(fixture.crowd.transcripts.slice(0, vector.learners), view, fixture.crowd.board, fixture.crowd.board.at, caller.learner);
+        const place = (row: { rank: number; tag: string }): string => `${row.rank}:${row.tag}`;
+        expect({ rows: board.rows.map(place), learners: board.learners, own: board.own ? place(board.own) : null }, `${vector.id}/${caller.id}`).toEqual(vector.expected[caller.id]);
+      }
     }
   });
 
@@ -223,41 +260,62 @@ describe("👥️shared-presence", () => {
   });
 });
 
+describe("🪪️identity-shapes", () => {
+  const fixture = vectors<{
+    handles: { id: string; handle: string; expected: { display: string; key: string; actor: string } | null }[];
+    shapes: { id: string; definition: "Command" | "Query"; document: Command | Query; expected: string | null }[];
+  }>("🪪️identity-shapes");
+
+  it("normalises every committed handle to its display, key and stream id, or refuses it", () => {
+    expect(fixture.handles.length).toBeGreaterThan(0);
+    for (const vector of fixture.handles) {
+      const normalized = normalizeHandle(vector.handle);
+      expect(normalized ? { ...normalized, actor: handleActorId(normalized.key) } : null, vector.id).toEqual(vector.expected);
+    }
+  });
+
+  it("refuses every committed command and query with a malformed id", () => {
+    expect(fixture.shapes.length).toBeGreaterThan(0);
+    for (const vector of fixture.shapes) expect((vector.definition === "Command" ? commandRejection(vector.document as Command) : queryRejection(vector.document as Query)) ?? null, vector.id).toBe(vector.expected);
+  });
+});
+
 describe("🧾️learner-lifecycle", () => {
   type Step = { command: Command; now: number; revisions?: Record<string, string>; expected: unknown };
+  type Claims = { id: string; key: string; steps: Step[] }[];
+  type Sequences = { id: string; learner: string; given: Event[]; limits?: Limits; steps: Step[]; views?: { runs: string[]; expected: { learner: unknown; runs: Record<string, unknown> } } }[];
   const fixture = vectors<{
     catalog: Catalog;
     quizzes: Quiz[];
     revisions: Record<string, string>;
-    handles: { id: string; handle: string; expected: { display: string; key: string } | null }[];
-    roster: { id: string; steps: Step[] }[];
-    learners: { id: string; learner: string; given: Event[]; steps: Step[]; views?: { runs: string[]; expected: { learner: unknown; runs: Record<string, unknown> } } }[];
+    limits: Limits;
+    registrations: Claims;
+    quotas: { id: string; learners: number; limits: Limits; expected: string | null }[];
+    learners: Sequences;
+    malformed: { registrations: Claims; learners: Sequences };
   }>("🧾️learner-lifecycle");
   const loaded = (revisions: Record<string, string>): Record<string, LoadedQuiz> => Object.fromEntries(fixture.quizzes.map((quiz) => [quiz.id, { quiz, revision: revisions[quiz.id]! }]));
 
-  it("normalises every committed handle", () => {
-    for (const vector of fixture.handles) expect(normalizeHandle(vector.handle) ?? null, vector.id).toEqual(vector.expected);
-  });
-
-  it("decides every committed roster step", () => {
-    for (const vector of fixture.roster) {
-      let state = emptyRosterState();
+  it("decides every committed registration of a handle key and every committed learner count", () => {
+    for (const vector of [...fixture.registrations, ...fixture.malformed.registrations]) {
+      let state = emptyHandleState(vector.key);
       for (const [index, step] of vector.steps.entries()) {
-        const decision = decideRoster(state, step.command as IdentifyLearnerCommand, step.now);
+        const decision = decideHandle(state, step.command as IdentifyLearnerCommand, step.now);
         expectClose(decision, step.expected, `${vector.id}/${index}`);
-        if ("events" in decision) state = decision.events.reduce(evolveRoster, state);
+        if ("events" in decision) state = decision.events.reduce(evolveHandle, state);
       }
     }
+    for (const vector of fixture.quotas) expect(registrationRejection(vector.learners, vector.limits) ?? null, vector.id).toBe(vector.expected);
   });
 
   it("decides every committed learner step and serves the committed views", () => {
     const view = catalogView(fixture.catalog, fixture.quizzes);
-    for (const vector of fixture.learners) {
+    for (const vector of [...fixture.learners, ...fixture.malformed.learners]) {
       let state: LearnerState = vector.given.reduce(evolveLearner, emptyLearnerState(vector.learner));
       let revisions = { ...fixture.revisions };
       for (const [index, step] of vector.steps.entries()) {
         revisions = { ...revisions, ...step.revisions };
-        const decision = decideLearner(state, step.command as Exclude<Command, IdentifyLearnerCommand>, { now: step.now, catalog: fixture.catalog, quizzes: loaded(revisions) });
+        const decision = decideLearner(state, step.command, { now: step.now, catalog: fixture.catalog, quizzes: loaded(revisions), limits: vector.limits ?? fixture.limits });
         expectClose(decision, step.expected, `${vector.id}/${index}`);
         if ("events" in decision) state = decision.events.reduce(evolveLearner, state);
       }

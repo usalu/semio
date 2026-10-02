@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/architecture-quiz-typecheck.tsbuildinfo",
+    "types": ["bun", "react", "react-dom", "vite/client"],
+    "paths": {
+      "@semio-tech/quiz-react": ["../../../../../🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
+      "@semio-tech/quiz": ["../../../../../🧰️framework/🛍️products/❓️quiz/📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/pets-react": ["../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
+      "@semio-tech/pets": ["../../../../../🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/framework": ["../../../../../🧰️framework/📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/framework-server": ["../../../../../🧰️framework/🛍️products/🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/ui-react/i18n": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts"],
+      "@semio-tech/ui-react/chrome": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts"],
+      "@semio-tech/ui-react": ["../../../../../🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"]
+    }
+  },
+  "include": ["./📜️script.ts", "../../🟦️.ts", "../../🏗️builder/**/*.ts", "../../🧱️stack/**/*.ts", "../../🚀️deploy/**/*.ts", "../../🎭️e2e/**/*.ts", "../../🧪️tests/**/*.ts"],
+  "exclude": ["**/node_modules/**"]
+}

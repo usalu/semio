@@ -1,6 +1,6 @@
 {
-  "schema": "semio.quiz.crowd-client/v1",
-  "description": "What the others think, as the web client shows it (design §17). A crowd is live while anyone else thinks along in the quiz (one learner per tag, counted by distinct tags), else the submitted runs once there is one, else none. Live item crowds come from the others' drafts aggregated for the viewer's sheet task, submitted ones from the crowd view; both are keyed by item id in the viewer's sheet order (the submitted view's order for submitted crowds). Choices by category or value are ordered by count descending, then by value numerically when both keys are numbers, else by code point — a crowd view's keys arrive in code point order (`120` before `8`) and are re-sorted for display. Positions of a sorting are normalized (0 smallest … 1 largest), live one per learner by tag, submitted their mean; the place shown is `1 + position × (total − 1)` to one decimal. A draft is the learner's own answer in the form peers read: classification and sorting unchanged, matching card indices replaced by the card values; an answer that does not fit its sheet task is no draft.",
+  "schema": "semio.quiz.crowd-client/v2",
+  "description": "What everyone answered, as the web client shows it (design §20). WHEN: `gates` is the whole truth table of the gate — the learner's choice of when the others show (never, once submitted, always), the place (a run, the page of a quiz, the results of a run), whether the learner asked to see them now and whether the learner has submitted a run of the quiz: `off` never shows, `open` shows, `asked` shows because of the ask, `locked` does not show yet and offers the ask. HOW: `figures` are the answers of one sheet task as a figure — the rows are the items of the viewer's sheet (a sorting in the viewer's own order once there is one, by own position once there is a result), the columns the categories in sheet order, the places 0 … m − 1 of a sorting, or every value on the sheet's cards, in the submitted counts or in a draft, ascending numerically (a crowd view's keys arrive in code point order, `120` before `8`); a cell holds the count of the submitted runs under that key, its share of the item's answers (0 while nobody answered), the tags of the others thinking it right now (one draft per tag, a sorting draft at the place its normalized position rounds half up to), and whether it is the viewer's own answer or — with a result — the correct one; a sorting row carries the place `1 + meanPosition × (m − 1)` to one decimal. `vector.crowd` says whether the submitted `view` is known, `thinking` which of `others` think along, `answer` and `result` whether the viewer's answer and its scored result are given. `scores` are the score figures: the ten bins (none known: ten zeros), how many runs they hold, the tallest bin and the bin of the viewer's own score. `shares` is how a share reads in each language: whole percent, but never nothing for something nor everything for less. `livePlaces` is the place a normalized position falls on, `places` the place a mean position reads as. A draft is the learner's own answer in the form peers read: classification and sorting unchanged, matching card indices replaced by the card values; an answer that does not fit its sheet task is no draft.",
   "quiz": {
     "schema": "semio.quiz/v1",
     "id": "household",
@@ -114,121 +114,24 @@
         "lamps": { "kind": "matching", "values": { "power": { "led": 120, "halogen": 120 } } }
       }
     },
-    {
-      "tag": "0000000c",
-      "answers": {
-        "heat": { "kind": "classification", "assignments": { "kettle": "energy" } },
-        "lamps": { "kind": "matching", "values": { "power": { "led": 2000 } } }
-      }
-    }
-  ],
-  "live": [
-    {
-      "id": "classification-by-category",
-      "task": "heat",
-      "dimension": null,
-      "expected": [
-        {
-          "item": "kettle",
-          "answers": 3,
-          "tags": ["0000000a", "0000000b", "0000000c"],
-          "choices": [
-            { "key": "power", "count": 2, "tags": ["0000000a", "0000000b"] },
-            { "key": "energy", "count": 1, "tags": ["0000000c"] }
-          ],
-          "positions": []
-        },
-        {
-          "item": "fridge",
-          "answers": 2,
-          "tags": ["0000000a", "0000000b"],
-          "choices": [
-            { "key": "energy", "count": 1, "tags": ["0000000a"] },
-            { "key": "power", "count": 1, "tags": ["0000000b"] }
-          ],
-          "positions": []
-        },
-        { "item": "candle", "answers": 1, "tags": ["0000000a"], "choices": [{ "key": "power", "count": 1, "tags": ["0000000a"] }], "positions": [] }
-      ]
-    },
-    {
-      "id": "sorting-positions-per-learner",
-      "task": "masses",
-      "dimension": null,
-      "expected": [
-        {
-          "item": "horse",
-          "answers": 2,
-          "tags": ["0000000a", "0000000b"],
-          "choices": [],
-          "positions": [
-            { "position": 1, "tag": "0000000a" },
-            { "position": 1, "tag": "0000000b" }
-          ]
-        },
-        {
-          "item": "mouse",
-          "answers": 2,
-          "tags": ["0000000a", "0000000b"],
-          "choices": [],
-          "positions": [
-            { "position": 0, "tag": "0000000a" },
-            { "position": 0.5, "tag": "0000000b" }
-          ]
-        },
-        {
-          "item": "cat",
-          "answers": 2,
-          "tags": ["0000000a", "0000000b"],
-          "choices": [],
-          "positions": [
-            { "position": 0.5, "tag": "0000000a" },
-            { "position": 0, "tag": "0000000b" }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "matching-values-numerically",
-      "task": "lamps",
-      "dimension": "power",
-      "expected": [
-        {
-          "item": "led",
-          "answers": 3,
-          "tags": ["0000000a", "0000000b", "0000000c"],
-          "choices": [
-            { "key": "8", "count": 1, "tags": ["0000000a"] },
-            { "key": "120", "count": 1, "tags": ["0000000b"] },
-            { "key": "2000", "count": 1, "tags": ["0000000c"] }
-          ],
-          "positions": []
-        },
-        { "item": "halogen", "answers": 2, "tags": ["0000000a", "0000000b"], "choices": [{ "key": "120", "count": 2, "tags": ["0000000a", "0000000b"] }], "positions": [] },
-        { "item": "floodlight", "answers": 1, "tags": ["0000000a"], "choices": [{ "key": "2000", "count": 1, "tags": ["0000000a"] }], "positions": [] }
-      ]
-    },
-    {
-      "id": "matching-unknown-dimension",
-      "task": "lamps",
-      "dimension": "brightness",
-      "expected": []
-    }
+    { "tag": "0000000c", "answers": { "heat": { "kind": "classification", "assignments": { "kettle": "energy" } }, "lamps": { "kind": "matching", "values": { "power": { "led": 2000 } } } } }
   ],
   "view": {
     "quiz": "household",
-    "runs": 3,
+    "runs": 4,
+    "scores": [0, 0, 0, 1, 0, 1, 0, 0, 1, 1],
     "tasks": [
       {
         "task": "heat",
         "kind": "classification",
+        "scores": [0, 0, 0, 1, 0, 0, 1, 0, 0, 2],
         "items": [
           {
             "item": "kettle",
-            "answers": 3,
+            "answers": 4,
             "counts": [
               { "key": "energy", "count": 1 },
-              { "key": "power", "count": 2 }
+              { "key": "power", "count": 3 }
             ]
           },
           { "item": "candle", "answers": 1, "counts": [{ "key": "power", "count": 1 }] }
@@ -237,16 +140,18 @@
       {
         "task": "masses",
         "kind": "sorting",
+        "scores": [1, 0, 0, 0, 0, 1, 0, 0, 0, 2],
         "items": [
-          { "item": "mouse", "answers": 2, "meanPosition": 0.25 },
-          { "item": "cat", "answers": 2, "meanPosition": 0.25 },
-          { "item": "horse", "answers": 2, "meanPosition": 1 }
+          { "item": "mouse", "answers": 4, "meanPosition": 0.25, "places": [2, 2, 0] },
+          { "item": "cat", "answers": 4, "meanPosition": 0.375, "places": [2, 1, 1] },
+          { "item": "horse", "answers": 4, "meanPosition": 0.875, "places": [0, 1, 3] }
         ]
       },
       {
         "task": "lamps",
         "kind": "matching",
         "dimension": "power",
+        "scores": [0, 0, 0, 2, 0, 0, 0, 0, 0, 2],
         "items": [
           {
             "item": "led",
@@ -256,71 +161,517 @@
               { "key": "2000", "count": 1 },
               { "key": "8", "count": 2 }
             ]
+          },
+          {
+            "item": "halogen",
+            "answers": 3,
+            "counts": [
+              { "key": "120", "count": 2 },
+              { "key": "45", "count": 1 }
+            ]
           }
         ]
       }
     ]
   },
-  "submitted": [
+  "gates": [
+    { "others": "never", "place": "run", "asked": false, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "run", "asked": false, "submitted": true, "expected": "off" },
+    { "others": "never", "place": "run", "asked": true, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "run", "asked": true, "submitted": true, "expected": "off" },
+    { "others": "never", "place": "quiz", "asked": false, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "quiz", "asked": false, "submitted": true, "expected": "off" },
+    { "others": "never", "place": "quiz", "asked": true, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "quiz", "asked": true, "submitted": true, "expected": "off" },
+    { "others": "never", "place": "results", "asked": false, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "results", "asked": false, "submitted": true, "expected": "off" },
+    { "others": "never", "place": "results", "asked": true, "submitted": false, "expected": "off" },
+    { "others": "never", "place": "results", "asked": true, "submitted": true, "expected": "off" },
+    { "others": "submitted", "place": "run", "asked": false, "submitted": false, "expected": "locked" },
+    { "others": "submitted", "place": "run", "asked": false, "submitted": true, "expected": "locked" },
+    { "others": "submitted", "place": "run", "asked": true, "submitted": false, "expected": "asked" },
+    { "others": "submitted", "place": "run", "asked": true, "submitted": true, "expected": "asked" },
+    { "others": "submitted", "place": "quiz", "asked": false, "submitted": false, "expected": "locked" },
+    { "others": "submitted", "place": "quiz", "asked": false, "submitted": true, "expected": "open" },
+    { "others": "submitted", "place": "quiz", "asked": true, "submitted": false, "expected": "asked" },
+    { "others": "submitted", "place": "quiz", "asked": true, "submitted": true, "expected": "open" },
+    { "others": "submitted", "place": "results", "asked": false, "submitted": false, "expected": "open" },
+    { "others": "submitted", "place": "results", "asked": false, "submitted": true, "expected": "open" },
+    { "others": "submitted", "place": "results", "asked": true, "submitted": false, "expected": "open" },
+    { "others": "submitted", "place": "results", "asked": true, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "run", "asked": false, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "run", "asked": false, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "run", "asked": true, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "run", "asked": true, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "quiz", "asked": false, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "quiz", "asked": false, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "quiz", "asked": true, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "quiz", "asked": true, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "results", "asked": false, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "results", "asked": false, "submitted": true, "expected": "open" },
+    { "others": "always", "place": "results", "asked": true, "submitted": false, "expected": "open" },
+    { "others": "always", "place": "results", "asked": true, "submitted": true, "expected": "open" }
+  ],
+  "figures": [
     {
-      "id": "classification-counts-by-count",
+      "id": "classification-submitted-runs",
       "task": "heat",
       "dimension": null,
-      "expected": [
-        {
-          "item": "kettle",
-          "answers": 3,
-          "tags": [],
-          "choices": [
-            { "key": "power", "count": 2, "tags": [] },
-            { "key": "energy", "count": 1, "tags": [] }
-          ],
-          "positions": []
-        },
-        { "item": "candle", "answers": 1, "tags": [], "choices": [{ "key": "power", "count": 1, "tags": [] }], "positions": [] }
-      ]
+      "crowd": true,
+      "thinking": [],
+      "answer": false,
+      "result": false,
+      "expected": {
+        "runs": 4,
+        "thinkers": 0,
+        "columns": ["power", "energy"],
+        "rows": [
+          {
+            "item": "kettle",
+            "answers": 4,
+            "cells": [
+              { "key": "power", "count": 3, "share": 0.75, "tags": [], "own": false, "correct": false },
+              { "key": "energy", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "fridge",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "candle",
+            "answers": 1,
+            "cells": [
+              { "key": "power", "count": 1, "share": 1, "tags": [], "own": false, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          }
+        ]
+      }
     },
     {
-      "id": "sorting-mean-positions",
+      "id": "classification-thinkers-and-the-learners-own-answer",
+      "task": "heat",
+      "dimension": null,
+      "crowd": true,
+      "thinking": [0, 1, 2],
+      "answer": true,
+      "result": false,
+      "expected": {
+        "runs": 4,
+        "thinkers": 3,
+        "columns": ["power", "energy"],
+        "rows": [
+          {
+            "item": "kettle",
+            "answers": 4,
+            "cells": [
+              { "key": "power", "count": 3, "share": 0.75, "tags": ["0000000a", "0000000b"], "own": true, "correct": false },
+              { "key": "energy", "count": 1, "share": 0.25, "tags": ["0000000c"], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "fridge",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": ["0000000b"], "own": true, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": ["0000000a"], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "candle",
+            "answers": 1,
+            "cells": [
+              { "key": "power", "count": 1, "share": 1, "tags": ["0000000a"], "own": true, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "classification-result-marks-the-correct-category",
+      "task": "heat",
+      "dimension": null,
+      "crowd": true,
+      "thinking": [],
+      "answer": true,
+      "result": true,
+      "expected": {
+        "runs": 4,
+        "thinkers": 0,
+        "columns": ["power", "energy"],
+        "rows": [
+          {
+            "item": "kettle",
+            "answers": 4,
+            "cells": [
+              { "key": "power", "count": 3, "share": 0.75, "tags": [], "own": true, "correct": true },
+              { "key": "energy", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "fridge",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": [], "own": true, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": true }
+            ]
+          },
+          {
+            "item": "candle",
+            "answers": 1,
+            "cells": [
+              { "key": "power", "count": 1, "share": 1, "tags": [], "own": true, "correct": true },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "classification-thinkers-before-any-run-one-per-tag",
+      "task": "heat",
+      "dimension": null,
+      "crowd": false,
+      "thinking": [0, 0, 2],
+      "answer": false,
+      "result": false,
+      "expected": {
+        "runs": 0,
+        "thinkers": 2,
+        "columns": ["power", "energy"],
+        "rows": [
+          {
+            "item": "kettle",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": ["0000000a"], "own": false, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": ["0000000c"], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "fridge",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": ["0000000a"], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "candle",
+            "answers": 0,
+            "cells": [
+              { "key": "power", "count": 0, "share": 0, "tags": ["0000000a"], "own": false, "correct": false },
+              { "key": "energy", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "sorting-in-the-learners-own-order-with-places-and-thinkers",
       "task": "masses",
       "dimension": null,
-      "expected": [
-        { "item": "mouse", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 0.25 }] },
-        { "item": "cat", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 0.25 }] },
-        { "item": "horse", "answers": 2, "tags": [], "choices": [], "positions": [{ "position": 1 }] }
-      ]
+      "crowd": true,
+      "thinking": [0, 1],
+      "answer": true,
+      "result": false,
+      "expected": {
+        "runs": 4,
+        "thinkers": 2,
+        "columns": ["0", "1", "2"],
+        "rows": [
+          {
+            "item": "mouse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": ["0000000a"], "own": true, "correct": false },
+              { "key": "1", "count": 2, "share": 0.5, "tags": ["0000000b"], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.5
+          },
+          {
+            "item": "cat",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": ["0000000b"], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": ["0000000a"], "own": true, "correct": false },
+              { "key": "2", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.8
+          },
+          {
+            "item": "horse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 3, "share": 0.75, "tags": ["0000000a", "0000000b"], "own": true, "correct": false }
+            ],
+            "mean": 2.8
+          }
+        ]
+      }
     },
     {
-      "id": "matching-code-point-keys-resorted",
+      "id": "sorting-in-sheet-order-without-an-answer",
+      "task": "masses",
+      "dimension": null,
+      "crowd": true,
+      "thinking": [],
+      "answer": false,
+      "result": false,
+      "expected": {
+        "runs": 4,
+        "thinkers": 0,
+        "columns": ["0", "1", "2"],
+        "rows": [
+          {
+            "item": "horse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 3, "share": 0.75, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 2.8
+          },
+          {
+            "item": "mouse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 2, "share": 0.5, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.5
+          },
+          {
+            "item": "cat",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.8
+          }
+        ]
+      }
+    },
+    {
+      "id": "sorting-result-marks-the-correct-place",
+      "task": "masses",
+      "dimension": null,
+      "crowd": true,
+      "thinking": [],
+      "answer": true,
+      "result": true,
+      "expected": {
+        "runs": 4,
+        "thinkers": 0,
+        "columns": ["0", "1", "2"],
+        "rows": [
+          {
+            "item": "mouse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": [], "own": true, "correct": true },
+              { "key": "1", "count": 2, "share": 0.5, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.5
+          },
+          {
+            "item": "cat",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 2, "share": 0.5, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": [], "own": true, "correct": true },
+              { "key": "2", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ],
+            "mean": 1.8
+          },
+          {
+            "item": "horse",
+            "answers": 4,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 3, "share": 0.75, "tags": [], "own": true, "correct": true }
+            ],
+            "mean": 2.8
+          }
+        ]
+      }
+    },
+    {
+      "id": "sorting-before-the-crowd-is-known",
+      "task": "masses",
+      "dimension": null,
+      "crowd": false,
+      "thinking": [],
+      "answer": false,
+      "result": false,
+      "expected": {
+        "runs": 0,
+        "thinkers": 0,
+        "columns": ["0", "1", "2"],
+        "rows": [
+          {
+            "item": "horse",
+            "answers": 0,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "mouse",
+            "answers": 0,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "cat",
+            "answers": 0,
+            "cells": [
+              { "key": "0", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "1", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "2", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "matching-values-ascending-with-a-value-of-another-sheet",
       "task": "lamps",
       "dimension": "power",
-      "expected": [
-        {
-          "item": "led",
-          "answers": 4,
-          "tags": [],
-          "choices": [
-            { "key": "8", "count": 2, "tags": [] },
-            { "key": "120", "count": 1, "tags": [] },
-            { "key": "2000", "count": 1, "tags": [] }
-          ],
-          "positions": []
-        }
-      ]
+      "crowd": true,
+      "thinking": [0, 1, 2],
+      "answer": true,
+      "result": false,
+      "expected": {
+        "runs": 4,
+        "thinkers": 3,
+        "columns": ["8", "45", "120", "2000"],
+        "rows": [
+          {
+            "item": "led",
+            "answers": 4,
+            "cells": [
+              { "key": "8", "count": 2, "share": 0.5, "tags": ["0000000a"], "own": true, "correct": false },
+              { "key": "45", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 1, "share": 0.25, "tags": ["0000000b"], "own": false, "correct": false },
+              { "key": "2000", "count": 1, "share": 0.25, "tags": ["0000000c"], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "halogen",
+            "answers": 3,
+            "cells": [
+              { "key": "8", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "45", "count": 1, "share": 0.3333333333333333, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 2, "share": 0.6666666666666666, "tags": ["0000000a", "0000000b"], "own": true, "correct": false },
+              { "key": "2000", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "floodlight",
+            "answers": 0,
+            "cells": [
+              { "key": "8", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "45", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "2000", "count": 0, "share": 0, "tags": ["0000000a"], "own": true, "correct": false }
+            ]
+          }
+        ]
+      }
     },
     {
-      "id": "unknown-task",
-      "task": "volumes",
-      "dimension": null,
-      "expected": []
+      "id": "matching-result-marks-the-correct-value",
+      "task": "lamps",
+      "dimension": "power",
+      "crowd": true,
+      "thinking": [],
+      "answer": true,
+      "result": true,
+      "expected": {
+        "runs": 4,
+        "thinkers": 0,
+        "columns": ["8", "45", "120", "2000"],
+        "rows": [
+          {
+            "item": "led",
+            "answers": 4,
+            "cells": [
+              { "key": "8", "count": 2, "share": 0.5, "tags": [], "own": true, "correct": true },
+              { "key": "45", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false },
+              { "key": "2000", "count": 1, "share": 0.25, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "halogen",
+            "answers": 3,
+            "cells": [
+              { "key": "8", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "45", "count": 1, "share": 0.3333333333333333, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 2, "share": 0.6666666666666666, "tags": [], "own": true, "correct": true },
+              { "key": "2000", "count": 0, "share": 0, "tags": [], "own": false, "correct": false }
+            ]
+          },
+          {
+            "item": "floodlight",
+            "answers": 0,
+            "cells": [
+              { "key": "8", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "45", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "120", "count": 0, "share": 0, "tags": [], "own": false, "correct": false },
+              { "key": "2000", "count": 0, "share": 0, "tags": [], "own": true, "correct": true }
+            ]
+          }
+        ]
+      }
     }
   ],
-  "choices": [
-    { "id": "live-while-anyone-thinks-along", "others": [0, 1], "runs": 3, "expected": { "source": "live", "count": 2 } },
-    { "id": "one-learner-per-tag", "others": [0, 0, 2], "runs": 0, "expected": { "source": "live", "count": 2 } },
-    { "id": "submitted-when-nobody-thinks-along", "others": [], "runs": 3, "expected": { "source": "submitted", "count": 3 } },
-    { "id": "none-before-a-submission", "others": [], "runs": 0, "expected": null },
-    { "id": "none-without-a-view", "others": [], "runs": null, "expected": null }
+  "scores": [
+    { "id": "none-before-the-crowd-is-known", "bins": null, "own": null, "expected": { "bins": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "runs": 0, "peak": 0, "own": null } },
+    { "id": "own-score-in-a-middle-bin", "bins": [0, 0, 0, 1, 0, 1, 0, 0, 1, 1], "own": 0.5555, "expected": { "bins": [0, 0, 0, 1, 0, 1, 0, 0, 1, 1], "runs": 4, "peak": 1, "own": 5 } },
+    { "id": "a-perfect-score-in-the-last-bin", "bins": [1, 0, 0, 0, 0, 2, 0, 0, 0, 5], "own": 1, "expected": { "bins": [1, 0, 0, 0, 0, 2, 0, 0, 0, 5], "runs": 8, "peak": 5, "own": 9 } },
+    { "id": "a-low-score-in-the-first-bin", "bins": [3, 0, 0, 0, 0, 0, 0, 0, 0, 0], "own": 0.04, "expected": { "bins": [3, 0, 0, 0, 0, 0, 0, 0, 0, 0], "runs": 3, "peak": 3, "own": 0 } },
+    { "id": "no-own-score", "bins": [0, 2, 0, 0, 0, 0, 0, 7, 0, 0], "own": null, "expected": { "bins": [0, 2, 0, 0, 0, 0, 0, 7, 0, 0], "runs": 9, "peak": 7, "own": null } }
+  ],
+  "shares": [
+    { "share": 0, "en": "0%", "de": "0\u00a0%" },
+    { "share": 0.004, "en": "<1%", "de": "<1\u00a0%" },
+    { "share": 0.25, "en": "25%", "de": "25\u00a0%" },
+    { "share": 0.3333333333333333, "en": "33%", "de": "33\u00a0%" },
+    { "share": 0.75, "en": "75%", "de": "75\u00a0%" },
+    { "share": 0.996, "en": ">99%", "de": ">99\u00a0%" },
+    { "share": 1, "en": "100%", "de": "100\u00a0%" }
+  ],
+  "livePlaces": [
+    { "position": 0, "places": 3, "place": 0 },
+    { "position": 0.24, "places": 3, "place": 0 },
+    { "position": 0.25, "places": 3, "place": 1 },
+    { "position": 0.5, "places": 3, "place": 1 },
+    { "position": 1, "places": 3, "place": 2 },
+    { "position": 0.6, "places": 6, "place": 3 },
+    { "position": 1, "places": 1, "place": 0 },
+    { "position": 0.5, "places": 0, "place": 0 }
   ],
   "places": [
     { "position": 0, "total": 3, "place": 1 },
@@ -353,20 +704,9 @@
     {
       "id": "a-misfit-answer-is-no-draft",
       "status": "open",
-      "answers": {
-        "heat": { "kind": "classification", "assignments": { "kettle": "volume" } },
-        "lamps": { "kind": "matching", "assignments": { "power": { "halogen": 0 } } }
-      },
-      "expected": {
-        "quiz": "household",
-        "answers": { "lamps": { "kind": "matching", "values": { "power": { "halogen": 120 } } } }
-      }
+      "answers": { "heat": { "kind": "classification", "assignments": { "kettle": "volume" } }, "lamps": { "kind": "matching", "assignments": { "power": { "halogen": 0 } } } },
+      "expected": { "quiz": "household", "answers": { "lamps": { "kind": "matching", "values": { "power": { "halogen": 120 } } } } }
     },
-    {
-      "id": "no-drafts-once-submitted",
-      "status": "submitted",
-      "answers": { "heat": { "kind": "classification", "assignments": { "kettle": "power" } } },
-      "expected": null
-    }
+    { "id": "no-drafts-once-submitted", "status": "submitted", "answers": { "heat": { "kind": "classification", "assignments": { "kettle": "power" } } }, "expected": null }
   ]
 }

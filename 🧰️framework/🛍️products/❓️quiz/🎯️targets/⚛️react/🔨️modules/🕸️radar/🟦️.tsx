@@ -4,9 +4,10 @@
  * o'clock and run clockwise. Axis labels come from content and can be long, so {@link radarLayout} lays each diagram
  * out for the width it actually gets: labels wrap onto as many lines as they need, the circle yields room to them and
  * the height grows to hold them. The SVG draws one user unit per CSS pixel, so labels keep the reading size of the text
- * around them and are never scaled down or clipped. The SVG is one `role="img"` with a text name; the exact values,
- * units and axis ranges are always available as a table in a disclosure next to it — the text alternative screen
- * readers and learners who prefer numbers use.
+ * around them and are never scaled down or clipped. The SVG is one `role="img"` with a text name and a description
+ * that reads every axis with its value and says a table follows; the exact values, units and axis ranges are always
+ * available as that table in a disclosure next to it — the text alternative screen readers and learners who prefer
+ * numbers use.
  *
  * @see ../../../../🧬️schema/🔣️.json — `Axis`, `Profile`
  * @see https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/measureText
@@ -16,6 +17,7 @@
 import { useId, useLayoutEffect, useMemo, useRef, useState, type ReactElement, type RefObject } from "react";
 import type { QuizLocale, QuizText } from "../🌐️i18n/🟦️.ts";
 import { formatNumber, withUnit } from "../📏️quantity/🟦️.ts";
+import { Missing } from "../🪟️chrome/🟦️.tsx";
 
 //#region 📐️Geometry
 /** 📐️ The circle a diagram is drawn in, in SVG user units. */
@@ -453,11 +455,14 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
   }, [labelKey, space]);
   const { frame } = layout;
   const count = axes.length;
+  const shown = (axis: RadarAxis): string => (axis.id in values ? withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit) : text("quiz.radar.missing"));
+  const reading = text("quiz.radar.values", { values: axes.map((axis) => text("quiz.radar.entry", { axis: axis.label, value: shown(axis) })).join("; ") });
   return (
     <figure ref={figure} className="quiz-radar m-0 flex flex-col gap-single">
       <span ref={ruler} className="quiz-radar-ruler" style={{ width: `${RULER_EM}em` }} aria-hidden="true" />
-      <svg className="quiz-radar-chart" viewBox={`0 0 ${fixed(layout.width)} ${fixed(layout.height)}`} width={fixed(layout.width)} height={fixed(layout.height)} role="img" aria-labelledby={titleId}>
+      <svg className="quiz-radar-chart" viewBox={`0 0 ${fixed(layout.width)} ${fixed(layout.height)}`} width={fixed(layout.width)} height={fixed(layout.height)} role="img" aria-labelledby={titleId} aria-describedby={`${titleId}-values`}>
         <title id={titleId}>{text("quiz.radar.label", { name })}</title>
+        <desc id={`${titleId}-values`}>{reading}</desc>
         {RINGS.map((ring) => (
           <polygon key={ring} className="quiz-radar-ring" points={pointList(axes.map((_, index) => radarPoint(frame, index, count, ring)))} />
         ))}
@@ -480,7 +485,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
       </svg>
       <details className="text-sm">
         <summary className="quiz-target flex cursor-pointer items-center">{text("quiz.radar.table")}</summary>
-        <div className="max-w-full overflow-x-auto">
+        <div className="relative max-w-full overflow-x-auto">
           <table className="w-full border-collapse">
             <caption className="sr-only">{text("quiz.radar.label", { name })}</caption>
             <thead>
@@ -505,7 +510,7 @@ export function RadarChart(props: { readonly name: string; readonly axes: readon
                   <th scope="row" className={VALUE_ROW_HEAD}>
                     {axis.label}
                   </th>
-                  <td className={VALUE_CELL}>{axis.id in values ? withUnit(formatNumber(values[axis.id] ?? 0, locale), axis.unit) : "–"}</td>
+                  <td className={VALUE_CELL}>{axis.id in values ? shown(axis) : <Missing label={text("quiz.radar.missing")} />}</td>
                   <td className={VALUE_CELL}>{withUnit(formatNumber(axis.min, locale), axis.unit)}</td>
                   <td className={VALUE_CELL}>{withUnit(formatNumber(axis.max, locale), axis.unit)}</td>
                 </tr>

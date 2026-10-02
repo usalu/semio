@@ -69,12 +69,17 @@ def ascending(task, items):
     return sorted(items, key=lambda item: (item["value"], index[item["id"]]))
 
 
+def icon_of(source):
+    """🖼️ The icon of a task, an item or a dimension as the optional member its presentation carries."""
+    return {"icon": source["icon"]} if "icon" in source else {}
+
+
 def sheet_task(generator, task):
     """🧾️ One task's solution-free sheet, consuming the stream in the order §4 fixes."""
     items = shuffle(generator, task["items"])
     if "draw" in task and task["draw"] < len(items):
         items = items[: task["draw"]]
-    built = {"kind": task["kind"], "id": task["id"], "title": task["title"], "prompt": task["prompt"]}
+    built = {"kind": task["kind"], "id": task["id"], "title": task["title"], "prompt": task["prompt"], **icon_of(task)}
     if task["kind"] == "classification":
         if "axes" in task:
             built["axes"] = task["axes"]
@@ -84,15 +89,16 @@ def sheet_task(generator, task):
         if len(items) >= 2 and [item["id"] for item in items] == [item["id"] for item in ascending(task, items)]:
             items = items[1:] + items[:1]
     else:
-        built["dimensions"] = [{"id": dimension["id"], "quantity": dimension["quantity"], "cards": shuffle(generator, [item["values"][dimension["id"]] for item in items])} for dimension in task["dimensions"]]
-    built["items"] = [{"id": item["id"], "label": item["label"]} for item in items]
+        built["dimensions"] = [{"id": dimension["id"], "quantity": dimension["quantity"], **icon_of(dimension), "cards": shuffle(generator, [item["values"][dimension["id"]] for item in items])} for dimension in task["dimensions"]]
+    built["items"] = [{"id": item["id"], "label": item["label"], **icon_of(item)} for item in items]
     return built
 
 
 def sheet_of(quiz, seed):
-    """📄️ ``sheet(quiz, seed)``: task order first, then every task in definition order."""
+    """📄️ ``sheet(quiz, seed)``: keep the first task first, shuffle the rest, then present tasks in definition order."""
     generator = Mt19937(seed)
-    order = shuffle(generator, range(len(quiz["tasks"])))
+    shuffled_order = shuffle(generator, range(len(quiz["tasks"])))
+    order = [0, *[position for position in shuffled_order if position != 0]] if shuffled_order else []
     built = [sheet_task(generator, task) for task in quiz["tasks"]]
     return {"quiz": quiz["id"], "seed": seed, "title": quiz["title"], "description": quiz["description"], "tasks": [built[position] for position in order]}
 

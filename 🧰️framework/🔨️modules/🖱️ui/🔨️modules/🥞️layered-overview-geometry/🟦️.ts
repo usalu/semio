@@ -29,21 +29,6 @@ export interface LayeredSpan {
   readonly last: number;
 }
 
-/** ▭️ A rectangle in fractions of the view (`{ x: 0, y: 0, width: 1, height: 1 }` is the whole view). */
-export interface LayeredRect {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-}
-
-/** 📏️ Relative track sizes of the grid rest (`fr` weights per strip column and row; missing ones weigh 1), so each page lies exactly behind a card
- * cell of an overlay grid built from the same tracks. */
-export interface LayeredTracks {
-  readonly columns?: readonly number[];
-  readonly rows?: readonly number[];
-}
-
 /** ⏱️ When panes are mounted and released; `budget` is the most panes mounted at once, every other value is in ms. */
 export interface LayeredLifecycle {
   readonly budget: number;
@@ -129,8 +114,11 @@ export function pointerOffset(fx: number, fy: number, grid: LayeredGrid): Layere
 /** 🎞️ Duration of every programmatic glide (reveal, open, deep link). */
 export const LAYERED_GLIDE_MS = 500;
 
-/** 🎞️ Per-frame follow factor of the pointer pan. */
+/** 🎞️ Follow factor of the pointer pan per frame of a 60 Hz display: the share of the remaining gap one such frame closes. */
 export const LAYERED_FOLLOW_LERP = 0.12;
+
+/** ⏲️ The frame {@link LAYERED_FOLLOW_LERP} is defined for, in ms. */
+export const LAYERED_FOLLOW_FRAME_MS = 1000 / 60;
 
 /** 🎞️ The follow settles once both axes are this close to the target, in cells. */
 export const LAYERED_FOLLOW_EPSILON = 1e-4;
@@ -151,10 +139,16 @@ export function glideOffset(from: LayeredOffset, to: LayeredOffset, elapsedMs: n
   return t >= 1 ? { offset: to, done: true } : { offset: lerpOffset(from, to, easeInOutCubic(t)), done: false };
 }
 
-/** 🎞️ One frame of the pointer follow; it lands exactly on `target` once within {@link LAYERED_FOLLOW_EPSILON}. */
-export function followStep(current: LayeredOffset, target: LayeredOffset): { readonly offset: LayeredOffset; readonly settled: boolean } {
+/** 🧲️ The share of the remaining gap a follow closes within `elapsedMs`: {@link LAYERED_FOLLOW_LERP} per 60 Hz frame, compounded, so the pan
+ * takes the same time at every refresh rate and under a browser that paints slowly. */
+export function followFactor(elapsedMs: number = LAYERED_FOLLOW_FRAME_MS): number {
+  return 1 - (1 - LAYERED_FOLLOW_LERP) ** (Math.max(0, elapsedMs) / LAYERED_FOLLOW_FRAME_MS);
+}
+
+/** 🎞️ The pointer follow `elapsedMs` after its last frame (one 60 Hz frame unless given); it lands exactly on `target` once within {@link LAYERED_FOLLOW_EPSILON}. */
+export function followStep(current: LayeredOffset, target: LayeredOffset, elapsedMs?: number): { readonly offset: LayeredOffset; readonly settled: boolean } {
   if (Math.abs(target.x - current.x) < LAYERED_FOLLOW_EPSILON && Math.abs(target.y - current.y) < LAYERED_FOLLOW_EPSILON) return { offset: target, settled: true };
-  return { offset: lerpOffset(current, target, LAYERED_FOLLOW_LERP), settled: false };
+  return { offset: lerpOffset(current, target, followFactor(elapsedMs)), settled: false };
 }
 
 /** 🧱️ The strip's CSS transform for `offset`, in percent of the strip itself. */
@@ -172,16 +166,11 @@ export interface PaneAxisBounds {
   readonly visible: boolean;
 }
 
-/** 📐️ Where a span starting at `start` (fractions of the view) and `size` long lies inside the view along one axis. */
-export function spanAxisBounds(start: number, size: number): PaneAxisBounds {
-  const inside = Math.max(0, start);
-  const end = Math.min(1, start + size);
-  return { start: inside, end, visible: end - inside > LAYERED_VEIL_EPSILON };
-}
-
 /** 📐️ Where cell `index` lies along one axis of a view panned to `offset` on that axis. */
 export function paneAxisBounds(index: number, offset: number): PaneAxisBounds {
-  return spanAxisBounds(index - offset, 1);
+  const start = Math.max(0, index - offset);
+  const end = Math.min(1, index - offset + 1);
+  return { start, end, visible: end - start > LAYERED_VEIL_EPSILON };
 }
 
 /** 🕳️ Slivers and overhangs below this fraction of the view count as nothing. */
@@ -190,16 +179,11 @@ export const LAYERED_VEIL_EPSILON = 1e-6;
 /** 🕳️ The glass over the strip: `whole` (no hole), `clear` (the revealed pane fills the view, the glass is hidden) or a `hole` in fractions of the view. */
 export type LayeredVeil = { readonly kind: "whole" } | { readonly kind: "clear" } | { readonly kind: "hole"; readonly left: number; readonly top: number; readonly right: number; readonly bottom: number };
 
-/** 🕳️ The glass for a revealed `cell` (or none) at the CURRENT `offset` of the panorama. */
+/** 🕳️ The glass for a revealed `cell` (or none) at the CURRENT `offset` of the strip. */
 export function veilClip(cell: LayeredCell | null, offset: LayeredOffset): LayeredVeil {
-  return veilForRect(cell === null ? null : { x: cell.column - offset.x, y: cell.row - offset.y, width: 1, height: 1 });
-}
-
-/** 🕳️ The glass for the revealed page showing at `rect` (fractions of the view), or none. */
-export function veilForRect(rect: LayeredRect | null): LayeredVeil {
-  if (rect === null) return { kind: "whole" };
-  const horizontal = spanAxisBounds(rect.x, rect.width);
-  const vertical = spanAxisBounds(rect.y, rect.height);
+  if (cell === null) return { kind: "whole" };
+  const horizontal = paneAxisBounds(cell.column, offset.x);
+  const vertical = paneAxisBounds(cell.row, offset.y);
   if (!horizontal.visible || !vertical.visible) return { kind: "whole" };
   const covers = (bounds: PaneAxisBounds): boolean => bounds.start <= LAYERED_VEIL_EPSILON && bounds.end >= 1 - LAYERED_VEIL_EPSILON;
   if (covers(horizontal) && covers(vertical)) return { kind: "clear" };
@@ -218,60 +202,6 @@ export function veilClipPath(veil: LayeredVeil): string {
   return veil.kind === "hole" ? `polygon(evenodd, ${veilPolygon(veil).map(([x, y]) => `${x}% ${y}%`).join(", ")})` : "none";
 }
 // #endregion 🕳️LayeredVeil
-
-// #region 🔍️LayeredGridRest
-/** ▭️ The whole view. */
-export const LAYERED_VIEW: LayeredRect = { x: 0, y: 0, width: 1, height: 1 };
-
-/** 📏️ Start and size of every track along one axis, as fractions of the view, from `fr` weights (missing ones weigh 1). */
-export function trackSpans(weights: readonly number[] | undefined, count: number): readonly { readonly start: number; readonly size: number }[] {
-  const sizes = Array.from({ length: count }, (_, index) => weights?.[index] ?? 1);
-  if (sizes.some((size) => !(size > 0) || !Number.isFinite(size))) throw new Error(`Layered grid tracks must be positive: ${sizes.join(" ")}`);
-  const total = sizes.reduce((sum, size) => sum + size, 0);
-  return sizes.map((size, index) => ({ start: sizes.slice(0, index).reduce((sum, before) => sum + before, 0) / total, size: size / total }));
-}
-
-/** 🔳️ The CSS track list of one axis (`minmax(0, 1fr) minmax(0, 1.5fr) …`) — the overlay grid that puts each card over its page. */
-export function trackTemplate(weights: readonly number[] | undefined, count: number): string {
-  return Array.from({ length: count }, (_, index) => `minmax(0, ${weights?.[index] ?? 1}fr)`).join(" ");
-}
-
-/** 🔳️ Where `cell` rests in the grid rest: its track rectangle. */
-export function restRect(cell: LayeredCell, grid: LayeredGrid, tracks: LayeredTracks = {}): LayeredRect {
-  const column = trackSpans(tracks.columns, grid.columns)[cell.column]!;
-  const row = trackSpans(tracks.rows, grid.rows)[cell.row]!;
-  return { x: column.start, y: row.start, width: column.size, height: row.size };
-}
-
-/** 🧭️ Linear blend of two rectangles. */
-export function lerpRect(from: LayeredRect, to: LayeredRect, t: number): LayeredRect {
-  return { x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t, width: from.width + (to.width - from.width) * t, height: from.height + (to.height - from.height) * t };
-}
-
-/** 🎞️ Where a zoom of the camera from `from` to `to` (the part of the grid rest shown full size) is after `elapsedMs`; it lands exactly on `to`. */
-export function glideRect(from: LayeredRect, to: LayeredRect, elapsedMs: number, durationMs: number = LAYERED_GLIDE_MS): { readonly rect: LayeredRect; readonly done: boolean } {
-  const t = Math.min(1, Math.max(0, elapsedMs / durationMs));
-  return t >= 1 ? { rect: to, done: true } : { rect: lerpRect(from, to, easeInOutCubic(t)), done: false };
-}
-
-/** 🔍️ Where a page resting at `rest` shows while the camera frames `camera` (the grid rest's `LAYERED_VIEW` at rest, the page's own rest when it is zoomed to full size). */
-export function viewRect(rest: LayeredRect, camera: LayeredRect): LayeredRect {
-  return { x: (rest.x - camera.x) / camera.width, y: (rest.y - camera.y) / camera.height, width: rest.width / camera.width, height: rest.height / camera.height };
-}
-
-/** 🖼️ How a view-sized page covers `view` without distortion: uniformly scaled to cover it, anchored at the top centre, the rest cut off — the
- * page's CSS `transform` (origin `0 0`) and `clip-path`. A full-view rectangle is the identity. */
-export function coverPlacement(view: LayeredRect): { readonly transform: string; readonly clipPath: string } {
-  const scale = Math.max(view.width, view.height);
-  const side = (1 - view.width / scale) / 2;
-  const bottom = 1 - view.height / scale;
-  const percent = (value: number): number => Math.round(value * 1e6) / 1e4 + 0;
-  return {
-    transform: `translate3d(${percent(view.x - side * scale)}%, ${percent(view.y)}%, 0) scale(${Math.round(scale * 1e6) / 1e6})`,
-    clipPath: `inset(0% ${percent(side)}% ${percent(bottom)}% ${percent(side)}%)`,
-  };
-}
-// #endregion 🔍️LayeredGridRest
 
 // #region 🪟️LayeredWindowing
 /** 🪟️ The cells whose placeholder or poster exists while the view sits at an offset. */

@@ -4,14 +4,14 @@ use super::*;
 fn every_named_export_resolves_in_every_declared_format() {
     register_scope_exports();
     for export in EXPORTS {
-        for format in [semio_framework_schema::SchemaFormat::JsonSchema, semio_framework_schema::SchemaFormat::Rust, semio_framework_schema::SchemaFormat::Typescript, semio_framework_schema::SchemaFormat::Graphql] {
-            let leaf = semio_framework_schema::resolve_schema_export("framework.interaction", export.id, format).expect("resolve");
+        for format in [semio_framework_schema_registry::SchemaFormat::JsonSchema, semio_framework_schema_registry::SchemaFormat::Rust, semio_framework_schema_registry::SchemaFormat::Typescript, semio_framework_schema_registry::SchemaFormat::Graphql] {
+            let leaf = semio_framework_schema_registry::resolve_schema_export("framework.interaction", export.id, format).expect("resolve");
             assert!(!leaf.is_empty());
         }
-        assert!(semio_framework_schema::resolve_schema_export("framework.interaction", export.id, semio_framework_schema::SchemaFormat::Protobuf).is_err());
+        assert!(semio_framework_schema_registry::resolve_schema_export("framework.interaction", export.id, semio_framework_schema_registry::SchemaFormat::Protobuf).is_err());
         assert!(LEAVES.json_schema.contains(export.id));
     }
-    assert!(semio_framework_schema::scope_schema_exports_registered("framework.interaction"));
+    assert!(semio_framework_schema_registry::scope_schema_exports_registered("framework.interaction"));
 }
 
 /// 🏷️ Resolving to a non-empty leaf only proves the FILE exists. Execution contract §A defines export

@@ -1,8 +1,10 @@
 /** 🧩️ What every task interaction shares: its props, polite announcements of moves for screen readers, focus that
  * follows an item after it moved, and the pointer grip that starts a drag.
+ *
+ * @see https://www.w3.org/WAI/WCAG22/Techniques/aria/ARIA22 — status messages through `role="status"`
  */
 
-import { useCallback, useLayoutEffect, useRef, useState, type PointerEvent, type ReactElement } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent, type ReactElement } from "react";
 import type { Answer, SheetTask } from "@semio-tech/quiz";
 import type { QuizLocale, QuizText } from "../🌐️i18n/🟦️.ts";
 import { startPointerDrag } from "../🤏️drag/🟦️.ts";
@@ -26,17 +28,41 @@ export const SELECT_CLASS = "quiz-target border border-normal bg-background px-s
 export const ICON_BUTTON_CLASS =
   "quiz-target inline-flex min-w-[1.75em] cursor-pointer items-center justify-center border border-normal bg-transparent px-single text-foreground hover:bg-hover-interactive-fill aria-disabled:cursor-not-allowed aria-disabled:opacity-50";
 
-/** 📢️ A message for the polite live region of a task, and the function that replaces it. */
-export function useAnnouncement(): { readonly announcement: string; readonly announce: (message: string) => void } {
-  const [announcement, setAnnouncement] = useState("");
-  return { announcement, announce: setAnnouncement };
+/** ⏱️ How long a select-driven task waits before it announces a change: a closed select commits every option the arrow
+ * keys pass, so only where the item ends up is spoken. */
+export const SELECT_ANNOUNCEMENT_DELAY_MS = 400;
+
+/** 📢️ What a task's live region says: the message and how many were said before it, so a repeated message is a new one. */
+export interface Announcement {
+  readonly message: string;
+  readonly serial: number;
 }
 
-/** 📢️ The visually hidden polite live region announcing what a keyboard or pointer action changed. */
-export function LiveRegion(props: { readonly message: string }): ReactElement {
+/** 📢️ The message of the polite live region of a task, and the function that replaces it — after `delayMs` without a
+ * newer one, so a burst of changes is announced once, by its last message. */
+export function useAnnouncement(delayMs = 0): { readonly announcement: Announcement; readonly announce: (message: string) => void } {
+  const [announcement, setAnnouncement] = useState<Announcement>({ message: "", serial: 0 });
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => () => clearTimeout(timer.current), []);
+  const announce = useCallback(
+    (message: string) => {
+      const say = (): void => setAnnouncement((said) => ({ message, serial: said.serial + 1 }));
+      clearTimeout(timer.current);
+      if (delayMs <= 0) say();
+      else timer.current = setTimeout(say, delayMs);
+    },
+    [delayMs],
+  );
+  return { announcement, announce };
+}
+
+/** 📢️ The visually hidden polite live region announcing what a keyboard or pointer action changed; every announcement
+ * is a new node, so the same sentence said twice is spoken twice. */
+export function LiveRegion(props: { readonly announcement: Announcement }): ReactElement {
+  const { message, serial } = props.announcement;
   return (
     <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">
-      {props.message}
+      {message === "" ? null : <span key={serial}>{message}</span>}
     </p>
   );
 }

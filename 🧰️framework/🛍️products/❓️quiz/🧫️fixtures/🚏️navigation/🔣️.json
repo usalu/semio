@@ -1,0 +1,124 @@
+{
+  "schema": "semio.quiz.navigation/v1",
+  "description": "How a learner finds the way through a quiz client. A step is the screen in front: the overview ({screen: home}), one of its pages ({screen: home, page}), a run or the results of a run. The trail holds the steps behind the one in front and the steps ahead of it. Opening a step other than the one in front leaves that one behind and forgets every step ahead; opening the step in front changes nothing. A step entered instead of the one in front — the page the address named on arrival — leaves nothing behind. Going back shows the nearest step behind that still stands and is not the one in front, and leaves the step in front ahead; going forward mirrors it; steps passed over are forgotten. A step stands while it is a place to be: the overview and its pages always, a run while it is open, results once their run is submitted; a step that no longer stands is never left behind or ahead. Going up opens the place above like any opening: the overview above its pages, the page of its quiz above a run and above results (the overview when the catalog no longer lists the quiz), nothing above the overview. The overview is opened like any step. Submitting the run in front opens its results; a run voided in front opens the overview. The trail keeps at most `limit` steps behind. The address names pages only: the hash of a step is its page of the overview and empty everywhere else; a hash names a page when it is that page's id.",
+  "limit": 50,
+  "quizzes": ["physics", "heating", "cooling", "demand"],
+  "runs": {
+    "run-open": { "quiz": "heating", "status": "open" },
+    "run-done": { "quiz": "cooling", "status": "submitted" },
+    "run-retired": { "quiz": "retired", "status": "submitted" }
+  },
+  "trails": [
+    {
+      "id": "pages",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "home", "page": "board" }, "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } },
+        { "open": { "screen": "home", "page": "heating" }, "step": { "screen": "home", "page": "heating" }, "back": { "screen": "home", "page": "board" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "back", "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": { "screen": "home", "page": "heating" }, "up": { "screen": "home" } },
+        { "go": "back", "step": { "screen": "home" }, "back": null, "forward": { "screen": "home", "page": "board" }, "up": null },
+        { "go": "back", "step": { "screen": "home" }, "back": null, "forward": { "screen": "home", "page": "board" }, "up": null },
+        { "go": "forward", "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": { "screen": "home", "page": "heating" }, "up": { "screen": "home" } },
+        { "open": { "screen": "home", "page": "prefs" }, "step": { "screen": "home", "page": "prefs" }, "back": { "screen": "home", "page": "board" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "forward", "step": { "screen": "home", "page": "prefs" }, "back": { "screen": "home", "page": "board" }, "forward": null, "up": { "screen": "home" } },
+        { "open": { "screen": "home", "page": "prefs" }, "step": { "screen": "home", "page": "prefs" }, "back": { "screen": "home", "page": "board" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "overview", "step": { "screen": "home" }, "back": { "screen": "home", "page": "prefs" }, "forward": null, "up": null },
+        { "go": "up", "step": { "screen": "home" }, "back": { "screen": "home", "page": "prefs" }, "forward": null, "up": null },
+        { "go": "overview", "step": { "screen": "home" }, "back": { "screen": "home", "page": "prefs" }, "forward": null, "up": null }
+      ]
+    },
+    {
+      "id": "run",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "home", "page": "heating" }, "step": { "screen": "home", "page": "heating" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } },
+        { "open": { "screen": "run", "run": "run-open" }, "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home", "page": "heating" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "go": "up", "step": { "screen": "home", "page": "heating" }, "back": { "screen": "run", "run": "run-open" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "back", "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home", "page": "heating" }, "forward": { "screen": "home", "page": "heating" }, "up": { "screen": "home", "page": "heating" } },
+        { "go": "overview", "step": { "screen": "home" }, "back": { "screen": "run", "run": "run-open" }, "forward": null, "up": null }
+      ]
+    },
+    {
+      "id": "arrival",
+      "start": { "screen": "home" },
+      "moves": [
+        { "enter": { "screen": "home", "page": "board" }, "step": { "screen": "home", "page": "board" }, "back": null, "forward": null, "up": { "screen": "home" } },
+        { "go": "up", "step": { "screen": "home" }, "back": { "screen": "home", "page": "board" }, "forward": null, "up": null },
+        { "go": "back", "step": { "screen": "home", "page": "board" }, "back": null, "forward": { "screen": "home" }, "up": { "screen": "home" } }
+      ]
+    },
+    {
+      "id": "results",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "results", "run": "run-done" }, "step": { "screen": "results", "run": "run-done" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home", "page": "cooling" } },
+        { "go": "up", "step": { "screen": "home", "page": "cooling" }, "back": { "screen": "results", "run": "run-done" }, "forward": null, "up": { "screen": "home" } },
+        { "open": { "screen": "results", "run": "run-retired" }, "step": { "screen": "results", "run": "run-retired" }, "back": { "screen": "home", "page": "cooling" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "up", "step": { "screen": "home" }, "back": { "screen": "results", "run": "run-retired" }, "forward": null, "up": null }
+      ]
+    },
+    {
+      "id": "submitted",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "run", "run": "run-open" }, "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "submit": "run-open", "step": { "screen": "results", "run": "run-open" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "open": { "screen": "home", "page": "board" }, "step": { "screen": "home", "page": "board" }, "back": { "screen": "results", "run": "run-open" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "back", "step": { "screen": "results", "run": "run-open" }, "back": { "screen": "home" }, "forward": { "screen": "home", "page": "board" }, "up": { "screen": "home", "page": "heating" } },
+        { "go": "back", "step": { "screen": "home" }, "back": null, "forward": { "screen": "results", "run": "run-open" }, "up": null }
+      ]
+    },
+    {
+      "id": "closed-elsewhere",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "run", "run": "run-open" }, "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "go": "overview", "step": { "screen": "home" }, "back": { "screen": "run", "run": "run-open" }, "forward": null, "up": null },
+        { "open": { "screen": "home", "page": "board" }, "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } },
+        { "close": "run-open", "as": "submitted", "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } },
+        { "go": "back", "step": { "screen": "home" }, "back": null, "forward": { "screen": "home", "page": "board" }, "up": null },
+        { "go": "forward", "step": { "screen": "home", "page": "board" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } }
+      ]
+    },
+    {
+      "id": "closed-ahead",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "run", "run": "run-open" }, "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "go": "back", "step": { "screen": "home" }, "back": null, "forward": { "screen": "run", "run": "run-open" }, "up": null },
+        { "close": "run-open", "as": "voided", "step": { "screen": "home" }, "back": null, "forward": null, "up": null },
+        { "go": "forward", "step": { "screen": "home" }, "back": null, "forward": null, "up": null }
+      ]
+    },
+    {
+      "id": "voided",
+      "start": { "screen": "home" },
+      "moves": [
+        { "open": { "screen": "home", "page": "heating" }, "step": { "screen": "home", "page": "heating" }, "back": { "screen": "home" }, "forward": null, "up": { "screen": "home" } },
+        { "open": { "screen": "run", "run": "run-open" }, "step": { "screen": "run", "run": "run-open" }, "back": { "screen": "home", "page": "heating" }, "forward": null, "up": { "screen": "home", "page": "heating" } },
+        { "void": "run-open", "step": { "screen": "home" }, "back": { "screen": "home", "page": "heating" }, "forward": null, "up": null },
+        { "go": "back", "step": { "screen": "home", "page": "heating" }, "back": { "screen": "home" }, "forward": { "screen": "home" }, "up": { "screen": "home" } }
+      ]
+    }
+  ],
+  "addresses": [
+    { "step": { "screen": "home" }, "hash": "" },
+    { "step": { "screen": "home", "page": "board" }, "hash": "#board" },
+    { "step": { "screen": "home", "page": "heating" }, "hash": "#heating" },
+    { "step": { "screen": "run", "run": "run-open" }, "hash": "" },
+    { "step": { "screen": "results", "run": "run-done" }, "hash": "" },
+    { "step": { "screen": "introduction" }, "hash": "" },
+    { "step": { "screen": "identity" }, "hash": "" }
+  ],
+  "named": [
+    { "hash": "#board", "page": "board" },
+    { "hash": "#heating", "page": "heating" },
+    { "hash": "#learner", "page": "learner" },
+    { "hash": "board", "page": "board" },
+    { "hash": "", "page": null },
+    { "hash": "#", "page": null },
+    { "hash": "#quiz-main", "page": null },
+    { "hash": "#retired", "page": null },
+    { "hash": "#Board", "page": null }
+  ]
+}

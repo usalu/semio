@@ -7,10 +7,12 @@ Inputs are composed here; every expected output is computed by the case adapters
 corroboration), so the committed files and the oracles can never disagree.
 """
 
+import calendar
 import hashlib
 import importlib.util
 import json
 import os
+import re
 import sys
 import time
 
@@ -41,8 +43,9 @@ CASES = {name: load(os.path.join(QUIZ, "🧪️tests", directory, "🐍️.py"),
     "lifecycle": "🧾️learner-lifecycle",
     "presence": "👥️shared-presence",
     "crowd": "📊️crowd-view",
+    "identity": "🪪️identity-shapes",
 }.items()}
-R, S, SO, MA, CL, VA, BA, LB, LC = (CASES[name] for name in ["randomness", "sheet", "sorting", "matching", "classification", "validation", "badges", "leaderboard", "lifecycle"])
+R, S, SO, MA, CL, VA, BA, LB, LC, ID = (CASES[name] for name in ["randomness", "sheet", "sorting", "matching", "classification", "validation", "badges", "leaderboard", "lifecycle", "identity"])
 
 
 def write(directory, document):
@@ -95,6 +98,7 @@ HEATING = {
     "id": "heating-systems",
     "title": T("Heating systems", "Heizsysteme"),
     "prompt": T("Assign every installation to its heating system.", "Ordne jede Anlage ihrem Heizsystem zu."),
+    "icon": {"emoji": "🔥", "motion": "float"},
     "axes": [
         {"id": "seasonal-efficiency", "label": T("Seasonal efficiency", "Jahresnutzungsgrad"), "unit": "%", "min": 0, "max": 400},
         {"id": "investment", "label": T("Investment", "Investition"), "unit": "CHF", "min": 0, "max": 40000},
@@ -142,6 +146,7 @@ ROOMS = {
     "id": "room-temperatures",
     "title": T("Room temperatures", "Raumtemperaturen"),
     "prompt": T("Order by recommended temperature, lowest first.", "Ordne nach empfohlener Temperatur, die tiefste zuerst."),
+    "icon": {"emoji": "🌡️", "motion": "pulse"},
     "quantity": quantity("Temperature", "Temperatur", "°C", "linear", False),
     "items": [
         {"id": "bedroom", "label": T("Bedroom", "Schlafzimmer"), "value": 18},
@@ -226,6 +231,63 @@ ROTATION = {
     "tasks": [
         {"kind": "sorting", "id": "pair", "title": T("Pair", "Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Mass", "Masse", "kg", "linear", True), "items": [{"id": "feather", "label": T("Feather", "Feder"), "value": 0.001}, {"id": "brick", "label": T("Brick", "Backstein"), "value": 2.5}]},
         {"kind": "sorting", "id": "triple", "title": T("Triple", "Dreier"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Mass", "Masse", "kg", "linear", True), "items": [{"id": "apple", "label": T("Apple", "Apfel"), "value": 0.2}, {"id": "pear", "label": T("Pear", "Birne"), "value": 0.2}, {"id": "melon", "label": T("Melon", "Melone"), "value": 1.5}]},
+    ],
+}
+
+
+def icon(emoji, motion):
+    """🖼️ An icon: an emoji and the microanimation it plays."""
+    return {"emoji": emoji, "motion": motion}
+
+
+ICONS = {
+    "schema": "semio.quiz/v1",
+    "id": "icon-demo",
+    "emoji": "🖼️",
+    "title": T("Icon demo", "Symbolbeispiel"),
+    "description": T("Every task, item, category and dimension carries an icon.", "Jede Aufgabe, jedes Element, jede Kategorie und jede Dimension trägt ein Symbol."),
+    "tasks": [
+        {
+            "kind": "classification",
+            "id": "sources",
+            "title": T("Sources", "Quellen"),
+            "prompt": T("Assign every source.", "Ordne jede Quelle zu."),
+            "icon": icon("⚡", "pulse"),
+            "categories": [{"id": "renewable", "label": T("Renewable", "Erneuerbar"), "icon": icon("♻️", "spin")}, {"id": "fossil", "label": T("Fossil", "Fossil"), "icon": icon("🛢️", "sway")}],
+            "items": [
+                {"id": "sunlight", "label": T("Sunlight", "Sonnenlicht"), "icon": icon("☀️", "spin"), "category": "renewable"},
+                {"id": "wind", "label": T("Wind", "Wind"), "icon": icon("🌬️", "sway"), "category": "renewable"},
+                {"id": "coal", "label": T("Coal", "Kohle"), "icon": icon("🪨", "bounce"), "category": "fossil"},
+                {"id": "gas", "label": T("Natural gas", "Erdgas"), "icon": icon("🔥", "float"), "category": "fossil"},
+            ],
+            "draw": 3,
+        },
+        {
+            "kind": "sorting",
+            "id": "masses",
+            "title": T("Masses", "Massen"),
+            "prompt": T("Smallest first.", "Das Kleinste zuerst."),
+            "icon": icon("⚖️", "sway"),
+            "quantity": quantity("Mass", "Masse", "kg", "logarithmic", True),
+            "items": [
+                {"id": "feather", "label": T("Feather", "Feder"), "icon": icon("🪶", "float"), "value": 0.001},
+                {"id": "brick", "label": T("Brick", "Backstein"), "icon": icon("🧱", "flip"), "value": 2.5},
+                {"id": "car", "label": T("Car", "Auto"), "icon": icon("🚗", "bounce"), "value": 1500},
+            ],
+        },
+        {
+            "kind": "matching",
+            "id": "appliances",
+            "title": T("Appliances", "Geräte"),
+            "prompt": T("Match every appliance.", "Ordne jedem Gerät zu."),
+            "icon": icon("🔌", "bounce"),
+            "dimensions": [{"id": "power", "quantity": quantity("Power", "Leistung", "W", "linear", True), "icon": icon("⚡", "pulse")}, {"id": "lifespan", "quantity": quantity("Lifespan", "Lebensdauer", "a", "linear", False)}],
+            "items": [
+                {"id": "toaster", "label": T("Toaster", "Toaster"), "icon": icon("🍞", "bounce"), "values": {"power": 800, "lifespan": 8}},
+                {"id": "kettle", "label": T("Kettle", "Wasserkocher"), "values": {"power": 2200, "lifespan": 5}},
+                {"id": "oven", "label": T("Oven", "Backofen"), "icon": icon("♨️", "pulse"), "values": {"power": 3000, "lifespan": 15}},
+            ],
+        },
     ],
 }
 
@@ -348,12 +410,12 @@ def rotation_seeds():
 
 
 def sheets():
-    """🃏️ Sheets of three quizzes for several seeds, including every rotation outcome."""
-    vectors = [("energy-5489", "energy-basics", 5489), ("energy-0", "energy-basics", 0), ("energy-42", "energy-basics", 42), ("energy-max", "energy-basics", 4294967295), ("energy-run-a", "energy-basics", R.fnv1a32(hexid("run-a"))), ("energy-20260928", "energy-basics", 20260928), ("cooling-1", "cooling-basics", 1), ("cooling-7", "cooling-basics", 7), ("cooling-run-b", "cooling-basics", R.fnv1a32(hexid("run-b")))]
+    """🃏️ Sheets of four quizzes for several seeds, including every rotation outcome and every place an icon is carried."""
+    vectors = [("energy-5489", "energy-basics", 5489), ("energy-0", "energy-basics", 0), ("energy-42", "energy-basics", 42), ("energy-max", "energy-basics", 4294967295), ("energy-run-a", "energy-basics", R.fnv1a32(hexid("run-a"))), ("energy-20260928", "energy-basics", 20260928), ("cooling-1", "cooling-basics", 1), ("cooling-7", "cooling-basics", 7), ("cooling-run-b", "cooling-basics", R.fnv1a32(hexid("run-b"))), ("icons-1", "icon-demo", 1), ("icons-7", "icon-demo", 7), ("icons-20261002", "icon-demo", 20261002)]
     notes = {"both-rotated": "the draw of pair and of triple equals their ascending order, so both are rotated left by one", "tie-reversed-kept": "triple draws pear before apple — ascending by value but not by definition index — so it is not rotated", "neither-rotated": "neither draw is ascending, so neither is rotated"}
-    quizzes = {quiz["id"]: quiz for quiz in [ENERGY, COOLING, ROTATION]}
+    quizzes = {quiz["id"]: quiz for quiz in [ENERGY, COOLING, ROTATION, ICONS]}
     rotations = rotation_seeds()
-    document = {"$comment": GENERATED % "🃏️sheet-assembly", "quizzes": [ENERGY, COOLING, ROTATION], "sheets": []}
+    document = {"$comment": GENERATED % "🃏️sheet-assembly", "quizzes": [ENERGY, COOLING, ROTATION, ICONS], "sheets": []}
     for identifier, quiz, seed in vectors:
         document["sheets"].append({"id": identifier, "quiz": quiz, "seed": seed, "sheet": S.sheet_of(quizzes[quiz], seed)})
     for identifier in ["both-rotated", "tie-reversed-kept", "neither-rotated"]:
@@ -518,12 +580,14 @@ def classification():
 
 # region 🔖️Validation
 def validation():
-    """✅️ Valid, partial, absent and every kind of invalid answer for each task kind."""
+    """✅️ Valid, partial, absent and every kind of invalid answer for each task kind; answers the schema itself refuses are kept apart under ``malformed``."""
     classify = {"kind": "classification", "id": "classify", "title": T("Classify", "Zuordnen"), "prompt": T("Assign.", "Zuordnen."), "categories": [{"id": "warm", "label": T("Warm", "Warm")}, {"id": "cold", "label": T("Cold", "Kalt")}], "items": [{"id": "sauna", "label": T("Sauna", "Sauna")}, {"id": "glacier", "label": T("Glacier", "Gletscher")}, {"id": "desert", "label": T("Desert", "Wüste")}]}
     order = {"kind": "sorting", "id": "order", "title": T("Order", "Ordnen"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Length", "Länge", "m", "linear", True), "items": [{"id": "ant", "label": T("Ant", "Ameise")}, {"id": "cat", "label": T("Cat", "Katze")}, {"id": "whale", "label": T("Whale", "Wal")}]}
+    order_log = {"kind": "sorting", "id": "order-log", "title": T("Power", "Leistung"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Power", "Leistung", "W", "logarithmic", True), "items": [{"id": "led", "label": T("LED", "LED")}, {"id": "kettle", "label": T("Kettle", "Wasserkocher")}, {"id": "turbine", "label": T("Turbine", "Turbine")}]}
     match = {"kind": "matching", "id": "match", "title": T("Match", "Zuordnen"), "prompt": T("Match.", "Zuordnen."), "dimensions": [{"id": "mass", "quantity": quantity("Mass", "Masse", "kg", "linear", True), "cards": [5, 0.004, 150000]}, {"id": "age", "quantity": quantity("Lifespan", "Lebensdauer", "a", "linear", False), "cards": [15, 90, 0.1]}], "items": [{"id": "ant", "label": T("Ant", "Ameise")}, {"id": "cat", "label": T("Cat", "Katze")}, {"id": "whale", "label": T("Whale", "Wal")}]}
     C = lambda assignments: {"kind": "classification", "assignments": assignments}
     O = lambda order_: {"kind": "sorting", "order": order_}
+    G = lambda order_, guesses: {"kind": "sorting", "order": order_, "guesses": guesses}
     M = lambda assignments: {"kind": "matching", "assignments": assignments}
     full_match = {"mass": {"ant": 1, "cat": 0, "whale": 2}, "age": {"ant": 2, "cat": 0, "whale": 1}}
     cases = [
@@ -542,6 +606,19 @@ def validation():
         ("sorting-extra-item", "order", O(["ant", "cat", "whale", "mouse"])),
         ("sorting-empty", "order", O([])),
         ("sorting-wrong-kind", "order", M({"mass": {"ant": 0}})),
+        ("sorting-guesses-ascending", "order", G(["ant", "cat", "whale"], {"ant": 0.001, "cat": 0.3, "whale": 25})),
+        ("sorting-guesses-ties", "order", G(["ant", "cat", "whale"], {"ant": 1, "cat": 1, "whale": 2})),
+        ("sorting-guesses-partial", "order", G(["ant", "cat", "whale"], {"ant": 0.001, "whale": 25})),
+        ("sorting-guesses-only-one", "order", G(["whale", "ant", "cat"], {"cat": 0.3})),
+        ("sorting-guesses-empty", "order", G(["ant", "cat", "whale"], {})),
+        ("sorting-guesses-non-positive-linear", "order", G(["ant", "cat", "whale"], {"ant": -5, "cat": 0, "whale": 3})),
+        ("sorting-guesses-unknown-item", "order", G(["ant", "cat", "whale"], {"ant": 1, "mouse": 2})),
+        ("sorting-guesses-descending", "order", G(["ant", "cat", "whale"], {"ant": 5, "cat": 3, "whale": 9})),
+        ("sorting-guesses-descending-around-unguessed", "order", G(["ant", "cat", "whale"], {"ant": 5, "whale": 3})),
+        ("sorting-guesses-with-invalid-order", "order", G(["ant", "cat"], {"ant": 1, "cat": 2})),
+        ("sorting-log-guesses-positive", "order-log", G(["led", "kettle", "turbine"], {"led": 0.5, "kettle": 2000, "turbine": 1e9})),
+        ("sorting-log-guesses-zero", "order-log", G(["led", "kettle", "turbine"], {"led": 0, "kettle": 2000})),
+        ("sorting-log-guesses-negative", "order-log", G(["led", "kettle", "turbine"], {"turbine": -1})),
         ("matching-complete", "match", M(full_match)),
         ("matching-one-dimension", "match", M({"mass": full_match["mass"]})),
         ("matching-partial-dimension", "match", M({"mass": {"ant": 1, "cat": 0, "whale": 2}, "age": {"whale": 1}})),
@@ -554,14 +631,20 @@ def validation():
         ("matching-unknown-item", "match", M({"mass": {"mouse": 0}})),
         ("matching-wrong-kind", "match", C({"ant": "warm"})),
     ]
-    sheet_tasks = {task["id"]: task for task in [classify, order, match]}
-    document = {"$comment": GENERATED % "✅️answer-validation", "sheetTasks": [classify, order, match], "vectors": []}
-    for identifier, task, answer in cases:
-        vector = {"id": identifier, "sheetTask": task}
-        if answer is not None:
-            vector["answer"] = answer
-        vector["expected"] = VA.verdict(sheet_tasks[task], answer)
-        document["vectors"].append(vector)
+    malformed = [
+        ("sorting-guesses-non-numeric", "order", G(["ant", "cat", "whale"], {"ant": "big"})),
+        ("sorting-guesses-not-an-object", "order", G(["ant", "cat", "whale"], [1, 2, 3])),
+    ]
+    sheet_tasks = {task["id"]: task for task in [classify, order, order_log, match]}
+    document = {"$comment": GENERATED % "✅️answer-validation", "sheetTasks": [classify, order, order_log, match], "vectors": []}
+    document["malformed"] = []
+    for entries, group in ((document["vectors"], cases), (document["malformed"], malformed)):
+        for identifier, task, answer in group:
+            vector = {"id": identifier, "sheetTask": task}
+            if answer is not None:
+                vector["answer"] = answer
+            vector["expected"] = VA.verdict(sheet_tasks[task], answer)
+            entries.append(vector)
     write("✅️answer-validation", document)
 # endregion 🔖️Validation
 
@@ -613,34 +696,42 @@ class Clock:
         return self.now
 
 
-def handles():
-    """🪪️ Trimming, collapsing, case folding and the length bounds."""
-    cases = [("plain", "Anna"), ("padded", "  Anna  "), ("inner-runs", "Anna \t\n  Muster"), ("no-break-space", "Anna Muster"), ("ideographic-space", "　Anna　　Muster　"), ("umlauts", "JÜRGEN Müller"), ("capital-sharp-s", "GROẞ"), ("emoji", "  Quiz 🦊  Fuchs "), ("empty", ""), ("blank", " \t\n "), ("max-length", "x" * 64), ("over-length", "y" * 65), ("over-length-before-trim", "  " + "z" * 64 + "  ")]
-    return [{"id": identifier, "handle": handle, "expected": LC.normalize_handle(handle)} for identifier, handle in cases]
+def identify(label, kind, handle=None, learner=None, command=None):
+    """🙋️ One identify-learner command with deterministic ids."""
+    return {"type": "identify-learner", "id": command or hexid("command-" + label), "learner": learner or hexid("learner-" + label), "identity": {"kind": kind} if handle is None else {"kind": kind, "handle": handle}}
 
 
-def roster():
-    """🪪️ identify-learner sequences over one roster each."""
+def registrations():
+    """🪪️ identify-learner sequences, each addressed to the stream of one handle key."""
     clock = Clock(BASE)
-    identify = lambda label, kind, handle=None: {"type": "identify-learner", "id": hexid("command-" + label), "learner": hexid("learner-" + label), "identity": {"kind": kind} if handle is None else {"kind": kind, "handle": handle}}
     sequences = [
-        ("anonymous-always-new", [identify("anon-1", "anonymous"), identify("anon-2", "anonymous")]),
-        ("shared-key-space", [identify("anna", "pseudonym", "  Anna   Muster "), identify("anna-name", "name", "anna muster"), identify("anna-tabs", "pseudonym", "ANNA\tMUSTER"), identify("bert", "name", "Bert")]),
-        ("invalid-handles", [identify("blank", "pseudonym", "   "), identify("blank-name", "name", "\t\n"), identify("after-invalid", "pseudonym", "Carla")]),
-        ("umlauts-recalled", [identify("juergen", "name", "Jürgen Müller"), identify("juergen-caps", "pseudonym", "JÜRGEN  MÜLLER")]),
+        ("first-claim-wins", "anna muster", [identify("anna", "pseudonym", "  Anna   Muster "), identify("anna-name", "name", "anna muster"), identify("anna-tabs", "pseudonym", "ANNA\tMUSTER"), identify("anna", "name", "Anna Muster", command=hexid("command-anna-again"))]),
+        ("name-kept-as-typed", "jürgen müller", [identify("juergen", "name", "Jürgen  Müller"), identify("juergen-caps", "pseudonym", "JÜRGEN MÜLLER")]),
+        ("typographic-apostrophe", "o'brien", [identify("obrien", "name", "O’Brien"), identify("obrien-ascii", "name", "o'brien")]),
+        ("invalid-handles", "carla", [identify("blank", "pseudonym", "   "), identify("blank-name", "name", "\t\n"), identify("zero-width", "pseudonym", "Car​la"), identify("bidi", "name", "‮Carla"), identify("nfd", "name", "Carlá"), identify("cyrillic", "pseudonym", "Cаrla"), identify("overlong", "name", "C" * 65), identify("after-invalid", "pseudonym", "Carla")]),
+        ("another-key", "carla", [identify("bert", "name", "Bert"), identify("carla", "name", "Carla")]),
+        ("anonymous-has-no-handle", "anna", [identify("anon", "anonymous")]),
+        ("malformed-ids", "dora", [identify("dora", "name", "Dora", learner="DORA"), identify("dora", "name", "Dora", command="0" * 31), identify("dora", "name", "Dora", learner=hexid("learner-dora") + "\n"), identify("dora", "name", "Dora")]),
     ]
     built = []
-    for identifier, commands in sequences:
-        state = {}
+    for identifier, key, commands in sequences:
+        state = LC.empty_handle_state(key)
         steps = []
         for command in commands:
             now = clock.tick()
-            decision = LC.decide_roster(state, command, now)
+            decision = LC.decide_handle(state, command, now)
             for event in decision.get("events", []):
-                state = LC.evolve_roster(state, event)
+                state = LC.evolve_handle(state, event)
             steps.append({"command": command, "now": now, "expected": decision})
-        built.append({"id": identifier, "steps": steps})
+        built.append({"id": identifier, "key": key, "steps": steps})
     return built
+
+
+def quotas():
+    """🚧️ Learner counts against the cap of learners."""
+    cap = LC.DEFAULT_LIMITS["learners"]
+    cases = [("empty", 0, LC.DEFAULT_LIMITS), ("one-below", cap - 1, LC.DEFAULT_LIMITS), ("at-the-cap", cap, LC.DEFAULT_LIMITS), ("beyond", cap + 1, LC.DEFAULT_LIMITS), ("class-of-one", 1, {**LC.DEFAULT_LIMITS, "learners": 1}), ("class-of-three", 2, {**LC.DEFAULT_LIMITS, "learners": 3})]
+    return [{"id": identifier, "learners": learners, "limits": limits, "expected": LC.registration_rejection(learners, limits)} for identifier, learners, limits in cases]
 
 
 REVISIONS = {"energy-basics": revision("energy-basics@1"), "cooling-basics": revision("cooling-basics@1")}
@@ -654,8 +745,8 @@ def context_quizzes(revisions):
 class Learner:
     """🧑‍🎓️ Drives one learner through commands with the reference, recording steps and folding events."""
 
-    def __init__(self, label, clock, registered=True):
-        self.label, self.clock = label, clock
+    def __init__(self, label, clock, registered=True, limits=None):
+        self.label, self.clock, self.limits = label, clock, limits
         self.learner = hexid("learner-" + label)
         self.state = LC.empty_learner_state(self.learner)
         self.given = []
@@ -685,7 +776,7 @@ class Learner:
             self.revisions.update(revise)
             step["revisions"] = dict(revise)
         now = self.clock.tick()
-        decision = LC.decide_learner(self.state, command, {"now": now, "catalog": CATALOG, "quizzes": context_quizzes(self.revisions)})
+        decision = LC.decide_learner(self.state, command, {"now": now, "catalog": CATALOG, "quizzes": context_quizzes(self.revisions), "limits": self.limits or LC.DEFAULT_LIMITS})
         for event in decision.get("events", []):
             self.state = LC.evolve_learner(self.state, event)
             self.events.append(event)
@@ -693,6 +784,10 @@ class Learner:
         step["expected"] = decision
         self.steps.append(step)
         return decision
+
+    def identify(self, kind, handle=None, learner=None):
+        """🙋️ identify-learner addressed to this learner's stream."""
+        return self.decide(identify(self.label, kind, handle, learner=learner or self.learner, command=self.command_id()))
 
     def start(self, name, quiz, revise=None):
         """▶️ start-run."""
@@ -720,6 +815,8 @@ class Learner:
     def sequence(self, identifier, runs):
         """🎞️ The committed learner sequence with its final views — none for a learner that never registered."""
         built = {"id": identifier, "learner": self.learner, "given": self.given, "steps": self.steps}
+        if self.limits is not None:
+            built["limits"] = self.limits
         if self.state["identity"] is not None:
             built["views"] = {"runs": runs, "expected": {"learner": LC.learner_view(self.state), "runs": {run: LC.run_view(self.state, run, context_quizzes(self.revisions)) for run in runs}}}
         return built
@@ -794,13 +891,88 @@ def learners():
     champion.answer_all("again", COOLING, every_cooling)
     champion.submit("again")
     built.append(champion.sequence("every-badge", [champion.run_id("energy"), champion.run_id("cooling"), champion.run_id("again")]))
+
+    newcomer = Learner("newcomer", clock, registered=False)
+    newcomer.identify("pseudonym", "Newcomer")
+    newcomer.identify("anonymous", learner=hexid("learner-somebody-else"))
+    newcomer.identify("anonymous")
+    newcomer.identify("anonymous")
+    newcomer.start("first", "cooling-basics")
+    newcomer.decide({"type": "start-run", "id": newcomer.command_id(), "learner": newcomer.learner, "run": newcomer.run_id("first"), "quiz": "cooling-basics"})
+    newcomer.decide({"type": "submit-run", "id": newcomer.command_id(), "learner": hexid("learner-somebody-else"), "run": newcomer.run_id("first")})
+    built.append(newcomer.sequence("anonymous-registration", [newcomer.run_id("first")]))
+
+    capped = Learner("capped", clock, limits={"learners": 10, "runsPerQuiz": 2, "runs": 3, "answersPerRun": 3})
+    capped.start("one", "cooling-basics")
+    capped.answer_all("one", COOLING, every_cooling)
+    capped.answer("one", "cooling-loads", correct_answer(LOADS, sheet_task_of(capped.sheet("one", COOLING), "cooling-loads")))
+    capped.answer("one", "cooling-loads", reversed_answer(LOADS, sheet_task_of(capped.sheet("one", COOLING), "cooling-loads")))
+    capped.submit("one")
+    capped.start("two", "cooling-basics")
+    capped.answer_all("two", COOLING, [])
+    capped.submit("two")
+    capped.start("three", "cooling-basics")
+    capped.start("energy", "energy-basics")
+    capped.answer_all("energy", ENERGY, [], skip=["energy-carriers", "power-ratings"])
+    capped.answer("energy", "power-ratings", reversed_answer(POWER, sheet_task_of(capped.sheet("energy", ENERGY), "power-ratings")))
+    capped.submit("energy")
+    capped.start("energy-again", "energy-basics")
+    built.append(capped.sequence("caps", [capped.run_id("one"), capped.run_id("two"), capped.run_id("energy")]))
     return built
 
 
+def malformed_learners():
+    """🛃️ Commands whose ids break their shapes, decided by a registered learner with an open run: none reaches an event."""
+    clock = Clock(BASE + 3 * 10**8)
+    sloppy = Learner("sloppy", clock, registered=False)
+    sloppy.identify("anonymous", learner=sloppy.learner.upper())
+    sloppy.identify("anonymous")
+    sloppy.decide({"type": "start-run", "id": sloppy.command_id(), "learner": sloppy.learner, "run": "run-1", "quiz": "cooling-basics"})
+    sloppy.decide({"type": "start-run", "id": sloppy.command_id(), "learner": sloppy.learner, "run": sloppy.run_id("slug"), "quiz": "Cooling Basics"})
+    sloppy.decide({"type": "start-run", "id": sloppy.command_id(), "learner": sloppy.learner, "run": sloppy.run_id("megabyte") * 128, "quiz": "cooling-basics"})
+    sloppy.start("first", "cooling-basics")
+    sloppy.decide({"type": "record-answer", "id": sloppy.command_id(), "learner": sloppy.learner, "run": sloppy.run_id("first"), "task": "../cooling-loads", "answer": {"kind": "sorting", "order": []}})
+    sloppy.decide({"type": "record-answer", "id": sloppy.command_id(), "learner": sloppy.learner, "run": sloppy.run_id("first").upper(), "task": "cooling-loads", "answer": {"kind": "sorting", "order": []}})
+    sloppy.decide({"type": "submit-run", "id": "not-an-id", "learner": sloppy.learner, "run": sloppy.run_id("first")})
+    sloppy.decide({"type": "submit-run", "id": sloppy.command_id() + "\n", "learner": sloppy.learner, "run": sloppy.run_id("first")})
+    sloppy.decide({"type": "submit-run", "id": sloppy.command_id(), "learner": sloppy.learner + " ", "run": sloppy.run_id("first")})
+    return [sloppy.sequence("malformed-ids", [sloppy.run_id("first")])]
+
+
+SITE_CATALOG = "🎓️teaching/🏛️architecture/❓️quiz/🔣️.json"
+SITE_NAMED = ["heating-expert", "numerical-brain", "pattern-seer"]
+
+
+def site():
+    """🏅️ Plays of the site catalog: three perfect tours with different draws, and one tour per task with a single mistake in that task."""
+    catalog, quizzes = LC.site_quizzes(ROOT, SITE_CATALOG)
+    plays = [{"id": "perfect-%s" % label, "learner": hexid("site-learner-%s" % label), "runs": [{"run": hexid("site-%s-%s" % (label, quiz["id"])), "quiz": quiz["id"]} for quiz in order]} for label, order in [("in-catalog-order", quizzes), ("in-reverse-order", quizzes[::-1]), ("another-draw", quizzes)]]
+    for flawed in quizzes:
+        for task in flawed["tasks"]:
+            label = "flawed-%s-%s" % (flawed["id"], task["id"])
+            plays.append({"id": label, "learner": hexid("site-learner-%s" % label), "runs": [{"run": hexid("site-%s-%s" % (label, quiz["id"])), "quiz": quiz["id"], **({"flaw": task["id"]} if quiz is flawed else {})} for quiz in quizzes]})
+    for scenario in plays:
+        played = LC.play(catalog, quizzes, LC.DEFAULT_LIMITS, scenario)
+        scenario["expected"] = {"awards": played["awards"], "held": played["held"]}
+    return {"catalog": SITE_CATALOG, "named": SITE_NAMED, "plays": plays}
+
+
 def lifecycle():
-    """🧾️ Handles, roster sequences and learner sequences with their final views."""
-    document = {"$comment": GENERATED % "🧾️learner-lifecycle", "catalog": CATALOG, "quizzes": [ENERGY, COOLING], "revisions": REVISIONS, "handles": handles(), "roster": roster(), "learners": learners()}
-    for sequence in document["learners"]:
+    """🧾️ Registrations per handle key, learner counts against the cap, learner sequences with their final views, and the plays of the site catalog."""
+    claims = registrations()
+    document = {
+        "$comment": GENERATED % "🧾️learner-lifecycle",
+        "catalog": CATALOG,
+        "quizzes": [ENERGY, COOLING],
+        "revisions": REVISIONS,
+        "limits": LC.DEFAULT_LIMITS,
+        "registrations": [sequence for sequence in claims if sequence["id"] != "malformed-ids"],
+        "quotas": quotas(),
+        "learners": learners(),
+        "malformed": {"registrations": [sequence for sequence in claims if sequence["id"] == "malformed-ids"], "learners": malformed_learners()},
+        "site": site(),
+    }
+    for sequence in document["learners"] + document["malformed"]["learners"]:
         decisions, state, quizzes = LC.replay_learner(document, sequence)
         assert decisions == [step["expected"] for step in sequence["steps"]], sequence["id"]
     write("🧾️learner-lifecycle", document)
@@ -809,7 +981,7 @@ def lifecycle():
 
 # region 🔖️Leaderboard
 WARM_UP = {"schema": "semio.quiz/v1", "id": "warm-up", "emoji": "🔥", "title": T("Warm-up", "Aufwärmen"), "description": T("Two pairs to order.", "Zwei Paare zum Ordnen."), "tasks": [
-    {"kind": "sorting", "id": "first-pair", "title": T("First pair", "Erstes Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Energy", "Energie", "Wh", "logarithmic", True), "items": [{"id": "phone-charge", "label": T("Phone charge", "Handyladung"), "value": 15}, {"id": "car-charge", "label": T("Car charge", "Autoladung"), "value": 60000}]},
+    {"kind": "sorting", "id": "first-pair", "title": T("First pair", "Erstes Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "icon": {"emoji": "🔋", "motion": "bounce"}, "quantity": quantity("Energy", "Energie", "Wh", "logarithmic", True), "items": [{"id": "phone-charge", "label": T("Phone charge", "Handyladung"), "value": 15}, {"id": "car-charge", "label": T("Car charge", "Autoladung"), "value": 60000}]},
     {"kind": "sorting", "id": "second-pair", "title": T("Second pair", "Zweites Paar"), "prompt": T("Smallest first.", "Das Kleinste zuerst."), "quantity": quantity("Temperature", "Temperatur", "°C", "linear", False), "items": [{"id": "fridge", "label": T("Fridge", "Kühlschrank"), "value": 5}, {"id": "oven", "label": T("Oven", "Backofen"), "value": 220}]},
 ]}
 COOL_DOWN = {"schema": "semio.quiz/v1", "id": "cool-down", "emoji": "🧊", "title": T("Cool-down", "Abkühlen"), "description": T("One classification, one pair.", "Eine Zuordnung, ein Paar."), "tasks": [
@@ -829,7 +1001,7 @@ class BoardLearner(Learner):
         """⚖️ Decides against the leaderboard catalog."""
         now = self.clock.tick()
         quizzes = {quiz["id"]: {"quiz": quiz, "revision": revision(quiz["id"] + "@1")} for quiz in [WARM_UP, COOL_DOWN]}
-        decision = LC.decide_learner(self.state, command, {"now": now, "catalog": BOARD_CATALOG, "quizzes": quizzes})
+        decision = LC.decide_learner(self.state, command, {"now": now, "catalog": BOARD_CATALOG, "quizzes": quizzes, "limits": LC.DEFAULT_LIMITS})
         assert "events" in decision, (self.label, command, decision)
         for event in decision["events"]:
             self.state = LC.evolve_learner(self.state, event)
@@ -875,18 +1047,119 @@ def leaderboard():
     gil.play("best", WARM_UP, ["first-pair", "second-pair"])
     gil.play("worse", WARM_UP, ["second-pair"])
     gil.start("pending", COOL_DOWN["id"])
+    stranger = {"id": "stranger", "learner": hexid("learner-nobody")}
+    nobody = {"id": "nobody"}
+
+    def instant(*moment):
+        """⏱️ A UTC calendar moment (year, month, day, then optional hour, minute, second, millisecond) in milliseconds since the epoch."""
+        return calendar.timegm((list(moment[:6]) + [0, 0, 0])[:6]) * 1000 + (moment[6] if len(moment) > 6 else 0)
+
+    def board(identifier, period, at, quiz=None):
+        """🗂️ One asked leaderboard: its period, the instant it is asked at and the one quiz it counts."""
+        return {"id": identifier, "period": period, **({"quiz": quiz} if quiz is not None else {}), "at": at}
+
+    monday, october = instant(2026, 9, 28), instant(2026, 10, 1)
+    lea = board_learner("lea", BASE + 6 * day + 3600000)
+    lea.play("sunday", COOL_DOWN, ["renewable"], at=monday - 1)
+    ivy = board_learner("ivy", BASE + 6 * day + 7200000)
+    ivy.play("monday", COOL_DOWN, ["renewable", "last-pair"], at=monday)
+    jon = board_learner("jon", BASE + 9 * day)
+    jon.play("september", WARM_UP, ["first-pair"], at=october - 1)
+    kim = board_learner("kim", BASE + 9 * day + 3600000)
+    kim.play("october", WARM_UP, ["first-pair", "second-pair"], at=october)
+    hal = board_learner("hal", BASE + 10 * day)
+    hal.play("warm", WARM_UP, ["second-pair"])
+    hal.play("cool", COOL_DOWN, ["renewable", "last-pair"])
+    after = BASE + 8 * day
     vectors = [
-        ("tie-break-chain", [ada, bea, cyd, dan, eve, fay, gil]),
-        ("single-learner-improving", [gil]),
-        ("nobody-submitted", [eve]),
+        (
+            "tie-break-chain",
+            [ada, bea, cyd, dan, eve, fay, gil],
+            [nobody, {"id": "first", "learner": cyd.learner}, {"id": "last", "learner": fay.learner}, {"id": "unranked", "learner": eve.learner}, stranger],
+            [
+                board("all-time", "all-time", after),
+                board("all-time-warm-up", "all-time", after, "warm-up"),
+                board("all-time-cool-down", "all-time", after, "cool-down"),
+                board("september", "monthly", after),
+                board("october", "monthly", october),
+                board("first-week", "weekly", tie_at),
+                board("first-week-cool-down", "weekly", tie_at, "cool-down"),
+                board("second-week", "weekly", BASE + 7 * day + 3600000),
+                board("saturday", "daily", tie_at),
+                board("monday-warm-up", "daily", BASE, "warm-up"),
+                board("friday", "daily", BASE + 4 * day),
+            ],
+        ),
+        ("single-learner-improving", [gil], [nobody, {"id": "own", "learner": gil.learner}], [board("all-time", "all-time", after), board("today", "daily", BASE + 7 * day), board("yesterday", "daily", BASE + 6 * day), board("this-week-cool-down", "weekly", BASE + 7 * day, "cool-down")]),
+        ("nobody-submitted", [eve], [nobody, {"id": "unranked", "learner": eve.learner}], [board("all-time", "all-time", after), board("today", "daily", BASE + 4 * day)]),
+        (
+            "calendar-edges",
+            [lea, ivy, jon, kim, hal],
+            [nobody, {"id": "sunday", "learner": lea.learner}, {"id": "monday", "learner": ivy.learner}, {"id": "september", "learner": jon.learner}, {"id": "october", "learner": kim.learner}],
+            [
+                board("all-time", "all-time", after),
+                board("last-of-sunday", "daily", monday - 1),
+                board("first-of-monday", "daily", monday),
+                board("last-of-the-week", "weekly", monday - 1),
+                board("first-of-the-week", "weekly", monday),
+                board("last-of-september", "monthly", october - 1),
+                board("first-of-october", "monthly", october),
+                board("last-day-of-september", "daily", october - 1),
+                board("first-day-of-october", "daily", october),
+                board("october-cool-down", "monthly", october, "cool-down"),
+            ],
+        ),
     ]
     catalogs = [("board", BOARD_CATALOG, [WARM_UP, COOL_DOWN]), ("demo", CATALOG, [ENERGY, COOLING])]
-    document = {"$comment": GENERATED % "🏆️leaderboard", "catalog": BOARD_CATALOG, "quizzes": [WARM_UP, COOL_DOWN], "catalogs": [{"id": identifier, "catalog": catalog, "quizzes": quizzes, "expected": LB.catalog_view(catalog, quizzes)} for identifier, catalog, quizzes in catalogs], "vectors": []}
-    for identifier, members in vectors:
-        vector = {"id": identifier, "learners": [{"learner": member.learner, "events": member.events} for member in members]}
+    document = {"$comment": GENERATED % "🏆️leaderboard", "catalog": BOARD_CATALOG, "quizzes": [WARM_UP, COOL_DOWN], "catalogs": [{"id": identifier, "catalog": catalog, "quizzes": quizzes, "expected": LB.catalog_view(catalog, quizzes)} for identifier, catalog, quizzes in catalogs], "windows": [], "vectors": []}
+    instants = [
+        ("epoch", 0),
+        ("first-sunday", instant(1970, 1, 4, 23, 59, 59, 999)),
+        ("first-monday", instant(1970, 1, 5)),
+        ("last-of-first-january", instant(1970, 1, 31, 23, 59, 59, 999)),
+        ("first-of-first-february", instant(1970, 2, 1)),
+        ("leap-day-ending-an-era", instant(2000, 2, 29, 12)),
+        ("first-day-of-an-era", instant(2000, 3, 1)),
+        ("base", BASE),
+        ("last-of-a-sunday", monday - 1),
+        ("first-of-a-monday", monday),
+        ("last-of-a-year", instant(2026, 12, 31, 23, 59, 59, 999)),
+        ("first-of-a-year", instant(2027, 1, 1)),
+        ("leap-day", instant(2028, 2, 29, 12)),
+        ("day-after-a-leap-day", instant(2028, 3, 1)),
+        ("february-of-a-common-century", instant(2100, 2, 28, 23, 59, 59, 999)),
+        ("march-of-a-common-century", instant(2100, 3, 1)),
+        ("leap-day-of-the-next-era", instant(2400, 2, 29, 23, 59, 59, 999)),
+        ("far-future", instant(9999, 11, 30, 23, 59, 59, 999)),
+    ]
+    for identifier, at in instants:
+        document["windows"].append({"id": identifier, "at": at, "expected": {period: LB.period_window(period, at) for period in LB.PERIODS}})
+    for identifier, members, callers, boards in vectors:
+        vector = {"id": identifier, "learners": [{"learner": member.learner, "events": member.events} for member in members], "callers": callers, "boards": boards}
         states = LB.folded(vector)
-        vector["expected"] = {"learnerViews": {state["learner"]: LB.learner_view(state) for state in states}, "leaderboard": LB.leaderboard(states)}
+        vector["expected"] = {"learnerViews": {state["learner"]: LB.learner_view(state) for state in states}, "leaderboards": LB.boards(LB.transcripts(vector), vector)}
         document["vectors"].append(vector)
+
+    def crowd_of(count):
+        """👥️ ``count`` transcripts with dyadic totals, every total shared by two learners, in an order that is not the ranking; one to four runs each, the first the best."""
+        transcripts = []
+        for number in range(count):
+            learner = hexid("board-learner-%d" % number)
+            score = ((number * 37) % 128 // 2 + 1) / 128
+            runs = [{"quiz": "warm-up", "score": score, "at": BASE + number * 1000}] + [{"quiz": "warm-up", "score": score / 2, "at": BASE + number * 1000 + 100 * later} for later in range(1, 1 + number % 4)]
+            transcripts.append({"learner": learner, "tag": LB.tag(learner), "identity": {"kind": "pseudonym", "handle": "Learner %d" % number} if number % 3 else {"kind": "anonymous"}, "runs": runs, "badges": []})
+        return transcripts
+
+    def ranked(transcripts, position):
+        """🔢️ The learner at a 1-based rank of the transcripts' all-time standings."""
+        return sorted((LB.standing(record, None, None) for record in transcripts), key=lambda entry: (-entry["total"], -len(entry["badges"]), entry["reachedAt"], entry["learner"]))[position - 1]["learner"]
+
+    crowd = crowd_of(130)
+    asked = board("all-time", "all-time", BASE)
+    document["crowd"] = {"transcripts": crowd, "board": asked, "cuts": []}
+    for identifier, count, positions in [("exactly-the-top", 100, [1, 100]), ("one-beyond-the-top", 101, [100, 101]), ("a-class-and-a-half", 130, [1, 57, 100, 101, 130]), ("empty", 0, [])]:
+        callers = [nobody, stranger] + [{"id": "rank-%d" % position, "learner": ranked(crowd[:count], position)} for position in positions]
+        document["crowd"]["cuts"].append({"id": identifier, "learners": count, "callers": callers, "expected": {caller: LB.outline(answer) for caller, answer in LB.asked(crowd[:count], asked, callers).items()}})
     write("🏆️leaderboard", document)
 # endregion 🔖️Leaderboard
 
@@ -918,6 +1191,13 @@ def rejected():
         broken("single-sorting-item", "Quiz", "oneOf", lambda document: document["tasks"][0].update(items=document["tasks"][0]["items"][:1]), quiz),
         broken("draw-of-one", "Quiz", "oneOf", lambda document: document["tasks"][0].update(draw=1), quiz),
         broken("unknown-scale", "Quiz", "oneOf", lambda document: document["tasks"][0]["quantity"].update(scale="exponential"), quiz),
+        broken("unknown-icon-motion", "Quiz", "oneOf", lambda document: document["tasks"][0]["icon"].update(motion="explode"), quiz),
+        broken("empty-icon-emoji", "Quiz", "oneOf", lambda document: document["tasks"][0]["icon"].update(emoji=""), quiz),
+        broken("icon-without-motion", "Quiz", "oneOf", lambda document: document["tasks"][0]["icon"].pop("motion"), quiz),
+        broken("undeclared-icon-member", "Quiz", "oneOf", lambda document: document["tasks"][0]["icon"].update(colour="red"), quiz),
+        broken("empty-item-icon-emoji", "Quiz", "oneOf", lambda document: document["tasks"][0]["items"][0].update(icon=icon("", "pulse")), quiz),
+        broken("unknown-category-icon-motion", "Quiz", "oneOf", lambda document: document["tasks"].append({**copy.deepcopy(HEATING), "categories": [{**copy.deepcopy(HEATING["categories"][0]), "icon": icon("🔥", "explode")}] + copy.deepcopy(HEATING["categories"][1:])}), quiz),
+        broken("undeclared-dimension-icon-member", "Quiz", "oneOf", lambda document: document["tasks"].append({**copy.deepcopy(POWER_MATCH), "dimensions": [{**copy.deepcopy(POWER_MATCH["dimensions"][0]), "icon": {**icon("⚡", "pulse"), "colour": "red"}}]}), quiz),
         broken("two-axes", "Quiz", "oneOf", lambda document: document["tasks"].append({**copy.deepcopy(HEATING), "axes": copy.deepcopy(HEATING["axes"][:2])}), quiz),
         broken("empty-matching-values", "Quiz", "oneOf", lambda document: document["tasks"].append({**copy.deepcopy(POWER_MATCH), "items": [{**copy.deepcopy(POWER_MATCH["items"][0]), "values": {}}] + copy.deepcopy(POWER_MATCH["items"][1:])}), quiz),
         broken("catalog-without-quizzes", "Catalog", "minItems", lambda document: document.update(quizzes=[]), catalog),
@@ -980,6 +1260,15 @@ def presence():
         ("handle-missing", state({"screen": "home"}, identity={"kind": "pseudonym"}), "oneOf"),
         ("handle-empty", state({"screen": "home"}, identity={"kind": "name", "handle": ""}), "oneOf"),
         ("handle-too-long", state({"screen": "home"}, identity={"kind": "name", "handle": "h" * 65}), "oneOf"),
+        ("handle-untrimmed", state({"screen": "home"}, identity={"kind": "name", "handle": " Ada"}), "oneOf"),
+        ("handle-double-space", state({"screen": "home"}, identity={"kind": "name", "handle": "Ada  Lovelace"}), "oneOf"),
+        ("handle-zero-width", state({"screen": "home"}, identity={"kind": "pseudonym", "handle": "A​da"}), "oneOf"),
+        ("handle-bidi-override", state({"screen": "home"}, identity={"kind": "pseudonym", "handle": "‮adA"}), "oneOf"),
+        ("handle-combining-mark", state({"screen": "home"}, identity={"kind": "name", "handle": "Adé"}), "oneOf"),
+        ("handle-cyrillic-lookalike", state({"screen": "home"}, identity={"kind": "name", "handle": "Аda"}), "oneOf"),
+        ("handle-emoji", state({"screen": "home"}, identity={"kind": "pseudonym", "handle": "Ada \U0001f98a"}), "oneOf"),
+        ("handle-punctuation-only", state({"screen": "home"}, identity={"kind": "pseudonym", "handle": "..."}), "oneOf"),
+        ("handle-accents-and-apostrophe", state({"screen": "home"}, identity={"kind": "name", "handle": "Zoë O'Neill-Müller"}), None),
         ("quiz-page", state({"screen": "quiz", "quiz": "physics"}), None),
         ("badges", state({"screen": "badges"}), None),
         ("learner", state({"screen": "learner"}, active=False), None),
@@ -1066,6 +1355,12 @@ def presence():
         ("matching-dimension-not-an-object", draft(energy_carriers=matching({"energy-density": [120]})), "oneOf"),
         ("learner-id-smuggled", {**draft(), "learner": hexid("learner-ada")}, "additionalProperties"),
         ("repeated-sorting-item", draft(power_ratings={"kind": "sorting", "order": ["kettle", "laptop", "kettle"]}), "duplicate-id"),
+        ("sorting-guess-as-text", draft(power_ratings={**sort_draft, "guesses": {"kettle": "2000"}}), "oneOf"),
+        ("sorting-guess-null", draft(power_ratings={**sort_draft, "guesses": {"kettle": None}}), "oneOf"),
+        ("sorting-guesses-not-an-object", draft(power_ratings={**sort_draft, "guesses": [1, 2]}), "oneOf"),
+        ("sorting-guess-item-not-a-slug", draft(power_ratings={**sort_draft, "guesses": {"Tea Light": 1}}), "oneOf"),
+        ("guesses-on-classification", draft(heating_systems={"kind": "classification", "assignments": {}, "guesses": {"ground-source": 1}}), "oneOf"),
+        ("guesses-of-sixty-five", draft(power_ratings={"kind": "sorting", "order": [], "guesses": {item: index * 1.5 for index, item in enumerate(ids(65))}}), "too-many"),
         ("sixty-five-tasks", {"tag": tag, "answers": {"task-%02d" % index: {"kind": "sorting", "order": []} for index in range(65)}}, "too-many"),
         ("order-of-sixty-five", draft(power_ratings={"kind": "sorting", "order": ids(65)}), "too-many"),
         ("assignments-of-sixty-five", draft(heating_systems={"kind": "classification", "assignments": {item: "heat-pump" for item in ids(65)}}), "too-many"),
@@ -1092,8 +1387,29 @@ def presence():
 
 
 # region 🔖️Crowd
+SCORE_EDGES = [0, 0.0949, 0.095, 0.1, 0.5, 0.8949, 0.895, 0.9, 0.995, 1]
+
+
+def edge_result(turn):
+    """🪣️ A hand-built energy result whose run, task and dimension scores sit on and beside the score bin edges, differently spread per task; every fourth leaves the CO₂ dimension out and none plays the room temperatures."""
+    edge = lambda index: SCORE_EDGES[index % len(SCORE_EDGES)]
+    density = {"dimension": "energy-density", "score": edge(len(SCORE_EDGES) - 1 - turn), "items": [{"item": "hydrogen", "assigned": 120, "correct": 120}]}
+    factor = {"dimension": "co2-factor", "score": edge(turn if turn % 3 else 3), "items": [{"item": "hydrogen", "assigned": 0.2, "correct": 0}]}
+    return {"quiz": "energy-basics", "score": edge(turn), "tasks": [
+        {"kind": "classification", "task": "heating-systems", "score": edge(turn // 2 * 2), "items": [{"item": "air-source", "assigned": "heat-pump", "correct": "heat-pump", "credit": 1}]},
+        {"kind": "sorting", "task": "power-ratings", "score": edge(turn * 5), "items": [{"item": "laptop", "value": 60, "position": 0, "rank": 0}]},
+        {"kind": "matching", "task": "energy-carriers", "score": edge(turn + 1), "dimensions": [density] if turn % 4 == 0 else [density, factor]},
+    ]}
+
+
+def ordered(task, order):
+    """📶️ An energy result that ordered exactly the named items of one sorting task: an order as long as the reference scores it, whatever a sheet would present."""
+    scored = LC.sorting_result(task, {"items": [{"id": identifier} for identifier in order]}, {"kind": "sorting", "order": order})
+    return {"quiz": "energy-basics", "score": scored["score"], "tasks": [scored]}
+
+
 def crowd():
-    """📊️ Crowd views of real runs: all three kinds, two matching dimensions with equal values, unanswered items, a foreign result, no runs and a one-item order."""
+    """📊️ Crowd views of real runs: all three kinds, two matching dimensions with equal values, unanswered items, a foreign result, no runs, a one-item order, scores on the bin edges, orders shorter and longer than a sheet presents, and repeated entries of which the first counts."""
     CV = CASES["crowd"]
     every_energy = [task["id"] for task in ENERGY["tasks"]]
     perfect = run_result(ENERGY, 101, every_energy)
@@ -1104,12 +1420,40 @@ def crowd():
         {"kind": "sorting", "task": "cooling-loads", "score": 1, "items": [{"item": "office", "value": 40, "position": 0, "rank": 0}]},
         {"kind": "classification", "task": "cooling-strategies", "score": 1, "items": [{"item": "night-ventilation", "assigned": "passive", "correct": "passive", "credit": 1}]},
     ]}
+    power = [item["id"] for item in POWER["items"]]
+    orders = [
+        ordered(POWER, list(reversed(power))),
+        ordered(POWER, power[1:] + power[:1]),
+        ordered(POWER, ["wallbox", "led-bulb", "kettle", "nuclear-plant", "tea-light", "laptop", "hair-dryer"]),
+        ordered(POWER, ["tea-light", "wind-turbine", "led-bulb", "hair-dryer", "kettle", "laptop"]),
+        ordered(POWER, ["nuclear-plant", "kettle", "led-bulb", "wallbox", "laptop"]),
+        ordered(POWER, ["wallbox", "led-bulb", "kettle"]),
+        ordered(POWER, ["nuclear-plant", "tea-light"]),
+        ordered(POWER, ["laptop"]),
+        ordered(ROOMS, ["bathroom", "bedroom"]),
+        ordered(ROOMS, ["living-room", "bathroom", "bedroom"]),
+    ]
+    repeated = {"quiz": "energy-basics", "score": 0.5, "tasks": [
+        {"kind": "classification", "task": "power-ratings", "score": 0.25, "items": [{"item": "laptop", "assigned": "heat-pump", "correct": "gas-boiler", "credit": 0}]},
+        {"kind": "sorting", "task": "power-ratings", "score": 0.75, "items": [{"item": "kettle", "value": 2200, "position": 0, "rank": 1}, {"item": "laptop", "value": 60, "position": 1, "rank": 0}, {"item": "kettle", "value": 2200, "position": 2, "rank": 1}]},
+        {"kind": "sorting", "task": "power-ratings", "score": 0.05, "items": [{"item": "laptop", "value": 60, "position": 0, "rank": 0}, {"item": "wallbox", "value": 11000, "position": 1, "rank": 1}]},
+        {"kind": "classification", "task": "heating-systems", "score": 1, "items": [{"item": "air-source", "assigned": "heat-pump", "correct": "heat-pump", "credit": 1}, {"item": "air-source", "assigned": "gas-boiler", "correct": "heat-pump", "credit": 0}]},
+        {"kind": "classification", "task": "heating-systems", "score": 0, "items": [{"item": "pellet-stove", "assigned": "gas-boiler", "correct": "wood-pellets", "credit": 0}]},
+        {"kind": "matching", "task": "energy-carriers", "score": 0.3, "dimensions": [
+            {"dimension": "energy-density", "score": 0.3, "items": [{"item": "hydrogen", "assigned": 50, "correct": 120}, {"item": "hydrogen", "assigned": 120, "correct": 120}]},
+            {"dimension": "energy-density", "score": 0.95, "items": [{"item": "coal", "assigned": 29, "correct": 29}]},
+        ]},
+        {"kind": "matching", "task": "energy-carriers", "score": 1, "dimensions": [{"dimension": "co2-factor", "score": 1, "items": [{"item": "hydrogen", "assigned": 0, "correct": 0}]}]},
+    ]}
     vectors = [
         ("energy-three-runs", "energy-basics", [perfect, worst, mixed]),
         ("energy-one-run", "energy-basics", [worst]),
         ("foreign-result-ignored", "energy-basics", [perfect, cooling]),
         ("no-runs", "cooling-basics", []),
         ("single-item-order", "cooling-basics", [lonely, cooling]),
+        ("scores-on-bin-edges", "energy-basics", [edge_result(turn) for turn in range(len(SCORE_EDGES))]),
+        ("orders-shorter-and-longer", "energy-basics", orders),
+        ("first-entries-count", "energy-basics", [repeated, worst]),
     ]
     quizzes = {quiz["id"]: quiz for quiz in [ENERGY, COOLING]}
     document = {"$comment": GENERATED % "📊️crowd-view", "quizzes": [ENERGY, COOLING], "vectors": []}
@@ -1121,9 +1465,154 @@ def crowd():
 # endregion 🔖️Crowd
 
 
+# region 🔖️Identity
+def identity():
+    """🪪️ Handles at every edge of the policy, the alphabet itself, and commands and queries with well- and ill-shaped ids."""
+    judge = ID.validator("Handle")
+    white_space = "".join(chr(point) for point in sorted(ID.WHITE_SPACE))
+    handles = [
+        ("plain", "Anna"),
+        ("padded", "  Anna  "),
+        ("inner-runs", "Anna \t\n  Muster"),
+        ("no-break-space", "Anna Muster"),
+        ("ideographic-space", "　Anna　　Muster　"),
+        ("every-white-space", "Anna" + white_space + "Muster"),
+        ("umlauts", "JÜRGEN Müller"),
+        ("sharp-s", "Straße Groß"),
+        ("capital-sharp-s", "GROẞ"),
+        ("accents", "Zoë François Åse Søren Łukasz Çağla"),
+        ("vietnamese", "Nguyễn Thị Ánh"),
+        ("turkish-dotted-capital", "İpek Işık"),
+        ("apostrophe", "O'Brien"),
+        ("typographic-apostrophe", "O’Brien"),
+        ("hyphen-and-digits", "Anna-Lena 2"),
+        ("full-stop-and-underscore", "dr.who_42"),
+        ("single-letter", "x"),
+        ("single-digit", "7"),
+        ("max-length", "x" * 64),
+        ("max-length-after-trim", "  " + "z" * 64 + "  "),
+        ("max-length-of-words", " ".join(["ab"] * 21) + " c"),
+        ("input-at-the-limit", " " * 192 + "y" * 64),
+        ("nfc-composed", "André"),
+        ("empty", ""),
+        ("blank", " \t\n "),
+        ("only-no-break-spaces", "  "),
+        ("over-length", "y" * 65),
+        ("over-length-of-words", " ".join(["ab"] * 22)),
+        ("input-over-the-limit", " " * 193 + "y" * 64),
+        ("nfd-decomposed", "André"),
+        ("nfd-umlaut", "Jürgen"),
+        ("lone-combining-mark", "́"),
+        ("zero-width-space", "An​na"),
+        ("zero-width-joiner", "An‍na"),
+        ("zero-width-no-break-space", "﻿Anna"),
+        ("word-joiner", "An⁠na"),
+        ("soft-hyphen", "An­na"),
+        ("mongolian-vowel-separator", "An᠎na"),
+        ("bidi-override", "‮annA"),
+        ("bidi-isolate", "⁦Anna⁩"),
+        ("left-to-right-mark", "Anna‎"),
+        ("control-null", "An\u0000na"),
+        ("control-bell", "Anna\u0007"),
+        ("control-escape", "\u001bAnna"),
+        ("control-delete", "Anna\u007f"),
+        ("control-c1", "An\u0080na"),
+        ("information-separator", "Anna\u001fMuster"),
+        ("cyrillic-homoglyph-a", "Аnna"),
+        ("cyrillic-homoglyph-small-a", "Annа"),
+        ("cyrillic-word", "Анна"),
+        ("greek-homoglyph-omicron", "Rοbert"),
+        ("fullwidth-latin", "Ａnna"),
+        ("mathematical-bold", "\U0001d400nna"),
+        ("kelvin-sign", "Karl"),
+        ("angstrom-sign", "Åse"),
+        ("ligature-ij", "Ĳsbrand"),
+        ("long-s", "Roſe"),
+        ("digraph-dz", "Ǆemal"),
+        ("superscript-digit", "Anna²"),
+        ("arabic-indic-digit", "Anna١"),
+        ("emoji", "  Quiz \U0001f98a  Fuchs "),
+        ("punctuation-only", "..."),
+        ("apostrophe-only", "'"),
+        ("hyphen-only", "-"),
+        ("en-dash", "Anna–Lena"),
+        ("non-breaking-hyphen", "Anna‑Lena"),
+        ("left-single-quote", "O‘Brien"),
+        ("modifier-apostrophe", "OʼBrien"),
+        ("backtick", "O`Brien"),
+        ("comma", "Muster, Anna"),
+        ("at-sign", "anna@example"),
+        ("slash", "anna/muster"),
+        ("angle-brackets", "<b>Anna</b>"),
+        ("multiplication-sign", "Anna×Lena"),
+    ]
+    alphabet = ID.alphabet_of(re.compile(ID.schema()["$defs"]["Handle"]["pattern"]))
+    learner, run, command = hexid("learner-shape"), hexid("run-shape"), hexid("command-shape")
+    start = {"type": "start-run", "id": command, "learner": learner, "run": run, "quiz": "cooling-basics"}
+    record = {"type": "record-answer", "id": command, "learner": learner, "run": run, "task": "cooling-loads", "answer": {"kind": "sorting", "order": []}}
+    submit = {"type": "submit-run", "id": command, "learner": learner, "run": run}
+    named = {"type": "identify-learner", "id": command, "learner": learner, "identity": {"kind": "name", "handle": "Anna"}}
+    broken = lambda base, **members: {**base, **members}
+    shapes = [
+        ("identify-anonymous", "Command", {"type": "identify-learner", "id": command, "learner": learner, "identity": {"kind": "anonymous"}}),
+        ("identify-named", "Command", named),
+        ("start-run", "Command", start),
+        ("record-answer", "Command", record),
+        ("submit-run", "Command", submit),
+        ("command-id-uppercase", "Command", broken(start, id=command.upper())),
+        ("command-id-short", "Command", broken(submit, id=command[:31])),
+        ("command-id-long", "Command", broken(submit, id=command + "0")),
+        ("command-id-not-hex", "Command", broken(submit, id="g" * 32)),
+        ("command-id-empty", "Command", broken(named, id="")),
+        ("command-id-line-feed", "Command", broken(submit, id=command + "\n")),
+        ("command-id-enrollment-key", "Command", broken(named, id="enroll:architecture:roster:1")),
+        ("learner-megabyte", "Command", broken(start, learner="a" * 4096)),
+        ("learner-path", "Command", broken(start, learner="../" + learner[3:])),
+        ("learner-padded", "Command", broken(named, learner=" " + learner[1:])),
+        ("learner-fullwidth-digits", "Command", broken(submit, learner="０" * 32)),
+        ("run-uppercase", "Command", broken(record, run=run.upper())),
+        ("run-with-null", "Command", broken(submit, run=run[:31] + "\u0000")),
+        ("quiz-uppercase", "Command", broken(start, quiz="Cooling-Basics")),
+        ("quiz-trailing-hyphen", "Command", broken(start, quiz="cooling-")),
+        ("quiz-double-hyphen", "Command", broken(start, quiz="cooling--basics")),
+        ("quiz-empty", "Command", broken(start, quiz="")),
+        ("quiz-65-characters", "Command", broken(start, quiz="q" * 65)),
+        ("quiz-64-characters", "Command", broken(start, quiz="q" * 64)),
+        ("quiz-line-feed", "Command", broken(start, quiz="cooling-basics\n")),
+        ("task-with-slash", "Command", broken(record, task="cooling/loads")),
+        ("task-umlaut", "Command", broken(record, task="kühllast")),
+        ("query-catalog", "Query", {"type": "catalog"}),
+        ("query-learner", "Query", {"type": "learner", "learner": learner}),
+        ("query-run", "Query", {"type": "run", "run": run}),
+        ("query-leaderboard", "Query", {"type": "leaderboard", "period": "all-time"}),
+        ("query-leaderboard-caller", "Query", {"type": "leaderboard", "period": "daily", "learner": learner}),
+        ("query-leaderboard-quiz", "Query", {"type": "leaderboard", "period": "weekly", "quiz": "cooling-basics", "learner": learner}),
+        ("query-leaderboard-quiz-not-a-slug", "Query", {"type": "leaderboard", "period": "monthly", "quiz": "Cooling Basics"}),
+        ("query-crowd", "Query", {"type": "crowd", "quiz": "cooling-basics"}),
+        ("query-handle", "Query", {"type": "handle", "handle": "  Anna   Muster "}),
+        ("query-learner-uppercase", "Query", {"type": "learner", "learner": learner.upper()}),
+        ("query-learner-megabyte", "Query", {"type": "learner", "learner": "f" * 4096}),
+        ("query-run-short", "Query", {"type": "run", "run": run[:8]}),
+        ("query-leaderboard-caller-tag", "Query", {"type": "leaderboard", "period": "all-time", "learner": "0d07d623"}),
+        ("query-crowd-not-a-slug", "Query", {"type": "crowd", "quiz": "Cooling Basics"}),
+        ("query-handle-zero-width", "Query", {"type": "handle", "handle": "An​na"}),
+        ("query-handle-blank", "Query", {"type": "handle", "handle": "   "}),
+        ("query-handle-over-the-limit", "Query", {"type": "handle", "handle": "a" * 257}),
+    ]
+    document = {
+        "$comment": GENERATED % "🪪️identity-shapes",
+        "handles": [{"id": identifier, "handle": handle, "expected": ID.normalize_handle(handle, judge)} for identifier, handle in handles],
+        "alphabet": alphabet,
+        "shapes": [{"id": identifier, "definition": definition, "document": document, "expected": ID.rejection({"id": identifier, "definition": definition, "document": document}, judge)} for identifier, definition, document in shapes],
+    }
+    write("🪪️identity-shapes", document)
+# endregion 🔖️Identity
+
+
 CASES_SCHEMA = load(os.path.join(QUIZ, "🧪️tests", "🧬️schema-conformance", "🐍️.py"), "schema_conformance")
 
 if __name__ == "__main__":
+    identity()
     randomness()
     sheets()
     sorting()

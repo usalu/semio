@@ -1,0 +1,37 @@
+{
+  "schema": "semio.quiz.live-regions/v1",
+  "description": "The connection indicator of a quiz client is visible text and never a live region: 'saving' and 'saved' alternate with every answer and would talk over the task's own announcements. One separate polite status speaks only when the connection enters an alert state (offline, or the proctor unreachable) — once, with the indicator's text at that moment, not again while the count of waiting answers changes or one alert state follows another — and when it leaves the alert state ('Connection restored'). A busy proctor (rate limit) is shown in the indicator and never announced. Each step gives the connection, what the indicator shows, its tone, and what the status holds after the step.",
+  "steps": [
+    { "connection": { "online": true, "reachability": "unknown", "pending": 0 }, "tone": "busy", "shown": { "en": "Connecting to the quiz server…", "de": "Verbindung zum Quiz-Server wird aufgebaut…" }, "announced": { "en": "", "de": "" } },
+    { "connection": { "online": true, "reachability": "reachable", "pending": 0 }, "tone": "calm", "shown": { "en": "All answers saved", "de": "Alle Antworten gespeichert" }, "announced": { "en": "", "de": "" } },
+    { "connection": { "online": true, "reachability": "reachable", "pending": 1 }, "tone": "busy", "shown": { "en": "Saving answers (1 waiting)", "de": "Antworten werden gespeichert (1 ausstehend)" }, "announced": { "en": "", "de": "" } },
+    { "connection": { "online": true, "reachability": "reachable", "pending": 0 }, "tone": "calm", "shown": { "en": "All answers saved", "de": "Alle Antworten gespeichert" }, "announced": { "en": "", "de": "" } },
+    { "connection": { "online": true, "reachability": "throttled", "pending": 1 }, "tone": "busy", "shown": { "en": "Server busy – retrying shortly", "de": "Server ausgelastet – neuer Versuch in Kürze" }, "announced": { "en": "", "de": "" } },
+    {
+      "connection": { "online": true, "reachability": "unreachable", "pending": 1 },
+      "tone": "alert",
+      "shown": { "en": "Connection lost – retrying. Answers kept on this device: 1", "de": "Verbindung unterbrochen – neuer Versuch läuft. Auf diesem Gerät gesicherte Antworten: 1" },
+      "announced": { "en": "Connection lost – retrying. Answers kept on this device: 1", "de": "Verbindung unterbrochen – neuer Versuch läuft. Auf diesem Gerät gesicherte Antworten: 1" }
+    },
+    {
+      "connection": { "online": true, "reachability": "unreachable", "pending": 2 },
+      "tone": "alert",
+      "shown": { "en": "Connection lost – retrying. Answers kept on this device: 2", "de": "Verbindung unterbrochen – neuer Versuch läuft. Auf diesem Gerät gesicherte Antworten: 2" },
+      "announced": { "en": "Connection lost – retrying. Answers kept on this device: 1", "de": "Verbindung unterbrochen – neuer Versuch läuft. Auf diesem Gerät gesicherte Antworten: 1" }
+    },
+    {
+      "connection": { "online": false, "reachability": "unreachable", "pending": 2 },
+      "tone": "alert",
+      "shown": { "en": "Offline – answers stay on this device until the connection returns", "de": "Offline – Antworten bleiben auf diesem Gerät, bis die Verbindung zurück ist" },
+      "announced": { "en": "Connection lost – retrying. Answers kept on this device: 1", "de": "Verbindung unterbrochen – neuer Versuch läuft. Auf diesem Gerät gesicherte Antworten: 1" }
+    },
+    { "connection": { "online": true, "reachability": "reachable", "pending": 2 }, "tone": "busy", "shown": { "en": "Saving answers (2 waiting)", "de": "Antworten werden gespeichert (2 ausstehend)" }, "announced": { "en": "Connection restored", "de": "Verbindung wiederhergestellt" } },
+    { "connection": { "online": true, "reachability": "reachable", "pending": 0 }, "tone": "calm", "shown": { "en": "All answers saved", "de": "Alle Antworten gespeichert" }, "announced": { "en": "Connection restored", "de": "Verbindung wiederhergestellt" } },
+    {
+      "connection": { "online": false, "reachability": "reachable", "pending": 0 },
+      "tone": "alert",
+      "shown": { "en": "Offline – answers stay on this device until the connection returns", "de": "Offline – Antworten bleiben auf diesem Gerät, bis die Verbindung zurück ist" },
+      "announced": { "en": "Offline – answers stay on this device until the connection returns", "de": "Offline – Antworten bleiben auf diesem Gerät, bis die Verbindung zurück ist" }
+    }
+  ]
+}

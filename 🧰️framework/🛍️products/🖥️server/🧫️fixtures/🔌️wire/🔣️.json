@@ -1,69 +1,123 @@
 {
   "schema": "semio.framework.server.wire/v1",
-  "note": "🔌️ The language-agnostic wire contract of the server product: the gateway's own route table, and one canonical JSON document per wire type. Rust (🧪️tests/🔬️wire/🦀️.rs) and TypeScript (🟦️.ts) each deserialize every vector into their own twin and serialize it back, asserting the result equals this document. A rename on either side fails the other side's suite. Field spellings are deliberate and not all camelCase: traceContext and frontierSummary carry no serde rename, and an internally tagged enum renames its variants but never the fields inside them, which is why commandOutcome carries canonical_events and rejection carries command_kind.",
+  "note": "🔌️ The language-agnostic wire contract of the server product: the gateway's own route table, and one canonical JSON document per wire type. Rust (🧪️tests/🔬️wire/🦀️.rs) and TypeScript (🟦️.ts) each deserialize every vector into their own twin and serialize it back, asserting the result equals this document. A rename on either side fails the other side's suite. Field spellings are deliberate and not all camelCase: traceContext and frontierSummary carry no serde rename, and an internally tagged enum renames its variants but never the fields inside them, which is why commandOutcome carries canonical_events and rejection carries command_kind. Every route names the group it is mounted with: core is always mounted, ephemeral, blobs and apps only by an instance that asks for them, documents only by an instance that hosts a document authority. The error table is every error the gateway answers with: its status and the kind tag of its errorBody; throttled and overloaded carry retryAfterMs and a Retry-After header.",
   "routes": [
     {
       "method": "GET",
-      "path": "/instance"
+      "path": "/instance",
+      "group": "core"
     },
     {
       "method": "POST",
-      "path": "/commands"
+      "path": "/commands",
+      "group": "core"
     },
     {
       "method": "POST",
-      "path": "/queries"
+      "path": "/queries",
+      "group": "core"
+    },
+    {
+      "method": "GET",
+      "path": "/scopes/{scope}/presence/ws",
+      "group": "core"
+    },
+    {
+      "method": "GET",
+      "path": "/actors/{tenant}/{kind}/{id}/events",
+      "group": "core"
+    },
+    {
+      "method": "GET",
+      "path": "/actors/{tenant}/{kind}/{id}/events/ws",
+      "group": "core"
     },
     {
       "method": "POST",
-      "path": "/scopes/{scope}/ephemeral"
+      "path": "/scopes/{scope}/ephemeral",
+      "group": "ephemeral"
     },
     {
       "method": "GET",
-      "path": "/scopes/{scope}/presence/ws"
-    },
-    {
-      "method": "GET",
-      "path": "/actors/{tenant}/{kind}/{id}/events"
-    },
-    {
-      "method": "GET",
-      "path": "/actors/{tenant}/{kind}/{id}/events/ws"
-    },
-    {
-      "method": "GET",
-      "path": "/blobs/{hash}"
+      "path": "/blobs/{hash}",
+      "group": "blobs"
     },
     {
       "method": "HEAD",
-      "path": "/blobs/{hash}"
+      "path": "/blobs/{hash}",
+      "group": "blobs"
     },
     {
       "method": "PUT",
-      "path": "/blobs/{hash}"
+      "path": "/blobs/{hash}",
+      "group": "blobs"
     },
     {
       "method": "GET",
-      "path": "/apps"
+      "path": "/apps",
+      "group": "apps"
     },
     {
       "method": "GET",
-      "path": "/apps/{app}/installs"
+      "path": "/apps/{app}/installs",
+      "group": "apps"
     },
     {
       "method": "GET",
-      "path": "/apps/{app}"
+      "path": "/apps/{app}",
+      "group": "apps"
     },
     {
       "method": "GET",
-      "path": "/apps/{app}/{*rest}"
+      "path": "/apps/{app}/{*rest}",
+      "group": "apps"
     },
     {
       "method": "GET",
-      "path": "/scopes/{scope}/document/ws"
+      "path": "/scopes/{scope}/document/ws",
+      "group": "documents"
     }
   ],
+  "errors": [
+    { "status": 401, "kind": "unauthorized" },
+    { "status": 403, "kind": "forbidden" },
+    { "status": 404, "kind": "notFound" },
+    { "status": 409, "kind": "conflict" },
+    { "status": 400, "kind": "badRequest" },
+    { "status": 500, "kind": "internal" },
+    { "status": 413, "kind": "payloadTooLarge" },
+    { "status": 408, "kind": "stalled" },
+    { "status": 429, "kind": "throttled" },
+    { "status": 503, "kind": "overloaded" }
+  ],
   "vectors": [
+    {
+      "name": "error-body",
+      "type": "errorBody",
+      "json": {
+        "kind": "forbidden",
+        "message": "forbidden"
+      }
+    },
+    {
+      "name": "error-body-names-the-wait-of-a-refusal-that-passes",
+      "type": "errorBody",
+      "json": {
+        "kind": "throttled",
+        "message": "too many requests",
+        "retryAfterMs": 1500
+      }
+    },
+    {
+      "name": "error-body-names-the-allowance-that-is-spent",
+      "type": "errorBody",
+      "json": {
+        "kind": "throttled",
+        "message": "the sign-up allowance of this address is spent",
+        "retryAfterMs": 36000,
+        "allowance": "sign-up"
+      }
+    },
     {
       "name": "actor-key",
       "type": "actorKey",

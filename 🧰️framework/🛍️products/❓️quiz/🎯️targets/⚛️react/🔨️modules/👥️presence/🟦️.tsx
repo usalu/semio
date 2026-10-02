@@ -10,9 +10,11 @@
  * every learner at that place renders (`data-presence-anchor`: cards, the leaderboard, a task card, an item
  * `item:<id>`, a category `category:<id>`), so it survives other viewports and randomized item orders; a drag names the
  * item it carries. State frames go out at most {@link PRESENCE_FRAME_HZ} times a second, latest state wins; a lost socket
- * reconnects with jittered backoff and sends its latest state and watch again. Others' cursors are decorative
- * (`aria-hidden`); the roster is text for everyone: the online count in the navbar, who is where on the learner card,
- * learners in a quiz on its card and online marks in the leaderboard.
+ * reconnects with jittered backoff — ever more slowly while sessions keep ending right after they began — and sends its
+ * latest state and watch again. Others' cursors are decorative (`aria-hidden`); their name labels are written in the ink
+ * that reads on their palette colour and step aside from the control that has keyboard focus. The roster is text for
+ * everyone: the online count in the navbar, who is where on the learner card, learners in a quiz on its card and online
+ * marks in the leaderboard.
  *
  * @see ../../../../🔨️modules/👥️presence/🟦️.ts — rooms, admission checks, the roster and the thinking crowd of the core
  * @see ../../../../../🖥️server/🟦️.ts — `presenceSocketUrl`, the `semio.presence.v1` frames including `watch`
@@ -43,7 +45,7 @@ import {
   type ThinkingAnswer,
   type ThinkingState,
 } from "@semio-tech/quiz";
-import { Icon, presencePaint } from "@semio-tech/ui-react/chrome";
+import { Icon, presenceColor, presencePaint } from "@semio-tech/ui-react/chrome";
 import { localized, type QuizLocale, type QuizText } from "../🌐️i18n/🟦️.ts";
 import { learnerName } from "../🪪️identity/🟦️.tsx";
 import { RETRY_TIMING, type RetryTiming } from "../🛂️proctor/🟦️.ts";
@@ -65,6 +67,18 @@ export const WATCH_INTERVAL_MS = 250;
 
 /** 🔢️ The most rooms one socket watches (the framework's bound). */
 export const MAX_WATCHED_ROOMS = 16;
+
+/** ⏱️ How long a joined session must last to count as stable; one that ends sooner is a flap. */
+export const PRESENCE_STABLE_MS = 10_000;
+
+/** ⏳️ The pause before a room joins again after `flaps` short-lived sessions in a row (`random` in [0, 1]): a first loss
+ * is a blip and is rejoined within the shortest backoff; from the second flap on the pause is at least that backoff
+ * plus a random share of an exponentially growing ceiling, capped at the longest — so a proctor that admits and drops
+ * sockets (a connection limit) is asked ever more rarely. */
+export function rejoinDelay(flaps: number, timing: RetryTiming, random: number): number {
+  if (flaps <= 1) return random * timing.minMs;
+  return timing.minMs + random * (Math.min(timing.maxMs, timing.minMs * 2 ** (flaps - 1)) - timing.minMs);
+}
 
 /** 🔌️ What a presence room needs of a WebSocket; the browser's `WebSocket` is one. */
 export interface PresenceSocket {
@@ -205,12 +219,15 @@ export class PresenceRoom<S, W = never> {
   }
 
   private async run(signal: AbortSignal): Promise<void> {
-    const { minMs, maxMs } = this.options.timing ?? RETRY_TIMING;
+    const timing = this.options.timing ?? RETRY_TIMING;
+    let flaps = 0;
     while (!signal.aborted) {
-      const joined = await retryWithJitteredBackoff(() => this.join(signal), { minMs, maxMs, signal });
+      const joined = await retryWithJitteredBackoff(() => this.join(signal), { ...timing, signal });
+      const since = Date.now();
       await joined.ended;
       if (signal.aborted) return;
-      await pause((this.options.random ?? Math.random)() * minMs, signal);
+      flaps = Date.now() - since < PRESENCE_STABLE_MS ? flaps + 1 : 0;
+      await pause(rejoinDelay(flaps, timing, (this.options.random ?? Math.random)()), signal);
     }
   }
 
@@ -836,21 +853,72 @@ function appearance(): "light" | "dark" {
   return typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light";
 }
 
-/** 🎨️ The custom property `--quiz-peer` that colours a learner of roster slot `colour` in the current appearance. */
+/** 🖋️ The relative luminance above which black ink contrasts more with a colour than white ink does: where
+ * `(L + 0.05) / 0.05` equals `1.05 / (L + 0.05)`. Either ink then reaches at least 4.58 : 1 on any colour. */
+const INK_FLIP_LUMINANCE = Math.sqrt(1.05 * 0.05) - 0.05;
+
+function channel(value: number): number {
+  return value <= 0.03928 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+}
+
+/** 🖋️ The ink that reads on the palette colour of roster slot `colour` in `appearance`: black or white, whichever
+ * contrasts more by the WCAG relative luminance of that colour. */
+export function peerInk(colour: number, appearance: "light" | "dark"): string {
+  const { h, s, l } = presenceColor(colour, appearance);
+  const chroma = s * Math.min(l, 1 - l);
+  const part = (offset: number): number => {
+    const turn = (offset + h / 30) % 12;
+    return l - chroma * Math.max(-1, Math.min(turn - 3, 9 - turn, 1));
+  };
+  const luminance = 0.2126 * channel(part(0)) + 0.7152 * channel(part(8)) + 0.0722 * channel(part(4));
+  return luminance > INK_FLIP_LUMINANCE ? "#000000" : "#ffffff";
+}
+
+/** 🎨️ The custom properties that colour a learner of roster slot `colour`: `--quiz-peer` in the current appearance, and
+ * the ink of its name label for either appearance (`--quiz-peer-ink-light`, `--quiz-peer-ink-dark`), of which the
+ * stylesheet takes the one the document shows. */
 export function paintStyle(colour: number): CSSProperties {
-  return { ["--quiz-peer" as string]: presencePaint(colour, appearance()) } as CSSProperties;
+  return { ["--quiz-peer" as string]: presencePaint(colour, appearance()), ["--quiz-peer-ink-light" as string]: peerInk(colour, "light"), ["--quiz-peer-ink-dark" as string]: peerInk(colour, "dark") } as CSSProperties;
 }
 
 function anchorSelector(anchor: string): string {
   return `[data-presence-anchor="${typeof CSS !== "undefined" && typeof CSS.escape === "function" ? CSS.escape(anchor) : anchor}"]`;
 }
 
+/** 🫣️ How far (px) a name label keeps from the control that has focus (WCAG 2.2 SC 2.4.11, focus not obscured). */
+export const PEER_LABEL_CLEARANCE_PX = 24;
+
+const LABEL_OFFSET = { cursor: { left: 16, top: 24 }, focus: { left: -2, top: -20 } } as const;
+
+/** ⌨️ The box of the control that has focus in the document, if any. */
+function focusedBox(): DOMRect | undefined {
+  const active = typeof document === "undefined" ? null : document.activeElement;
+  if (active === null || active === document.body) return undefined;
+  const box = active.getBoundingClientRect();
+  return box.width > 0 && box.height > 0 ? box : undefined;
+}
+
+/** 🫣️ Whether the name label of a mark placed at (`left`, `top`) would lie over `focus` or closer to it than
+ * {@link PEER_LABEL_CLEARANCE_PX}. */
+function covers(mark: HTMLElement, left: number, top: number, focus: DOMRect): boolean {
+  const label = mark.querySelector<HTMLElement>(".quiz-peer-label");
+  if (label === null) return false;
+  const offset = LABEL_OFFSET[mark.dataset.peer === "focus" ? "focus" : "cursor"];
+  const x = left + offset.left;
+  const y = top + offset.top;
+  const reach = PEER_LABEL_CLEARANCE_PX;
+  return x < focus.right + reach && x + label.offsetWidth > focus.left - reach && y < focus.bottom + reach && y + label.offsetHeight > focus.top - reach;
+}
+
 /** 📍️ Moves every peer mark of `layer` onto its anchor's box as laid out now; marks whose anchor is not on screen hide.
- * Without `within`, anchors are looked up in the document outside inert pages and placed in viewport pixels; with it,
- * inside `within` only and placed in its own (unscaled) pixels, so marks inside a page scaled on the overview follow. */
+ * Without `within`, anchors are looked up in the document outside inert pages and placed in viewport pixels, and a
+ * mark whose name label would cover the control that has keyboard focus is marked `data-shy` (its label hides, the
+ * pointer or frame stays); with `within`, inside it only and placed in its own (unscaled) pixels, so marks inside a
+ * page scaled on the overview follow. */
 export function placePeers(layer: HTMLElement, within?: HTMLElement): void {
   const frame = within?.getBoundingClientRect();
   const scale = within === undefined || frame === undefined || within.offsetWidth <= 0 ? 1 : frame.width / within.offsetWidth;
+  const focus = within === undefined ? focusedBox() : undefined;
   for (const mark of layer.querySelectorAll<HTMLElement>("[data-peer]")) {
     const selector = anchorSelector(mark.dataset.anchor ?? "");
     const target = within === undefined ? ([...document.querySelectorAll<HTMLElement>(selector)].find((element) => element.closest("[inert]") === null) ?? null) : within.querySelector<HTMLElement>(selector);
@@ -861,13 +929,14 @@ export function placePeers(layer: HTMLElement, within?: HTMLElement): void {
     const seen = target.getBoundingClientRect();
     const box = frame === undefined ? seen : { left: (seen.left - frame.left) / scale, top: (seen.top - frame.top) / scale, width: seen.width / scale, height: seen.height / scale };
     mark.hidden = false;
+    const left = mark.dataset.peer === "focus" ? box.left : box.left + Number(mark.dataset.x) * box.width;
+    const top = mark.dataset.peer === "focus" ? box.top : box.top + Number(mark.dataset.y) * box.height;
+    mark.style.transform = `translate(${left}px, ${top}px)`;
     if (mark.dataset.peer === "focus") {
-      mark.style.transform = `translate(${box.left}px, ${box.top}px)`;
       mark.style.width = `${box.width}px`;
       mark.style.height = `${box.height}px`;
-    } else {
-      mark.style.transform = `translate(${box.left + Number(mark.dataset.x) * box.width}px, ${box.top + Number(mark.dataset.y) * box.height}px)`;
     }
+    mark.toggleAttribute("data-shy", focus !== undefined && covers(mark, left, top, focus));
   }
 }
 
@@ -886,8 +955,11 @@ function PeerMarks(props: { readonly peers: readonly PeerCursor[]; readonly item
             )}
             {peer.cursor === undefined ? null : (
               <div data-peer="cursor" data-anchor={peer.cursor.anchor} data-x={peer.cursor.x} data-y={peer.cursor.y} data-tag={peer.tag} data-drag={peer.drag} hidden className="quiz-peer">
-                <svg viewBox="0 0 16 16" width="16" height="16" className="quiz-peer-arrow">
-                  <path d="M1 1 L1 13.5 L4.6 10 L7.2 15.2 L9.4 14.2 L6.8 9 L11.8 9 Z" />
+                <svg viewBox="0 0 14.666391 23.899563" width="14.666391" height="23.899563" className="quiz-peer-arrow">
+                  <g transform="translate(-219.91582,-287.95767)">
+                    <path d="m 220.04082,288.26777 v 23.46446 h 5.64666 v -17.59835 z" />
+                    <path d="m 226.42314,294.89902 7.98557,8.29594 -3.99279,4.14797 -3.99278,-4.14797 z" />
+                  </g>
                 </svg>
                 <span className="quiz-peer-label">{label}</span>
               </div>
@@ -916,10 +988,12 @@ function usePlacing(layer: { readonly current: HTMLDivElement | null }, active: 
     };
     window.addEventListener("resize", schedule);
     document.addEventListener("scroll", schedule, { capture: true, passive: true });
+    document.addEventListener("focusin", schedule);
     const timer = setInterval(schedule, everyMs);
     return () => {
       window.removeEventListener("resize", schedule);
       document.removeEventListener("scroll", schedule, { capture: true });
+      document.removeEventListener("focusin", schedule);
       clearInterval(timer);
       if (typeof cancelAnimationFrame === "function") cancelAnimationFrame(frame);
     };
@@ -975,7 +1049,7 @@ export function PresenceStatus(props: { readonly text: QuizText }): ReactElement
   const { roster } = usePresenceView();
   if (roster === undefined) return null;
   return (
-    <p data-presence-status="" className="m-0 flex min-w-0 items-center gap-single px-single text-xs text-muted-foreground">
+    <p data-presence-status="" className="m-0 flex min-w-0 items-center gap-single text-xs text-muted-foreground md:px-single">
       <Icon icon="users" size="small" className="shrink-0" />
       <span aria-hidden="true" className="tabular-nums md:hidden">
         {roster.online}
@@ -992,11 +1066,11 @@ export function PresenceList(props: { readonly catalog: CatalogView; readonly te
   const { roster, me, colours } = usePresenceView();
   if (roster === undefined) return null;
   return (
-    <details data-presence-list="" className={cn("min-h-0 overflow-auto text-xs", props.className)}>
+    <details data-presence-list="" className={cn("relative min-h-0 overflow-auto text-xs", props.className)}>
       <summary className="quiz-target cursor-pointer text-foreground">
         {text("quiz.presence.online", { count: roster.online })} · {text("quiz.presence.whoIsWhere")}
       </summary>
-      <ul className="m-0 mt-single flex list-none flex-col gap-single p-0 text-muted-foreground">
+      <ul role="list" className="m-0 mt-single flex list-none flex-col gap-single p-0 text-muted-foreground">
         {roster.learners.map((learner) => (
           <li key={learner.tag} className="flex min-w-0 flex-wrap items-center gap-x-single">
             <OnlineMark colour={colours.get(learner.tag) ?? 0} text={text} />

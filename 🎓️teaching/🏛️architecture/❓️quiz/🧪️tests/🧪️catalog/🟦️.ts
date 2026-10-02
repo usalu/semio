@@ -3,12 +3,13 @@
  * unnoticed on this content.
  * @see ../../🔣️.json — the catalog under test
  * @see ../../../../../🧰️framework/🛍️products/❓️quiz/🧬️schema/🔣️.json — the contract ajv validates against */
-import { catalogIssues, quizIssues, type Catalog, type Quiz } from "@semio-tech/quiz";
+import { MOTIONS, catalogIssues, quizIssues, type Catalog, type Quiz } from "@semio-tech/quiz";
 import Ajv from "ajv";
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import * as material from "../../📚️catalog/🟦️.ts";
 
 const siteRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const catalogPath = resolve(siteRoot, "🔣️.json");
@@ -36,9 +37,21 @@ describe("architecture quiz catalog", () => {
     expect(validCatalog(catalog) ? [] : validCatalog.errors).toEqual([]);
   });
 
+  it("is what the site ships as its material: the module's static imports equal the documents on disk, in the catalog's order, and it exports nothing else", () => {
+    expect(material.ARCHITECTURE_QUIZ_MATERIAL).toEqual({ catalog, quizzes: quizzes.map(({ quiz }) => quiz) });
+    expect(Object.keys(material)).toEqual(["ARCHITECTURE_QUIZ_MATERIAL"]);
+  });
+
   for (const { path, quiz } of quizzes) {
     it(`${path} has no issue in the TS core`, () => {
       expect(quizIssues(quiz)).toEqual([]);
+    });
+
+    it(`${path} gives every task an icon with a distinct emoji`, () => {
+      const icons = quiz.tasks.map((task) => task.icon);
+      expect(icons.every((icon) => icon !== undefined)).toBe(true);
+      expect(new Set(icons.map((icon) => icon!.emoji)).size).toBe(icons.length);
+      for (const icon of icons) expect(MOTIONS).toContain(icon!.motion);
     });
 
     it(`${path} is accepted by the draft-07 contract (ajv)`, () => {

@@ -7,3 +7,8 @@
 //! registries and runs the same host.
 
 pub use crate::contract::*;
+
+/// 📣️ Tell the operator about a fault the caller is not told about: one `[ERROR]` line on stderr.
+pub(crate) fn report(context: &str, cause: &dyn std::fmt::Display) {
+    eprintln!("[ERROR] {context}: {cause}");
+}

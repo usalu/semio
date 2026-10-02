@@ -97,6 +97,50 @@
       ]
     },
     {
+      "kind": "sorting",
+      "id": "order-log",
+      "title": {
+        "en": "Power",
+        "de": "Leistung"
+      },
+      "prompt": {
+        "en": "Smallest first.",
+        "de": "Das Kleinste zuerst."
+      },
+      "quantity": {
+        "label": {
+          "en": "Power",
+          "de": "Leistung"
+        },
+        "unit": "W",
+        "scale": "logarithmic",
+        "prefixed": true
+      },
+      "items": [
+        {
+          "id": "led",
+          "label": {
+            "en": "LED",
+            "de": "LED"
+          }
+        },
+        {
+          "id": "kettle",
+          "label": {
+            "en": "Kettle",
+            "de": "Wasserkocher"
+          }
+        },
+        {
+          "id": "turbine",
+          "label": {
+            "en": "Turbine",
+            "de": "Turbine"
+          }
+        }
+      ]
+    },
+    {
       "kind": "matching",
       "id": "match",
       "title": {
@@ -374,6 +418,259 @@
       }
     },
     {
+      "id": "sorting-guesses-ascending",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 0.001,
+          "cat": 0.3,
+          "whale": 25
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-ties",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 1,
+          "cat": 1,
+          "whale": 2
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-partial",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 0.001,
+          "whale": 25
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-only-one",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "whale",
+          "ant",
+          "cat"
+        ],
+        "guesses": {
+          "cat": 0.3
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-empty",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {}
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-non-positive-linear",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": -5,
+          "cat": 0,
+          "whale": 3
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-guesses-unknown-item",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 1,
+          "mouse": 2
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-guesses-descending",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 5,
+          "cat": 3,
+          "whale": 9
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-guesses-descending-around-unguessed",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": 5,
+          "whale": 3
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-guesses-with-invalid-order",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat"
+        ],
+        "guesses": {
+          "ant": 1,
+          "cat": 2
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-log-guesses-positive",
+      "sheetTask": "order-log",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led",
+          "kettle",
+          "turbine"
+        ],
+        "guesses": {
+          "led": 0.5,
+          "kettle": 2000,
+          "turbine": 1000000000.0
+        }
+      },
+      "expected": {
+        "rejection": null,
+        "complete": true
+      }
+    },
+    {
+      "id": "sorting-log-guesses-zero",
+      "sheetTask": "order-log",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led",
+          "kettle",
+          "turbine"
+        ],
+        "guesses": {
+          "led": 0,
+          "kettle": 2000
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-log-guesses-negative",
+      "sheetTask": "order-log",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "led",
+          "kettle",
+          "turbine"
+        ],
+        "guesses": {
+          "turbine": -1
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
       "id": "matching-complete",
       "sheetTask": "match",
       "answer": {
@@ -547,6 +844,46 @@
         "assignments": {
           "ant": "warm"
         }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    }
+  ],
+  "malformed": [
+    {
+      "id": "sorting-guesses-non-numeric",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": {
+          "ant": "big"
+        }
+      },
+      "expected": {
+        "rejection": "answer-invalid"
+      }
+    },
+    {
+      "id": "sorting-guesses-not-an-object",
+      "sheetTask": "order",
+      "answer": {
+        "kind": "sorting",
+        "order": [
+          "ant",
+          "cat",
+          "whale"
+        ],
+        "guesses": [
+          1,
+          2,
+          3
+        ]
       },
       "expected": {
         "rejection": "answer-invalid"

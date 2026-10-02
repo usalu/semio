@@ -14,7 +14,8 @@ import { buildBudgetMs } from "../../../../🏃️process/⏱️budget/🟦️.t
 import { basename, dirname, join, relative } from "node:path";
 import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { seedGeneratedFile } from "../../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 
 import { BundleScript, ScriptRouter } from "../../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -105,7 +106,7 @@ async function runTypegenExportTest(root: string, outPath?: string): Promise<voi
 class GenerateScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     const outPath = generatedUiContractPath(this.root);
-    mkdirSync(dirname(outPath), { recursive: true });
+    seedGeneratedFile(outPath);
     await runTypegenExportTest(this.root, outPath);
     console.log(`ui-contract typescript mirror refreshed -> ${outPath}`);
   }

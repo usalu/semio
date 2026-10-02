@@ -5282,10 +5282,9 @@ export { OverviewCard, OverviewCardAction, OverviewCardOpenChip, overviewCardChi
 // #endregion 🃏️OverviewCard
 
 // #region 🥞️LayeredOverview
-export { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredChromeState, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState, type LayeredRest } from "../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
+export { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredChromeState, type LayeredLabels, type LayeredMode, type LayeredOverviewProps, type LayeredPane, type LayeredPaneState } from "../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
 export {
   LAYERED_DEFAULT_LIFECYCLE,
-  LAYERED_VIEW,
   LAYERED_FOLLOW_EPSILON,
   LAYERED_FOLLOW_LERP,
   LAYERED_GLIDE_MS,
@@ -5297,15 +5296,8 @@ export {
   followStep,
   glideOffset,
   inWindow,
-  coverPlacement,
-  glideRect,
-  lerpRect,
-  restRect,
-  spanAxisBounds,
-  trackSpans,
-  trackTemplate,
-  veilForRect,
-  viewRect,
+  LAYERED_FOLLOW_FRAME_MS,
+  followFactor,
   lerpOffset,
   nearSquareGrid,
   nextWarmBoot,
@@ -5334,8 +5326,6 @@ export {
   type LayeredWarmStep,
   type LayeredWindow,
   type PaneAxisBounds,
-  type LayeredRect,
-  type LayeredTracks,
 } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 // #endregion 🥞️LayeredOverview
 

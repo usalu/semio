@@ -1,0 +1,681 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/framework/product/pets/schema.json",
+  "title": "Pets",
+  "description": "Render-independent deterministic pets: menageries of rigged species with keyframed clips, their bonds and casts, the stage they act on, the events folded into it and the frames it projects.",
+  "$ref": "#/$defs/Menagerie",
+  "$defs": {
+    "Slug": {
+      "description": "A kebab-case identifier, unique within its scope.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "Text": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A human-readable text in every supported language; there is no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["en", "de"],
+      "properties": {
+        "en": { "type": "string", "minLength": 1 },
+        "de": { "type": "string", "minLength": 1 }
+      }
+    },
+    "Degrees": {
+      "description": "An authored angle in degrees, clockwise on screen (the y axis points down).",
+      "type": "number"
+    },
+    "Turns": {
+      "description": "A simulated angle in turns (1 = a full clockwise revolution).",
+      "type": "number"
+    },
+    "Ticks": {
+      "description": "A whole number of simulation ticks; the stage advances 64 ticks per second.",
+      "type": "integer"
+    },
+    "Color": {
+      "description": "An sRGB colour as #rrggbb in lowercase hexadecimal digits.",
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    },
+    "Paint": {
+      "description": "What a part is painted with: a colour of the species palette, the theme's ink or paper, or nothing.",
+      "enum": ["body", "accent", "detail", "ink", "paper", "none"]
+    },
+    "Channel": {
+      "description": "What a track animates on a bone: offsets in pixels (x, y), an offset in degrees (rotation) or scale factors (scaleX, scaleY; rest = 1).",
+      "enum": ["x", "y", "rotation", "scaleX", "scaleY"]
+    },
+    "Gait": {
+      "description": "How a species moves along a perch: on legs, in hops or hovering above it.",
+      "enum": ["walk", "hop", "float"]
+    },
+    "Activity": {
+      "description": "Everything an actor can be doing; exactly one activity at a time.",
+      "enum": ["idle", "fidget", "walk", "hop", "fall", "land", "sleep", "greet", "cuddle", "squabble", "sulk"]
+    },
+    "PetMode": {
+      "description": "How lively a stage is: motionless, slightly active or busy.",
+      "enum": ["still", "calm", "lively"]
+    },
+    "Bone": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One bone of a skeleton: its rest offset in pixels and rest rotation relative to its parent. Bones are listed parents first; exactly the first bone has no parent.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x", "y"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "parent": { "$ref": "#/$defs/Slug" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "rotation": { "$ref": "#/$defs/Degrees" }
+      }
+    },
+    "PathShape": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A free-form outline as SVG path data in the bone's own coordinates.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "d"],
+      "properties": {
+        "kind": { "const": "path" },
+        "d": { "type": "string", "minLength": 1 }
+      }
+    },
+    "EllipseShape": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "An ellipse around a centre.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "cx", "cy", "rx", "ry"],
+      "properties": {
+        "kind": { "const": "ellipse" },
+        "cx": { "type": "number" },
+        "cy": { "type": "number" },
+        "rx": { "type": "number", "exclusiveMinimum": 0 },
+        "ry": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "RectShape": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "An axis-aligned rectangle with optionally rounded corners.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y", "width", "height"],
+      "properties": {
+        "kind": { "const": "rect" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 },
+        "radius": { "type": "number", "minimum": 0 }
+      }
+    },
+    "LineShape": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A straight stroke between two points.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x1", "y1", "x2", "y2"],
+      "properties": {
+        "kind": { "const": "line" },
+        "x1": { "type": "number" },
+        "y1": { "type": "number" },
+        "x2": { "type": "number" },
+        "y2": { "type": "number" }
+      }
+    },
+    "Shape": {
+      "description": "The geometry of a part, in the coordinates of the bone that carries it; `kind` names the variant.",
+      "oneOf": [{ "$ref": "#/$defs/PathShape" }, { "$ref": "#/$defs/EllipseShape" }, { "$ref": "#/$defs/RectShape" }, { "$ref": "#/$defs/LineShape" }]
+    },
+    "Part": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One drawn piece of a species, rigidly attached to a bone; parts are drawn in list order, back to front. The stroke is 2 pixels wide unless `strokeWidth` says otherwise.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bone", "shape", "fill", "stroke"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "bone": { "$ref": "#/$defs/Slug" },
+        "shape": { "$ref": "#/$defs/Shape" },
+        "fill": { "$ref": "#/$defs/Paint" },
+        "stroke": { "$ref": "#/$defs/Paint" },
+        "strokeWidth": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Eye": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "An eye on a bone: a round white of `radius` whose pupil of radius `pupil` (smaller than `radius`) follows what the actor looks at.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "bone", "x", "y", "radius", "pupil"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "bone": { "$ref": "#/$defs/Slug" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "radius": { "type": "number", "exclusiveMinimum": 0 },
+        "pupil": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Mouth": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A mouth on a bone: a curve of `width` that bends with the actor's mood.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bone", "x", "y", "width"],
+      "properties": {
+        "bone": { "$ref": "#/$defs/Slug" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Face": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The face of a species; it is drawn above the part named by `above` (above every part when absent).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["eyes"],
+      "properties": {
+        "eyes": { "type": "array", "items": { "$ref": "#/$defs/Eye" } },
+        "mouth": { "$ref": "#/$defs/Mouth" },
+        "above": { "$ref": "#/$defs/Slug" }
+      }
+    },
+    "Ease": {
+      "description": "The control points [x1, y1, x2, y2] of a cubic Bézier easing from (0, 0) to (1, 1), as in CSS cubic-bezier(); the abscissas x1 and x2 lie in [0, 1].",
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": [{ "type": "number", "minimum": 0, "maximum": 1 }, { "type": "number" }, { "type": "number", "minimum": 0, "maximum": 1 }, { "type": "number" }]
+    },
+    "Key": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A keyed value at phase `at` (0…1) of a clip; `ease` shapes the way to the next key (linear when absent).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["at", "value"],
+      "properties": {
+        "at": { "type": "number", "minimum": 0, "maximum": 1 },
+        "value": { "type": "number" },
+        "ease": { "$ref": "#/$defs/Ease" }
+      }
+    },
+    "Track": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The keys of one channel of one bone: at least two, in strictly ascending phase, the first at 0 and the last at 1.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bone", "channel", "keys"],
+      "properties": {
+        "bone": { "$ref": "#/$defs/Slug" },
+        "channel": { "$ref": "#/$defs/Channel" },
+        "keys": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/Key" } }
+      }
+    },
+    "Clip": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A keyframed motion of `seconds` length, played once or looped; values are relative to the rest pose. In a looping clip every track ends on the value it starts with (on the rotation channel: the same angle modulo 360°).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "seconds", "loop", "tracks"],
+      "properties": {
+        "id": { "$ref": "#/$defs/Slug" },
+        "seconds": { "type": "number", "exclusiveMinimum": 0 },
+        "loop": { "type": "boolean" },
+        "tracks": { "type": "array", "items": { "$ref": "#/$defs/Track" } }
+      }
+    },
+    "Repertoire": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The clips a species plays per activity; one of several is drawn at random, none leaves the body at rest.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "idle": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "fidget": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "walk": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "hop": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "fall": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "land": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "sleep": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "greet": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "cuddle": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "squabble": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "sulk": { "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+      }
+    },
+    "Size": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The box a species fills at rest in pixels at scale 1: its feet stand on the origin, the body rises `height` above it and spans `width` around it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["width", "height"],
+      "properties": {
+        "width": { "type": "number", "exclusiveMinimum": 0 },
+        "height": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Palette": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The three colours of a species; ink and paper come from the theme.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["body", "accent", "detail"],
+      "properties": {
+        "body": { "$ref": "#/$defs/Color" },
+        "accent": { "$ref": "#/$defs/Color" },
+        "detail": { "$ref": "#/$defs/Color" }
+      }
+    },
+    "Locomotion": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How fast a species travels in pixels per second, with which gait and, exactly when the gait is float, how high above its perch it hovers.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["gait", "speed"],
+      "properties": {
+        "gait": { "$ref": "#/$defs/Gait" },
+        "speed": { "type": "number", "exclusiveMinimum": 0 },
+        "hover": { "type": "number", "exclusiveMinimum": 0 }
+      }
+    },
+    "Temperament": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The character of a species, each trait in [0, 1].",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["energy", "sociability", "curiosity"],
+      "properties": {
+        "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sociability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "curiosity": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Species": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A kind of pet: its accessible name, what it stands for and where that is grounded, its rig (bones, parts, face), its motions (clips, repertoire) and its character. Ids are unique within its bones, parts, eyes and clips; every reference to a bone, part or clip resolves.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "name", "thing", "grounds", "size", "palette", "bones", "parts", "face", "clips", "repertoire", "locomotion", "temperament"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "name": { "$ref": "#/$defs/Text" },
+        "thing": { "$ref": "#/$defs/Text" },
+        "grounds": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "size": { "$ref": "#/$defs/Size" },
+        "palette": { "$ref": "#/$defs/Palette" },
+        "bones": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Bone" } },
+        "parts": { "type": "array", "items": { "$ref": "#/$defs/Part" } },
+        "face": { "$ref": "#/$defs/Face" },
+        "clips": { "type": "array", "items": { "$ref": "#/$defs/Clip" } },
+        "repertoire": { "$ref": "#/$defs/Repertoire" },
+        "locomotion": { "$ref": "#/$defs/Locomotion" },
+        "temperament": { "$ref": "#/$defs/Temperament" }
+      }
+    },
+    "Bond": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How two different species feel about each other, from −1 (they squabble) to 1 (they adore each other); unlisted pairs are neutral and every unordered pair is listed at most once.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["between", "affinity"],
+      "properties": {
+        "between": { "type": "array", "minItems": 2, "maxItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/Slug" } },
+        "affinity": { "type": "number", "minimum": -1, "maximum": 1 }
+      }
+    },
+    "Cast": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The species of one scene: the core (at least one) is on stage whenever there is room, the rotation takes turns.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scene", "core", "rotation"],
+      "properties": {
+        "scene": { "$ref": "#/$defs/Slug" },
+        "core": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Slug" } },
+        "rotation": { "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+      }
+    },
+    "Menagerie": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A menagerie document: every species of a domain, their bonds and the casts of its scenes. Species ids and scenes are unique; bonds and casts name species of this menagerie.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "id", "title", "species", "bonds", "casts"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schema": { "const": "semio.pets.menagerie/v1" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "species": { "type": "array", "items": { "$ref": "#/$defs/Species" } },
+        "bonds": { "type": "array", "items": { "$ref": "#/$defs/Bond" } },
+        "casts": { "type": "array", "items": { "$ref": "#/$defs/Cast" } }
+      }
+    },
+    "Ensemble": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The authoring form of a menagerie: every species lives in a document of its own, referenced by a path relative to the ensemble; the species are assembled in the order of their paths.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "id", "title", "species", "bonds", "casts"],
+      "properties": {
+        "$schema": { "type": "string" },
+        "schema": { "const": "semio.pets.ensemble/v1" },
+        "id": { "$ref": "#/$defs/Slug" },
+        "title": { "$ref": "#/$defs/Text" },
+        "species": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "bonds": { "type": "array", "items": { "$ref": "#/$defs/Bond" } },
+        "casts": { "type": "array", "items": { "$ref": "#/$defs/Cast" } }
+      }
+    },
+    "Point": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A position in viewport pixels.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Rect": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "An axis-aligned box in viewport pixels.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "width", "height"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 }
+      }
+    },
+    "Surface": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The top edge of something actors may stand on, from `x0` to `x1` at height `y`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "x0", "x1", "y"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "x0": { "type": "number" },
+        "x1": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Perch": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A stretch of a surface that is free to stand on.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "x0", "x1", "y"],
+      "properties": {
+        "surface": { "type": "string", "minLength": 1 },
+        "x0": { "type": "number" },
+        "x1": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Ticked": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Time passed: the stage advances by whole ticks.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ticks"],
+      "properties": {
+        "kind": { "const": "ticked" },
+        "ticks": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Pointed": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The pointer moved to a position.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y"],
+      "properties": {
+        "kind": { "const": "pointed" },
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "Unpointed": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The pointer left the stage.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind"],
+      "properties": {
+        "kind": { "const": "unpointed" }
+      }
+    },
+    "Glanced": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Other things worth a look right now, such as the cursors of other people.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "points"],
+      "properties": {
+        "kind": { "const": "glanced" },
+        "points": { "type": "array", "items": { "$ref": "#/$defs/Point" } }
+      }
+    },
+    "Surveyed": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The stage was measured anew: its size, every surface and everything actors must not cover.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "width", "height", "surfaces", "keepouts"],
+      "properties": {
+        "kind": { "const": "surveyed" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/Surface" } },
+        "keepouts": { "type": "array", "items": { "$ref": "#/$defs/Rect" } }
+      }
+    },
+    "Summoned": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The species that belong on stage from now on, most wanted first.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "species"],
+      "properties": {
+        "kind": { "const": "summoned" },
+        "species": { "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+      }
+    },
+    "Tuned": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The liveliness changed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "mode"],
+      "properties": {
+        "kind": { "const": "tuned" },
+        "mode": { "$ref": "#/$defs/PetMode" }
+      }
+    },
+    "Hushed": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "A time of concentration began or ended; hushed actors rest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "quiet"],
+      "properties": {
+        "kind": { "const": "hushed" },
+        "quiet": { "type": "boolean" }
+      }
+    },
+    "Poked": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Someone tapped the stage at a position.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "x", "y"],
+      "properties": {
+        "kind": { "const": "poked" },
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      }
+    },
+    "StageEvent": {
+      "description": "Everything that can happen to a stage; `kind` names the variant.",
+      "oneOf": [
+        { "$ref": "#/$defs/Ticked" },
+        { "$ref": "#/$defs/Pointed" },
+        { "$ref": "#/$defs/Unpointed" },
+        { "$ref": "#/$defs/Glanced" },
+        { "$ref": "#/$defs/Surveyed" },
+        { "$ref": "#/$defs/Summoned" },
+        { "$ref": "#/$defs/Tuned" },
+        { "$ref": "#/$defs/Hushed" },
+        { "$ref": "#/$defs/Poked" }
+      ]
+    },
+    "Gaze": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Where the pupils rest between −1 and 1 on both axes, with the velocity of the spring that moves them.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "vx", "vy"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "vx": { "type": "number" },
+        "vy": { "type": "number" }
+      }
+    },
+    "Needs": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The drives of an actor, each in [0, 1].",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["energy", "sociability", "curiosity"],
+      "properties": {
+        "energy": { "type": "number", "minimum": 0, "maximum": 1 },
+        "sociability": { "type": "number", "minimum": 0, "maximum": 1 },
+        "curiosity": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "Actor": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One pet on stage: where its feet are, the way it faces and the tick from which it faces that way squarely (faced; it turns round over the ticks before), what it does and until when, whom it does it with, how it looks and feels.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["species", "perch", "x", "y", "vx", "vy", "facing", "faced", "activity", "since", "until", "goal", "partner", "clip", "gaze", "blink", "mood", "needs", "opacity", "leaving", "draws"],
+      "properties": {
+        "species": { "$ref": "#/$defs/Slug" },
+        "perch": { "type": ["string", "null"] },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "vx": { "type": "number" },
+        "vy": { "type": "number" },
+        "facing": { "enum": [1, -1] },
+        "faced": { "$ref": "#/$defs/Ticks" },
+        "activity": { "$ref": "#/$defs/Activity" },
+        "since": { "$ref": "#/$defs/Ticks" },
+        "until": { "$ref": "#/$defs/Ticks" },
+        "goal": { "type": "number" },
+        "partner": { "oneOf": [{ "$ref": "#/$defs/Slug" }, { "type": "null" }] },
+        "clip": { "oneOf": [{ "$ref": "#/$defs/Slug" }, { "type": "null" }] },
+        "gaze": { "$ref": "#/$defs/Gaze" },
+        "blink": { "$ref": "#/$defs/Ticks" },
+        "mood": { "type": "number", "minimum": -1, "maximum": 1 },
+        "needs": { "$ref": "#/$defs/Needs" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "leaving": { "type": "boolean" },
+        "draws": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "Rapport": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How the shared history of two actors has shifted their bond away from its authored affinity.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["between", "drift"],
+      "properties": {
+        "between": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "$ref": "#/$defs/Slug" } },
+        "drift": { "type": "number" }
+      }
+    },
+    "Stage": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The whole state of a stage; `advance` folds events into it and `frameOf` projects it.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["seed", "tick", "mode", "quiet", "width", "height", "pointer", "pointed", "glances", "surfaces", "keepouts", "perches", "wanted", "actors", "rapports", "met", "draws"],
+      "properties": {
+        "seed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "tick": { "type": "integer", "minimum": 0 },
+        "mode": { "$ref": "#/$defs/PetMode" },
+        "quiet": { "type": "boolean" },
+        "width": { "type": "number", "minimum": 0 },
+        "height": { "type": "number", "minimum": 0 },
+        "pointer": { "oneOf": [{ "$ref": "#/$defs/Point" }, { "type": "null" }] },
+        "pointed": { "$ref": "#/$defs/Ticks" },
+        "glances": { "type": "array", "items": { "$ref": "#/$defs/Point" } },
+        "surfaces": { "type": "array", "items": { "$ref": "#/$defs/Surface" } },
+        "keepouts": { "type": "array", "items": { "$ref": "#/$defs/Rect" } },
+        "perches": { "type": "array", "items": { "$ref": "#/$defs/Perch" } },
+        "wanted": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "actors": { "type": "array", "items": { "$ref": "#/$defs/Actor" } },
+        "rapports": { "type": "array", "items": { "$ref": "#/$defs/Rapport" } },
+        "met": { "$ref": "#/$defs/Ticks" },
+        "draws": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "EyeFrame": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One eye as drawn: the pupil's offset from the centre of the white in pixels and how far the lid is shut (0 open, 1 shut).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["x", "y", "lid"],
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "lid": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "ActorFrame": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "One actor as drawn: its feet, the way it faces, what it is doing, its opacity, a 2×3 matrix a b c d e f per bone in rig order, its eyes and its mood (−1 sad … 1 happy).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["species", "x", "y", "facing", "activity", "opacity", "bones", "eyes", "mood"],
+      "properties": {
+        "species": { "$ref": "#/$defs/Slug" },
+        "x": { "type": "number" },
+        "y": { "type": "number" },
+        "facing": { "enum": [1, -1] },
+        "activity": { "$ref": "#/$defs/Activity" },
+        "opacity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "bones": { "type": "array", "items": { "type": "number" } },
+        "eyes": { "type": "array", "items": { "$ref": "#/$defs/EyeFrame" } },
+        "mood": { "type": "number", "minimum": -1, "maximum": 1 }
+      }
+    },
+    "Frame": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Everything a render target needs to draw a stage: the actors back to front, how many ticks per second the motion needs (0 = nothing moves) and the tick of the next change when nothing moves.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tick", "actors", "rate", "wake"],
+      "properties": {
+        "tick": { "type": "integer", "minimum": 0 },
+        "actors": { "type": "array", "items": { "$ref": "#/$defs/ActorFrame" } },
+        "rate": { "enum": [0, 16, 32, 64] },
+        "wake": { "oneOf": [{ "$ref": "#/$defs/Ticks" }, { "type": "null" }] }
+      }
+    }
+  }
+}

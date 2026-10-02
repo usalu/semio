@@ -57,9 +57,11 @@ Feature: Every quiz document the product meets conforms to the normative schema
       | badge-results               | shared://🏅️badge-rules/🔣️.json           | /vectors/*/results/*                        | RunResult   | -        |
       | lifecycle-catalog           | shared://🧾️learner-lifecycle/🔣️.json     | /catalog                                    | Catalog     | /quizzes |
       | lifecycle-quizzes           | shared://🧾️learner-lifecycle/🔣️.json     | /quizzes/*                                  | Quiz        | -        |
-      | lifecycle-roster-commands   | shared://🧾️learner-lifecycle/🔣️.json     | /roster/*/steps/*/command                   | Command     | -        |
-      | lifecycle-roster-events     | shared://🧾️learner-lifecycle/🔣️.json     | /roster/*/steps/*/expected/events/*         | Event       | -        |
-      | lifecycle-roster-rejections | shared://🧾️learner-lifecycle/🔣️.json     | /roster/*/steps/*/expected/rejection        | Rejection   | -        |
+      | lifecycle-limits            | shared://🧾️learner-lifecycle/🔣️.json     | /limits                                     | Limits      | -        |
+      | lifecycle-quota-limits      | shared://🧾️learner-lifecycle/🔣️.json     | /quotas/*/limits                            | Limits      | -        |
+      | lifecycle-claim-commands    | shared://🧾️learner-lifecycle/🔣️.json     | /registrations/*/steps/*/command            | Command     | -        |
+      | lifecycle-claim-events      | shared://🧾️learner-lifecycle/🔣️.json     | /registrations/*/steps/*/expected/events/*  | Event       | -        |
+      | lifecycle-claim-rejections  | shared://🧾️learner-lifecycle/🔣️.json     | /registrations/*/steps/*/expected/rejection | Rejection   | -        |
       | lifecycle-given-events      | shared://🧾️learner-lifecycle/🔣️.json     | /learners/*/given/*                         | Event       | -        |
       | lifecycle-commands          | shared://🧾️learner-lifecycle/🔣️.json     | /learners/*/steps/*/command                 | Command     | -        |
       | lifecycle-events            | shared://🧾️learner-lifecycle/🔣️.json     | /learners/*/steps/*/expected/events/*       | Event       | -        |
@@ -72,7 +74,12 @@ Feature: Every quiz document the product meets conforms to the normative schema
       | leaderboard-catalog-views   | shared://🏆️leaderboard/🔣️.json           | /catalogs/*/expected                        | CatalogView | -        |
       | leaderboard-events          | shared://🏆️leaderboard/🔣️.json           | /vectors/*/learners/*/events/*              | Event       | -        |
       | leaderboard-learner-views   | shared://🏆️leaderboard/🔣️.json           | /vectors/*/expected/learnerViews/*          | LearnerView | -        |
-      | leaderboard-rankings        | shared://🏆️leaderboard/🔣️.json           | /vectors/*/expected/leaderboard             | Leaderboard | -        |
+      | leaderboard-rankings        | shared://🏆️leaderboard/🔣️.json           | /vectors/*/expected/leaderboards/*/*        | Leaderboard | -        |
+      | leaderboard-daily-windows   | shared://🏆️leaderboard/🔣️.json           | /windows/*/expected/daily                   | LeaderboardWindow | -  |
+      | leaderboard-weekly-windows  | shared://🏆️leaderboard/🔣️.json           | /windows/*/expected/weekly                  | LeaderboardWindow | -  |
+      | leaderboard-monthly-windows | shared://🏆️leaderboard/🔣️.json           | /windows/*/expected/monthly                 | LeaderboardWindow | -  |
+      | leaderboard-periods         | shared://🏆️leaderboard/🔣️.json           | /vectors/*/boards/*/period                  | LeaderboardPeriod | -  |
+      | identity-handles            | shared://🪪️identity-shapes/🔣️.json       | /handles/*/expected/display                 | Handle      | -        |
       | presence-places             | shared://👥️shared-presence/🔣️.json       | /scopes/*/place                             | Place       | -        |
       | crowd-quizzes               | shared://📊️crowd-view/🔣️.json            | /quizzes/*                                  | Quiz        | -        |
       | crowd-results               | shared://📊️crowd-view/🔣️.json            | /vectors/*/results/*                        | RunResult   | -        |

@@ -94,7 +94,9 @@
     { "name": "one frame covers 12 % of the distance", "current": { "x": 0, "y": 0 }, "target": { "x": 1, "y": 0 }, "offset": { "x": 0.12, "y": 0 }, "settled": false },
     { "name": "both axes move together", "current": { "x": 0, "y": 0 }, "target": { "x": -1, "y": 2 }, "offset": { "x": -0.12, "y": 0.24 }, "settled": false },
     { "name": "within the epsilon it lands on the target", "current": { "x": 0.99995, "y": 0 }, "target": { "x": 1, "y": 0 }, "offset": { "x": 1, "y": 0 }, "settled": true },
-    { "name": "on the target it is settled", "current": { "x": 2, "y": 1 }, "target": { "x": 2, "y": 1 }, "offset": { "x": 2, "y": 1 }, "settled": true }
+    { "name": "on the target it is settled", "current": { "x": 2, "y": 1 }, "target": { "x": 2, "y": 1 }, "offset": { "x": 2, "y": 1 }, "settled": true },
+    { "name": "a 120 Hz frame covers less, so the pan takes as long as at 60 Hz", "elapsedMs": 8.333333333333334, "current": { "x": 0, "y": 0 }, "target": { "x": 1, "y": 0 }, "offset": { "x": 0.0619168480353141, "y": 0 }, "settled": false },
+    { "name": "a slow 100 ms frame covers what six 60 Hz frames would", "elapsedMs": 100, "current": { "x": 0, "y": 0 }, "target": { "x": 1, "y": -2 }, "offset": { "x": 0.535595913216, "y": -1.071191826432 }, "settled": false }
   ],
   "stripTransforms": [
     { "name": "the first cell", "offset": { "x": 0, "y": 0 }, "grid": { "columns": 3, "rows": 3 }, "transform": "translate3d(0%, 0%, 0)" },
@@ -198,90 +200,12 @@
     { "name": "play releases a pane untouched for two minutes", "lifecycle": { "suspendIdleMs": 120000 }, "live": [{ "id": "a", "since": 0 }, { "id": "b", "since": 100000 }], "keep": [], "now": 120000, "opened": false, "hidden": false, "released": ["a"] },
     { "name": "the quiz home never releases", "lifecycle": {}, "live": [{ "id": "a", "since": 0 }], "keep": [], "now": 1000000000, "opened": true, "hidden": true, "released": [] }
   ],
-  "rests": [
-    { "name": "the centre of a uniform 3 × 3", "grid": { "columns": 3, "rows": 3 }, "tracks": {}, "cell": { "column": 1, "row": 1 }, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 } },
-    { "name": "the quiz desktop centre with larger middle tracks", "grid": { "columns": 3, "rows": 3 }, "tracks": { "columns": [1, 1.5, 1], "rows": [1, 1.4, 1] }, "cell": { "column": 1, "row": 1 }, "rect": { "x": 0.2857142857142857, "y": 0.29411764705882354, "width": 0.42857142857142855, "height": 0.4117647058823529 } },
-    { "name": "the last cell of a tablet 2 × 5", "grid": { "columns": 2, "rows": 5 }, "tracks": {}, "cell": { "column": 1, "row": 4 }, "rect": { "x": 0.5, "y": 0.8, "width": 0.5, "height": 0.2 } },
-    { "name": "the demonstrator's last cell", "grid": { "columns": 4, "rows": 2 }, "tracks": {}, "cell": { "column": 3, "row": 1 }, "rect": { "x": 0.75, "y": 0.5, "width": 0.25, "height": 0.5 } },
-    { "name": "a missing track weight weighs one", "grid": { "columns": 3, "rows": 1 }, "tracks": { "columns": [2] }, "cell": { "column": 2, "row": 0 }, "rect": { "x": 0.75, "y": 0, "width": 0.25, "height": 1 } }
-  ],
-  "invalidTracks": [
-    { "name": "a zero track", "grid": { "columns": 3, "rows": 1 }, "tracks": { "columns": [1, 0, 1] } },
-    { "name": "a negative track", "grid": { "columns": 1, "rows": 2 }, "tracks": { "rows": [-1, 1] } }
-  ],
-  "trackTemplates": [
-    { "name": "the quiz desktop columns", "weights": [1, 1.5, 1], "count": 3, "template": "minmax(0, 1fr) minmax(0, 1.5fr) minmax(0, 1fr)" },
-    { "name": "equal tracks by default", "weights": null, "count": 2, "template": "minmax(0, 1fr) minmax(0, 1fr)" },
-    { "name": "missing weights are one", "weights": [2], "count": 3, "template": "minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr)" }
-  ],
-  "views": [
-    { "name": "at rest a page shows at its rest", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0, "y": 0, "width": 1, "height": 1 }, "view": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 } },
-    { "name": "the zoomed page fills the view", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "view": { "x": 0, "y": 0, "width": 1, "height": 1 } },
-    { "name": "a neighbour of the zoomed page lies just outside", "rest": { "x": 0, "y": 0, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "view": { "x": -1, "y": -1, "width": 1, "height": 1 } },
-    { "name": "a tablet neighbour lies right of the zoomed page", "rest": { "x": 0.5, "y": 0.4, "width": 0.5, "height": 0.2 }, "camera": { "x": 0, "y": 0.4, "width": 0.5, "height": 0.2 }, "view": { "x": 1, "y": 0, "width": 1, "height": 1 } },
-    { "name": "half way into the zoom", "rest": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "camera": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "view": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 } }
-  ],
-  "zooms": [
-    {
-      "name": "a reveal zooms from the whole grid to the centre page",
-      "from": { "x": 0, "y": 0, "width": 1, "height": 1 },
-      "to": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
-      "durationMs": 500,
-      "samples": [
-        { "elapsedMs": 0, "rect": { "x": 0, "y": 0, "width": 1, "height": 1 }, "done": false },
-        { "elapsedMs": 125, "rect": { "x": 0.020833333333333332, "y": 0.020833333333333332, "width": 0.9583333333333334, "height": 0.9583333333333334 }, "done": false },
-        { "elapsedMs": 250, "rect": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "done": false },
-        { "elapsedMs": 500, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "done": true },
-        { "elapsedMs": 700, "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "done": true }
-      ]
-    },
-    {
-      "name": "leaving zooms back out",
-      "from": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
-      "to": { "x": 0, "y": 0, "width": 1, "height": 1 },
-      "durationMs": 500,
-      "samples": [{ "elapsedMs": 250, "rect": { "x": 0.16666666666666666, "y": 0.16666666666666666, "width": 0.6666666666666667, "height": 0.6666666666666667 }, "done": false }]
-    }
-  ],
-  "placements": [
-    { "name": "a page resting in a third of the view", "view": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 }, "transform": "translate3d(33.3333%, 33.3333%, 0) scale(0.333333)", "clipPath": "inset(0% 0% 0% 0%)" },
-    { "name": "a page filling the view is untouched", "view": { "x": 0, "y": 0, "width": 1, "height": 1 }, "transform": "translate3d(0%, 0%, 0) scale(1)", "clipPath": "inset(0% 0% 0% 0%)" },
-    { "name": "a neighbour just outside the view", "view": { "x": -1, "y": -1, "width": 1, "height": 1 }, "transform": "translate3d(-100%, -100%, 0) scale(1)", "clipPath": "inset(0% 0% 0% 0%)" },
-    { "name": "half way into the zoom", "view": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 }, "transform": "translate3d(25%, 25%, 0) scale(0.5)", "clipPath": "inset(0% 0% 0% 0%)" },
-    { "name": "a wide cell covers by width and cuts the bottom", "view": { "x": 0, "y": 0.2, "width": 0.5, "height": 0.2 }, "transform": "translate3d(0%, 20%, 0) scale(0.5)", "clipPath": "inset(0% 0% 60% 0%)" },
-    { "name": "a tall cell covers by height and cuts both sides", "view": { "x": 0.1, "y": 0, "width": 0.2, "height": 0.5 }, "transform": "translate3d(-5%, 0%, 0) scale(0.5)", "clipPath": "inset(0% 30% 0% 30%)" },
-    { "name": "the quiz desktop centre", "view": { "x": 0.2857142857142857, "y": 0.29411764705882354, "width": 0.42857142857142855, "height": 0.4117647058823529 }, "transform": "translate3d(28.5714%, 29.4118%, 0) scale(0.428571)", "clipPath": "inset(0% 0% 3.9216% 0%)" }
-  ],
-  "rectVeils": [
-    { "name": "nothing revealed keeps the glass whole", "rect": null, "kind": "whole", "clipPath": "none", "area": 10000 },
-    { "name": "a zoomed page hides the glass", "rect": { "x": 0, "y": 0, "width": 1, "height": 1 }, "kind": "clear", "clipPath": "none", "area": 0 },
-    { "name": "a page outside the view keeps the glass whole", "rect": { "x": -1, "y": -1, "width": 1, "height": 1 }, "kind": "whole", "clipPath": "none", "area": 10000 },
-    {
-      "name": "a page revealed at rest shows through its cell",
-      "rect": { "x": 0.3333333333333333, "y": 0.3333333333333333, "width": 0.3333333333333333, "height": 0.3333333333333333 },
-      "kind": "hole",
-      "hole": { "left": 0.3333333333333333, "top": 0.3333333333333333, "right": 0.6666666666666666, "bottom": 0.6666666666666666 },
-      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [33.3333, 33.3333], [66.6667, 33.3333], [66.6667, 66.6667], [33.3333, 66.6667], [33.3333, 33.3333]],
-      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 33.3333% 33.3333%, 66.6667% 33.3333%, 66.6667% 66.6667%, 33.3333% 66.6667%, 33.3333% 33.3333%)",
-      "area": 8888.88444444
-    },
-    {
-      "name": "half way into the zoom",
-      "rect": { "x": 0.25, "y": 0.25, "width": 0.5, "height": 0.5 },
-      "kind": "hole",
-      "hole": { "left": 0.25, "top": 0.25, "right": 0.75, "bottom": 0.75 },
-      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [25, 25], [75, 25], [75, 75], [25, 75], [25, 25]],
-      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 25% 25%, 75% 25%, 75% 75%, 25% 75%, 25% 25%)",
-      "area": 7500
-    },
-    {
-      "name": "a page sliding in from the right is cut at the view's edge",
-      "rect": { "x": 0.75, "y": 0, "width": 0.5, "height": 0.5 },
-      "kind": "hole",
-      "hole": { "left": 0.75, "top": 0, "right": 1, "bottom": 0.5 },
-      "polygon": [[0, 0], [100, 0], [100, 100], [0, 100], [0, 0], [75, 0], [100, 0], [100, 50], [75, 50], [75, 0]],
-      "clipPath": "polygon(evenodd, 0% 0%, 100% 0%, 100% 100%, 0% 100%, 0% 0%, 75% 0%, 100% 0%, 100% 50%, 75% 50%, 75% 0%)",
-      "area": 8750
-    }
+  "followFactors": [
+    { "name": "no time closes nothing", "elapsedMs": 0, "factor": 0 },
+    { "name": "one 60 Hz frame closes 12 %", "elapsedMs": 16.666666666666668, "factor": 0.12 },
+    { "name": "two 60 Hz frames compound", "elapsedMs": 33.333333333333336, "factor": 0.2256 },
+    { "name": "a 120 Hz frame closes less, two of them the same 12 %", "elapsedMs": 8.333333333333334, "factor": 0.0619168480353141 },
+    { "name": "a slow 100 ms frame closes what six 60 Hz frames would", "elapsedMs": 100, "factor": 0.535595913216 },
+    { "name": "a clock running backwards closes nothing", "elapsedMs": -5, "factor": 0 }
   ]
 }

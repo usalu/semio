@@ -1,19 +1,25 @@
 //! 🃏️ The sheet of a run: the randomized, solution-free presentation of a quiz as a pure function of
-//! `(quiz, seed)` (design §4). The RNG consumption order is part of the contract: the task order
-//! first, then per task in definition order its items, then its categories (classification) or its
-//! cards per dimension in definition order (matching).
+//! `(quiz, seed)` (design §4). The first task stays first and the remaining tasks are shuffled. The
+//! RNG consumption order is part of the contract: the shuffled task order first, then per task in
+//! definition order its items, then its categories (classification) or its cards per dimension in
+//! definition order (matching).
 //!
 //! @see ../🎲️randomness/🦀️.rs — the generator and shuffle
 //! @see ../🃏️sheet/🟦️.ts — the TypeScript twin
 
 use crate::randomness::{shuffle, Mt19937};
-use crate::schema::{MatchingTask, Quiz, Sheet, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, Text};
+use crate::schema::{Icon, MatchingTask, Quiz, Sheet, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, Text};
 
 /// 🎰️ Present `quiz` for `seed`. Expects a quiz free of [`crate::validation::quiz_issues`]; a matching
 /// item missing a dimension value contributes a `NaN` card.
 pub fn sheet_of(quiz: &Quiz, seed: u32) -> Sheet {
     let mut random = Mt19937::new(seed);
-    let order = shuffle(&mut random, &(0..quiz.tasks.len()).collect::<Vec<_>>());
+    let shuffled_order = shuffle(&mut random, &(0..quiz.tasks.len()).collect::<Vec<_>>());
+    let order = if shuffled_order.len() > 1 {
+        std::iter::once(0).chain(shuffled_order.into_iter().filter(|&index| index != 0)).collect()
+    } else {
+        shuffled_order
+    };
     let mut presented: Vec<Option<SheetTask>> = quiz.tasks.iter().map(|task| Some(present(&mut random, task))).collect();
     Sheet {
         quiz: quiz.id.clone(),
@@ -32,9 +38,10 @@ fn present(random: &mut Mt19937, task: &Task) -> SheetTask {
                 id: task.id.clone(),
                 title: task.title.clone(),
                 prompt: task.prompt.clone(),
+                icon: task.icon.clone(),
                 axes: task.axes.clone(),
                 categories: shuffle(random, &task.categories),
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label)).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].icon.as_ref())).collect(),
             })
         }
         Task::Sorting(task) => {
@@ -46,8 +53,9 @@ fn present(random: &mut Mt19937, task: &Task) -> SheetTask {
                 id: task.id.clone(),
                 title: task.title.clone(),
                 prompt: task.prompt.clone(),
+                icon: task.icon.clone(),
                 quantity: task.quantity.clone(),
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label)).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].icon.as_ref())).collect(),
             })
         }
         Task::Matching(task) => {
@@ -56,8 +64,9 @@ fn present(random: &mut Mt19937, task: &Task) -> SheetTask {
                 id: task.id.clone(),
                 title: task.title.clone(),
                 prompt: task.prompt.clone(),
-                dimensions: task.dimensions.iter().map(|dimension| SheetDimension { id: dimension.id.clone(), quantity: dimension.quantity.clone(), cards: shuffle(random, &values(task, &items, &dimension.id)) }).collect(),
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label)).collect(),
+                icon: task.icon.clone(),
+                dimensions: task.dimensions.iter().map(|dimension| SheetDimension { id: dimension.id.clone(), quantity: dimension.quantity.clone(), icon: dimension.icon.clone(), cards: shuffle(random, &values(task, &items, &dimension.id)) }).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].icon.as_ref())).collect(),
             })
         }
     }
@@ -82,8 +91,8 @@ fn values(task: &MatchingTask, items: &[usize], dimension: &str) -> Vec<f64> {
     items.iter().map(|&index| task.items[index].values.get(dimension).copied().unwrap_or(f64::NAN)).collect()
 }
 
-fn sheet_item(id: &str, label: &Text) -> SheetItem {
-    SheetItem { id: id.to_string(), label: label.clone() }
+fn sheet_item(id: &str, label: &Text, icon: Option<&Icon>) -> SheetItem {
+    SheetItem { id: id.to_string(), label: label.clone(), icon: icon.cloned() }
 }
 
 #[cfg(test)]

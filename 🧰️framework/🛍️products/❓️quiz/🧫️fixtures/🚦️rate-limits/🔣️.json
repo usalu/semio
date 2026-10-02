@@ -1,0 +1,62 @@
+{
+  "schema": "semio.quiz.rate-limits/v1",
+  "description": "A proctor that answers 429 is busy, not gone: the client waits what `Retry-After` asks (RFC 9110 §10.2.3: delay-seconds as a non-negative integer, or an HTTP-date; anything else is no hint; capped so a wrong header never parks the client), adds its own jittered backoff, never retries earlier even when woken, and says so in the connection indicator without an alert. Polling keeps its interval with ±10 % jitter while the proctor answers and backs off exponentially (full jitter above the interval, capped) while it does not, never below what `Retry-After` asked. A presence socket that is welcomed and lost again and again is rejoined after growing, jittered pauses. Times are milliseconds; `random` is the uniform draw in [0, 1].",
+  "retryAfter": {
+    "capMs": 120000,
+    "now": "Wed, 21 Oct 2026 07:28:00 GMT",
+    "headers": [
+      { "header": "3", "ms": 3000 },
+      { "header": "0", "ms": 0 },
+      { "header": " 12 ", "ms": 12000 },
+      { "header": "120", "ms": 120000 },
+      { "header": "86400", "ms": 120000 },
+      { "header": "Wed, 21 Oct 2026 07:28:10 GMT", "ms": 10000 },
+      { "header": "Wed, 21 Oct 2026 07:27:00 GMT", "ms": 0 },
+      { "header": "Thu, 22 Oct 2026 07:28:00 GMT", "ms": 120000 },
+      { "header": null, "ms": null },
+      { "header": "", "ms": null },
+      { "header": "soon", "ms": null },
+      { "header": "-5", "ms": null },
+      { "header": "1.5", "ms": null }
+    ]
+  },
+  "polling": {
+    "intervalMs": 10000,
+    "maxMs": 300000,
+    "delays": [
+      { "failures": 0, "retryAfterMs": null, "random": 0.5, "ms": 10000 },
+      { "failures": 0, "retryAfterMs": null, "random": 0, "ms": 9000 },
+      { "failures": 0, "retryAfterMs": null, "random": 1, "ms": 11000 },
+      { "failures": 1, "retryAfterMs": null, "random": 0, "ms": 10000 },
+      { "failures": 1, "retryAfterMs": null, "random": 1, "ms": 20000 },
+      { "failures": 3, "retryAfterMs": null, "random": 0.5, "ms": 45000 },
+      { "failures": 10, "retryAfterMs": null, "random": 1, "ms": 300000 },
+      { "failures": 1, "retryAfterMs": 30000, "random": 0, "ms": 30000 },
+      { "failures": 1, "retryAfterMs": 30000, "random": 1, "ms": 40000 },
+      { "failures": 2, "retryAfterMs": 2000, "random": 0.5, "ms": 25000 }
+    ]
+  },
+  "allowances": {
+    "description": "A 429 whose body names an allowance was not sent too fast: an allowance of the client's address is spent. Each vector is an answer of the proctor (status, the Retry-After header a browser may read or null, the body) and what the client reads from it: the wait (the header first, else the body's retryAfterMs) and the allowance (a string member of the body, else none). Only the allowance `sign-up` ends the call it refused; every other 429 is a shortage to wait out.",
+    "signUp": "sign-up",
+    "answers": [
+      { "id": "the sign-up allowance is spent, header readable", "status": 429, "header": "36", "body": { "kind": "throttled", "message": "the sign-up allowance of this address is spent", "retryAfterMs": 35912, "allowance": "sign-up" }, "retryAfterMs": 36000, "allowance": "sign-up", "ends": true },
+      { "id": "the sign-up allowance is spent, header hidden from another origin", "status": 429, "header": null, "body": { "kind": "throttled", "message": "the sign-up allowance of this address is spent", "retryAfterMs": 35912, "allowance": "sign-up" }, "retryAfterMs": 35912, "allowance": "sign-up", "ends": true },
+      { "id": "sent too fast", "status": 429, "header": "2", "body": { "kind": "throttled", "message": "too many requests", "retryAfterMs": 1800 }, "retryAfterMs": 2000, "allowance": null, "ends": false },
+      { "id": "an allowance this client does not know", "status": 429, "header": null, "body": { "kind": "throttled", "message": "spent", "retryAfterMs": 5000, "allowance": "uploads" }, "retryAfterMs": 5000, "allowance": "uploads", "ends": false },
+      { "id": "an allowance that is no string", "status": 429, "header": null, "body": { "kind": "throttled", "message": "spent", "allowance": 7 }, "retryAfterMs": null, "allowance": null, "ends": false }
+    ]
+  },
+  "rejoin": {
+    "timing": { "minMs": 500, "maxMs": 15000 },
+    "stableMs": 10000,
+    "delays": [
+      { "flaps": 0, "random": 0.5, "ms": 250 },
+      { "flaps": 1, "random": 1, "ms": 500 },
+      { "flaps": 2, "random": 0, "ms": 500 },
+      { "flaps": 2, "random": 1, "ms": 1000 },
+      { "flaps": 4, "random": 0.5, "ms": 2250 },
+      { "flaps": 10, "random": 1, "ms": 15000 }
+    ]
+  }
+}

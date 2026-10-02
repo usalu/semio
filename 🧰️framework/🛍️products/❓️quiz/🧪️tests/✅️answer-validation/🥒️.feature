@@ -5,7 +5,15 @@ Feature: An answer is valid for its sheet task, and complete once it answers eve
   A proctor records an answer only when it fits the sheet task (design §5): its kind matches, every
   item, category and dimension it names exists in the sheet task, every card index is in range and used
   at most once per dimension, and a sorting order is a permutation of the sheet items — otherwise
-  `answer-invalid`. Partial classification and matching answers stay valid while the run is open. A
+  `answer-invalid`. A sorting answer may carry numeric `guesses` (item id to the learner's guess in the
+  quantity's base unit): each names a sheet item, is a finite number (positive on a logarithmic
+  quantity) and the guessed items stand in `order` in non-decreasing guess order — ties allowed,
+  unguessed items unconstrained; guesses that are no object or hold a non-number are `answer-invalid`
+  too (those answers violate the schema and are kept apart under `malformed` in the vectors, since the
+  schema-conformance case holds every `vectors` answer to the schema; a typed core that refuses them
+  while decoding judges them `answer-invalid`), and an empty `guesses` is valid. Guesses never
+  influence scoring. Partial classification and
+  matching answers stay valid while the run is open. A
   run is submitted only when every sheet task has a complete answer: a classification assigns every
   sheet item, a matching assigns every sheet item in every dimension, and a recorded sorting order is
   always complete; a missing answer is never complete.

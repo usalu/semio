@@ -97,10 +97,11 @@ describe("sheetOf", () => {
     expect({ quiz: sheet.quiz, seed: sheet.seed, title: sheet.title, description: sheet.description }).toEqual({ quiz: "physics", seed: 4294967295, title: QUIZ.title, description: QUIZ.description });
   });
 
-  it("consumes the generator in the normative order: task order, then every task in definition order", () => {
+  it("keeps the first task first and consumes the generator before presenting tasks in definition order", () => {
     for (const seed of [0, 1, 5489, runSeed("ffffffffffffffffffffffffffffffff")]) {
       const random = new Mt19937(seed);
-      const order = shuffle(random, [0, 1, 2]);
+      const shuffledOrder = shuffle(random, [0, 1, 2]);
+      const order = [0, ...shuffledOrder.filter((index) => index !== 0)];
       const classificationItems = shuffle(random, CLASSIFICATION.items).slice(0, 4);
       const categories = shuffle(random, CLASSIFICATION.categories);
       const shuffledSorting = shuffle(random, SORTING.items).slice(0, 5);
@@ -115,6 +116,16 @@ describe("sheetOf", () => {
       ];
       expect(sheetOf(QUIZ, seed).tasks).toEqual(order.map((index) => expected[index]));
     }
+  });
+
+  it("always presents the first defined task first while shuffling the remaining tasks", () => {
+    const orders = new Set<string>();
+    for (let seed = 0; seed < 100; seed++) {
+      const tasks = sheetOf(QUIZ, seed).tasks;
+      expect(tasks[0]!.id).toBe(CLASSIFICATION.id);
+      orders.add(tasks.slice(1).map((task) => task.id).join(","));
+    }
+    expect(orders.size).toBeGreaterThan(1);
   });
 
   it("never reveals a solution", () => {

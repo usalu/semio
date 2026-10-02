@@ -59,6 +59,7 @@ members = [
     "🧰️framework/🔨️modules/🧮️math/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🎚️config/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
@@ -154,6 +155,7 @@ semio-framework-pack = { path = "🧰️framework/🔨️modules/🎒️pack/�
 pack = { path = "🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 semio-framework-server = { path = "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust" }
 semio-framework-quiz = { path = "🧰️framework/🛍️products/❓️quiz/📦️packages/🦀️rust" }
+semio-framework-pets = { path = "🧰️framework/🛍️products/🐾️pets/📦️packages/🦀️rust" }
 semio-framework-async = { path = "🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

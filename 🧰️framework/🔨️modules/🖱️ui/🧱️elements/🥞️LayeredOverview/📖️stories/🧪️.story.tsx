@@ -92,14 +92,4 @@ export const Opened: Story = { args: { openedId: "board" } };
 
 /** 🐢️ Reduced motion: reveals snap instead of gliding and the pointer never pans. */
 export const ReducedMotion: Story = { args: { reducedMotion: "always" } };
-
-/** 🔍️ Grid rest: all nine live pages as a grid behind their cards (a larger centre track); a reveal zooms its page to full size. */
-export const GridRest: Story = {
-  args: {
-    rest: "grid",
-    gridTracks: { columns: [1, 1.5, 1], rows: [1, 1.4, 1] },
-    overlayClassName: "grid place-items-center",
-    overlayStyle: { gridTemplateColumns: "var(--layered-columns)", gridTemplateRows: "var(--layered-rows)" },
-  },
-};
 // #endregion 🥞️LayeredOverview

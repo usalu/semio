@@ -87,8 +87,8 @@ fn every_fixture_document_round_trips_through_the_twin() {
         round_trips::<RunResult>("badge-rules/result", result);
     }
     let lifecycle = fixture("learner-lifecycle");
-    for sequence in entries(&lifecycle["roster"]).iter().chain(entries(&lifecycle["learners"])) {
-        for event in entries(&sequence["given"]) {
+    for sequence in entries(&lifecycle["registrations"]).iter().chain(entries(&lifecycle["learners"])).chain(entries(&lifecycle["malformed"]["registrations"])).chain(entries(&lifecycle["malformed"]["learners"])) {
+        for event in sequence.get("given").map(entries).unwrap_or_default() {
             round_trips::<Event>("learner-lifecycle/given", event);
         }
         for step in entries(&sequence["steps"]) {
@@ -105,7 +105,9 @@ fn every_fixture_document_round_trips_through_the_twin() {
         }
     }
     for vector in entries(&fixture("leaderboard")["vectors"]) {
-        round_trips::<Leaderboard>("leaderboard/leaderboard", &vector["expected"]["leaderboard"]);
+        for board in vector["expected"]["leaderboards"].as_object().into_iter().flat_map(|boards| boards.values()).flat_map(|callers| callers.as_object().into_iter().flat_map(|callers| callers.values())) {
+            round_trips::<Leaderboard>("leaderboard/leaderboard", board);
+        }
         for view in vector["expected"]["learnerViews"].as_object().into_iter().flat_map(|views| views.values()) {
             round_trips::<LearnerView>("leaderboard/learner", view);
         }
@@ -114,7 +116,7 @@ fn every_fixture_document_round_trips_through_the_twin() {
 
 #[test]
 fn queries_and_identities_use_their_wire_tags() {
-    for query in [json!({"type": "catalog"}), json!({"type": "learner", "learner": "0123456789abcdef0123456789abcdef"}), json!({"type": "run", "run": "0123456789abcdef0123456789abcdef"}), json!({"type": "leaderboard"})] {
+    for query in [json!({"type": "catalog"}), json!({"type": "learner", "learner": "0123456789abcdef0123456789abcdef"}), json!({"type": "run", "run": "0123456789abcdef0123456789abcdef"}), json!({"type": "leaderboard", "period": "all-time"}), json!({"type": "leaderboard", "period": "daily", "quiz": "physics", "learner": "0123456789abcdef0123456789abcdef"}), json!({"type": "leaderboard", "period": "weekly", "learner": "0123456789abcdef0123456789abcdef"}), json!({"type": "leaderboard", "period": "monthly", "quiz": "physics"}), json!({"type": "crowd", "quiz": "physics"}), json!({"type": "handle", "handle": " Ada "})] {
         let typed: Query = typed(&query);
         assert_eq!(Some(typed.type_name()), query["type"].as_str());
         assert_close("query", &json(&typed), &query);
@@ -123,6 +125,11 @@ fn queries_and_identities_use_their_wire_tags() {
     assert_eq!(json(&BadgeRule::PerfectTasks { task_kind: Some(TaskKind::Sorting), quiz: None }), json!({"kind": "perfect-tasks", "taskKind": "sorting"}));
     assert_eq!(Rejection::QuizRevised.as_str(), "quiz-revised");
     assert_eq!(json(&Rejection::HandleInvalid), json!("handle-invalid"));
+    for rejection in [Rejection::HandleClaimed, Rejection::IdInvalid, Rejection::LearnerExists, Rejection::RosterFull, Rejection::RunsExhausted, Rejection::AnswersExhausted] {
+        assert_eq!(json(&rejection), json!(rejection.as_str()));
+    }
+    assert_eq!(json(&DEFAULT_LIMITS), json!({"learners": 100000, "runsPerQuiz": 200, "runs": 1000, "answersPerRun": 2000}));
+    assert_eq!(json(&HandleView { display: "Ada".to_string(), holder: None }), json!({"display": "Ada"}));
 }
 
 #[test]
@@ -135,4 +142,19 @@ fn undeclared_members_are_refused_like_additional_properties_false() {
     assert!(serde_json::from_value::<Command>(json!({"type": "submit-run", "id": "a", "learner": "b", "run": "c", "extra": 1})).is_err());
     assert!(serde_json::from_value::<BadgeRule>(json!({"kind": "perfect-quiz"})).is_err());
     assert!(serde_json::from_value::<Text>(json!({"en": "a", "de": "b", "fr": "c"})).is_err());
+}
+
+#[test]
+fn sorting_answers_carry_optional_guesses_per_item() {
+    let bare = json!({"kind": "sorting", "order": ["a", "b"]});
+    assert_close("bare", &json(&typed::<Answer>(&bare)), &bare);
+    let Answer::Sorting(answer) = typed::<Answer>(&bare) else { unreachable!() };
+    assert!(answer.guesses.is_empty());
+    let guessed = json!({"kind": "sorting", "order": ["b", "a"], "guesses": {"a": 1500.5, "b": 0.002}});
+    assert_close("guessed", &json(&typed::<Answer>(&guessed)), &guessed);
+    let Answer::Sorting(answer) = typed::<Answer>(&guessed) else { unreachable!() };
+    assert_eq!(answer.guesses, BTreeMap::from([("a".to_string(), 1500.5), ("b".to_string(), 0.002)]));
+    assert_close("empty", &json(&typed::<Answer>(&json!({"kind": "sorting", "order": [], "guesses": {}}))), &json!({"kind": "sorting", "order": []}));
+    assert!(serde_json::from_value::<Answer>(json!({"kind": "sorting", "order": [], "guesses": {"a": "1"}})).is_err());
+    assert!(serde_json::from_value::<Answer>(json!({"kind": "sorting", "order": [], "guesses": {"a": 1}, "extra": 1})).is_err());
 }

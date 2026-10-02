@@ -1,0 +1,91 @@
+/* 🐾️ Pets: the decorative layer and the paints of a depiction. Plain CSS: a host needs no utility framework for it.
+   The layer never takes pointer events, never changes layout and is hidden where its colours would be overridden or
+   wasted: under forced colours and in print. Motion is written by script, frame by frame; nothing here animates. */
+
+.pet-layer {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  contain: strict;
+}
+
+/* A frame shows as it was written: nothing in the layer transitions, whatever the host's stylesheet says about
+   transitions. A host that shortens every transition for a device that asks for reduced motion
+   (`* { transition-duration: 0.01ms !important }`) would otherwise start one with every write of a frame — hundreds a
+   second while pets move. */
+.pet-layer,
+.pet-layer * {
+  transition-property: none !important;
+}
+
+/* One actor: a one-pixel box at the layer's origin whose transform puts its feet in place. The origin of that
+   transform is the box's corner, so mirroring an actor flips it around its feet; its drawing overflows the box. */
+.pet {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  transform-origin: 0 0;
+  will-change: transform;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+/* Paints. Body, accent and detail are set per actor; ink follows the host's foreground, so outlines stay legible on a
+   light and on a dark ground; paper and pupil keep an eye an eye on both. A host may override any `--pet-*`. */
+.pet-fill-body {
+  fill: var(--pet-body);
+}
+.pet-fill-accent {
+  fill: var(--pet-accent);
+}
+.pet-fill-detail {
+  fill: var(--pet-detail);
+}
+.pet-fill-ink {
+  fill: var(--pet-ink, var(--foreground, #001117));
+}
+.pet-fill-paper {
+  fill: var(--pet-paper, #f7f3e3);
+}
+.pet-fill-none {
+  fill: none;
+}
+
+.pet-stroke-body {
+  stroke: var(--pet-body);
+}
+.pet-stroke-accent {
+  stroke: var(--pet-accent);
+}
+.pet-stroke-detail {
+  stroke: var(--pet-detail);
+}
+.pet-stroke-ink {
+  stroke: var(--pet-ink, var(--foreground, #001117));
+}
+.pet-stroke-paper {
+  stroke: var(--pet-paper, #f7f3e3);
+}
+.pet-stroke-none {
+  stroke: none;
+}
+
+.pet-pupil {
+  fill: var(--pet-pupil, #001117);
+}
+
+@media (forced-colors: active) {
+  .pet-layer {
+    display: none;
+  }
+}
+
+@media print {
+  .pet-layer {
+    display: none;
+  }
+}

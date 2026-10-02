@@ -1,0 +1,27 @@
+import { chromium } from "../../../../../../../node_modules/playwright/index.mjs";
+import { mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const out = join(here, "🗑️generated");
+mkdirSync(out, { recursive: true });
+const origin = process.argv[2] ?? "https://localhost:18445";
+const browser = await chromium.launch();
+const context = await browser.newContext({ ignoreHTTPSErrors: true, viewport: { width: 1280, height: 800 }, reducedMotion: "no-preference" });
+const page = await context.newPage();
+const problems = [];
+page.on("console", (message) => { if (["error", "warning"].includes(message.type())) problems.push(`[console ${message.type()}] ${message.text()}`); });
+page.on("pageerror", (error) => problems.push(`[pageerror] ${error.message}`));
+page.on("requestfailed", (request) => problems.push(`[requestfailed] ${request.url()} ${request.failure()?.errorText}`));
+const requests = [];
+page.on("response", (response) => requests.push(`${response.status()} ${response.request().method()} ${new URL(response.url()).pathname}`));
+await page.goto(origin, { waitUntil: "networkidle" });
+await page.waitForTimeout(3000);
+console.log("title:", await page.title());
+console.log("text:", (await page.locator("body").innerText()).replace(/\s+/g, " ").slice(0, 600));
+await page.screenshot({ path: join(out, "poc-home.png") });
+const gateway = requests.filter((line) => /\/(instance|queries|commands|scopes|actors)/.test(line));
+console.log("gateway requests:", gateway.slice(0, 8));
+console.log("problems:", problems.length ? problems : "none");
+await browser.close();

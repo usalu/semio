@@ -106,7 +106,7 @@ describe("presenceProblem", () => {
     ];
     for (const place of places) expect(checkedPresence({ ...presence(), place }), JSON.stringify(place)).toEqual([]);
     expect(checkedPresence({ ...presence(), identity: { kind: "anonymous" }, active: false })).toEqual([]);
-    expect(checkedPresence({ ...presence(), identity: { kind: "name", handle: "🧑‍🏫".repeat(21) } })).toEqual([]);
+    expect(checkedPresence({ ...presence(), identity: { kind: "name", handle: "Zoë O'Neill-Müller".padEnd(64, "x") } })).toEqual([]);
   });
 
   const cases: readonly [string, (state: Mutable) => void, readonly ValidationIssue[]][] = [
@@ -120,8 +120,8 @@ describe("presenceProblem", () => {
     ["an unknown identity kind", (state) => (state.identity.kind = "alias"), [{ path: "/identity/kind", code: "value-invalid" }]],
     ["a pseudonym without handle", (state) => delete state.identity.handle, [{ path: "/identity/handle", code: "required" }]],
     ["an anonymous identity with a handle", (state) => (state.identity = { kind: "anonymous", handle: "Ada" }), [{ path: "/identity/handle", code: "property-unknown" }]],
-    ["an empty handle", (state) => (state.identity.handle = ""), [{ path: "/identity/handle", code: "length-invalid" }]],
-    ["a handle of 65 code points", (state) => (state.identity.handle = "🎲".repeat(65)), [{ path: "/identity/handle", code: "length-invalid" }]],
+    ["an empty handle", (state) => (state.identity.handle = ""), [{ path: "/identity/handle", code: "handle-invalid" }]],
+    ["a handle of 65 code points", (state) => (state.identity.handle = "🎲".repeat(65)), [{ path: "/identity/handle", code: "handle-invalid" }]],
     ["an unknown screen", (state) => (state.place = { screen: "settings" }), [{ path: "/place/screen", code: "value-invalid" }]],
     ["a place without screen", (state) => (state.place = { quiz: "physics" }), [{ path: "/place/screen", code: "required" }]],
     ["a smuggled answer", (state) => (state.place.answer = "joule"), [{ path: "/place/answer", code: "property-unknown" }]],

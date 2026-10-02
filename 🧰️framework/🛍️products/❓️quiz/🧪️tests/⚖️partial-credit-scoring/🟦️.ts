@@ -104,6 +104,15 @@ describe("sorting — magnitude-weighted pair concordance", () => {
     }
   });
 
+  it("scores the order alone: guesses, right or wrong, change neither the score nor the item results", () => {
+    const task = sortingTask([1, 60, 2000, 100000], "logarithmic");
+    const sheetTask = sheetTaskOf(task);
+    const order = ["i1", "i0", "i3", "i2"];
+    const bare = scoreTask(task, sheetTask, { kind: "sorting", order });
+    expect(scoreTask(task, sheetTask, { kind: "sorting", order, guesses: { i1: 0.5, i0: 3, i2: 1e12 } })).toEqual(bare);
+    expect(scoreTask(task, sheetTask, { kind: "sorting", order, guesses: {} })).toEqual(bare);
+  });
+
   it("punishes swapping distant magnitudes more than swapping neighbours", () => {
     const task = sortingTask([1, 60, 2000, 100000, 3000000, 1.4e9], "logarithmic");
     const ascending = ascendingIds(task);

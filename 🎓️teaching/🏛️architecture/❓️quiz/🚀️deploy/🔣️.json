@@ -1,9 +1,11 @@
 {
+  "$schema": "./🧬️schema/🔣️.json",
   "site": {
-    "host": "quizzes.architektur-und-technologie.de"
+    "host": "quizze.architektur-und-technologie.de",
+    "legal": {}
   },
   "proctor": {
-    "host": "proctor.quizzes.architektur-und-technologie.de",
+    "host": "semio.iek.uni-hannover.de",
     "image": "ghcr.io/usalu/architecture-quiz-proctor",
     "port": 8791
   }

@@ -1,0 +1,58 @@
+{
+  "schema": "semio.quiz.identity-step/v1",
+  "description": "What a quiz client tells a learner about a pseudonym or name the handle policy refuses. The policy is the core's `normalizeHandle` (white space runs collapse to one space and are trimmed, U+2019 becomes an apostrophe; then 1 to 64 code points of Latin letters, ASCII digits, single spaces and ' . _ -, with at least one letter or digit; raw input over 256 code points is refused); the client first brings the typed text into NFC. A fault is the first that applies of: `characters` (the distinct refused characters in typed order), `empty` (nothing but white space), `long` (the length of the handle as it would be kept; the typed length when even that is over 256) and `letter` (no letter or digit). `fault` null means the core accepts the handle. Typed texts are given as code point lists so that no editor can change them.",
+  "faults": [
+    { "name": "a plain pseudonym", "typed": [65, 100, 97, 32, 76, 111, 118, 101, 108, 97, 99, 101], "fault": null },
+    { "name": "spaces around and between words", "typed": [32, 32, 65, 100, 97, 32, 32, 32, 76, 111, 118, 101, 108, 97, 99, 101, 32], "fault": null },
+    { "name": "a typographic apostrophe", "typed": [79, 8217, 66, 114, 105, 101, 110], "fault": null },
+    { "name": "a decomposed umlaut (NFD) the client composes first", "typed": [90, 111, 101, 776], "fault": null },
+    { "name": "nothing", "typed": [], "fault": { "kind": "empty" } },
+    { "name": "only white space", "typed": [32, 160, 9], "fault": { "kind": "empty" } },
+    { "name": "only punctuation", "typed": [45, 45, 46, 95], "fault": { "kind": "letter" } },
+    { "name": "an emoji", "typed": [65, 100, 97, 128512], "fault": { "kind": "characters", "characters": [[128512]] } },
+    { "name": "a Cyrillic look-alike", "typed": [1040, 100, 97], "fault": { "kind": "characters", "characters": [[1040]] } },
+    { "name": "a zero-width space", "typed": [65, 8203, 100, 97], "fault": { "kind": "characters", "characters": [[8203]] } },
+    { "name": "several refused characters, each once", "typed": [65, 100, 97, 33, 63, 33], "fault": { "kind": "characters", "characters": [[33], [63]] } },
+    { "name": "65 letters", "typed": [97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97, 97], "fault": { "kind": "long", "length": 65 } }
+  ],
+  "messages": [
+    { "fault": { "kind": "empty" }, "en": "Please enter at least one letter or digit.", "de": "Bitte gib mindestens einen Buchstaben oder eine Ziffer ein." },
+    { "fault": { "kind": "letter" }, "en": "Please include at least one letter or digit.", "de": "Bitte verwende mindestens einen Buchstaben oder eine Ziffer." },
+    { "fault": { "kind": "long", "length": 65 }, "en": "This is 65 characters long; at most 64 are allowed.", "de": "Das sind 65 Zeichen; erlaubt sind höchstens 64." },
+    {
+      "fault": { "kind": "characters", "characters": [[33], [8203]] },
+      "en": "Not allowed here: “!” U+200B. Use Latin letters, digits, single spaces between words and ' . _ -",
+      "de": "Hier nicht erlaubt: “!” U+200B. Verwende lateinische Buchstaben, Ziffern, einzelne Leerzeichen zwischen Wörtern und ' . _ -"
+    }
+  ],
+  "refusals": {
+    "description": "A sign-up the proctor refuses although nothing is wrong with what the learner typed. (1) Its network (one client address) has spent its sign-up allowance: the proctor answers 429 with a body that names the allowance and the wait until the next single sign-up of that address. The client does not send the sign-up again by itself; it says what happened, that it passes by itself, after how many seconds (the wait rounded up to whole seconds, at least 1; no number when the proctor named no wait) to try again, and that continuing with an existing pseudonym works at once — recalling a pseudonym is a read, not a sign-up. Until the wait is over the client asks the proctor for no further sign-up and answers with the time that is left. A 429 that names no allowance, or one this client does not know, stays a shortage that is waited out silently. (2) The roster is full (rejection roster-full): waiting does not help; only the operator can raise the limit. Each vector is the failure the client holds and the sentence it shows in each language.",
+    "allowance": "sign-up",
+    "vectors": [
+      {
+        "id": "the sign-up allowance is spent and the proctor says for how long",
+        "failure": { "kind": "waiting", "allowance": "sign-up", "retryAfterMs": 35912 },
+        "en": "Too many new learners have signed up from your network just now, so the quiz server takes no further sign-up from it for the moment. This passes by itself: try again in about 36 s – or continue with a pseudonym you already have, which works right away.",
+        "de": "Aus deinem Netzwerk haben sich gerade sehr viele neu angemeldet, deshalb nimmt der Quiz-Server von dort im Moment keine weitere Anmeldung an. Das geht von selbst vorbei: Versuch es in etwa 36 s noch einmal – oder mach mit einem Pseudonym weiter, das du schon hast; das geht sofort."
+      },
+      {
+        "id": "the sign-up allowance is spent and the wait is a fraction of a second",
+        "failure": { "kind": "waiting", "allowance": "sign-up", "retryAfterMs": 120 },
+        "en": "Too many new learners have signed up from your network just now, so the quiz server takes no further sign-up from it for the moment. This passes by itself: try again in about 1 s – or continue with a pseudonym you already have, which works right away.",
+        "de": "Aus deinem Netzwerk haben sich gerade sehr viele neu angemeldet, deshalb nimmt der Quiz-Server von dort im Moment keine weitere Anmeldung an. Das geht von selbst vorbei: Versuch es in etwa 1 s noch einmal – oder mach mit einem Pseudonym weiter, das du schon hast; das geht sofort."
+      },
+      {
+        "id": "the sign-up allowance is spent and the proctor names no wait",
+        "failure": { "kind": "waiting", "allowance": "sign-up" },
+        "en": "Too many new learners have signed up from your network just now, so the quiz server takes no further sign-up from it for the moment. This passes by itself: try again in a moment – or continue with a pseudonym you already have, which works right away.",
+        "de": "Aus deinem Netzwerk haben sich gerade sehr viele neu angemeldet, deshalb nimmt der Quiz-Server von dort im Moment keine weitere Anmeldung an. Das geht von selbst vorbei: Versuch es gleich noch einmal – oder mach mit einem Pseudonym weiter, das du schon hast; das geht sofort."
+      },
+      {
+        "id": "the roster is full",
+        "failure": { "kind": "rejected", "rejection": "roster-full" },
+        "en": "The quiz server has reached its maximum number of learners and takes no new ones until its operator raises the limit; trying again does not help until then. You can continue with a pseudonym that already exists.",
+        "de": "Der Quiz-Server hat seine Höchstzahl an Lernenden erreicht und nimmt keine neuen auf, bis die Betreiberin oder der Betreiber die Grenze anhebt; ein neuer Versuch hilft bis dahin nicht. Du kannst mit einem Pseudonym weitermachen, das es schon gibt."
+      }
+    ]
+  }
+}

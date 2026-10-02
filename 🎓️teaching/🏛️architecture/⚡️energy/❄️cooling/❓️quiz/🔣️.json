@@ -13,6 +13,7 @@
       "kind": "matching",
       "id": "air-change-rates",
       "title": { "en": "Air Change Rates", "de": "Luftwechselraten" },
+      "icon": { "emoji": "🌬️", "motion": "sway" },
       "prompt": {
         "en": "Assign each room use its typical design air change rate in 1/h: the outdoor or supply air volume per hour divided by the room volume.",
         "de": "Ordne jeder Raumnutzung ihre typische Auslegungs-Luftwechselrate in 1/h zu: den Außen- oder Zuluftvolumenstrom pro Stunde geteilt durch das Raumvolumen."
@@ -26,11 +27,11 @@
       "items": [
         {
           "id": "warehouse",
-          "label": { "en": "High-bay warehouse without workplaces (10 m high)", "de": "Hochregallager ohne Arbeitsplätze (10 m hoch)" },
+          "label": { "en": "High-bay warehouse without workplaces (10\u00a0m high)", "de": "Hochregallager ohne Arbeitsplätze (10\u00a0m hoch)" },
           "values": { "air-change-rate": 0.13 },
           "explanation": {
-            "en": "About 0.13 1/h: only the building's own emissions need diluting, 0.35 l/(s·m²) for very low-polluting buildings (EN 16798-1) = 1.26 m³/(h·m²) spread over 10 m of height.",
-            "de": "Rund 0,13 1/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35 l/(s·m²) für sehr schadstoffarme Gebäude (EN 16798-1) = 1,26 m³/(h·m²) verteilt auf 10 m Höhe."
+            "en": "About 0.13\u00a01/h: only the building's own emissions need diluting, 0.35\u00a0l/(s·m²) for very low-polluting buildings (EN 16798-1)\u00a0=\u00a01.26\u00a0m³/(h·m²) spread over 10\u00a0m of height.",
+            "de": "Rund 0,13\u00a01/h: nur die Emissionen des Gebäudes selbst sind zu verdünnen, 0,35\u00a0l/(s·m²) für sehr schadstoffarme Gebäude (EN 16798-1)\u00a0=\u00a01,26\u00a0m³/(h·m²) verteilt auf 10\u00a0m Höhe."
           }
         },
         {
@@ -38,8 +39,8 @@
           "label": { "en": "Passive-house apartment with heat-recovery ventilation", "de": "Passivhauswohnung mit Wärmerückgewinnungslüftung" },
           "values": { "air-change-rate": 0.3 },
           "explanation": {
-            "en": "About 0.3 1/h: about 30 m³/h of fresh air per person gives good air quality without drying out the air in winter. Source: Passive House Institute.",
-            "de": "Rund 0,3 1/h: etwa 30 m³/h Frischluft pro Person sorgen für gute Luftqualität, ohne die Luft im Winter auszutrocknen. Quelle: Passivhaus Institut."
+            "en": "About 0.3\u00a01/h: about 30\u00a0m³/h of fresh air per person gives good air quality without drying out the air in winter. Source: Passive House Institute.",
+            "de": "Rund 0,3\u00a01/h: etwa 30\u00a0m³/h Frischluft pro Person sorgen für gute Luftqualität, ohne die Luft im Winter auszutrocknen. Quelle: Passivhaus Institut."
           }
         },
         {
@@ -47,26 +48,26 @@
           "label": { "en": "Apartment, nominal ventilation", "de": "Wohnung, Nennlüftung" },
           "values": { "air-change-rate": 0.5 },
           "explanation": {
-            "en": "About 0.5 1/h: DIN 1946-6 asks −0.001·A² + 1.15·A + 20 = 125 m³/h for a 100 m² apartment with 250 m³ of air.",
-            "de": "Rund 0,5 1/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20 = 125 m³/h für eine 100-m²-Wohnung mit 250 m³ Luft."
+            "en": "About 0.5\u00a01/h: DIN 1946-6 requires −0.001·A² + 1.15·A + 20\u00a0=\u00a0125\u00a0m³/h for a 100\u00a0m² apartment with 250\u00a0m³ of air.",
+            "de": "Rund 0,5\u00a01/h: DIN 1946-6 verlangt −0,001·A² + 1,15·A + 20\u00a0=\u00a0125\u00a0m³/h für eine 100-m²-Wohnung mit 250\u00a0m³ Luft."
           }
         },
         {
           "id": "sports-hall",
-          "label": { "en": "Single sports hall (15 × 27 m, 5.5 m high) with 30 athletes", "de": "Einfeldsporthalle (15 × 27 m, 5,5 m hoch) mit 30 Sporttreibenden" },
+          "label": { "en": "Single sports hall (15\u00a0×\u00a027\u00a0m, 5.5\u00a0m high) with 30 athletes", "de": "Einfeldsporthalle (15\u00a0×\u00a027\u00a0m, 5,5\u00a0m hoch) mit 30 Sporttreibenden" },
           "values": { "air-change-rate": 0.8 },
           "explanation": {
-            "en": "About 0.8 1/h: 60 m³/h per athlete (DIN 18032-1) × 30 = 1,800 m³/h in 2,230 m³ — a large volume for few people.",
-            "de": "Rund 0,8 1/h: 60 m³/h je sporttreibender Person (DIN 18032-1) × 30 = 1800 m³/h in 2230 m³ – viel Volumen für wenige Menschen."
+            "en": "About 0.8\u00a01/h: 60\u00a0m³/h per athlete (DIN 18032-1)\u00a0×\u00a030\u00a0=\u00a01,800\u00a0m³/h in 2,230\u00a0m³ – a large volume for few people.",
+            "de": "Rund 0,8\u00a01/h: 60\u00a0m³/h je sporttreibender Person (DIN 18032-1)\u00a0×\u00a030\u00a0=\u00a01.800\u00a0m³/h in 2.230\u00a0m³ – viel Volumen für wenige Menschen."
           }
         },
         {
           "id": "single-office",
-          "label": { "en": "Single office (12 m², one person)", "de": "Einzelbüro (12 m², eine Person)" },
+          "label": { "en": "Single office (12\u00a0m², one person)", "de": "Einzelbüro (12\u00a0m², eine Person)" },
           "values": { "air-change-rate": 1.5 },
           "explanation": {
-            "en": "About 1.5 1/h: category II of EN 16798-1 asks 7 l/s per person + 0.7 l/(s·m²), i.e. 55 m³/h for 36 m³ of room.",
-            "de": "Rund 1,5 1/h: Kategorie II der EN 16798-1 verlangt 7 l/s je Person + 0,7 l/(s·m²), also 55 m³/h für 36 m³ Raum."
+            "en": "About 1.5\u00a01/h: category II of EN 16798-1 requires 7\u00a0l/s per person + 0.7\u00a0l/(s·m²), i.e. 55\u00a0m³/h for 36\u00a0m³ of room.",
+            "de": "Rund 1,5\u00a01/h: Kategorie II der EN 16798-1 verlangt 7\u00a0l/s je Person + 0,7\u00a0l/(s·m²), also 55\u00a0m³/h für 36\u00a0m³ Raum."
           }
         },
         {
@@ -74,8 +75,8 @@
           "label": { "en": "Underground car park of a residential building, mechanically ventilated", "de": "Tiefgarage eines Wohngebäudes, maschinell belüftet" },
           "values": { "air-change-rate": 2.4 },
           "explanation": {
-            "en": "About 2.4 1/h: the garage ordinances of the German states ask 6 m³/h of exhaust air per m² for garages with little traffic; at 2.5 m height that is 2.4 air changes.",
-            "de": "Rund 2,4 1/h: die Garagenverordnungen der Länder verlangen 6 m³/h Abluft je m² für Garagen mit geringem Verkehr; bei 2,5 m Höhe sind das 2,4 Luftwechsel."
+            "en": "About 2.4\u00a01/h: the garage ordinances of the German states require 6\u00a0m³/h of exhaust air per m² for garages with little traffic; at 2.5\u00a0m height that is 2.4\u00a0air changes.",
+            "de": "Rund 2,4\u00a01/h: die Garagenverordnungen der Länder verlangen 6\u00a0m³/h Abluft je m² für Garagen mit geringem Verkehr; bei 2,5\u00a0m Höhe sind das 2,4\u00a0Luftwechsel."
           }
         },
         {
@@ -83,17 +84,17 @@
           "label": { "en": "Cinema auditorium, sold out", "de": "Kinosaal, ausverkauft" },
           "values": { "air-change-rate": 3.5 },
           "explanation": {
-            "en": "About 3.5 1/h: EN 16798-1 category II with one seat per m² (27.7 m³/(h·m²)) spread over about 8 m of room height.",
-            "de": "Rund 3,5 1/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7 m³/(h·m²)) verteilt auf rund 8 m Raumhöhe."
+            "en": "About 3.5\u00a01/h: EN 16798-1 category II with one seat per m² (27.7\u00a0m³/(h·m²)) spread over about 8\u00a0m of room height.",
+            "de": "Rund 3,5\u00a01/h: EN 16798-1 Kategorie II mit einem Sitz je m² (27,7\u00a0m³/(h·m²)) verteilt auf rund 8\u00a0m Raumhöhe."
           }
         },
         {
           "id": "classroom",
-          "label": { "en": "Classroom with 28 pupils (60 m², 3 m high)", "de": "Klassenzimmer mit 28 Schulkindern (60 m², 3 m hoch)" },
+          "label": { "en": "Classroom with 28 pupils (60\u00a0m², 3\u00a0m high)", "de": "Klassenzimmer mit 28 Schulkindern (60\u00a0m², 3\u00a0m hoch)" },
           "values": { "air-change-rate": 4.8 },
           "explanation": {
-            "en": "About 4.8 1/h: EN 16798-1 category II gives 28 × 25 m³/h + 60 m² × 2.5 m³/(h·m²) ≈ 860 m³/h for 180 m³, which is why window ventilation alone struggles.",
-            "de": "Rund 4,8 1/h: EN 16798-1 Kategorie II ergibt 28 × 25 m³/h + 60 m² × 2,5 m³/(h·m²) ≈ 860 m³/h für 180 m³, deshalb kommt Fensterlüftung allein kaum hinterher."
+            "en": "About 4.8\u00a01/h: EN 16798-1 category II gives 28\u00a0×\u00a025\u00a0m³/h + 60\u00a0m²\u00a0×\u00a02.5\u00a0m³/(h·m²)\u00a0≈\u00a0860\u00a0m³/h for 180\u00a0m³, which is why window ventilation alone struggles.",
+            "de": "Rund 4,8\u00a01/h: EN 16798-1 Kategorie II ergibt 28\u00a0×\u00a025\u00a0m³/h + 60\u00a0m²\u00a0×\u00a02,5\u00a0m³/(h·m²)\u00a0≈\u00a0860\u00a0m³/h für 180\u00a0m³, deshalb kommt Fensterlüftung allein kaum hinterher."
           }
         },
         {
@@ -101,8 +102,8 @@
           "label": { "en": "Restaurant dining room", "de": "Gastraum eines Restaurants" },
           "values": { "air-change-rate": 6.4 },
           "explanation": {
-            "en": "About 6.4 1/h: EN 16798-1 category II with 1.5 m² per guest and 3 m room height.",
-            "de": "Rund 6,4 1/h: EN 16798-1 Kategorie II mit 1,5 m² je Gast und 3 m Raumhöhe."
+            "en": "About 6.4\u00a01/h: EN 16798-1 category II with 1.5\u00a0m² per guest and 3\u00a0m room height.",
+            "de": "Rund 6,4\u00a01/h: EN 16798-1 Kategorie II mit 1,5\u00a0m² je Gast und 3\u00a0m Raumhöhe."
           }
         },
         {
@@ -110,8 +111,8 @@
           "label": { "en": "Chemistry laboratory", "de": "Chemielabor" },
           "values": { "air-change-rate": 8.3 },
           "explanation": {
-            "en": "About 8.3 1/h: DIN 1946-7 requires at least 25 m³/h of outdoor air per m² of floor; at 3 m height that is 8.3 air changes.",
-            "de": "Rund 8,3 1/h: DIN 1946-7 fordert mindestens 25 m³/h Außenluft je m² Grundfläche; bei 3 m Höhe sind das 8,3 Luftwechsel."
+            "en": "About 8.3\u00a01/h: DIN 1946-7 requires at least 25\u00a0m³/h of outdoor air per m² of floor; at 3\u00a0m height that is 8.3\u00a0air changes.",
+            "de": "Rund 8,3\u00a01/h: DIN 1946-7 fordert mindestens 25\u00a0m³/h Außenluft je m² Grundfläche; bei 3\u00a0m Höhe sind das 8,3\u00a0Luftwechsel."
           }
         },
         {
@@ -119,8 +120,8 @@
           "label": { "en": "Operating room, room class Ib", "de": "Operationssaal, Raumklasse Ib" },
           "values": { "air-change-rate": 20 },
           "explanation": {
-            "en": "About 20 1/h: DIN 1946-4 asks 60 m³/(h·m²) of filtered supply air, 20 air changes at 3 m height (and at least 1,200 m³/h of outdoor air).",
-            "de": "Rund 20 1/h: DIN 1946-4 verlangt 60 m³/(h·m²) gefilterte Zuluft, also 20 Luftwechsel bei 3 m Höhe (und mindestens 1200 m³/h Außenluft)."
+            "en": "About 20\u00a01/h: DIN 1946-4 requires 60\u00a0m³/(h·m²) of filtered supply air, 20\u00a0air changes at 3\u00a0m height (and at least 1,200\u00a0m³/h of outdoor air).",
+            "de": "Rund 20\u00a01/h: DIN 1946-4 verlangt 60\u00a0m³/(h·m²) gefilterte Zuluft, also 20\u00a0Luftwechsel bei 3\u00a0m Höhe (und mindestens 1.200\u00a0m³/h Außenluft)."
           }
         },
         {
@@ -128,8 +129,8 @@
           "label": { "en": "Commercial kitchen", "de": "Gewerbeküche" },
           "values": { "air-change-rate": 25 },
           "explanation": {
-            "en": "About 25 1/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30 air changes per hour.",
-            "de": "Rund 25 1/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052), typisch 12–30 Luftwechsel pro Stunde."
+            "en": "About 25\u00a01/h: the exhaust air is sized to the heat and vapour of the cooking appliances (VDI 2052), typically 12–30\u00a0air changes per hour.",
+            "de": "Rund 25\u00a01/h: die Abluft wird nach Wärme und Dampf der Kochgeräte bemessen (VDI 2052), typisch 12–30\u00a0Luftwechsel pro Stunde."
           }
         },
         {
@@ -137,8 +138,8 @@
           "label": { "en": "Cleanroom ISO class 7 (e.g. pharmacy compounding)", "de": "Reinraum ISO-Klasse 7 (z. B. Apothekenherstellung)" },
           "values": { "air-change-rate": 60 },
           "explanation": {
-            "en": "About 60 1/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
-            "de": "Rund 60 1/h: HEPA-gefilterte Luft verdünnt die Partikel; Richtwert der IEST-RP-CC012 für ISO-Klasse 7."
+            "en": "About 60\u00a01/h: HEPA-filtered air dilutes the particles; guideline value of IEST-RP-CC012 for ISO class 7.",
+            "de": "Rund 60\u00a01/h: HEPA-gefilterte Luft verdünnt die Partikel; Richtwert der IEST-RP-CC012 für ISO-Klasse 7."
           }
         },
         {
@@ -146,8 +147,8 @@
           "label": { "en": "Cleanroom ISO class 6", "de": "Reinraum ISO-Klasse 6" },
           "values": { "air-change-rate": 150 },
           "explanation": {
-            "en": "About 150 1/h (90–180 1/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
-            "de": "Rund 150 1/h (90–180 1/h, IEST-RP-CC012): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
+            "en": "About 150\u00a01/h (90–180\u00a01/h, IEST-RP-CC012): ten times fewer particles than ISO 7 need about two and a half times the air.",
+            "de": "Rund 150\u00a01/h (90–180\u00a01/h, IEST-RP-CC012): zehnmal weniger Partikel als ISO 7 brauchen etwa zweieinhalbmal so viel Luft."
           }
         },
         {
@@ -155,8 +156,8 @@
           "label": { "en": "Cleanroom ISO class 5 with unidirectional airflow (e.g. chip fab)", "de": "Reinraum ISO-Klasse 5 mit turbulenzarmer Verdrängungsströmung (z. B. Chipfabrik)" },
           "values": { "air-change-rate": 540 },
           "explanation": {
-            "en": "About 540 1/h: the whole ceiling blows filtered air downwards at about 0.45 m/s (ISO 14644-4: 0.2–0.5 m/s); 0.45 m/s × 3,600 s ÷ 3 m = 540.",
-            "de": "Rund 540 1/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45 m/s nach unten (ISO 14644-4: 0,2–0,5 m/s); 0,45 m/s × 3600 s ÷ 3 m = 540."
+            "en": "About 540\u00a01/h: the whole ceiling blows filtered air downwards at about 0.45\u00a0m/s (ISO 14644-4: 0.2–0.5\u00a0m/s); 0.45\u00a0m/s\u00a0×\u00a03,600\u00a0s\u00a0÷\u00a03\u00a0m\u00a0=\u00a0540.",
+            "de": "Rund 540\u00a01/h: die ganze Decke bläst gefilterte Luft mit etwa 0,45\u00a0m/s nach unten (ISO 14644-4: 0,2–0,5\u00a0m/s); 0,45\u00a0m/s\u00a0×\u00a03.600\u00a0s\u00a0÷\u00a03\u00a0m\u00a0=\u00a0540."
           }
         }
       ],
@@ -166,9 +167,10 @@
       "kind": "matching",
       "id": "cooling-load-and-demand",
       "title": { "en": "Cooling Load and Cooling Demand", "de": "Kühllast und Kühlbedarf" },
+      "icon": { "emoji": "❄️", "motion": "spin" },
       "prompt": {
-        "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26 °C), both per m² of floor area.",
-        "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26 °C zu halten) zu, beide je m² Fläche."
+        "en": "Assign each building its specific cooling load in W/m² (the heat to remove on a hot design day, VDI 2078) and its annual cooling demand in kWh/(m²·a) (the useful cooling per year to keep about 26\u00a0°C), both per m² of floor area.",
+        "de": "Ordne jedem Gebäude seine spezifische Kühllast in W/m² (die an einem heißen Auslegungstag abzuführende Wärme, VDI 2078) und seinen Jahres-Kühlbedarf in kWh/(m²·a) (die Nutzkälte pro Jahr, um etwa 26\u00a0°C zu halten) zu, beide je m² Fläche."
       },
       "dimensions": [
         {
@@ -186,8 +188,8 @@
           "label": { "en": "Passive-house home with external shading", "de": "Passivhaus-Wohngebäude mit außenliegendem Sonnenschutz" },
           "values": { "cooling-load": 6, "cooling-demand": 2 },
           "explanation": {
-            "en": "About 6 W/m² and 2 kWh/(m²·a): shading and low internal gains keep it comfortable without a chiller; the Passive House Institute limits overheating above 25 °C to 10 % of the hours.",
-            "de": "Rund 6 W/m² und 2 kWh/(m²·a): Verschattung und geringe innere Lasten halten es ohne Kältemaschine behaglich; das Passivhaus Institut begrenzt Überhitzung über 25 °C auf 10 % der Stunden."
+            "en": "About 6\u00a0W/m² and 2\u00a0kWh/(m²·a): shading and low internal gains keep it comfortable without a chiller; the Passive House Institute limits overheating above 25\u00a0°C to 10% of the hours.",
+            "de": "Rund 6\u00a0W/m² und 2\u00a0kWh/(m²·a): Verschattung und geringe innere Lasten halten es ohne Kältemaschine behaglich; das Passivhaus Institut begrenzt Überhitzung über 25\u00a0°C auf 10\u00a0% der Stunden."
           }
         },
         {
@@ -195,8 +197,8 @@
           "label": { "en": "New home to GEG 2024 with external blinds (DIN 4108-2)", "de": "Neues Wohngebäude nach GEG 2024 mit Außenjalousien (DIN 4108-2)" },
           "values": { "cooling-load": 15, "cooling-demand": 5 },
           "explanation": {
-            "en": "About 15 W/m² and 5 kWh/(m²·a): the summer heat protection of DIN 4108-2 limits solar gains, so cooling is needed only on a few hot days (≈ 350 full-load hours).",
-            "de": "Rund 15 W/m² und 5 kWh/(m²·a): der sommerliche Wärmeschutz nach DIN 4108-2 begrenzt die Solargewinne, gekühlt wird nur an wenigen heißen Tagen (≈ 350 Volllaststunden)."
+            "en": "About 15\u00a0W/m² and 5\u00a0kWh/(m²·a): the summer heat protection of DIN 4108-2, which the GEG (German Buildings Energy Act) requires, limits solar gains, so cooling is needed only on a few hot days (≈\u00a0350\u00a0full-load hours).",
+            "de": "Rund 15\u00a0W/m² und 5\u00a0kWh/(m²·a): der sommerliche Wärmeschutz nach DIN 4108-2 begrenzt die Solargewinne, gekühlt wird nur an wenigen heißen Tagen (≈\u00a0350\u00a0Volllaststunden)."
           }
         },
         {
@@ -204,8 +206,8 @@
           "label": { "en": "New school building (GEG), cooled", "de": "Neues Schulgebäude (GEG), gekühlt" },
           "values": { "cooling-load": 30, "cooling-demand": 8 },
           "explanation": {
-            "en": "About 30 W/m² and 8 kWh/(m²·a): many people per m² make the load high, but the summer holidays fall into the hottest weeks (≈ 250 full-load hours).",
-            "de": "Rund 30 W/m² und 8 kWh/(m²·a): viele Menschen je m² machen die Last hoch, doch die Sommerferien fallen in die heißesten Wochen (≈ 250 Volllaststunden)."
+            "en": "About 30\u00a0W/m² and 8\u00a0kWh/(m²·a): many people per m² make the load high, but the summer holidays fall into the hottest weeks (≈\u00a0250\u00a0full-load hours).",
+            "de": "Rund 30\u00a0W/m² und 8\u00a0kWh/(m²·a): viele Menschen je m² machen die Last hoch, doch die Sommerferien fallen in die heißesten Wochen (≈\u00a0250\u00a0Volllaststunden)."
           }
         },
         {
@@ -213,8 +215,8 @@
           "label": { "en": "Passive-house office building", "de": "Bürogebäude im Passivhausstandard" },
           "values": { "cooling-load": 20, "cooling-demand": 10 },
           "explanation": {
-            "en": "About 20 W/m² and 10 kWh/(m²·a): efficient equipment, external shading and night ventilation keep the load low (≈ 500 full-load hours). Source: Passive House Institute criteria for non-residential buildings.",
-            "de": "Rund 20 W/m² und 10 kWh/(m²·a): effiziente Geräte, außenliegender Sonnenschutz und Nachtlüftung halten die Last klein (≈ 500 Volllaststunden). Quelle: Kriterien des Passivhaus Instituts für Nichtwohngebäude."
+            "en": "About 20\u00a0W/m² and 10\u00a0kWh/(m²·a): efficient equipment, external shading and night ventilation keep the load low (≈\u00a0500\u00a0full-load hours). Source: Passive House Institute criteria for non-residential buildings.",
+            "de": "Rund 20\u00a0W/m² und 10\u00a0kWh/(m²·a): effiziente Geräte, außenliegender Sonnenschutz und Nachtlüftung halten die Last klein (≈\u00a0500\u00a0Volllaststunden). Quelle: Kriterien des Passivhaus Instituts für Nichtwohngebäude."
           }
         },
         {
@@ -222,8 +224,8 @@
           "label": { "en": "New office building (GEG) with external sun shading", "de": "Neues Bürogebäude (GEG) mit außenliegendem Sonnenschutz" },
           "values": { "cooling-load": 40, "cooling-demand": 20 },
           "explanation": {
-            "en": "About 40 W/m² and 20 kWh/(m²·a): people, computers and lighting add about 25 W/m² to the shaded solar gains; offices see about 500 full-load hours of cooling (VDI 2078 practice).",
-            "de": "Rund 40 W/m² und 20 kWh/(m²·a): Menschen, Computer und Licht bringen rund 25 W/m² zu den verschatteten Solargewinnen; Büros kommen auf etwa 500 Kühl-Volllaststunden (Praxis nach VDI 2078)."
+            "en": "About 40\u00a0W/m² and 20\u00a0kWh/(m²·a): people, computers and lighting add about 25\u00a0W/m² to the shaded solar gains; offices see about 500\u00a0full-load hours of cooling (VDI 2078 practice).",
+            "de": "Rund 40\u00a0W/m² und 20\u00a0kWh/(m²·a): Menschen, Computer und Licht bringen rund 25\u00a0W/m² zu den verschatteten Solargewinnen; Büros kommen auf etwa 500\u00a0Kühl-Volllaststunden (Praxis nach VDI 2078)."
           }
         },
         {
@@ -231,8 +233,8 @@
           "label": { "en": "Attic flat under an uninsulated roof with unshaded roof windows", "de": "Dachgeschosswohnung unter ungedämmtem Dach mit unverschatteten Dachfenstern" },
           "values": { "cooling-load": 50, "cooling-demand": 25 },
           "explanation": {
-            "en": "About 50 W/m² and 25 kWh/(m²·a): the sun heats the roof surface to 60–70 °C (sol-air temperature, VDI 2078), and the heat passes the uninsulated roof almost unhindered.",
-            "de": "Rund 50 W/m² und 25 kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70 °C auf (Sonnenlufttemperatur, VDI 2078), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
+            "en": "About 50\u00a0W/m² and 25\u00a0kWh/(m²·a): the sun heats the roof surface to 60–70\u00a0°C (sol-air temperature, VDI 2078), and the heat passes the uninsulated roof almost unhindered.",
+            "de": "Rund 50\u00a0W/m² und 25\u00a0kWh/(m²·a): die Sonne heizt die Dachhaut auf 60–70\u00a0°C auf (Sonnenlufttemperatur, VDI 2078), und die Wärme gelangt fast ungehindert durch das ungedämmte Dach."
           }
         },
         {
@@ -240,17 +242,17 @@
           "label": { "en": "Hospital with operating rooms and intensive care", "de": "Krankenhaus mit OP-Sälen und Intensivstation" },
           "values": { "cooling-load": 70, "cooling-demand": 90 },
           "explanation": {
-            "en": "About 70 W/m² and 90 kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4) and 24-hour operation add up to about 1,300 full-load hours.",
-            "de": "Rund 70 W/m² und 90 kWh/(m²·a): Medizintechnik, strenge Raumbedingungen (DIN 1946-4) und Betrieb rund um die Uhr ergeben etwa 1300 Volllaststunden."
+            "en": "About 70\u00a0W/m² and 90\u00a0kWh/(m²·a): medical equipment, strict room conditions (DIN 1946-4) and 24-hour operation add up to about 1,300\u00a0full-load hours.",
+            "de": "Rund 70\u00a0W/m² und 90\u00a0kWh/(m²·a): Medizintechnik, strenge Raumbedingungen (DIN 1946-4) und Betrieb rund um die Uhr ergeben etwa 1.300\u00a0Volllaststunden."
           }
         },
         {
           "id": "office-1970s",
-          "label": { "en": "1970s office tower, fully glazed, without external shading", "de": "Bürohochhaus der 1970er, vollverglast, ohne außenliegenden Sonnenschutz" },
+          "label": { "en": "1970s office tower, fully glazed, without external shading", "de": "Bürohochhaus der 1970er-Jahre, vollverglast, ohne außenliegenden Sonnenschutz" },
           "values": { "cooling-load": 100, "cooling-demand": 60 },
           "explanation": {
-            "en": "About 100 W/m² and 60 kWh/(m²·a): unshaded glass lets in several hundred watts per m² of façade; with about 600 full-load hours that is three times the demand of a shaded new office.",
-            "de": "Rund 100 W/m² und 60 kWh/(m²·a): unverschattetes Glas lässt mehrere hundert Watt je m² Fassade herein; mit etwa 600 Volllaststunden ist das der dreifache Bedarf eines verschatteten Neubaubüros."
+            "en": "About 100\u00a0W/m² and 60\u00a0kWh/(m²·a): unshaded glass lets in several hundred watts per m² of façade; with about 600\u00a0full-load hours that is three times the demand of a shaded new office.",
+            "de": "Rund 100\u00a0W/m² und 60\u00a0kWh/(m²·a): unverschattetes Glas lässt mehrere hundert Watt je m² Fassade herein; mit etwa 600\u00a0Volllaststunden ist das der dreifache Bedarf eines verschatteten Neubaubüros."
           }
         },
         {
@@ -258,8 +260,8 @@
           "label": { "en": "Data centre (server room floor)", "de": "Rechenzentrum (Serverraumfläche)" },
           "values": { "cooling-load": 1000, "cooling-demand": 8000 },
           "explanation": {
-            "en": "About 1,000 W/m² and 8,000 kWh/(m²·a): every watt of IT power turns into heat, around the clock (≈ 8,000 full-load hours).",
-            "de": "Rund 1000 W/m² und 8000 kWh/(m²·a): jedes Watt IT-Leistung wird zu Wärme, rund um die Uhr (≈ 8000 Volllaststunden)."
+            "en": "About 1,000\u00a0W/m² and 8,000\u00a0kWh/(m²·a): every watt of IT power turns into heat, around the clock (≈\u00a08,000\u00a0full-load hours).",
+            "de": "Rund 1.000\u00a0W/m² und 8.000\u00a0kWh/(m²·a): jedes Watt IT-Leistung wird zu Wärme, rund um die Uhr (≈\u00a08.000\u00a0Volllaststunden)."
           }
         }
       ],

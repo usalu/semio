@@ -1,0 +1,23 @@
+{
+  "schema": "semio.quiz.contrast-states/v1",
+  "description": "Colour never carries a state or a name alone. (1) The name label of another learner is text on that learner's palette colour: for every palette slot of the presence palette (the 12 base hues and the lighter/darker and desaturated cycles after them) and both appearances, the label's ink must reach the minimum contrast of WCAG 2.2 SC 1.4.3 against the slot colour. (2) With forced colours (Windows high contrast) backgrounds, shadows and custom colours are replaced by system colours, so every state the stylesheet shows through one of them needs its own rule inside `@media (forced-colors: active)`: each entry names the state, the selector of that rule and the properties it must declare.",
+  "labels": {
+    "minimumContrast": 4.5,
+    "slots": 48,
+    "appearances": ["light", "dark"]
+  },
+  "forcedColors": [
+    { "state": "the pressed segment of a choice (language, theme, text size)", "selector": ".quiz-app [aria-pressed=true]", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the current task of a run", "selector": ".quiz-app [aria-current=step]", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the learner's own leaderboard row", "selector": ".quiz-me", "properties": ["outline"] },
+    { "state": "the drop zone under a dragged item", "selector": ".quiz-drop-active", "properties": ["outline"] },
+    { "state": "a learner's online mark", "selector": ".quiz-online", "properties": ["forced-color-adjust", "background-color"] },
+    { "state": "the column of a figure of what everyone answered", "selector": ".quiz-column-bar", "properties": ["forced-color-adjust", "background-color"] },
+    { "state": "the column of the learner's own answer in a figure", "selector": ".quiz-column[data-emphasis] > .quiz-column-bar", "properties": ["background-color"] },
+    { "state": "the mark of the learner's own answer in a figure", "selector": ".quiz-plot-own", "properties": ["color"] },
+    { "state": "another learner's name label", "selector": ".quiz-peer-label", "properties": ["forced-color-adjust", "background-color", "color"] },
+    { "state": "the area of a spider diagram", "selector": ".quiz-radar-area", "properties": ["fill", "stroke"] },
+    { "state": "a control that cannot be used now", "selector": ".quiz-app [aria-disabled=true]", "properties": ["color"] },
+    { "state": "keyboard focus on any control", "selector": ".quiz-app :focus-visible", "properties": ["outline"] }
+  ]
+}

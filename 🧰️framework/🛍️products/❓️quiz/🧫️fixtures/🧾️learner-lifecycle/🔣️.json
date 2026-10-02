@@ -146,6 +146,10 @@
             "en": "Assign every installation to its heating system.",
             "de": "Ordne jede Anlage ihrem Heizsystem zu."
           },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "float"
+          },
           "axes": [
             {
               "id": "seasonal-efficiency",
@@ -409,6 +413,10 @@
           "prompt": {
             "en": "Order by recommended temperature, lowest first.",
             "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+          },
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
           },
           "quantity": {
             "label": {
@@ -704,157 +712,16 @@
     "energy-basics": "153b20ac3c1e95298ecfd5c9e6db7063eb01099a600f1e602c9f057ca581c534",
     "cooling-basics": "38db3a3e052401e3b748cc5bdf069bd77545da991a00214678e8b366a2a15867"
   },
-  "handles": [
+  "limits": {
+    "learners": 100000,
+    "runsPerQuiz": 200,
+    "runs": 1000,
+    "answersPerRun": 2000
+  },
+  "registrations": [
     {
-      "id": "plain",
-      "handle": "Anna",
-      "expected": {
-        "display": "Anna",
-        "key": "anna"
-      }
-    },
-    {
-      "id": "padded",
-      "handle": "  Anna  ",
-      "expected": {
-        "display": "Anna",
-        "key": "anna"
-      }
-    },
-    {
-      "id": "inner-runs",
-      "handle": "Anna \t\n  Muster",
-      "expected": {
-        "display": "Anna Muster",
-        "key": "anna muster"
-      }
-    },
-    {
-      "id": "no-break-space",
-      "handle": "Anna Muster",
-      "expected": {
-        "display": "Anna Muster",
-        "key": "anna muster"
-      }
-    },
-    {
-      "id": "ideographic-space",
-      "handle": "　Anna　　Muster　",
-      "expected": {
-        "display": "Anna Muster",
-        "key": "anna muster"
-      }
-    },
-    {
-      "id": "umlauts",
-      "handle": "JÜRGEN Müller",
-      "expected": {
-        "display": "JÜRGEN Müller",
-        "key": "jürgen müller"
-      }
-    },
-    {
-      "id": "capital-sharp-s",
-      "handle": "GROẞ",
-      "expected": {
-        "display": "GROẞ",
-        "key": "groß"
-      }
-    },
-    {
-      "id": "emoji",
-      "handle": "  Quiz 🦊  Fuchs ",
-      "expected": {
-        "display": "Quiz 🦊 Fuchs",
-        "key": "quiz 🦊 fuchs"
-      }
-    },
-    {
-      "id": "empty",
-      "handle": "",
-      "expected": null
-    },
-    {
-      "id": "blank",
-      "handle": " \t\n ",
-      "expected": null
-    },
-    {
-      "id": "max-length",
-      "handle": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-      "expected": {
-        "display": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
-        "key": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-      }
-    },
-    {
-      "id": "over-length",
-      "handle": "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy",
-      "expected": null
-    },
-    {
-      "id": "over-length-before-trim",
-      "handle": "  zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz  ",
-      "expected": {
-        "display": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz",
-        "key": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
-      }
-    }
-  ],
-  "roster": [
-    {
-      "id": "anonymous-always-new",
-      "steps": [
-        {
-          "command": {
-            "type": "identify-learner",
-            "id": "486f09da0ce6f02f76d9eb10c93a38c6",
-            "learner": "82af118cb046949beb6be9ccbe4fbb54",
-            "identity": {
-              "kind": "anonymous"
-            }
-          },
-          "now": 1790000060000,
-          "expected": {
-            "events": [
-              {
-                "type": "learner-registered",
-                "learner": "82af118cb046949beb6be9ccbe4fbb54",
-                "identity": {
-                  "kind": "anonymous"
-                },
-                "at": 1790000060000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "identify-learner",
-            "id": "b7d14669b747a823d8234b7407522848",
-            "learner": "aa9eaf293c3ce2cc69bf1aa1c20e6779",
-            "identity": {
-              "kind": "anonymous"
-            }
-          },
-          "now": 1790000120000,
-          "expected": {
-            "events": [
-              {
-                "type": "learner-registered",
-                "learner": "aa9eaf293c3ce2cc69bf1aa1c20e6779",
-                "identity": {
-                  "kind": "anonymous"
-                },
-                "at": 1790000120000
-              }
-            ]
-          }
-        }
-      ]
-    },
-    {
-      "id": "shared-key-space",
+      "id": "first-claim-wins",
+      "key": "anna muster",
       "steps": [
         {
           "command": {
@@ -866,7 +733,7 @@
               "handle": "  Anna   Muster "
             }
           },
-          "now": 1790000180000,
+          "now": 1790000060000,
           "expected": {
             "events": [
               {
@@ -876,7 +743,7 @@
                   "kind": "pseudonym",
                   "handle": "Anna Muster"
                 },
-                "at": 1790000180000
+                "at": 1790000060000
               }
             ]
           }
@@ -891,15 +758,9 @@
               "handle": "anna muster"
             }
           },
-          "now": 1790000240000,
+          "now": 1790000120000,
           "expected": {
-            "events": [
-              {
-                "type": "learner-recalled",
-                "learner": "828d882df24c9acd624ce61eddc2c3d0",
-                "at": 1790000240000
-              }
-            ]
+            "rejection": "handle-claimed"
           }
         },
         {
@@ -912,12 +773,52 @@
               "handle": "ANNA\tMUSTER"
             }
           },
+          "now": 1790000180000,
+          "expected": {
+            "rejection": "handle-claimed"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "ab8f94e6fe0f2da0476d8d1a437fbc9a",
+            "learner": "828d882df24c9acd624ce61eddc2c3d0",
+            "identity": {
+              "kind": "name",
+              "handle": "Anna Muster"
+            }
+          },
+          "now": 1790000240000,
+          "expected": {
+            "rejection": "handle-claimed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "name-kept-as-typed",
+      "key": "jürgen müller",
+      "steps": [
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "8b945b7d75bf46354b63c95f2a88aef4",
+            "learner": "c72b74a9b8c85fde378211437f24a490",
+            "identity": {
+              "kind": "name",
+              "handle": "Jürgen  Müller"
+            }
+          },
           "now": 1790000300000,
           "expected": {
             "events": [
               {
-                "type": "learner-recalled",
-                "learner": "828d882df24c9acd624ce61eddc2c3d0",
+                "type": "learner-registered",
+                "learner": "c72b74a9b8c85fde378211437f24a490",
+                "identity": {
+                  "kind": "name",
+                  "handle": "Jürgen Müller"
+                },
                 "at": 1790000300000
               }
             ]
@@ -926,32 +827,69 @@
         {
           "command": {
             "type": "identify-learner",
-            "id": "96786a1357e25ee76823f2f02cc79483",
-            "learner": "7f2622dfc7e42e89413bd967d915bba1",
+            "id": "1611bd8278043d832b1c9276578dd383",
+            "learner": "ef7f0e225575aeae72205745d0d482ee",
             "identity": {
-              "kind": "name",
-              "handle": "Bert"
+              "kind": "pseudonym",
+              "handle": "JÜRGEN MÜLLER"
             }
           },
           "now": 1790000360000,
           "expected": {
+            "rejection": "handle-claimed"
+          }
+        }
+      ]
+    },
+    {
+      "id": "typographic-apostrophe",
+      "key": "o'brien",
+      "steps": [
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "68520afd2f0674d81074f02c090637fd",
+            "learner": "f873f7bacda2b6eab027e13de5be2c91",
+            "identity": {
+              "kind": "name",
+              "handle": "O’Brien"
+            }
+          },
+          "now": 1790000420000,
+          "expected": {
             "events": [
               {
                 "type": "learner-registered",
-                "learner": "7f2622dfc7e42e89413bd967d915bba1",
+                "learner": "f873f7bacda2b6eab027e13de5be2c91",
                 "identity": {
                   "kind": "name",
-                  "handle": "Bert"
+                  "handle": "O'Brien"
                 },
-                "at": 1790000360000
+                "at": 1790000420000
               }
             ]
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "77613e7b37f6aba0677525cea64f45c8",
+            "learner": "3519acb36b5222b8a679038e8004f2e7",
+            "identity": {
+              "kind": "name",
+              "handle": "o'brien"
+            }
+          },
+          "now": 1790000480000,
+          "expected": {
+            "rejection": "handle-claimed"
           }
         }
       ]
     },
     {
       "id": "invalid-handles",
+      "key": "carla",
       "steps": [
         {
           "command": {
@@ -963,7 +901,7 @@
               "handle": "   "
             }
           },
-          "now": 1790000420000,
+          "now": 1790000540000,
           "expected": {
             "rejection": "handle-invalid"
           }
@@ -978,7 +916,82 @@
               "handle": "\t\n"
             }
           },
-          "now": 1790000480000,
+          "now": 1790000600000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "0c9d6903dca35f9e938fecd82be6bb67",
+            "learner": "e8a8e0fdf1d265565d3f4c9c46aa00d8",
+            "identity": {
+              "kind": "pseudonym",
+              "handle": "Car​la"
+            }
+          },
+          "now": 1790000660000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "fa6032c73e581882350e086224dd991f",
+            "learner": "b2c873e70283482aa5337156a2a81ad7",
+            "identity": {
+              "kind": "name",
+              "handle": "‮Carla"
+            }
+          },
+          "now": 1790000720000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "a36bc4b6d0b7741ac8f04e4a4773d690",
+            "learner": "dd01ca02603fa47c57dd46ad0bcb8f84",
+            "identity": {
+              "kind": "name",
+              "handle": "Carlá"
+            }
+          },
+          "now": 1790000780000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "8284be5a57a5152cbb2c5cac78868dd9",
+            "learner": "6fd8734f4a5aae9ed034384cbbe158a4",
+            "identity": {
+              "kind": "pseudonym",
+              "handle": "Cаrla"
+            }
+          },
+          "now": 1790000840000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "fca6f9a1b339354e702df1d492e83c06",
+            "learner": "3be3852fc00716e8d639596451254da1",
+            "identity": {
+              "kind": "name",
+              "handle": "CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC"
+            }
+          },
+          "now": 1790000900000,
           "expected": {
             "rejection": "handle-invalid"
           }
@@ -993,7 +1006,7 @@
               "handle": "Carla"
             }
           },
-          "now": 1790000540000,
+          "now": 1790000960000,
           "expected": {
             "events": [
               {
@@ -1003,7 +1016,7 @@
                   "kind": "pseudonym",
                   "handle": "Carla"
                 },
-                "at": 1790000540000
+                "at": 1790000960000
               }
             ]
           }
@@ -1011,55 +1024,138 @@
       ]
     },
     {
-      "id": "umlauts-recalled",
+      "id": "another-key",
+      "key": "carla",
       "steps": [
         {
           "command": {
             "type": "identify-learner",
-            "id": "8b945b7d75bf46354b63c95f2a88aef4",
-            "learner": "c72b74a9b8c85fde378211437f24a490",
+            "id": "96786a1357e25ee76823f2f02cc79483",
+            "learner": "7f2622dfc7e42e89413bd967d915bba1",
             "identity": {
               "kind": "name",
-              "handle": "Jürgen Müller"
+              "handle": "Bert"
             }
           },
-          "now": 1790000600000,
+          "now": 1790001020000,
           "expected": {
-            "events": [
-              {
-                "type": "learner-registered",
-                "learner": "c72b74a9b8c85fde378211437f24a490",
-                "identity": {
-                  "kind": "name",
-                  "handle": "Jürgen Müller"
-                },
-                "at": 1790000600000
-              }
-            ]
+            "rejection": "handle-invalid"
           }
         },
         {
           "command": {
             "type": "identify-learner",
-            "id": "1611bd8278043d832b1c9276578dd383",
-            "learner": "ef7f0e225575aeae72205745d0d482ee",
+            "id": "58a5db9f4792ebbe659faaa0a863c171",
+            "learner": "aeac4562905949143ce6cac1c542715e",
             "identity": {
-              "kind": "pseudonym",
-              "handle": "JÜRGEN  MÜLLER"
+              "kind": "name",
+              "handle": "Carla"
             }
           },
-          "now": 1790000660000,
+          "now": 1790001080000,
           "expected": {
             "events": [
               {
-                "type": "learner-recalled",
-                "learner": "c72b74a9b8c85fde378211437f24a490",
-                "at": 1790000660000
+                "type": "learner-registered",
+                "learner": "aeac4562905949143ce6cac1c542715e",
+                "identity": {
+                  "kind": "name",
+                  "handle": "Carla"
+                },
+                "at": 1790001080000
               }
             ]
           }
         }
       ]
+    },
+    {
+      "id": "anonymous-has-no-handle",
+      "key": "anna",
+      "steps": [
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "6a0245c63c652705001cbe16806bee15",
+            "learner": "421195a61e5db1c826a5f59aa56c9231",
+            "identity": {
+              "kind": "anonymous"
+            }
+          },
+          "now": 1790001140000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        }
+      ]
+    }
+  ],
+  "quotas": [
+    {
+      "id": "empty",
+      "learners": 0,
+      "limits": {
+        "learners": 100000,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": null
+    },
+    {
+      "id": "one-below",
+      "learners": 99999,
+      "limits": {
+        "learners": 100000,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": null
+    },
+    {
+      "id": "at-the-cap",
+      "learners": 100000,
+      "limits": {
+        "learners": 100000,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": "roster-full"
+    },
+    {
+      "id": "beyond",
+      "learners": 100001,
+      "limits": {
+        "learners": 100000,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": "roster-full"
+    },
+    {
+      "id": "class-of-one",
+      "learners": 1,
+      "limits": {
+        "learners": 1,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": "roster-full"
+    },
+    {
+      "id": "class-of-three",
+      "learners": 2,
+      "limits": {
+        "learners": 3,
+        "runsPerQuiz": 200,
+        "runs": 1000,
+        "answersPerRun": 2000
+      },
+      "expected": null
     }
   ],
   "learners": [
@@ -1107,43 +1203,6 @@
             "id": "1881d29529323e9914999d4543accfc0",
             "learner": "77d51b6d02232460016ae6da42463576",
             "run": "f6d4c26d6703e2e9e438cec6fb61dde7",
-            "task": "cooling-strategies",
-            "answer": {
-              "kind": "classification",
-              "assignments": {
-                "chiller": "active",
-                "night-ventilation": "passive",
-                "external-shading": "passive"
-              }
-            }
-          },
-          "now": 1790100180000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "77d51b6d02232460016ae6da42463576",
-                "run": "f6d4c26d6703e2e9e438cec6fb61dde7",
-                "task": "cooling-strategies",
-                "answer": {
-                  "kind": "classification",
-                  "assignments": {
-                    "chiller": "active",
-                    "night-ventilation": "passive",
-                    "external-shading": "passive"
-                  }
-                },
-                "at": 1790100180000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "5c86250d9f8d10f77ccdc5a23d3bc2c2",
-            "learner": "77d51b6d02232460016ae6da42463576",
-            "run": "f6d4c26d6703e2e9e438cec6fb61dde7",
             "task": "cooling-loads",
             "answer": {
               "kind": "sorting",
@@ -1154,7 +1213,7 @@
               ]
             }
           },
-          "now": 1790100240000,
+          "now": 1790100180000,
           "expected": {
             "events": [
               {
@@ -1169,6 +1228,43 @@
                     "office",
                     "server-room"
                   ]
+                },
+                "at": 1790100180000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "5c86250d9f8d10f77ccdc5a23d3bc2c2",
+            "learner": "77d51b6d02232460016ae6da42463576",
+            "run": "f6d4c26d6703e2e9e438cec6fb61dde7",
+            "task": "cooling-strategies",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "chiller": "active",
+                "night-ventilation": "passive",
+                "external-shading": "passive"
+              }
+            }
+          },
+          "now": 1790100240000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "77d51b6d02232460016ae6da42463576",
+                "run": "f6d4c26d6703e2e9e438cec6fb61dde7",
+                "task": "cooling-strategies",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "chiller": "active",
+                    "night-ventilation": "passive",
+                    "external-shading": "passive"
+                  }
                 },
                 "at": 1790100240000
               }
@@ -1194,31 +1290,6 @@
                   "score": 1.0,
                   "tasks": [
                     {
-                      "kind": "classification",
-                      "task": "cooling-strategies",
-                      "score": 1.0,
-                      "items": [
-                        {
-                          "item": "chiller",
-                          "assigned": "active",
-                          "correct": "active",
-                          "credit": 1
-                        },
-                        {
-                          "item": "night-ventilation",
-                          "assigned": "passive",
-                          "correct": "passive",
-                          "credit": 1
-                        },
-                        {
-                          "item": "external-shading",
-                          "assigned": "passive",
-                          "correct": "passive",
-                          "credit": 1
-                        }
-                      ]
-                    },
-                    {
                       "kind": "sorting",
                       "task": "cooling-loads",
                       "score": 1.0,
@@ -1240,6 +1311,31 @@
                           "value": 1000,
                           "position": 2,
                           "rank": 2
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "classification",
+                      "task": "cooling-strategies",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "chiller",
+                          "assigned": "active",
+                          "correct": "active",
+                          "credit": 1
+                        },
+                        {
+                          "item": "night-ventilation",
+                          "assigned": "passive",
+                          "correct": "passive",
+                          "credit": 1
+                        },
+                        {
+                          "item": "external-shading",
+                          "assigned": "passive",
+                          "correct": "passive",
+                          "credit": 1
                         }
                       ]
                     }
@@ -1548,6 +1644,50 @@
                 },
                 "tasks": [
                   {
+                    "kind": "sorting",
+                    "id": "cooling-loads",
+                    "title": {
+                      "en": "Cooling loads",
+                      "de": "Kühllasten"
+                    },
+                    "prompt": {
+                      "en": "Order by cooling load per floor area, smallest first.",
+                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Cooling load",
+                        "de": "Kühllast"
+                      },
+                      "unit": "W/m²",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "office",
+                        "label": {
+                          "en": "Office",
+                          "de": "Büro"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      },
+                      {
+                        "id": "server-room",
+                        "label": {
+                          "en": "Server room",
+                          "de": "Serverraum"
+                        }
+                      }
+                    ]
+                  },
+                  {
                     "kind": "classification",
                     "id": "cooling-strategies",
                     "title": {
@@ -1597,62 +1737,10 @@
                         }
                       }
                     ]
-                  },
-                  {
-                    "kind": "sorting",
-                    "id": "cooling-loads",
-                    "title": {
-                      "en": "Cooling loads",
-                      "de": "Kühllasten"
-                    },
-                    "prompt": {
-                      "en": "Order by cooling load per floor area, smallest first.",
-                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
-                    },
-                    "quantity": {
-                      "label": {
-                        "en": "Cooling load",
-                        "de": "Kühllast"
-                      },
-                      "unit": "W/m²",
-                      "scale": "linear",
-                      "prefixed": false
-                    },
-                    "items": [
-                      {
-                        "id": "office",
-                        "label": {
-                          "en": "Office",
-                          "de": "Büro"
-                        }
-                      },
-                      {
-                        "id": "bedroom",
-                        "label": {
-                          "en": "Bedroom",
-                          "de": "Schlafzimmer"
-                        }
-                      },
-                      {
-                        "id": "server-room",
-                        "label": {
-                          "en": "Server room",
-                          "de": "Serverraum"
-                        }
-                      }
-                    ]
                   }
                 ]
               },
               "answers": {
-                "cooling-strategies": {
-                  "kind": "classification",
-                  "assignments": {
-                    "chiller": "active",
-                    "night-ventilation": "passive",
-                    "external-shading": "passive"
-                  }
-                },
                 "cooling-loads": {
                   "kind": "sorting",
                   "order": [
@@ -1660,6 +1748,14 @@
                     "office",
                     "server-room"
                   ]
+                },
+                "cooling-strategies": {
+                  "kind": "classification",
+                  "assignments": {
+                    "chiller": "active",
+                    "night-ventilation": "passive",
+                    "external-shading": "passive"
+                  }
                 }
               },
               "startedAt": 1790100120000,
@@ -1667,31 +1763,6 @@
                 "quiz": "cooling-basics",
                 "score": 1.0,
                 "tasks": [
-                  {
-                    "kind": "classification",
-                    "task": "cooling-strategies",
-                    "score": 1.0,
-                    "items": [
-                      {
-                        "item": "chiller",
-                        "assigned": "active",
-                        "correct": "active",
-                        "credit": 1
-                      },
-                      {
-                        "item": "night-ventilation",
-                        "assigned": "passive",
-                        "correct": "passive",
-                        "credit": 1
-                      },
-                      {
-                        "item": "external-shading",
-                        "assigned": "passive",
-                        "correct": "passive",
-                        "credit": 1
-                      }
-                    ]
-                  },
                   {
                     "kind": "sorting",
                     "task": "cooling-loads",
@@ -1714,6 +1785,31 @@
                         "value": 1000,
                         "position": 2,
                         "rank": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "classification",
+                    "task": "cooling-strategies",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "chiller",
+                        "assigned": "active",
+                        "correct": "active",
+                        "credit": 1
+                      },
+                      {
+                        "item": "night-ventilation",
+                        "assigned": "passive",
+                        "correct": "passive",
+                        "credit": 1
+                      },
+                      {
+                        "item": "external-shading",
+                        "assigned": "passive",
+                        "correct": "passive",
+                        "credit": 1
                       }
                     ]
                   }
@@ -2197,6 +2293,47 @@
             "id": "067a80339ff7a24de893071263619b42",
             "learner": "9d5bead1f6738ef0f0efa2c43848679e",
             "run": "b9c88319fc664b26ef8250f532514c8c",
+            "task": "heating-systems",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "condensing-gas": "gas-boiler",
+                "lake-water-network": "district-heating",
+                "pellet-stove": "wood-pellets",
+                "ground-source": "heat-pump",
+                "night-storage-heater": "electric-resistance"
+              }
+            }
+          },
+          "now": 1790101620000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "9d5bead1f6738ef0f0efa2c43848679e",
+                "run": "b9c88319fc664b26ef8250f532514c8c",
+                "task": "heating-systems",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "condensing-gas": "gas-boiler",
+                    "lake-water-network": "district-heating",
+                    "pellet-stove": "wood-pellets",
+                    "ground-source": "heat-pump",
+                    "night-storage-heater": "electric-resistance"
+                  }
+                },
+                "at": 1790101620000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "451233ab2706d23476ba0f9c4bb6f49f",
+            "learner": "9d5bead1f6738ef0f0efa2c43848679e",
+            "run": "b9c88319fc664b26ef8250f532514c8c",
             "task": "energy-carriers",
             "answer": {
               "kind": "matching",
@@ -2218,7 +2355,7 @@
               }
             }
           },
-          "now": 1790101620000,
+          "now": 1790101680000,
           "expected": {
             "events": [
               {
@@ -2245,7 +2382,7 @@
                     }
                   }
                 },
-                "at": 1790101620000
+                "at": 1790101680000
               }
             ]
           }
@@ -2253,7 +2390,7 @@
         {
           "command": {
             "type": "record-answer",
-            "id": "451233ab2706d23476ba0f9c4bb6f49f",
+            "id": "0be454d6289ada05aa84a1bcff5b7f51",
             "learner": "9d5bead1f6738ef0f0efa2c43848679e",
             "run": "b9c88319fc664b26ef8250f532514c8c",
             "task": "power-ratings",
@@ -2269,7 +2406,7 @@
               ]
             }
           },
-          "now": 1790101680000,
+          "now": 1790101740000,
           "expected": {
             "events": [
               {
@@ -2287,47 +2424,6 @@
                     "wind-turbine",
                     "nuclear-plant"
                   ]
-                },
-                "at": 1790101680000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "0be454d6289ada05aa84a1bcff5b7f51",
-            "learner": "9d5bead1f6738ef0f0efa2c43848679e",
-            "run": "b9c88319fc664b26ef8250f532514c8c",
-            "task": "heating-systems",
-            "answer": {
-              "kind": "classification",
-              "assignments": {
-                "condensing-gas": "gas-boiler",
-                "lake-water-network": "district-heating",
-                "pellet-stove": "wood-pellets",
-                "ground-source": "heat-pump",
-                "night-storage-heater": "electric-resistance"
-              }
-            }
-          },
-          "now": 1790101740000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "9d5bead1f6738ef0f0efa2c43848679e",
-                "run": "b9c88319fc664b26ef8250f532514c8c",
-                "task": "heating-systems",
-                "answer": {
-                  "kind": "classification",
-                  "assignments": {
-                    "condensing-gas": "gas-boiler",
-                    "lake-water-network": "district-heating",
-                    "pellet-stove": "wood-pellets",
-                    "ground-source": "heat-pump",
-                    "night-storage-heater": "electric-resistance"
-                  }
                 },
                 "at": 1790101740000
               }
@@ -2352,6 +2448,51 @@
                   "quiz": "energy-basics",
                   "score": 0.862858255387676,
                   "tasks": [
+                    {
+                      "kind": "classification",
+                      "task": "heating-systems",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "condensing-gas",
+                          "assigned": "gas-boiler",
+                          "correct": "gas-boiler",
+                          "credit": 1
+                        },
+                        {
+                          "item": "lake-water-network",
+                          "assigned": "district-heating",
+                          "correct": "district-heating",
+                          "credit": 1
+                        },
+                        {
+                          "item": "pellet-stove",
+                          "assigned": "wood-pellets",
+                          "correct": "wood-pellets",
+                          "credit": 1
+                        },
+                        {
+                          "item": "ground-source",
+                          "assigned": "heat-pump",
+                          "correct": "heat-pump",
+                          "credit": 1,
+                          "explanation": {
+                            "en": "A brine circuit feeds a heat pump.",
+                            "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                          }
+                        },
+                        {
+                          "item": "night-storage-heater",
+                          "assigned": "electric-resistance",
+                          "correct": "electric-resistance",
+                          "credit": 1,
+                          "explanation": {
+                            "en": "It heats with electricity directly.",
+                            "de": "Er heizt direkt mit Strom."
+                          }
+                        }
+                      ]
+                    },
                     {
                       "kind": "sorting",
                       "task": "room-temperatures",
@@ -2496,51 +2637,6 @@
                           }
                         }
                       ]
-                    },
-                    {
-                      "kind": "classification",
-                      "task": "heating-systems",
-                      "score": 1.0,
-                      "items": [
-                        {
-                          "item": "condensing-gas",
-                          "assigned": "gas-boiler",
-                          "correct": "gas-boiler",
-                          "credit": 1
-                        },
-                        {
-                          "item": "lake-water-network",
-                          "assigned": "district-heating",
-                          "correct": "district-heating",
-                          "credit": 1
-                        },
-                        {
-                          "item": "pellet-stove",
-                          "assigned": "wood-pellets",
-                          "correct": "wood-pellets",
-                          "credit": 1
-                        },
-                        {
-                          "item": "ground-source",
-                          "assigned": "heat-pump",
-                          "correct": "heat-pump",
-                          "credit": 1,
-                          "explanation": {
-                            "en": "A brine circuit feeds a heat pump.",
-                            "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                          }
-                        },
-                        {
-                          "item": "night-storage-heater",
-                          "assigned": "electric-resistance",
-                          "correct": "electric-resistance",
-                          "credit": 1,
-                          "explanation": {
-                            "en": "It heats with electricity directly.",
-                            "de": "Er heizt direkt mit Strom."
-                          }
-                        }
-                      ]
                     }
                   ]
                 },
@@ -2596,6 +2692,156 @@
                 },
                 "tasks": [
                   {
+                    "kind": "classification",
+                    "id": "heating-systems",
+                    "title": {
+                      "en": "Heating systems",
+                      "de": "Heizsysteme"
+                    },
+                    "prompt": {
+                      "en": "Assign every installation to its heating system.",
+                      "de": "Ordne jede Anlage ihrem Heizsystem zu."
+                    },
+                    "icon": {
+                      "emoji": "🔥",
+                      "motion": "float"
+                    },
+                    "axes": [
+                      {
+                        "id": "seasonal-efficiency",
+                        "label": {
+                          "en": "Seasonal efficiency",
+                          "de": "Jahresnutzungsgrad"
+                        },
+                        "unit": "%",
+                        "min": 0,
+                        "max": 400
+                      },
+                      {
+                        "id": "investment",
+                        "label": {
+                          "en": "Investment",
+                          "de": "Investition"
+                        },
+                        "unit": "CHF",
+                        "min": 0,
+                        "max": 40000
+                      },
+                      {
+                        "id": "emissions",
+                        "label": {
+                          "en": "Emissions",
+                          "de": "Emissionen"
+                        },
+                        "unit": "g/kWh",
+                        "min": 0,
+                        "max": 300
+                      }
+                    ],
+                    "categories": [
+                      {
+                        "id": "gas-boiler",
+                        "label": {
+                          "en": "Gas boiler",
+                          "de": "Gaskessel"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 95,
+                          "investment": 12000,
+                          "emissions": 250
+                        }
+                      },
+                      {
+                        "id": "heat-pump",
+                        "label": {
+                          "en": "Heat pump",
+                          "de": "Wärmepumpe"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 350,
+                          "investment": 30000,
+                          "emissions": 40
+                        }
+                      },
+                      {
+                        "id": "wood-pellets",
+                        "label": {
+                          "en": "Wood pellets",
+                          "de": "Holzpellets"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 85,
+                          "investment": 25000,
+                          "emissions": 30
+                        }
+                      },
+                      {
+                        "id": "electric-resistance",
+                        "label": {
+                          "en": "Direct electric heating",
+                          "de": "Elektrodirektheizung"
+                        },
+                        "description": {
+                          "en": "Resistance heaters without storage or pump.",
+                          "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+                        }
+                      },
+                      {
+                        "id": "district-heating",
+                        "label": {
+                          "en": "District heating",
+                          "de": "Fernwärme"
+                        },
+                        "description": {
+                          "en": "Heat delivered through a network.",
+                          "de": "Wärme aus einem Netz."
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 90,
+                          "investment": 18000,
+                          "emissions": 120
+                        }
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "condensing-gas",
+                        "label": {
+                          "en": "Condensing boiler on the gas grid",
+                          "de": "Brennwertkessel am Gasnetz"
+                        }
+                      },
+                      {
+                        "id": "lake-water-network",
+                        "label": {
+                          "en": "Lake water network connection",
+                          "de": "Anschluss an ein Seewassernetz"
+                        }
+                      },
+                      {
+                        "id": "pellet-stove",
+                        "label": {
+                          "en": "Silo with automatic feed",
+                          "de": "Silo mit automatischer Förderung"
+                        }
+                      },
+                      {
+                        "id": "ground-source",
+                        "label": {
+                          "en": "Borehole with brine circuit",
+                          "de": "Erdsonde mit Solekreislauf"
+                        }
+                      },
+                      {
+                        "id": "night-storage-heater",
+                        "label": {
+                          "en": "Night storage heater",
+                          "de": "Nachtspeicherofen"
+                        }
+                      }
+                    ]
+                  },
+                  {
                     "kind": "sorting",
                     "id": "room-temperatures",
                     "title": {
@@ -2605,6 +2851,10 @@
                     "prompt": {
                       "en": "Order by recommended temperature, lowest first.",
                       "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+                    },
+                    "icon": {
+                      "emoji": "🌡️",
+                      "motion": "pulse"
                     },
                     "quantity": {
                       "label": {
@@ -2792,152 +3042,6 @@
                         }
                       }
                     ]
-                  },
-                  {
-                    "kind": "classification",
-                    "id": "heating-systems",
-                    "title": {
-                      "en": "Heating systems",
-                      "de": "Heizsysteme"
-                    },
-                    "prompt": {
-                      "en": "Assign every installation to its heating system.",
-                      "de": "Ordne jede Anlage ihrem Heizsystem zu."
-                    },
-                    "axes": [
-                      {
-                        "id": "seasonal-efficiency",
-                        "label": {
-                          "en": "Seasonal efficiency",
-                          "de": "Jahresnutzungsgrad"
-                        },
-                        "unit": "%",
-                        "min": 0,
-                        "max": 400
-                      },
-                      {
-                        "id": "investment",
-                        "label": {
-                          "en": "Investment",
-                          "de": "Investition"
-                        },
-                        "unit": "CHF",
-                        "min": 0,
-                        "max": 40000
-                      },
-                      {
-                        "id": "emissions",
-                        "label": {
-                          "en": "Emissions",
-                          "de": "Emissionen"
-                        },
-                        "unit": "g/kWh",
-                        "min": 0,
-                        "max": 300
-                      }
-                    ],
-                    "categories": [
-                      {
-                        "id": "gas-boiler",
-                        "label": {
-                          "en": "Gas boiler",
-                          "de": "Gaskessel"
-                        },
-                        "profile": {
-                          "seasonal-efficiency": 95,
-                          "investment": 12000,
-                          "emissions": 250
-                        }
-                      },
-                      {
-                        "id": "heat-pump",
-                        "label": {
-                          "en": "Heat pump",
-                          "de": "Wärmepumpe"
-                        },
-                        "profile": {
-                          "seasonal-efficiency": 350,
-                          "investment": 30000,
-                          "emissions": 40
-                        }
-                      },
-                      {
-                        "id": "wood-pellets",
-                        "label": {
-                          "en": "Wood pellets",
-                          "de": "Holzpellets"
-                        },
-                        "profile": {
-                          "seasonal-efficiency": 85,
-                          "investment": 25000,
-                          "emissions": 30
-                        }
-                      },
-                      {
-                        "id": "electric-resistance",
-                        "label": {
-                          "en": "Direct electric heating",
-                          "de": "Elektrodirektheizung"
-                        },
-                        "description": {
-                          "en": "Resistance heaters without storage or pump.",
-                          "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
-                        }
-                      },
-                      {
-                        "id": "district-heating",
-                        "label": {
-                          "en": "District heating",
-                          "de": "Fernwärme"
-                        },
-                        "description": {
-                          "en": "Heat delivered through a network.",
-                          "de": "Wärme aus einem Netz."
-                        },
-                        "profile": {
-                          "seasonal-efficiency": 90,
-                          "investment": 18000,
-                          "emissions": 120
-                        }
-                      }
-                    ],
-                    "items": [
-                      {
-                        "id": "condensing-gas",
-                        "label": {
-                          "en": "Condensing boiler on the gas grid",
-                          "de": "Brennwertkessel am Gasnetz"
-                        }
-                      },
-                      {
-                        "id": "lake-water-network",
-                        "label": {
-                          "en": "Lake water network connection",
-                          "de": "Anschluss an ein Seewassernetz"
-                        }
-                      },
-                      {
-                        "id": "pellet-stove",
-                        "label": {
-                          "en": "Silo with automatic feed",
-                          "de": "Silo mit automatischer Förderung"
-                        }
-                      },
-                      {
-                        "id": "ground-source",
-                        "label": {
-                          "en": "Borehole with brine circuit",
-                          "de": "Erdsonde mit Solekreislauf"
-                        }
-                      },
-                      {
-                        "id": "night-storage-heater",
-                        "label": {
-                          "en": "Night storage heater",
-                          "de": "Nachtspeicherofen"
-                        }
-                      }
-                    ]
                   }
                 ]
               },
@@ -2949,6 +3053,16 @@
                     "living-room",
                     "bathroom"
                   ]
+                },
+                "heating-systems": {
+                  "kind": "classification",
+                  "assignments": {
+                    "condensing-gas": "gas-boiler",
+                    "lake-water-network": "district-heating",
+                    "pellet-stove": "wood-pellets",
+                    "ground-source": "heat-pump",
+                    "night-storage-heater": "electric-resistance"
+                  }
                 },
                 "energy-carriers": {
                   "kind": "matching",
@@ -2979,16 +3093,6 @@
                     "wind-turbine",
                     "nuclear-plant"
                   ]
-                },
-                "heating-systems": {
-                  "kind": "classification",
-                  "assignments": {
-                    "condensing-gas": "gas-boiler",
-                    "lake-water-network": "district-heating",
-                    "pellet-stove": "wood-pellets",
-                    "ground-source": "heat-pump",
-                    "night-storage-heater": "electric-resistance"
-                  }
                 }
               },
               "startedAt": 1790100960000,
@@ -2996,6 +3100,51 @@
                 "quiz": "energy-basics",
                 "score": 0.862858255387676,
                 "tasks": [
+                  {
+                    "kind": "classification",
+                    "task": "heating-systems",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "condensing-gas",
+                        "assigned": "gas-boiler",
+                        "correct": "gas-boiler",
+                        "credit": 1
+                      },
+                      {
+                        "item": "lake-water-network",
+                        "assigned": "district-heating",
+                        "correct": "district-heating",
+                        "credit": 1
+                      },
+                      {
+                        "item": "pellet-stove",
+                        "assigned": "wood-pellets",
+                        "correct": "wood-pellets",
+                        "credit": 1
+                      },
+                      {
+                        "item": "ground-source",
+                        "assigned": "heat-pump",
+                        "correct": "heat-pump",
+                        "credit": 1,
+                        "explanation": {
+                          "en": "A brine circuit feeds a heat pump.",
+                          "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                        }
+                      },
+                      {
+                        "item": "night-storage-heater",
+                        "assigned": "electric-resistance",
+                        "correct": "electric-resistance",
+                        "credit": 1,
+                        "explanation": {
+                          "en": "It heats with electricity directly.",
+                          "de": "Er heizt direkt mit Strom."
+                        }
+                      }
+                    ]
+                  },
                   {
                     "kind": "sorting",
                     "task": "room-temperatures",
@@ -3137,51 +3286,6 @@
                         "explanation": {
                           "en": "About 1.6 GW of electric power.",
                           "de": "Etwa 1,6 GW elektrische Leistung."
-                        }
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "classification",
-                    "task": "heating-systems",
-                    "score": 1.0,
-                    "items": [
-                      {
-                        "item": "condensing-gas",
-                        "assigned": "gas-boiler",
-                        "correct": "gas-boiler",
-                        "credit": 1
-                      },
-                      {
-                        "item": "lake-water-network",
-                        "assigned": "district-heating",
-                        "correct": "district-heating",
-                        "credit": 1
-                      },
-                      {
-                        "item": "pellet-stove",
-                        "assigned": "wood-pellets",
-                        "correct": "wood-pellets",
-                        "credit": 1
-                      },
-                      {
-                        "item": "ground-source",
-                        "assigned": "heat-pump",
-                        "correct": "heat-pump",
-                        "credit": 1,
-                        "explanation": {
-                          "en": "A brine circuit feeds a heat pump.",
-                          "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                        }
-                      },
-                      {
-                        "item": "night-storage-heater",
-                        "assigned": "electric-resistance",
-                        "correct": "electric-resistance",
-                        "credit": 1,
-                        "explanation": {
-                          "en": "It heats with electricity directly.",
-                          "de": "Er heizt direkt mit Strom."
                         }
                       }
                     ]
@@ -3335,6 +3439,47 @@
             "id": "4d3921886f4c4e87783afb60b87e6f72",
             "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
             "run": "2a4601e56111cd6418dc6fabb4277f49",
+            "task": "heating-systems",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "air-source": "heat-pump",
+                "pellet-stove": "wood-pellets",
+                "night-storage-heater": "electric-resistance",
+                "lake-water-network": "district-heating",
+                "condensing-gas": "gas-boiler"
+              }
+            }
+          },
+          "now": 1790102160000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+                "run": "2a4601e56111cd6418dc6fabb4277f49",
+                "task": "heating-systems",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "air-source": "heat-pump",
+                    "pellet-stove": "wood-pellets",
+                    "night-storage-heater": "electric-resistance",
+                    "lake-water-network": "district-heating",
+                    "condensing-gas": "gas-boiler"
+                  }
+                },
+                "at": 1790102160000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "3f4ca3cd5e105c856da28caec77f64d5",
+            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+            "run": "2a4601e56111cd6418dc6fabb4277f49",
             "task": "power-ratings",
             "answer": {
               "kind": "sorting",
@@ -3348,7 +3493,7 @@
               ]
             }
           },
-          "now": 1790102160000,
+          "now": 1790102220000,
           "expected": {
             "events": [
               {
@@ -3366,47 +3511,6 @@
                     "wallbox",
                     "nuclear-plant"
                   ]
-                },
-                "at": 1790102160000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "3f4ca3cd5e105c856da28caec77f64d5",
-            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-            "run": "2a4601e56111cd6418dc6fabb4277f49",
-            "task": "heating-systems",
-            "answer": {
-              "kind": "classification",
-              "assignments": {
-                "air-source": "heat-pump",
-                "pellet-stove": "wood-pellets",
-                "night-storage-heater": "electric-resistance",
-                "lake-water-network": "district-heating",
-                "condensing-gas": "gas-boiler"
-              }
-            }
-          },
-          "now": 1790102220000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-                "run": "2a4601e56111cd6418dc6fabb4277f49",
-                "task": "heating-systems",
-                "answer": {
-                  "kind": "classification",
-                  "assignments": {
-                    "air-source": "heat-pump",
-                    "pellet-stove": "wood-pellets",
-                    "night-storage-heater": "electric-resistance",
-                    "lake-water-network": "district-heating",
-                    "condensing-gas": "gas-boiler"
-                  }
                 },
                 "at": 1790102220000
               }
@@ -3572,43 +3676,6 @@
             "id": "151cf45120bd7b8221ffe2feca9b07f6",
             "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
             "run": "30ccd7b4f550ae3b6df8d8446bca2465",
-            "task": "room-temperatures",
-            "answer": {
-              "kind": "sorting",
-              "order": [
-                "bedroom",
-                "living-room",
-                "bathroom"
-              ]
-            }
-          },
-          "now": 1790102580000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-                "run": "30ccd7b4f550ae3b6df8d8446bca2465",
-                "task": "room-temperatures",
-                "answer": {
-                  "kind": "sorting",
-                  "order": [
-                    "bedroom",
-                    "living-room",
-                    "bathroom"
-                  ]
-                },
-                "at": 1790102580000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "18929dfd50a7d1078d559b27a2eba657",
-            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-            "run": "30ccd7b4f550ae3b6df8d8446bca2465",
             "task": "heating-systems",
             "answer": {
               "kind": "classification",
@@ -3621,7 +3688,7 @@
               }
             }
           },
-          "now": 1790102640000,
+          "now": 1790102580000,
           "expected": {
             "events": [
               {
@@ -3638,6 +3705,43 @@
                     "condensing-gas": "gas-boiler",
                     "night-storage-heater": "electric-resistance"
                   }
+                },
+                "at": 1790102580000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "18929dfd50a7d1078d559b27a2eba657",
+            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+            "run": "30ccd7b4f550ae3b6df8d8446bca2465",
+            "task": "room-temperatures",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "bedroom",
+                "living-room",
+                "bathroom"
+              ]
+            }
+          },
+          "now": 1790102640000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+                "run": "30ccd7b4f550ae3b6df8d8446bca2465",
+                "task": "room-temperatures",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "living-room",
+                    "bathroom"
+                  ]
                 },
                 "at": 1790102640000
               }
@@ -3765,31 +3869,6 @@
                   "score": 1.0,
                   "tasks": [
                     {
-                      "kind": "sorting",
-                      "task": "room-temperatures",
-                      "score": 1.0,
-                      "items": [
-                        {
-                          "item": "bedroom",
-                          "value": 18,
-                          "position": 0,
-                          "rank": 0
-                        },
-                        {
-                          "item": "living-room",
-                          "value": 21,
-                          "position": 1,
-                          "rank": 1
-                        },
-                        {
-                          "item": "bathroom",
-                          "value": 23.5,
-                          "position": 2,
-                          "rank": 2
-                        }
-                      ]
-                    },
-                    {
                       "kind": "classification",
                       "task": "heating-systems",
                       "score": 1.0,
@@ -3831,6 +3910,31 @@
                             "en": "It heats with electricity directly.",
                             "de": "Er heizt direkt mit Strom."
                           }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "sorting",
+                      "task": "room-temperatures",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "bedroom",
+                          "value": 18,
+                          "position": 0,
+                          "rank": 0
+                        },
+                        {
+                          "item": "living-room",
+                          "value": 21,
+                          "position": 1,
+                          "rank": 1
+                        },
+                        {
+                          "item": "bathroom",
+                          "value": 23.5,
+                          "position": 2,
+                          "rank": 2
                         }
                       ]
                     },
@@ -4005,43 +4109,6 @@
             "id": "92b5c21a65549a2730b6f1d28278fb41",
             "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
             "run": "d59e64eb0dba0ab8ab61a6232e154249",
-            "task": "cooling-strategies",
-            "answer": {
-              "kind": "classification",
-              "assignments": {
-                "night-ventilation": "active",
-                "external-shading": "active",
-                "split-unit": "passive"
-              }
-            }
-          },
-          "now": 1790102940000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-                "run": "d59e64eb0dba0ab8ab61a6232e154249",
-                "task": "cooling-strategies",
-                "answer": {
-                  "kind": "classification",
-                  "assignments": {
-                    "night-ventilation": "active",
-                    "external-shading": "active",
-                    "split-unit": "passive"
-                  }
-                },
-                "at": 1790102940000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "dfc18c0e0125ba9b12a82c01bd7d4d66",
-            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
-            "run": "d59e64eb0dba0ab8ab61a6232e154249",
             "task": "cooling-loads",
             "answer": {
               "kind": "sorting",
@@ -4052,7 +4119,7 @@
               ]
             }
           },
-          "now": 1790103000000,
+          "now": 1790102940000,
           "expected": {
             "events": [
               {
@@ -4067,6 +4134,43 @@
                     "office",
                     "bedroom"
                   ]
+                },
+                "at": 1790102940000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "dfc18c0e0125ba9b12a82c01bd7d4d66",
+            "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+            "run": "d59e64eb0dba0ab8ab61a6232e154249",
+            "task": "cooling-strategies",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "night-ventilation": "active",
+                "external-shading": "active",
+                "split-unit": "passive"
+              }
+            }
+          },
+          "now": 1790103000000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "16dbda06b6cca3f27e08c04da1cd33b3",
+                "run": "d59e64eb0dba0ab8ab61a6232e154249",
+                "task": "cooling-strategies",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "night-ventilation": "active",
+                    "external-shading": "active",
+                    "split-unit": "passive"
+                  }
                 },
                 "at": 1790103000000
               }
@@ -4091,6 +4195,31 @@
                   "quiz": "cooling-basics",
                   "score": 0.0,
                   "tasks": [
+                    {
+                      "kind": "sorting",
+                      "task": "cooling-loads",
+                      "score": 0.0,
+                      "items": [
+                        {
+                          "item": "server-room",
+                          "value": 1000,
+                          "position": 0,
+                          "rank": 2
+                        },
+                        {
+                          "item": "office",
+                          "value": 40,
+                          "position": 1,
+                          "rank": 1
+                        },
+                        {
+                          "item": "bedroom",
+                          "value": 15,
+                          "position": 2,
+                          "rank": 0
+                        }
+                      ]
+                    },
                     {
                       "kind": "classification",
                       "task": "cooling-strategies",
@@ -4117,31 +4246,6 @@
                             "en": "A split unit runs a refrigeration cycle.",
                             "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
                           }
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "sorting",
-                      "task": "cooling-loads",
-                      "score": 0.0,
-                      "items": [
-                        {
-                          "item": "server-room",
-                          "value": 1000,
-                          "position": 0,
-                          "rank": 2
-                        },
-                        {
-                          "item": "office",
-                          "value": 40,
-                          "position": 1,
-                          "rank": 1
-                        },
-                        {
-                          "item": "bedroom",
-                          "value": 15,
-                          "position": 2,
-                          "rank": 0
                         }
                       ]
                     }
@@ -4239,50 +4343,6 @@
                 },
                 "tasks": [
                   {
-                    "kind": "sorting",
-                    "id": "room-temperatures",
-                    "title": {
-                      "en": "Room temperatures",
-                      "de": "Raumtemperaturen"
-                    },
-                    "prompt": {
-                      "en": "Order by recommended temperature, lowest first.",
-                      "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
-                    },
-                    "quantity": {
-                      "label": {
-                        "en": "Temperature",
-                        "de": "Temperatur"
-                      },
-                      "unit": "°C",
-                      "scale": "linear",
-                      "prefixed": false
-                    },
-                    "items": [
-                      {
-                        "id": "bathroom",
-                        "label": {
-                          "en": "Bathroom",
-                          "de": "Badezimmer"
-                        }
-                      },
-                      {
-                        "id": "living-room",
-                        "label": {
-                          "en": "Living room",
-                          "de": "Wohnzimmer"
-                        }
-                      },
-                      {
-                        "id": "bedroom",
-                        "label": {
-                          "en": "Bedroom",
-                          "de": "Schlafzimmer"
-                        }
-                      }
-                    ]
-                  },
-                  {
                     "kind": "classification",
                     "id": "heating-systems",
                     "title": {
@@ -4292,6 +4352,10 @@
                     "prompt": {
                       "en": "Assign every installation to its heating system.",
                       "de": "Ordne jede Anlage ihrem Heizsystem zu."
+                    },
+                    "icon": {
+                      "emoji": "🔥",
+                      "motion": "float"
                     },
                     "axes": [
                       {
@@ -4424,6 +4488,54 @@
                         "label": {
                           "en": "Night storage heater",
                           "de": "Nachtspeicherofen"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "sorting",
+                    "id": "room-temperatures",
+                    "title": {
+                      "en": "Room temperatures",
+                      "de": "Raumtemperaturen"
+                    },
+                    "prompt": {
+                      "en": "Order by recommended temperature, lowest first.",
+                      "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+                    },
+                    "icon": {
+                      "emoji": "🌡️",
+                      "motion": "pulse"
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Temperature",
+                        "de": "Temperatur"
+                      },
+                      "unit": "°C",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "bathroom",
+                        "label": {
+                          "en": "Bathroom",
+                          "de": "Badezimmer"
+                        }
+                      },
+                      {
+                        "id": "living-room",
+                        "label": {
+                          "en": "Living room",
+                          "de": "Wohnzimmer"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
                         }
                       }
                     ]
@@ -4585,14 +4697,6 @@
                 ]
               },
               "answers": {
-                "room-temperatures": {
-                  "kind": "sorting",
-                  "order": [
-                    "bedroom",
-                    "living-room",
-                    "bathroom"
-                  ]
-                },
                 "heating-systems": {
                   "kind": "classification",
                   "assignments": {
@@ -4602,6 +4706,14 @@
                     "condensing-gas": "gas-boiler",
                     "night-storage-heater": "electric-resistance"
                   }
+                },
+                "room-temperatures": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "living-room",
+                    "bathroom"
+                  ]
                 },
                 "energy-carriers": {
                   "kind": "matching",
@@ -4639,31 +4751,6 @@
                 "quiz": "energy-basics",
                 "score": 1.0,
                 "tasks": [
-                  {
-                    "kind": "sorting",
-                    "task": "room-temperatures",
-                    "score": 1.0,
-                    "items": [
-                      {
-                        "item": "bedroom",
-                        "value": 18,
-                        "position": 0,
-                        "rank": 0
-                      },
-                      {
-                        "item": "living-room",
-                        "value": 21,
-                        "position": 1,
-                        "rank": 1
-                      },
-                      {
-                        "item": "bathroom",
-                        "value": 23.5,
-                        "position": 2,
-                        "rank": 2
-                      }
-                    ]
-                  },
                   {
                     "kind": "classification",
                     "task": "heating-systems",
@@ -4706,6 +4793,31 @@
                           "en": "It heats with electricity directly.",
                           "de": "Er heizt direkt mit Strom."
                         }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "sorting",
+                    "task": "room-temperatures",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "bedroom",
+                        "value": 18,
+                        "position": 0,
+                        "rank": 0
+                      },
+                      {
+                        "item": "living-room",
+                        "value": 21,
+                        "position": 1,
+                        "rank": 1
+                      },
+                      {
+                        "item": "bathroom",
+                        "value": 23.5,
+                        "position": 2,
+                        "rank": 2
                       }
                     ]
                   },
@@ -4859,6 +4971,50 @@
                 },
                 "tasks": [
                   {
+                    "kind": "sorting",
+                    "id": "cooling-loads",
+                    "title": {
+                      "en": "Cooling loads",
+                      "de": "Kühllasten"
+                    },
+                    "prompt": {
+                      "en": "Order by cooling load per floor area, smallest first.",
+                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Cooling load",
+                        "de": "Kühllast"
+                      },
+                      "unit": "W/m²",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "server-room",
+                        "label": {
+                          "en": "Server room",
+                          "de": "Serverraum"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      },
+                      {
+                        "id": "office",
+                        "label": {
+                          "en": "Office",
+                          "de": "Büro"
+                        }
+                      }
+                    ]
+                  },
+                  {
                     "kind": "classification",
                     "id": "cooling-strategies",
                     "title": {
@@ -4908,62 +5064,10 @@
                         }
                       }
                     ]
-                  },
-                  {
-                    "kind": "sorting",
-                    "id": "cooling-loads",
-                    "title": {
-                      "en": "Cooling loads",
-                      "de": "Kühllasten"
-                    },
-                    "prompt": {
-                      "en": "Order by cooling load per floor area, smallest first.",
-                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
-                    },
-                    "quantity": {
-                      "label": {
-                        "en": "Cooling load",
-                        "de": "Kühllast"
-                      },
-                      "unit": "W/m²",
-                      "scale": "linear",
-                      "prefixed": false
-                    },
-                    "items": [
-                      {
-                        "id": "server-room",
-                        "label": {
-                          "en": "Server room",
-                          "de": "Serverraum"
-                        }
-                      },
-                      {
-                        "id": "bedroom",
-                        "label": {
-                          "en": "Bedroom",
-                          "de": "Schlafzimmer"
-                        }
-                      },
-                      {
-                        "id": "office",
-                        "label": {
-                          "en": "Office",
-                          "de": "Büro"
-                        }
-                      }
-                    ]
                   }
                 ]
               },
               "answers": {
-                "cooling-strategies": {
-                  "kind": "classification",
-                  "assignments": {
-                    "night-ventilation": "active",
-                    "external-shading": "active",
-                    "split-unit": "passive"
-                  }
-                },
                 "cooling-loads": {
                   "kind": "sorting",
                   "order": [
@@ -4971,6 +5075,14 @@
                     "office",
                     "bedroom"
                   ]
+                },
+                "cooling-strategies": {
+                  "kind": "classification",
+                  "assignments": {
+                    "night-ventilation": "active",
+                    "external-shading": "active",
+                    "split-unit": "passive"
+                  }
                 }
               },
               "startedAt": 1790102880000,
@@ -4978,6 +5090,31 @@
                 "quiz": "cooling-basics",
                 "score": 0.0,
                 "tasks": [
+                  {
+                    "kind": "sorting",
+                    "task": "cooling-loads",
+                    "score": 0.0,
+                    "items": [
+                      {
+                        "item": "server-room",
+                        "value": 1000,
+                        "position": 0,
+                        "rank": 2
+                      },
+                      {
+                        "item": "office",
+                        "value": 40,
+                        "position": 1,
+                        "rank": 1
+                      },
+                      {
+                        "item": "bedroom",
+                        "value": 15,
+                        "position": 2,
+                        "rank": 0
+                      }
+                    ]
+                  },
                   {
                     "kind": "classification",
                     "task": "cooling-strategies",
@@ -5004,31 +5141,6 @@
                           "en": "A split unit runs a refrigeration cycle.",
                           "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
                         }
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "sorting",
-                    "task": "cooling-loads",
-                    "score": 0.0,
-                    "items": [
-                      {
-                        "item": "server-room",
-                        "value": 1000,
-                        "position": 0,
-                        "rank": 2
-                      },
-                      {
-                        "item": "office",
-                        "value": 40,
-                        "position": 1,
-                        "rank": 1
-                      },
-                      {
-                        "item": "bedroom",
-                        "value": 15,
-                        "position": 2,
-                        "rank": 0
                       }
                     ]
                   }
@@ -5720,43 +5832,6 @@
             "id": "6012b143a028ec0b2c7df4bbdb67644d",
             "learner": "68cb9b849467b2639cec134d8e88d82a",
             "run": "e86ff49564c8de0442d16032137bfe62",
-            "task": "cooling-strategies",
-            "answer": {
-              "kind": "classification",
-              "assignments": {
-                "external-shading": "passive",
-                "chiller": "active",
-                "split-unit": "active"
-              }
-            }
-          },
-          "now": 1790103840000,
-          "expected": {
-            "events": [
-              {
-                "type": "answer-recorded",
-                "learner": "68cb9b849467b2639cec134d8e88d82a",
-                "run": "e86ff49564c8de0442d16032137bfe62",
-                "task": "cooling-strategies",
-                "answer": {
-                  "kind": "classification",
-                  "assignments": {
-                    "external-shading": "passive",
-                    "chiller": "active",
-                    "split-unit": "active"
-                  }
-                },
-                "at": 1790103840000
-              }
-            ]
-          }
-        },
-        {
-          "command": {
-            "type": "record-answer",
-            "id": "2e20603ecbfb21b373d476716085aa0b",
-            "learner": "68cb9b849467b2639cec134d8e88d82a",
-            "run": "e86ff49564c8de0442d16032137bfe62",
             "task": "cooling-loads",
             "answer": {
               "kind": "sorting",
@@ -5767,7 +5842,7 @@
               ]
             }
           },
-          "now": 1790103900000,
+          "now": 1790103840000,
           "expected": {
             "events": [
               {
@@ -5782,6 +5857,43 @@
                     "office",
                     "server-room"
                   ]
+                },
+                "at": 1790103840000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "2e20603ecbfb21b373d476716085aa0b",
+            "learner": "68cb9b849467b2639cec134d8e88d82a",
+            "run": "e86ff49564c8de0442d16032137bfe62",
+            "task": "cooling-strategies",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "external-shading": "passive",
+                "chiller": "active",
+                "split-unit": "active"
+              }
+            }
+          },
+          "now": 1790103900000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "68cb9b849467b2639cec134d8e88d82a",
+                "run": "e86ff49564c8de0442d16032137bfe62",
+                "task": "cooling-strategies",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "external-shading": "passive",
+                    "chiller": "active",
+                    "split-unit": "active"
+                  }
                 },
                 "at": 1790103900000
               }
@@ -5806,6 +5918,31 @@
                   "quiz": "cooling-basics",
                   "score": 1.0,
                   "tasks": [
+                    {
+                      "kind": "sorting",
+                      "task": "cooling-loads",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "bedroom",
+                          "value": 15,
+                          "position": 0,
+                          "rank": 0
+                        },
+                        {
+                          "item": "office",
+                          "value": 40,
+                          "position": 1,
+                          "rank": 1
+                        },
+                        {
+                          "item": "server-room",
+                          "value": 1000,
+                          "position": 2,
+                          "rank": 2
+                        }
+                      ]
+                    },
                     {
                       "kind": "classification",
                       "task": "cooling-strategies",
@@ -5832,31 +5969,6 @@
                             "en": "A split unit runs a refrigeration cycle.",
                             "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
                           }
-                        }
-                      ]
-                    },
-                    {
-                      "kind": "sorting",
-                      "task": "cooling-loads",
-                      "score": 1.0,
-                      "items": [
-                        {
-                          "item": "bedroom",
-                          "value": 15,
-                          "position": 0,
-                          "rank": 0
-                        },
-                        {
-                          "item": "office",
-                          "value": 40,
-                          "position": 1,
-                          "rank": 1
-                        },
-                        {
-                          "item": "server-room",
-                          "value": 1000,
-                          "position": 2,
-                          "rank": 2
                         }
                       ]
                     }
@@ -5973,6 +6085,10 @@
                     "prompt": {
                       "en": "Assign every installation to its heating system.",
                       "de": "Ordne jede Anlage ihrem Heizsystem zu."
+                    },
+                    "icon": {
+                      "emoji": "🔥",
+                      "motion": "float"
                     },
                     "axes": [
                       {
@@ -6273,6 +6389,10 @@
                     "prompt": {
                       "en": "Order by recommended temperature, lowest first.",
                       "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+                    },
+                    "icon": {
+                      "emoji": "🌡️",
+                      "motion": "pulse"
                     },
                     "quantity": {
                       "label": {
@@ -6771,6 +6891,50 @@
                 },
                 "tasks": [
                   {
+                    "kind": "sorting",
+                    "id": "cooling-loads",
+                    "title": {
+                      "en": "Cooling loads",
+                      "de": "Kühllasten"
+                    },
+                    "prompt": {
+                      "en": "Order by cooling load per floor area, smallest first.",
+                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Cooling load",
+                        "de": "Kühllast"
+                      },
+                      "unit": "W/m²",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "server-room",
+                        "label": {
+                          "en": "Server room",
+                          "de": "Serverraum"
+                        }
+                      },
+                      {
+                        "id": "office",
+                        "label": {
+                          "en": "Office",
+                          "de": "Büro"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      }
+                    ]
+                  },
+                  {
                     "kind": "classification",
                     "id": "cooling-strategies",
                     "title": {
@@ -6820,7 +6984,1253 @@
                         }
                       }
                     ]
+                  }
+                ]
+              },
+              "answers": {
+                "cooling-loads": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "office",
+                    "server-room"
+                  ]
+                },
+                "cooling-strategies": {
+                  "kind": "classification",
+                  "assignments": {
+                    "external-shading": "passive",
+                    "chiller": "active",
+                    "split-unit": "active"
+                  }
+                }
+              },
+              "startedAt": 1790103780000,
+              "result": {
+                "quiz": "cooling-basics",
+                "score": 1.0,
+                "tasks": [
+                  {
+                    "kind": "sorting",
+                    "task": "cooling-loads",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "bedroom",
+                        "value": 15,
+                        "position": 0,
+                        "rank": 0
+                      },
+                      {
+                        "item": "office",
+                        "value": 40,
+                        "position": 1,
+                        "rank": 1
+                      },
+                      {
+                        "item": "server-room",
+                        "value": 1000,
+                        "position": 2,
+                        "rank": 2
+                      }
+                    ]
                   },
+                  {
+                    "kind": "classification",
+                    "task": "cooling-strategies",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "external-shading",
+                        "assigned": "passive",
+                        "correct": "passive",
+                        "credit": 1
+                      },
+                      {
+                        "item": "chiller",
+                        "assigned": "active",
+                        "correct": "active",
+                        "credit": 1
+                      },
+                      {
+                        "item": "split-unit",
+                        "assigned": "active",
+                        "correct": "active",
+                        "credit": 1,
+                        "explanation": {
+                          "en": "A split unit runs a refrigeration cycle.",
+                          "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "submittedAt": 1790103960000
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "anonymous-registration",
+      "learner": "896905de78816a095631bd0fa7fddd62",
+      "given": [],
+      "steps": [
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "0827cb227a99ac8120acce49fd6cf161",
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "identity": {
+              "kind": "pseudonym",
+              "handle": "Newcomer"
+            }
+          },
+          "now": 1790104020000,
+          "expected": {
+            "rejection": "handle-invalid"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "e086cb81e1808c46bcc76ab71393ed7f",
+            "learner": "7d08df11585bea36ed8389faf2c2c8eb",
+            "identity": {
+              "kind": "anonymous"
+            }
+          },
+          "now": 1790104080000,
+          "expected": {
+            "rejection": "unknown-learner"
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "7255ccbe3bc6c1efe03beacb5c07a76a",
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "identity": {
+              "kind": "anonymous"
+            }
+          },
+          "now": 1790104140000,
+          "expected": {
+            "events": [
+              {
+                "type": "learner-registered",
+                "learner": "896905de78816a095631bd0fa7fddd62",
+                "identity": {
+                  "kind": "anonymous"
+                },
+                "at": 1790104140000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "identify-learner",
+            "id": "edcccb6d2d63eca29fb2ac35789e37aa",
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "identity": {
+              "kind": "anonymous"
+            }
+          },
+          "now": 1790104200000,
+          "expected": {
+            "rejection": "learner-exists"
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "a6fd398888a7e6b1cc9d886cd759bdb1",
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "run": "71b64d363e447e20e841de541aca884c",
+            "quiz": "cooling-basics"
+          },
+          "now": 1790104260000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-started",
+                "learner": "896905de78816a095631bd0fa7fddd62",
+                "run": "71b64d363e447e20e841de541aca884c",
+                "quiz": "cooling-basics",
+                "revision": "38db3a3e052401e3b748cc5bdf069bd77545da991a00214678e8b366a2a15867",
+                "seed": 3282829737,
+                "at": 1790104260000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "aeeb5f36b81f615a6a9a0f7ddd163d1e",
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "run": "71b64d363e447e20e841de541aca884c",
+            "quiz": "cooling-basics"
+          },
+          "now": 1790104320000,
+          "expected": {
+            "rejection": "run-open"
+          }
+        },
+        {
+          "command": {
+            "type": "submit-run",
+            "id": "9a2bde6ff45cc30496352efaca9bcb18",
+            "learner": "7d08df11585bea36ed8389faf2c2c8eb",
+            "run": "71b64d363e447e20e841de541aca884c"
+          },
+          "now": 1790104380000,
+          "expected": {
+            "rejection": "unknown-learner"
+          }
+        }
+      ],
+      "views": {
+        "runs": [
+          "71b64d363e447e20e841de541aca884c"
+        ],
+        "expected": {
+          "learner": {
+            "learner": "896905de78816a095631bd0fa7fddd62",
+            "identity": {
+              "kind": "anonymous"
+            },
+            "runs": [
+              {
+                "run": "71b64d363e447e20e841de541aca884c",
+                "quiz": "cooling-basics",
+                "status": "open",
+                "startedAt": 1790104260000
+              }
+            ],
+            "badges": [],
+            "best": {},
+            "total": 0.0
+          },
+          "runs": {
+            "71b64d363e447e20e841de541aca884c": {
+              "run": "71b64d363e447e20e841de541aca884c",
+              "learner": "896905de78816a095631bd0fa7fddd62",
+              "quiz": "cooling-basics",
+              "status": "open",
+              "sheet": {
+                "quiz": "cooling-basics",
+                "seed": 3282829737,
+                "title": {
+                  "en": "Cooling basics",
+                  "de": "Kühlen-Grundlagen"
+                },
+                "description": {
+                  "en": "Cooling loads and cooling strategies.",
+                  "de": "Kühllasten und Kühlstrategien."
+                },
+                "tasks": [
+                  {
+                    "kind": "sorting",
+                    "id": "cooling-loads",
+                    "title": {
+                      "en": "Cooling loads",
+                      "de": "Kühllasten"
+                    },
+                    "prompt": {
+                      "en": "Order by cooling load per floor area, smallest first.",
+                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Cooling load",
+                        "de": "Kühllast"
+                      },
+                      "unit": "W/m²",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "office",
+                        "label": {
+                          "en": "Office",
+                          "de": "Büro"
+                        }
+                      },
+                      {
+                        "id": "server-room",
+                        "label": {
+                          "en": "Server room",
+                          "de": "Serverraum"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "classification",
+                    "id": "cooling-strategies",
+                    "title": {
+                      "en": "Cooling strategies",
+                      "de": "Kühlstrategien"
+                    },
+                    "prompt": {
+                      "en": "Is the measure passive or active?",
+                      "de": "Ist die Massnahme passiv oder aktiv?"
+                    },
+                    "categories": [
+                      {
+                        "id": "active",
+                        "label": {
+                          "en": "Active",
+                          "de": "Aktiv"
+                        }
+                      },
+                      {
+                        "id": "passive",
+                        "label": {
+                          "en": "Passive",
+                          "de": "Passiv"
+                        }
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "split-unit",
+                        "label": {
+                          "en": "Split unit",
+                          "de": "Split-Klimagerät"
+                        }
+                      },
+                      {
+                        "id": "chiller",
+                        "label": {
+                          "en": "Chiller",
+                          "de": "Kältemaschine"
+                        }
+                      },
+                      {
+                        "id": "external-shading",
+                        "label": {
+                          "en": "External shading",
+                          "de": "Aussenliegender Sonnenschutz"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "answers": {},
+              "startedAt": 1790104260000
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "caps",
+      "learner": "81522c118c2937c5981505f215ee23fe",
+      "given": [
+        {
+          "type": "learner-registered",
+          "learner": "81522c118c2937c5981505f215ee23fe",
+          "identity": {
+            "kind": "pseudonym",
+            "handle": "Capped"
+          },
+          "at": 1790104440000
+        }
+      ],
+      "steps": [
+        {
+          "command": {
+            "type": "start-run",
+            "id": "25ae3ad9905fceb3bdfe7ab9ca5ab471",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e",
+            "quiz": "cooling-basics"
+          },
+          "now": 1790104500000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-started",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "quiz": "cooling-basics",
+                "revision": "38db3a3e052401e3b748cc5bdf069bd77545da991a00214678e8b366a2a15867",
+                "seed": 3991714614,
+                "at": 1790104500000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "f590510dafedfbc0046f3627ea7098d0",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e",
+            "task": "cooling-loads",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "bedroom",
+                "office",
+                "server-room"
+              ]
+            }
+          },
+          "now": 1790104560000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "task": "cooling-loads",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "office",
+                    "server-room"
+                  ]
+                },
+                "at": 1790104560000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "61589e2796a8d157a12c41e3b4ed64cf",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e",
+            "task": "cooling-strategies",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "external-shading": "passive",
+                "chiller": "active",
+                "split-unit": "active"
+              }
+            }
+          },
+          "now": 1790104620000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "task": "cooling-strategies",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "external-shading": "passive",
+                    "chiller": "active",
+                    "split-unit": "active"
+                  }
+                },
+                "at": 1790104620000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "ca01fc57e9b4aca40fb0aa3c7004fa92",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e",
+            "task": "cooling-loads",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "bedroom",
+                "office",
+                "server-room"
+              ]
+            }
+          },
+          "now": 1790104680000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "task": "cooling-loads",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "office",
+                    "server-room"
+                  ]
+                },
+                "at": 1790104680000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "e3a1ed6eafe837fd2d0166b8f0123964",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e",
+            "task": "cooling-loads",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "server-room",
+                "office",
+                "bedroom"
+              ]
+            }
+          },
+          "now": 1790104740000,
+          "expected": {
+            "rejection": "answers-exhausted"
+          }
+        },
+        {
+          "command": {
+            "type": "submit-run",
+            "id": "31ef95a5a5d007d454ccf4e30640a5ad",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "ed6a6957a773496177089d1aa3a14d2e"
+          },
+          "now": 1790104800000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-submitted",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "result": {
+                  "quiz": "cooling-basics",
+                  "score": 1.0,
+                  "tasks": [
+                    {
+                      "kind": "sorting",
+                      "task": "cooling-loads",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "bedroom",
+                          "value": 15,
+                          "position": 0,
+                          "rank": 0
+                        },
+                        {
+                          "item": "office",
+                          "value": 40,
+                          "position": 1,
+                          "rank": 1
+                        },
+                        {
+                          "item": "server-room",
+                          "value": 1000,
+                          "position": 2,
+                          "rank": 2
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "classification",
+                      "task": "cooling-strategies",
+                      "score": 1.0,
+                      "items": [
+                        {
+                          "item": "external-shading",
+                          "assigned": "passive",
+                          "correct": "passive",
+                          "credit": 1
+                        },
+                        {
+                          "item": "chiller",
+                          "assigned": "active",
+                          "correct": "active",
+                          "credit": 1
+                        },
+                        {
+                          "item": "split-unit",
+                          "assigned": "active",
+                          "correct": "active",
+                          "credit": 1,
+                          "explanation": {
+                            "en": "A split unit runs a refrigeration cycle.",
+                            "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "at": 1790104800000
+              },
+              {
+                "type": "badge-awarded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "badge": "cooling-classifier",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "at": 1790104800000
+              },
+              {
+                "type": "badge-awarded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "badge": "perfect-cooling",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "at": 1790104800000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "8f0224657a12428bc7d433fd2008e81d",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "30607830de675084752dd5c0bfe67a00",
+            "quiz": "cooling-basics"
+          },
+          "now": 1790104860000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-started",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "30607830de675084752dd5c0bfe67a00",
+                "quiz": "cooling-basics",
+                "revision": "38db3a3e052401e3b748cc5bdf069bd77545da991a00214678e8b366a2a15867",
+                "seed": 194826984,
+                "at": 1790104860000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "a3a6a29f6436907b8b37972917ec5690",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "30607830de675084752dd5c0bfe67a00",
+            "task": "cooling-loads",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "server-room",
+                "office",
+                "bedroom"
+              ]
+            }
+          },
+          "now": 1790104920000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "30607830de675084752dd5c0bfe67a00",
+                "task": "cooling-loads",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "server-room",
+                    "office",
+                    "bedroom"
+                  ]
+                },
+                "at": 1790104920000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "9592a4cc3a66e3fb607b9dfa0c39042a",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "30607830de675084752dd5c0bfe67a00",
+            "task": "cooling-strategies",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "split-unit": "passive",
+                "night-ventilation": "active",
+                "external-shading": "active"
+              }
+            }
+          },
+          "now": 1790104980000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "30607830de675084752dd5c0bfe67a00",
+                "task": "cooling-strategies",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "split-unit": "passive",
+                    "night-ventilation": "active",
+                    "external-shading": "active"
+                  }
+                },
+                "at": 1790104980000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "submit-run",
+            "id": "35a4d9dcc353a029a94f03dc05e13414",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "30607830de675084752dd5c0bfe67a00"
+          },
+          "now": 1790105040000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-submitted",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "30607830de675084752dd5c0bfe67a00",
+                "result": {
+                  "quiz": "cooling-basics",
+                  "score": 0.0,
+                  "tasks": [
+                    {
+                      "kind": "sorting",
+                      "task": "cooling-loads",
+                      "score": 0.0,
+                      "items": [
+                        {
+                          "item": "server-room",
+                          "value": 1000,
+                          "position": 0,
+                          "rank": 2
+                        },
+                        {
+                          "item": "office",
+                          "value": 40,
+                          "position": 1,
+                          "rank": 1
+                        },
+                        {
+                          "item": "bedroom",
+                          "value": 15,
+                          "position": 2,
+                          "rank": 0
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "classification",
+                      "task": "cooling-strategies",
+                      "score": 0.0,
+                      "items": [
+                        {
+                          "item": "split-unit",
+                          "assigned": "passive",
+                          "correct": "active",
+                          "credit": 0,
+                          "explanation": {
+                            "en": "A split unit runs a refrigeration cycle.",
+                            "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                          }
+                        },
+                        {
+                          "item": "night-ventilation",
+                          "assigned": "active",
+                          "correct": "passive",
+                          "credit": 0
+                        },
+                        {
+                          "item": "external-shading",
+                          "assigned": "active",
+                          "correct": "passive",
+                          "credit": 0
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "at": 1790105040000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "2217fa8a7f2514208232fb966cfffce8",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "b8df623190f34f295cd67e1915231cc8",
+            "quiz": "cooling-basics"
+          },
+          "now": 1790105100000,
+          "expected": {
+            "rejection": "runs-exhausted"
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "1fc6ea2547e5d091161b1378e03be313",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "e4b3e70463ad6fa5e26f81408641aa55",
+            "quiz": "energy-basics"
+          },
+          "now": 1790105160000,
+          "expected": {
+            "events": [
+              {
+                "type": "run-started",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "e4b3e70463ad6fa5e26f81408641aa55",
+                "quiz": "energy-basics",
+                "revision": "153b20ac3c1e95298ecfd5c9e6db7063eb01099a600f1e602c9f057ca581c534",
+                "seed": 677392278,
+                "at": 1790105160000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "0b14eb6bc039fca7df2e6605b92a451f",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "e4b3e70463ad6fa5e26f81408641aa55",
+            "task": "heating-systems",
+            "answer": {
+              "kind": "classification",
+              "assignments": {
+                "night-storage-heater": "wood-pellets",
+                "air-source": "gas-boiler",
+                "pellet-stove": "district-heating",
+                "lake-water-network": "heat-pump",
+                "ground-source": "gas-boiler"
+              }
+            }
+          },
+          "now": 1790105220000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "e4b3e70463ad6fa5e26f81408641aa55",
+                "task": "heating-systems",
+                "answer": {
+                  "kind": "classification",
+                  "assignments": {
+                    "night-storage-heater": "wood-pellets",
+                    "air-source": "gas-boiler",
+                    "pellet-stove": "district-heating",
+                    "lake-water-network": "heat-pump",
+                    "ground-source": "gas-boiler"
+                  }
+                },
+                "at": 1790105220000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "87b739cf009c5efe38cdf64aa9d45216",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "e4b3e70463ad6fa5e26f81408641aa55",
+            "task": "room-temperatures",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "bathroom",
+                "living-room",
+                "bedroom"
+              ]
+            }
+          },
+          "now": 1790105280000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "e4b3e70463ad6fa5e26f81408641aa55",
+                "task": "room-temperatures",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "bathroom",
+                    "living-room",
+                    "bedroom"
+                  ]
+                },
+                "at": 1790105280000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "record-answer",
+            "id": "77c5249c2a3e633c92a8d9a3f10e403a",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "e4b3e70463ad6fa5e26f81408641aa55",
+            "task": "power-ratings",
+            "answer": {
+              "kind": "sorting",
+              "order": [
+                "nuclear-plant",
+                "wind-turbine",
+                "wallbox",
+                "hair-dryer",
+                "tea-light",
+                "led-bulb"
+              ]
+            }
+          },
+          "now": 1790105340000,
+          "expected": {
+            "events": [
+              {
+                "type": "answer-recorded",
+                "learner": "81522c118c2937c5981505f215ee23fe",
+                "run": "e4b3e70463ad6fa5e26f81408641aa55",
+                "task": "power-ratings",
+                "answer": {
+                  "kind": "sorting",
+                  "order": [
+                    "nuclear-plant",
+                    "wind-turbine",
+                    "wallbox",
+                    "hair-dryer",
+                    "tea-light",
+                    "led-bulb"
+                  ]
+                },
+                "at": 1790105340000
+              }
+            ]
+          }
+        },
+        {
+          "command": {
+            "type": "submit-run",
+            "id": "9f03b755b8fb089b89b425bc5b8d673f",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "e4b3e70463ad6fa5e26f81408641aa55"
+          },
+          "now": 1790105400000,
+          "expected": {
+            "rejection": "run-incomplete"
+          }
+        },
+        {
+          "command": {
+            "type": "start-run",
+            "id": "fb0adb9b15c034cba7ecbb7a813d3af1",
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "run": "d54a941f7c6bcbdf566ee7258f276c77",
+            "quiz": "energy-basics"
+          },
+          "now": 1790105460000,
+          "expected": {
+            "rejection": "run-open"
+          }
+        }
+      ],
+      "limits": {
+        "learners": 10,
+        "runsPerQuiz": 2,
+        "runs": 3,
+        "answersPerRun": 3
+      },
+      "views": {
+        "runs": [
+          "ed6a6957a773496177089d1aa3a14d2e",
+          "30607830de675084752dd5c0bfe67a00",
+          "e4b3e70463ad6fa5e26f81408641aa55"
+        ],
+        "expected": {
+          "learner": {
+            "learner": "81522c118c2937c5981505f215ee23fe",
+            "identity": {
+              "kind": "pseudonym",
+              "handle": "Capped"
+            },
+            "runs": [
+              {
+                "run": "e4b3e70463ad6fa5e26f81408641aa55",
+                "quiz": "energy-basics",
+                "status": "open",
+                "startedAt": 1790105160000
+              },
+              {
+                "run": "30607830de675084752dd5c0bfe67a00",
+                "quiz": "cooling-basics",
+                "status": "submitted",
+                "startedAt": 1790104860000,
+                "score": 0.0,
+                "submittedAt": 1790105040000
+              },
+              {
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "quiz": "cooling-basics",
+                "status": "submitted",
+                "startedAt": 1790104500000,
+                "score": 1.0,
+                "submittedAt": 1790104800000
+              }
+            ],
+            "badges": [
+              {
+                "badge": "cooling-classifier",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "at": 1790104800000
+              },
+              {
+                "badge": "perfect-cooling",
+                "run": "ed6a6957a773496177089d1aa3a14d2e",
+                "at": 1790104800000
+              }
+            ],
+            "best": {
+              "cooling-basics": 1.0
+            },
+            "total": 100.0
+          },
+          "runs": {
+            "ed6a6957a773496177089d1aa3a14d2e": {
+              "run": "ed6a6957a773496177089d1aa3a14d2e",
+              "learner": "81522c118c2937c5981505f215ee23fe",
+              "quiz": "cooling-basics",
+              "status": "submitted",
+              "sheet": {
+                "quiz": "cooling-basics",
+                "seed": 3991714614,
+                "title": {
+                  "en": "Cooling basics",
+                  "de": "Kühlen-Grundlagen"
+                },
+                "description": {
+                  "en": "Cooling loads and cooling strategies.",
+                  "de": "Kühllasten und Kühlstrategien."
+                },
+                "tasks": [
+                  {
+                    "kind": "sorting",
+                    "id": "cooling-loads",
+                    "title": {
+                      "en": "Cooling loads",
+                      "de": "Kühllasten"
+                    },
+                    "prompt": {
+                      "en": "Order by cooling load per floor area, smallest first.",
+                      "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Cooling load",
+                        "de": "Kühllast"
+                      },
+                      "unit": "W/m²",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "office",
+                        "label": {
+                          "en": "Office",
+                          "de": "Büro"
+                        }
+                      },
+                      {
+                        "id": "server-room",
+                        "label": {
+                          "en": "Server room",
+                          "de": "Serverraum"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "classification",
+                    "id": "cooling-strategies",
+                    "title": {
+                      "en": "Cooling strategies",
+                      "de": "Kühlstrategien"
+                    },
+                    "prompt": {
+                      "en": "Is the measure passive or active?",
+                      "de": "Ist die Massnahme passiv oder aktiv?"
+                    },
+                    "categories": [
+                      {
+                        "id": "active",
+                        "label": {
+                          "en": "Active",
+                          "de": "Aktiv"
+                        }
+                      },
+                      {
+                        "id": "passive",
+                        "label": {
+                          "en": "Passive",
+                          "de": "Passiv"
+                        }
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "external-shading",
+                        "label": {
+                          "en": "External shading",
+                          "de": "Aussenliegender Sonnenschutz"
+                        }
+                      },
+                      {
+                        "id": "chiller",
+                        "label": {
+                          "en": "Chiller",
+                          "de": "Kältemaschine"
+                        }
+                      },
+                      {
+                        "id": "split-unit",
+                        "label": {
+                          "en": "Split unit",
+                          "de": "Split-Klimagerät"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "answers": {
+                "cooling-loads": {
+                  "kind": "sorting",
+                  "order": [
+                    "bedroom",
+                    "office",
+                    "server-room"
+                  ]
+                },
+                "cooling-strategies": {
+                  "kind": "classification",
+                  "assignments": {
+                    "external-shading": "passive",
+                    "chiller": "active",
+                    "split-unit": "active"
+                  }
+                }
+              },
+              "startedAt": 1790104500000,
+              "result": {
+                "quiz": "cooling-basics",
+                "score": 1.0,
+                "tasks": [
+                  {
+                    "kind": "sorting",
+                    "task": "cooling-loads",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "bedroom",
+                        "value": 15,
+                        "position": 0,
+                        "rank": 0
+                      },
+                      {
+                        "item": "office",
+                        "value": 40,
+                        "position": 1,
+                        "rank": 1
+                      },
+                      {
+                        "item": "server-room",
+                        "value": 1000,
+                        "position": 2,
+                        "rank": 2
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "classification",
+                    "task": "cooling-strategies",
+                    "score": 1.0,
+                    "items": [
+                      {
+                        "item": "external-shading",
+                        "assigned": "passive",
+                        "correct": "passive",
+                        "credit": 1
+                      },
+                      {
+                        "item": "chiller",
+                        "assigned": "active",
+                        "correct": "active",
+                        "credit": 1
+                      },
+                      {
+                        "item": "split-unit",
+                        "assigned": "active",
+                        "correct": "active",
+                        "credit": 1,
+                        "explanation": {
+                          "en": "A split unit runs a refrigeration cycle.",
+                          "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "submittedAt": 1790104800000
+            },
+            "30607830de675084752dd5c0bfe67a00": {
+              "run": "30607830de675084752dd5c0bfe67a00",
+              "learner": "81522c118c2937c5981505f215ee23fe",
+              "quiz": "cooling-basics",
+              "status": "submitted",
+              "sheet": {
+                "quiz": "cooling-basics",
+                "seed": 194826984,
+                "title": {
+                  "en": "Cooling basics",
+                  "de": "Kühlen-Grundlagen"
+                },
+                "description": {
+                  "en": "Cooling loads and cooling strategies.",
+                  "de": "Kühllasten und Kühlstrategien."
+                },
+                "tasks": [
                   {
                     "kind": "sorting",
                     "id": "cooling-loads",
@@ -6864,71 +8274,93 @@
                         }
                       }
                     ]
+                  },
+                  {
+                    "kind": "classification",
+                    "id": "cooling-strategies",
+                    "title": {
+                      "en": "Cooling strategies",
+                      "de": "Kühlstrategien"
+                    },
+                    "prompt": {
+                      "en": "Is the measure passive or active?",
+                      "de": "Ist die Massnahme passiv oder aktiv?"
+                    },
+                    "categories": [
+                      {
+                        "id": "active",
+                        "label": {
+                          "en": "Active",
+                          "de": "Aktiv"
+                        }
+                      },
+                      {
+                        "id": "passive",
+                        "label": {
+                          "en": "Passive",
+                          "de": "Passiv"
+                        }
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "split-unit",
+                        "label": {
+                          "en": "Split unit",
+                          "de": "Split-Klimagerät"
+                        }
+                      },
+                      {
+                        "id": "night-ventilation",
+                        "label": {
+                          "en": "Night ventilation",
+                          "de": "Nachtlüftung"
+                        }
+                      },
+                      {
+                        "id": "external-shading",
+                        "label": {
+                          "en": "External shading",
+                          "de": "Aussenliegender Sonnenschutz"
+                        }
+                      }
+                    ]
                   }
                 ]
               },
               "answers": {
-                "cooling-strategies": {
-                  "kind": "classification",
-                  "assignments": {
-                    "external-shading": "passive",
-                    "chiller": "active",
-                    "split-unit": "active"
-                  }
-                },
                 "cooling-loads": {
                   "kind": "sorting",
                   "order": [
-                    "bedroom",
+                    "server-room",
                     "office",
-                    "server-room"
+                    "bedroom"
                   ]
+                },
+                "cooling-strategies": {
+                  "kind": "classification",
+                  "assignments": {
+                    "split-unit": "passive",
+                    "night-ventilation": "active",
+                    "external-shading": "active"
+                  }
                 }
               },
-              "startedAt": 1790103780000,
+              "startedAt": 1790104860000,
               "result": {
                 "quiz": "cooling-basics",
-                "score": 1.0,
+                "score": 0.0,
                 "tasks": [
-                  {
-                    "kind": "classification",
-                    "task": "cooling-strategies",
-                    "score": 1.0,
-                    "items": [
-                      {
-                        "item": "external-shading",
-                        "assigned": "passive",
-                        "correct": "passive",
-                        "credit": 1
-                      },
-                      {
-                        "item": "chiller",
-                        "assigned": "active",
-                        "correct": "active",
-                        "credit": 1
-                      },
-                      {
-                        "item": "split-unit",
-                        "assigned": "active",
-                        "correct": "active",
-                        "credit": 1,
-                        "explanation": {
-                          "en": "A split unit runs a refrigeration cycle.",
-                          "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
-                        }
-                      }
-                    ]
-                  },
                   {
                     "kind": "sorting",
                     "task": "cooling-loads",
-                    "score": 1.0,
+                    "score": 0.0,
                     "items": [
                       {
-                        "item": "bedroom",
-                        "value": 15,
+                        "item": "server-room",
+                        "value": 1000,
                         "position": 0,
-                        "rank": 0
+                        "rank": 2
                       },
                       {
                         "item": "office",
@@ -6937,20 +8369,1441 @@
                         "rank": 1
                       },
                       {
-                        "item": "server-room",
-                        "value": 1000,
+                        "item": "bedroom",
+                        "value": 15,
                         "position": 2,
-                        "rank": 2
+                        "rank": 0
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "classification",
+                    "task": "cooling-strategies",
+                    "score": 0.0,
+                    "items": [
+                      {
+                        "item": "split-unit",
+                        "assigned": "passive",
+                        "correct": "active",
+                        "credit": 0,
+                        "explanation": {
+                          "en": "A split unit runs a refrigeration cycle.",
+                          "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
+                        }
+                      },
+                      {
+                        "item": "night-ventilation",
+                        "assigned": "active",
+                        "correct": "passive",
+                        "credit": 0
+                      },
+                      {
+                        "item": "external-shading",
+                        "assigned": "active",
+                        "correct": "passive",
+                        "credit": 0
                       }
                     ]
                   }
                 ]
               },
-              "submittedAt": 1790103960000
+              "submittedAt": 1790105040000
+            },
+            "e4b3e70463ad6fa5e26f81408641aa55": {
+              "run": "e4b3e70463ad6fa5e26f81408641aa55",
+              "learner": "81522c118c2937c5981505f215ee23fe",
+              "quiz": "energy-basics",
+              "status": "open",
+              "sheet": {
+                "quiz": "energy-basics",
+                "seed": 677392278,
+                "title": {
+                  "en": "Energy basics",
+                  "de": "Energie-Grundlagen"
+                },
+                "description": {
+                  "en": "Heating systems, power ratings, room temperatures and energy carriers.",
+                  "de": "Heizsysteme, Leistungen, Raumtemperaturen und Energieträger."
+                },
+                "tasks": [
+                  {
+                    "kind": "classification",
+                    "id": "heating-systems",
+                    "title": {
+                      "en": "Heating systems",
+                      "de": "Heizsysteme"
+                    },
+                    "prompt": {
+                      "en": "Assign every installation to its heating system.",
+                      "de": "Ordne jede Anlage ihrem Heizsystem zu."
+                    },
+                    "icon": {
+                      "emoji": "🔥",
+                      "motion": "float"
+                    },
+                    "axes": [
+                      {
+                        "id": "seasonal-efficiency",
+                        "label": {
+                          "en": "Seasonal efficiency",
+                          "de": "Jahresnutzungsgrad"
+                        },
+                        "unit": "%",
+                        "min": 0,
+                        "max": 400
+                      },
+                      {
+                        "id": "investment",
+                        "label": {
+                          "en": "Investment",
+                          "de": "Investition"
+                        },
+                        "unit": "CHF",
+                        "min": 0,
+                        "max": 40000
+                      },
+                      {
+                        "id": "emissions",
+                        "label": {
+                          "en": "Emissions",
+                          "de": "Emissionen"
+                        },
+                        "unit": "g/kWh",
+                        "min": 0,
+                        "max": 300
+                      }
+                    ],
+                    "categories": [
+                      {
+                        "id": "heat-pump",
+                        "label": {
+                          "en": "Heat pump",
+                          "de": "Wärmepumpe"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 350,
+                          "investment": 30000,
+                          "emissions": 40
+                        }
+                      },
+                      {
+                        "id": "gas-boiler",
+                        "label": {
+                          "en": "Gas boiler",
+                          "de": "Gaskessel"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 95,
+                          "investment": 12000,
+                          "emissions": 250
+                        }
+                      },
+                      {
+                        "id": "electric-resistance",
+                        "label": {
+                          "en": "Direct electric heating",
+                          "de": "Elektrodirektheizung"
+                        },
+                        "description": {
+                          "en": "Resistance heaters without storage or pump.",
+                          "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+                        }
+                      },
+                      {
+                        "id": "wood-pellets",
+                        "label": {
+                          "en": "Wood pellets",
+                          "de": "Holzpellets"
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 85,
+                          "investment": 25000,
+                          "emissions": 30
+                        }
+                      },
+                      {
+                        "id": "district-heating",
+                        "label": {
+                          "en": "District heating",
+                          "de": "Fernwärme"
+                        },
+                        "description": {
+                          "en": "Heat delivered through a network.",
+                          "de": "Wärme aus einem Netz."
+                        },
+                        "profile": {
+                          "seasonal-efficiency": 90,
+                          "investment": 18000,
+                          "emissions": 120
+                        }
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "night-storage-heater",
+                        "label": {
+                          "en": "Night storage heater",
+                          "de": "Nachtspeicherofen"
+                        }
+                      },
+                      {
+                        "id": "air-source",
+                        "label": {
+                          "en": "Outdoor fan unit",
+                          "de": "Aussengerät mit Ventilator"
+                        }
+                      },
+                      {
+                        "id": "pellet-stove",
+                        "label": {
+                          "en": "Silo with automatic feed",
+                          "de": "Silo mit automatischer Förderung"
+                        }
+                      },
+                      {
+                        "id": "lake-water-network",
+                        "label": {
+                          "en": "Lake water network connection",
+                          "de": "Anschluss an ein Seewassernetz"
+                        }
+                      },
+                      {
+                        "id": "ground-source",
+                        "label": {
+                          "en": "Borehole with brine circuit",
+                          "de": "Erdsonde mit Solekreislauf"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "sorting",
+                    "id": "power-ratings",
+                    "title": {
+                      "en": "Power ratings",
+                      "de": "Leistungen"
+                    },
+                    "prompt": {
+                      "en": "Order by rated power, smallest first.",
+                      "de": "Ordne nach Nennleistung, die kleinste zuerst."
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Power",
+                        "de": "Leistung"
+                      },
+                      "unit": "W",
+                      "scale": "logarithmic",
+                      "prefixed": true
+                    },
+                    "items": [
+                      {
+                        "id": "hair-dryer",
+                        "label": {
+                          "en": "Hair dryer",
+                          "de": "Haartrockner"
+                        }
+                      },
+                      {
+                        "id": "tea-light",
+                        "label": {
+                          "en": "Tea light",
+                          "de": "Teelicht"
+                        }
+                      },
+                      {
+                        "id": "nuclear-plant",
+                        "label": {
+                          "en": "Nuclear power plant",
+                          "de": "Kernkraftwerk"
+                        }
+                      },
+                      {
+                        "id": "led-bulb",
+                        "label": {
+                          "en": "LED bulb",
+                          "de": "LED-Lampe"
+                        }
+                      },
+                      {
+                        "id": "wind-turbine",
+                        "label": {
+                          "en": "Wind turbine",
+                          "de": "Windturbine"
+                        }
+                      },
+                      {
+                        "id": "wallbox",
+                        "label": {
+                          "en": "Wallbox",
+                          "de": "Wallbox"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "matching",
+                    "id": "energy-carriers",
+                    "title": {
+                      "en": "Energy carriers",
+                      "de": "Energieträger"
+                    },
+                    "prompt": {
+                      "en": "Match every carrier with its energy density and its CO₂ factor.",
+                      "de": "Ordne jedem Energieträger seine Energiedichte und seinen CO₂-Faktor zu."
+                    },
+                    "dimensions": [
+                      {
+                        "id": "energy-density",
+                        "quantity": {
+                          "label": {
+                            "en": "Energy density",
+                            "de": "Energiedichte"
+                          },
+                          "unit": "MJ/kg",
+                          "scale": "logarithmic",
+                          "prefixed": false
+                        },
+                        "cards": [
+                          50,
+                          120,
+                          18,
+                          42.6,
+                          42.6
+                        ]
+                      },
+                      {
+                        "id": "co2-factor",
+                        "quantity": {
+                          "label": {
+                            "en": "CO₂ factor",
+                            "de": "CO₂-Faktor"
+                          },
+                          "unit": "kg/kWh",
+                          "scale": "linear",
+                          "prefixed": false
+                        },
+                        "cards": [
+                          0.27,
+                          0.027,
+                          0.27,
+                          0,
+                          0.2
+                        ]
+                      }
+                    ],
+                    "items": [
+                      {
+                        "id": "diesel",
+                        "label": {
+                          "en": "Diesel",
+                          "de": "Diesel"
+                        }
+                      },
+                      {
+                        "id": "wood-pellets",
+                        "label": {
+                          "en": "Wood pellets",
+                          "de": "Holzpellets"
+                        }
+                      },
+                      {
+                        "id": "hydrogen",
+                        "label": {
+                          "en": "Hydrogen",
+                          "de": "Wasserstoff"
+                        }
+                      },
+                      {
+                        "id": "heating-oil",
+                        "label": {
+                          "en": "Heating oil",
+                          "de": "Heizöl"
+                        }
+                      },
+                      {
+                        "id": "natural-gas",
+                        "label": {
+                          "en": "Natural gas",
+                          "de": "Erdgas"
+                        }
+                      }
+                    ]
+                  },
+                  {
+                    "kind": "sorting",
+                    "id": "room-temperatures",
+                    "title": {
+                      "en": "Room temperatures",
+                      "de": "Raumtemperaturen"
+                    },
+                    "prompt": {
+                      "en": "Order by recommended temperature, lowest first.",
+                      "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+                    },
+                    "icon": {
+                      "emoji": "🌡️",
+                      "motion": "pulse"
+                    },
+                    "quantity": {
+                      "label": {
+                        "en": "Temperature",
+                        "de": "Temperatur"
+                      },
+                      "unit": "°C",
+                      "scale": "linear",
+                      "prefixed": false
+                    },
+                    "items": [
+                      {
+                        "id": "living-room",
+                        "label": {
+                          "en": "Living room",
+                          "de": "Wohnzimmer"
+                        }
+                      },
+                      {
+                        "id": "bathroom",
+                        "label": {
+                          "en": "Bathroom",
+                          "de": "Badezimmer"
+                        }
+                      },
+                      {
+                        "id": "bedroom",
+                        "label": {
+                          "en": "Bedroom",
+                          "de": "Schlafzimmer"
+                        }
+                      }
+                    ]
+                  }
+                ]
+              },
+              "answers": {
+                "heating-systems": {
+                  "kind": "classification",
+                  "assignments": {
+                    "night-storage-heater": "wood-pellets",
+                    "air-source": "gas-boiler",
+                    "pellet-stove": "district-heating",
+                    "lake-water-network": "heat-pump",
+                    "ground-source": "gas-boiler"
+                  }
+                },
+                "room-temperatures": {
+                  "kind": "sorting",
+                  "order": [
+                    "bathroom",
+                    "living-room",
+                    "bedroom"
+                  ]
+                },
+                "power-ratings": {
+                  "kind": "sorting",
+                  "order": [
+                    "nuclear-plant",
+                    "wind-turbine",
+                    "wallbox",
+                    "hair-dryer",
+                    "tea-light",
+                    "led-bulb"
+                  ]
+                }
+              },
+              "startedAt": 1790105160000
             }
           }
         }
       }
     }
-  ]
+  ],
+  "malformed": {
+    "registrations": [
+      {
+        "id": "malformed-ids",
+        "key": "dora",
+        "steps": [
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "6adda73f01849111e77ba63aeb5de6a5",
+              "learner": "DORA",
+              "identity": {
+                "kind": "name",
+                "handle": "Dora"
+              }
+            },
+            "now": 1790001200000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "0000000000000000000000000000000",
+              "learner": "44b850f9ef88d2464a94cd5c9ad4f8f7",
+              "identity": {
+                "kind": "name",
+                "handle": "Dora"
+              }
+            },
+            "now": 1790001260000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "6adda73f01849111e77ba63aeb5de6a5",
+              "learner": "44b850f9ef88d2464a94cd5c9ad4f8f7\n",
+              "identity": {
+                "kind": "name",
+                "handle": "Dora"
+              }
+            },
+            "now": 1790001320000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "6adda73f01849111e77ba63aeb5de6a5",
+              "learner": "44b850f9ef88d2464a94cd5c9ad4f8f7",
+              "identity": {
+                "kind": "name",
+                "handle": "Dora"
+              }
+            },
+            "now": 1790001380000,
+            "expected": {
+              "events": [
+                {
+                  "type": "learner-registered",
+                  "learner": "44b850f9ef88d2464a94cd5c9ad4f8f7",
+                  "identity": {
+                    "kind": "name",
+                    "handle": "Dora"
+                  },
+                  "at": 1790001380000
+                }
+              ]
+            }
+          }
+        ]
+      }
+    ],
+    "learners": [
+      {
+        "id": "malformed-ids",
+        "learner": "994c9b104504c0ed79430fada477e5b4",
+        "given": [],
+        "steps": [
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "e615d1fad44dc78ffc9c89f580a41d63",
+              "learner": "994C9B104504C0ED79430FADA477E5B4",
+              "identity": {
+                "kind": "anonymous"
+              }
+            },
+            "now": 1790300060000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "identify-learner",
+              "id": "37d29562e4a54812728b1ad625ced6a2",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "identity": {
+                "kind": "anonymous"
+              }
+            },
+            "now": 1790300120000,
+            "expected": {
+              "events": [
+                {
+                  "type": "learner-registered",
+                  "learner": "994c9b104504c0ed79430fada477e5b4",
+                  "identity": {
+                    "kind": "anonymous"
+                  },
+                  "at": 1790300120000
+                }
+              ]
+            }
+          },
+          {
+            "command": {
+              "type": "start-run",
+              "id": "18c897eff5c3c8c99a2504ca3dc5364b",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "run-1",
+              "quiz": "cooling-basics"
+            },
+            "now": 1790300180000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "start-run",
+              "id": "da1f8d4a368624601772b9dedc099a26",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "7493580a905fcbbae8c30cc35fe6b74e",
+              "quiz": "Cooling Basics"
+            },
+            "now": 1790300240000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "start-run",
+              "id": "cd14e991d02d78fd19ba938b9fe6ecfe",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7f984dd4d889c6a88f57eb91825ce8dc7",
+              "quiz": "cooling-basics"
+            },
+            "now": 1790300300000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "start-run",
+              "id": "789a2d45133cc6bb80c7b54de9b51a2c",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "798ac8f46baa6ebdd9dee36da4574abd",
+              "quiz": "cooling-basics"
+            },
+            "now": 1790300360000,
+            "expected": {
+              "events": [
+                {
+                  "type": "run-started",
+                  "learner": "994c9b104504c0ed79430fada477e5b4",
+                  "run": "798ac8f46baa6ebdd9dee36da4574abd",
+                  "quiz": "cooling-basics",
+                  "revision": "38db3a3e052401e3b748cc5bdf069bd77545da991a00214678e8b366a2a15867",
+                  "seed": 294872488,
+                  "at": 1790300360000
+                }
+              ]
+            }
+          },
+          {
+            "command": {
+              "type": "record-answer",
+              "id": "8880ecc1ff1b844b1eac987b4b637638",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "798ac8f46baa6ebdd9dee36da4574abd",
+              "task": "../cooling-loads",
+              "answer": {
+                "kind": "sorting",
+                "order": []
+              }
+            },
+            "now": 1790300420000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "record-answer",
+              "id": "c1e9698b33103933bc50e9d7b5afff9e",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "798AC8F46BAA6EBDD9DEE36DA4574ABD",
+              "task": "cooling-loads",
+              "answer": {
+                "kind": "sorting",
+                "order": []
+              }
+            },
+            "now": 1790300480000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "submit-run",
+              "id": "not-an-id",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "798ac8f46baa6ebdd9dee36da4574abd"
+            },
+            "now": 1790300540000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "submit-run",
+              "id": "03cc343a67315189c31159bbb643aa58\n",
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "run": "798ac8f46baa6ebdd9dee36da4574abd"
+            },
+            "now": 1790300600000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          },
+          {
+            "command": {
+              "type": "submit-run",
+              "id": "caffdf9e25a0132682a7b031672669eb",
+              "learner": "994c9b104504c0ed79430fada477e5b4 ",
+              "run": "798ac8f46baa6ebdd9dee36da4574abd"
+            },
+            "now": 1790300660000,
+            "expected": {
+              "rejection": "id-invalid"
+            }
+          }
+        ],
+        "views": {
+          "runs": [
+            "798ac8f46baa6ebdd9dee36da4574abd"
+          ],
+          "expected": {
+            "learner": {
+              "learner": "994c9b104504c0ed79430fada477e5b4",
+              "identity": {
+                "kind": "anonymous"
+              },
+              "runs": [
+                {
+                  "run": "798ac8f46baa6ebdd9dee36da4574abd",
+                  "quiz": "cooling-basics",
+                  "status": "open",
+                  "startedAt": 1790300360000
+                }
+              ],
+              "badges": [],
+              "best": {},
+              "total": 0.0
+            },
+            "runs": {
+              "798ac8f46baa6ebdd9dee36da4574abd": {
+                "run": "798ac8f46baa6ebdd9dee36da4574abd",
+                "learner": "994c9b104504c0ed79430fada477e5b4",
+                "quiz": "cooling-basics",
+                "status": "open",
+                "sheet": {
+                  "quiz": "cooling-basics",
+                  "seed": 294872488,
+                  "title": {
+                    "en": "Cooling basics",
+                    "de": "Kühlen-Grundlagen"
+                  },
+                  "description": {
+                    "en": "Cooling loads and cooling strategies.",
+                    "de": "Kühllasten und Kühlstrategien."
+                  },
+                  "tasks": [
+                    {
+                      "kind": "sorting",
+                      "id": "cooling-loads",
+                      "title": {
+                        "en": "Cooling loads",
+                        "de": "Kühllasten"
+                      },
+                      "prompt": {
+                        "en": "Order by cooling load per floor area, smallest first.",
+                        "de": "Ordne nach Kühllast pro Fläche, die kleinste zuerst."
+                      },
+                      "quantity": {
+                        "label": {
+                          "en": "Cooling load",
+                          "de": "Kühllast"
+                        },
+                        "unit": "W/m²",
+                        "scale": "linear",
+                        "prefixed": false
+                      },
+                      "items": [
+                        {
+                          "id": "server-room",
+                          "label": {
+                            "en": "Server room",
+                            "de": "Serverraum"
+                          }
+                        },
+                        {
+                          "id": "office",
+                          "label": {
+                            "en": "Office",
+                            "de": "Büro"
+                          }
+                        },
+                        {
+                          "id": "bedroom",
+                          "label": {
+                            "en": "Bedroom",
+                            "de": "Schlafzimmer"
+                          }
+                        }
+                      ]
+                    },
+                    {
+                      "kind": "classification",
+                      "id": "cooling-strategies",
+                      "title": {
+                        "en": "Cooling strategies",
+                        "de": "Kühlstrategien"
+                      },
+                      "prompt": {
+                        "en": "Is the measure passive or active?",
+                        "de": "Ist die Massnahme passiv oder aktiv?"
+                      },
+                      "categories": [
+                        {
+                          "id": "passive",
+                          "label": {
+                            "en": "Passive",
+                            "de": "Passiv"
+                          }
+                        },
+                        {
+                          "id": "active",
+                          "label": {
+                            "en": "Active",
+                            "de": "Aktiv"
+                          }
+                        }
+                      ],
+                      "items": [
+                        {
+                          "id": "chiller",
+                          "label": {
+                            "en": "Chiller",
+                            "de": "Kältemaschine"
+                          }
+                        },
+                        {
+                          "id": "external-shading",
+                          "label": {
+                            "en": "External shading",
+                            "de": "Aussenliegender Sonnenschutz"
+                          }
+                        },
+                        {
+                          "id": "night-ventilation",
+                          "label": {
+                            "en": "Night ventilation",
+                            "de": "Nachtlüftung"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                },
+                "answers": {},
+                "startedAt": 1790300360000
+              }
+            }
+          }
+        }
+      }
+    ]
+  },
+  "site": {
+    "catalog": "🎓️teaching/🏛️architecture/❓️quiz/🔣️.json",
+    "named": [
+      "heating-expert",
+      "numerical-brain",
+      "pattern-seer"
+    ],
+    "plays": [
+      {
+        "id": "perfect-in-catalog-order",
+        "learner": "a87397e4884cbc197f9876367a3db0bd",
+        "runs": [
+          {
+            "run": "98b397980485178768ceba65b3b2b9e7",
+            "quiz": "physics"
+          },
+          {
+            "run": "279e8783a51961fc6d5adae3a4775a0c",
+            "quiz": "heating"
+          },
+          {
+            "run": "d2951ac2ec2731b66aa3321b07618e03",
+            "quiz": "cooling"
+          },
+          {
+            "run": "16cb4eaebf9a53a80ba5839245f6eeb4",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "perfect-in-reverse-order",
+        "learner": "8e1b85527750b40172a1cdb94ab7b1ec",
+        "runs": [
+          {
+            "run": "a43d43a4b3370908c2423893482ec231",
+            "quiz": "demand"
+          },
+          {
+            "run": "d12f6ff422be5cd166c187365e0165c7",
+            "quiz": "cooling"
+          },
+          {
+            "run": "35b0b19e89a833b34086ce1f071fc8c0",
+            "quiz": "heating"
+          },
+          {
+            "run": "fd1ccfe2e7e1ff7e9258f829c9c9cdc4",
+            "quiz": "physics"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "demand-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "physics-expert",
+              "numerical-brain",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "demand-expert",
+            "cooling-expert",
+            "heating-expert",
+            "physics-expert",
+            "numerical-brain",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "perfect-another-draw",
+        "learner": "22c8778c1a84ff2c18140087c4d3b887",
+        "runs": [
+          {
+            "run": "fbc657a61f63fe1243275e25a2669994",
+            "quiz": "physics"
+          },
+          {
+            "run": "3d8571a51c6c20e20a17fa96e99edd1f",
+            "quiz": "heating"
+          },
+          {
+            "run": "602e51a96e372e592b7a257a063b6039",
+            "quiz": "cooling"
+          },
+          {
+            "run": "ad343a6725b138b749bde058bdf6dc60",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-physics-power-or-energy",
+        "learner": "69525758e15de18bc8a0844672ad4293",
+        "runs": [
+          {
+            "run": "90321665b1e6487665dc26ee594a2f5b",
+            "quiz": "physics",
+            "flaw": "power-or-energy"
+          },
+          {
+            "run": "36e98e7bb75e35ffffa663c0f704f81b",
+            "quiz": "heating"
+          },
+          {
+            "run": "05e8f6ecd8fbcbcc5990c1d029a89945",
+            "quiz": "cooling"
+          },
+          {
+            "run": "39573355b902c8f971f07f5a954fe482",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "numerical-brain",
+            "heating-expert",
+            "cooling-expert",
+            "demand-expert",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-physics-powers",
+        "learner": "515b12785ea33ed242257f45d07efeee",
+        "runs": [
+          {
+            "run": "1d38420e93dba225eebfc8a32f21388d",
+            "quiz": "physics",
+            "flaw": "powers"
+          },
+          {
+            "run": "ab6b1031216678bb1eec5bd64df9fc38",
+            "quiz": "heating"
+          },
+          {
+            "run": "0498ebe9a12c00f484569ab12a90bb0f",
+            "quiz": "cooling"
+          },
+          {
+            "run": "d3145fd91ab1a2123872e3d765003a70",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "heating-expert",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-physics-energies",
+        "learner": "01719607aa67912ef2e854ed4e34ccf0",
+        "runs": [
+          {
+            "run": "bdd5a98d00df7ed8d5a7c06fcdf26bd1",
+            "quiz": "physics",
+            "flaw": "energies"
+          },
+          {
+            "run": "79a3e5280faa3f1ec7733a8c83c5709b",
+            "quiz": "heating"
+          },
+          {
+            "run": "e999d26dc70afa372719b7eafc01a610",
+            "quiz": "cooling"
+          },
+          {
+            "run": "166acd111af299206a114943186dba04",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "heating-expert",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-heating-u-values",
+        "learner": "170f7988c30e7650ee4c8e10b2e5f683",
+        "runs": [
+          {
+            "run": "8b1a8916fd510fddf51dd9bc5b50b801",
+            "quiz": "physics"
+          },
+          {
+            "run": "e47a31db6e16df4abee647162e5d7e3a",
+            "quiz": "heating",
+            "flaw": "u-values"
+          },
+          {
+            "run": "0abcd8103b218362e80663c69b284bf4",
+            "quiz": "cooling"
+          },
+          {
+            "run": "a7cd8cc03cb97bc8cfcee092d9093201",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-heating-heating-load-and-demand",
+        "learner": "6a0f3c00e2a620a4b44937209275c345",
+        "runs": [
+          {
+            "run": "18e3af124bab8d7e79412a7284b095d2",
+            "quiz": "physics"
+          },
+          {
+            "run": "6856c8d019c62fa722053ef8871f8bce",
+            "quiz": "heating",
+            "flaw": "heating-load-and-demand"
+          },
+          {
+            "run": "77682feba86fac33058a6e9c93b97db9",
+            "quiz": "cooling"
+          },
+          {
+            "run": "40a397103ee6dd3d00a0edc7ba33f6df",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [],
+            [
+              "cooling-expert"
+            ],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "cooling-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-cooling-air-change-rates",
+        "learner": "ca0d5a447b901804edaacd9bd28868f8",
+        "runs": [
+          {
+            "run": "6fe5e609d02925ff3efebe2178442548",
+            "quiz": "physics"
+          },
+          {
+            "run": "55874cecb4e54e5fed227f6c51bdc576",
+            "quiz": "heating"
+          },
+          {
+            "run": "2adcb528ad13e975b372279afdf64983",
+            "quiz": "cooling",
+            "flaw": "air-change-rates"
+          },
+          {
+            "run": "5e15a1241874bcdf2a42667430d4edec",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-cooling-cooling-load-and-demand",
+        "learner": "41abb13f7d0bafdc2e7bcc397b50ff0e",
+        "runs": [
+          {
+            "run": "9b4ba71526647a76484d2521ab41c5a3",
+            "quiz": "physics"
+          },
+          {
+            "run": "4ac794785ad1464b275783c82e91cf5b",
+            "quiz": "heating"
+          },
+          {
+            "run": "e4f29239ee00006db123058a0854a088",
+            "quiz": "cooling",
+            "flaw": "cooling-load-and-demand"
+          },
+          {
+            "run": "470ac3a7df8496896dc47f3a8ca377dd",
+            "quiz": "demand"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [],
+            [
+              "demand-expert",
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "demand-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-demand-standard-profiles",
+        "learner": "f5fb1f3be251bf66019a375428b4a9f2",
+        "runs": [
+          {
+            "run": "e4630479ff682ec0b13d02e8b80f0eba",
+            "quiz": "physics"
+          },
+          {
+            "run": "b413d5d109c8c885a4d7a5283d325605",
+            "quiz": "heating"
+          },
+          {
+            "run": "9bbc06c9b017968b017e2b26a9322b4d",
+            "quiz": "cooling"
+          },
+          {
+            "run": "c190ee7b36f9740ef52f7fdda5e16e98",
+            "quiz": "demand",
+            "flaw": "standard-profiles"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "cooling-expert",
+            "completionist"
+          ]
+        }
+      },
+      {
+        "id": "flawed-demand-final-energy",
+        "learner": "a92033433b362444ba6272be164821e7",
+        "runs": [
+          {
+            "run": "dea48a917aee532d05421fd7376ed133",
+            "quiz": "physics"
+          },
+          {
+            "run": "eb406f4d60ad47f1be4c91a8953c325a",
+            "quiz": "heating"
+          },
+          {
+            "run": "60585242b3623d3eedb8cf20792f6610",
+            "quiz": "cooling"
+          },
+          {
+            "run": "b5296fd387746b842ba1ac7dd6897ba7",
+            "quiz": "demand",
+            "flaw": "final-energy"
+          }
+        ],
+        "expected": {
+          "awards": [
+            [
+              "physics-expert",
+              "numerical-brain"
+            ],
+            [
+              "heating-expert"
+            ],
+            [
+              "cooling-expert"
+            ],
+            [
+              "pattern-seer",
+              "completionist"
+            ]
+          ],
+          "held": [
+            "physics-expert",
+            "numerical-brain",
+            "heating-expert",
+            "cooling-expert",
+            "pattern-seer",
+            "completionist"
+          ]
+        }
+      }
+    ]
+  }
 }

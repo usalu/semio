@@ -25,6 +25,10 @@
             "en": "Order by recommended temperature, lowest first.",
             "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
           },
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
+          },
           "quantity": {
             "label": {
               "en": "Temperature",
@@ -91,6 +95,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -188,6 +196,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -254,6 +266,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -322,6 +338,10 @@
               "en": "",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -389,6 +409,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -454,6 +478,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -522,6 +550,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -589,6 +621,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -655,6 +691,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -742,6 +782,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -810,6 +854,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -877,6 +925,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -927,6 +979,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -996,6 +1052,10 @@
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
             },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
             "quantity": {
               "label": {
                 "en": "Temperature",
@@ -1036,7 +1096,7 @@
       }
     },
     {
-      "id": "two-axes",
+      "id": "unknown-icon-motion",
       "definition": "Quiz",
       "violates": "oneOf",
       "document": {
@@ -1062,6 +1122,369 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "explode"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-icon-emoji",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "icon-without-motion",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "undeclared-icon-member",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse",
+              "colour": "red"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "empty-item-icon-emoji",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18,
+                "icon": {
+                  "emoji": "",
+                  "motion": "pulse"
+                }
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "unknown-category-icon-motion",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {
@@ -1109,6 +1532,391 @@
             "prompt": {
               "en": "Assign every installation to its heating system.",
               "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
+            },
+            "axes": [
+              {
+                "id": "seasonal-efficiency",
+                "label": {
+                  "en": "Seasonal efficiency",
+                  "de": "Jahresnutzungsgrad"
+                },
+                "unit": "%",
+                "min": 0,
+                "max": 400
+              },
+              {
+                "id": "investment",
+                "label": {
+                  "en": "Investment",
+                  "de": "Investition"
+                },
+                "unit": "CHF",
+                "min": 0,
+                "max": 40000
+              },
+              {
+                "id": "emissions",
+                "label": {
+                  "en": "Emissions",
+                  "de": "Emissionen"
+                },
+                "unit": "g/kWh",
+                "min": 0,
+                "max": 300
+              }
+            ],
+            "categories": [
+              {
+                "id": "heat-pump",
+                "label": {
+                  "en": "Heat pump",
+                  "de": "Wärmepumpe"
+                },
+                "profile": {
+                  "seasonal-efficiency": 350,
+                  "investment": 30000,
+                  "emissions": 40
+                },
+                "icon": {
+                  "emoji": "🔥",
+                  "motion": "explode"
+                }
+              },
+              {
+                "id": "gas-boiler",
+                "label": {
+                  "en": "Gas boiler",
+                  "de": "Gaskessel"
+                },
+                "profile": {
+                  "seasonal-efficiency": 95,
+                  "investment": 12000,
+                  "emissions": 250
+                }
+              },
+              {
+                "id": "district-heating",
+                "label": {
+                  "en": "District heating",
+                  "de": "Fernwärme"
+                },
+                "description": {
+                  "en": "Heat delivered through a network.",
+                  "de": "Wärme aus einem Netz."
+                },
+                "profile": {
+                  "seasonal-efficiency": 90,
+                  "investment": 18000,
+                  "emissions": 120
+                }
+              },
+              {
+                "id": "wood-pellets",
+                "label": {
+                  "en": "Wood pellets",
+                  "de": "Holzpellets"
+                },
+                "profile": {
+                  "seasonal-efficiency": 85,
+                  "investment": 25000,
+                  "emissions": 30
+                }
+              },
+              {
+                "id": "electric-resistance",
+                "label": {
+                  "en": "Direct electric heating",
+                  "de": "Elektrodirektheizung"
+                },
+                "description": {
+                  "en": "Resistance heaters without storage or pump.",
+                  "de": "Widerstandsheizungen ohne Speicher oder Pumpe."
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "ground-source",
+                "label": {
+                  "en": "Borehole with brine circuit",
+                  "de": "Erdsonde mit Solekreislauf"
+                },
+                "category": "heat-pump",
+                "explanation": {
+                  "en": "A brine circuit feeds a heat pump.",
+                  "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                }
+              },
+              {
+                "id": "air-source",
+                "label": {
+                  "en": "Outdoor fan unit",
+                  "de": "Aussengerät mit Ventilator"
+                },
+                "category": "heat-pump"
+              },
+              {
+                "id": "condensing-gas",
+                "label": {
+                  "en": "Condensing boiler on the gas grid",
+                  "de": "Brennwertkessel am Gasnetz"
+                },
+                "category": "gas-boiler"
+              },
+              {
+                "id": "lake-water-network",
+                "label": {
+                  "en": "Lake water network connection",
+                  "de": "Anschluss an ein Seewassernetz"
+                },
+                "category": "district-heating"
+              },
+              {
+                "id": "pellet-stove",
+                "label": {
+                  "en": "Silo with automatic feed",
+                  "de": "Silo mit automatischer Förderung"
+                },
+                "category": "wood-pellets"
+              },
+              {
+                "id": "night-storage-heater",
+                "label": {
+                  "en": "Night storage heater",
+                  "de": "Nachtspeicherofen"
+                },
+                "category": "electric-resistance",
+                "explanation": {
+                  "en": "It heats with electricity directly.",
+                  "de": "Er heizt direkt mit Strom."
+                }
+              }
+            ],
+            "draw": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "undeclared-dimension-icon-member",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          },
+          {
+            "kind": "matching",
+            "id": "appliance-power",
+            "title": {
+              "en": "Appliance power",
+              "de": "Geräteleistung"
+            },
+            "prompt": {
+              "en": "Match every appliance with its power.",
+              "de": "Ordne jedem Gerät seine Leistung zu."
+            },
+            "dimensions": [
+              {
+                "id": "power",
+                "quantity": {
+                  "label": {
+                    "en": "Power",
+                    "de": "Leistung"
+                  },
+                  "unit": "W",
+                  "scale": "linear",
+                  "prefixed": true
+                },
+                "icon": {
+                  "emoji": "⚡",
+                  "motion": "pulse",
+                  "colour": "red"
+                }
+              }
+            ],
+            "items": [
+              {
+                "id": "toaster",
+                "label": {
+                  "en": "Toaster",
+                  "de": "Toaster"
+                },
+                "values": {
+                  "power": 800
+                }
+              },
+              {
+                "id": "microwave",
+                "label": {
+                  "en": "Microwave",
+                  "de": "Mikrowelle"
+                },
+                "values": {
+                  "power": 800
+                }
+              },
+              {
+                "id": "oven",
+                "label": {
+                  "en": "Oven",
+                  "de": "Backofen"
+                },
+                "values": {
+                  "power": 3000
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "two-axes",
+      "definition": "Quiz",
+      "violates": "oneOf",
+      "document": {
+        "schema": "semio.quiz/v1",
+        "id": "tiny",
+        "emoji": "🐜",
+        "title": {
+          "en": "Tiny",
+          "de": "Winzig"
+        },
+        "description": {
+          "en": "A tiny quiz.",
+          "de": "Ein winziges Quiz."
+        },
+        "tasks": [
+          {
+            "kind": "sorting",
+            "id": "room-temperatures",
+            "title": {
+              "en": "Room temperatures",
+              "de": "Raumtemperaturen"
+            },
+            "prompt": {
+              "en": "Order by recommended temperature, lowest first.",
+              "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
+            },
+            "quantity": {
+              "label": {
+                "en": "Temperature",
+                "de": "Temperatur"
+              },
+              "unit": "°C",
+              "scale": "linear",
+              "prefixed": false
+            },
+            "items": [
+              {
+                "id": "bedroom",
+                "label": {
+                  "en": "Bedroom",
+                  "de": "Schlafzimmer"
+                },
+                "value": 18
+              },
+              {
+                "id": "living-room",
+                "label": {
+                  "en": "Living room",
+                  "de": "Wohnzimmer"
+                },
+                "value": 21
+              },
+              {
+                "id": "bathroom",
+                "label": {
+                  "en": "Bathroom",
+                  "de": "Badezimmer"
+                },
+                "value": 23.5
+              }
+            ]
+          },
+          {
+            "kind": "classification",
+            "id": "heating-systems",
+            "title": {
+              "en": "Heating systems",
+              "de": "Heizsysteme"
+            },
+            "prompt": {
+              "en": "Assign every installation to its heating system.",
+              "de": "Ordne jede Anlage ihrem Heizsystem zu."
+            },
+            "icon": {
+              "emoji": "🔥",
+              "motion": "float"
             },
             "axes": [
               {
@@ -1287,6 +2095,10 @@
             "prompt": {
               "en": "Order by recommended temperature, lowest first.",
               "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+            },
+            "icon": {
+              "emoji": "🌡️",
+              "motion": "pulse"
             },
             "quantity": {
               "label": {

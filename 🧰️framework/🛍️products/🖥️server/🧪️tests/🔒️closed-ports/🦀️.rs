@@ -20,7 +20,7 @@ use server::authority::{ActorState, Decider, Decision, DecisionContext};
 use server::contract::{ActorKey, CommandEnvelope, CommandReceipt, EventRecord, IdempotencyKey, Principal, QueryConsistency, QueryEnvelope, QueryId, QueryResult, Rejection, Revision, Scope, SessionId, TenantId};
 use server::gateway::{document_socket_identity, DocumentAuthority, DocumentFrames, DocumentHandshake, DocumentSocketIdentity, QueryHandler, ServerError};
 use server::policy::{Credential, PrincipalResolver, Resolved};
-use server::storage::{AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError};
+use server::storage::{AuthorityStore, BlobStore, Lease, OutboxEntry, ProjectionStore, SessionRecord, SessionStore, StorageError, TurnCommit};
 use server::{
     __semio_dispatch_AuthorityStore, __semio_dispatch_BlobStore, __semio_dispatch_Decider, __semio_dispatch_DocumentAuthority, __semio_dispatch_PrincipalResolver, __semio_dispatch_ProjectionStore,
     __semio_dispatch_QueryHandler, __semio_dispatch_SessionStore,

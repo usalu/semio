@@ -4188,6 +4188,7 @@
         "uriFormat": "%s"
       }
     },
+    {"name":"🛠️dev🎓️teaching🏛️architecture❓️quiz🌐️site","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:dev-site","cwd":"${workspaceFolder}","env":{"TEACHING_ARCHITECTURE_QUIZ_PORT":"6061","PROCTOR_PORT":"8791"},"presentation":{"group":"3_dev","order":213.605},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6061)","uriFormat":"%s"}},
     {
       "name": "🛠️dev🎓️teaching🛂️proctor",
       "type": "node-terminal",
@@ -4213,6 +4214,13 @@
         "order": 213.611
       }
     },
+    {"name":"🩺️health🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:health","cwd":"${workspaceFolder}","env":{"PROCTOR_PORT":"8791"},"presentation":{"group":"3_dev","order":213.612}},
+    {"name":"💾️backup🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:backup","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.613}},
+    {"name":"♻️restore🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:restore -- \"${input:proctorBackupFile}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.614}},
+    {"name":"🧨️erase🎓️teaching🛂️proctor🔍️dry-run","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:erase -- --handle \"${input:proctorEraseHandle}\" --dry-run","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.615}},
+    {"name":"🧨️erase🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:erase -- --handle \"${input:proctorEraseHandle}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.616}},
+    {"name":"🧹️prune🎓️teaching🛂️proctor🔍️dry-run","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:prune -- --older-than \"${input:proctorPruneAge}\" --dry-run","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.617}},
+    {"name":"🧹️prune🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:prune -- --older-than \"${input:proctorPruneAge}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.618}},
     {
       "name": "🧪️test❓️quiz🟦️",
       "type": "node-terminal",
@@ -4279,6 +4287,14 @@
         "order": 213.68
       }
     },
+    {"name":"🛠️dev🎓️teaching🏛️architecture❓️quiz🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.685}},
+    {"name":"🧪️test🐾️pets🟦️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.69}},
+    {"name":"🧪️test🐾️pets⚛️react","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.7}},
+    {"name":"🧪️test🐾️pets🦀️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-rs:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.71}},
+    {"name":"🛠️dev🐾️pets🟦️🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.715}},
+    {"name":"🛠️dev🐾️pets⚛️react🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.72}},
+    {"name":"🛠️dev🐾️pets📖️stories","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:dev","cwd":"${workspaceFolder}","env":{"PETS_STORIES_PORT":"6069"},"presentation":{"group":"3_dev","order":213.73},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6069)","uriFormat":"%s"}},
+    {"name":"🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:dev","cwd":"${workspaceFolder}","env":{"PETS_STORIES_PORT":"6074","PETS_MENAGERIE":"🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts"},"presentation":{"group":"3_dev","order":213.74},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6074)","uriFormat":"%s"}},
     {
       "name": "🛠️dev♻️mit-bestand🌀️procedural🧊️generation3d⚛️react",
       "type": "node-terminal",
@@ -6742,6 +6758,7 @@
         "order": 11.35
       }
     },
+    {"name":"📦️bundle🎓️teaching🏛️architecture❓️quiz🐳️docker-stack","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:docker-stack-bundle","cwd":"${workspaceFolder}","presentation":{"group":"4_build","order":11.4}},
     {
       "name": "✅️check🎓️teaching🏛️architecture❓️quiz📚️catalog",
       "type": "node-terminal",
@@ -6764,6 +6781,8 @@
         "order": 11.15
       }
     },
+    {"name":"⚖️gate🎓️teaching🛂️proctor🏋️capacity","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:capacity","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.16}},
+    {"name":"⚖️gate🎓️teaching🏛️architecture❓️quiz🎭️e2e","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:test-e2e","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.17}},
     {
       "name": "⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
       "type": "node-terminal",
@@ -6786,6 +6805,7 @@
         "order": 11.25
       }
     },
+    {"name":"⚖️gate🎓️teaching🏛️architecture❓️quiz🚀️deploy","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:deploy-check","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.3}},
     {
       "name": "📦️build🧩️puzzle🏙️3d",
       "type": "node-terminal",
@@ -16198,6 +16218,17 @@
       }
     },
     {
+      "name": "⚖️test-e2e📋️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run ${input:projectTarget.test-e2e}:test-e2e",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 899.001
+      }
+    },
+    {
       "name": "⚖️test-exhaustive📋️",
       "type": "node-terminal",
       "request": "launch",
@@ -16205,7 +16236,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.001
+        "order": 899.0011
       }
     },
     {
@@ -16216,7 +16247,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0011
+        "order": 899.0012
       }
     },
     {
@@ -16227,7 +16258,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0012
+        "order": 899.0013
       }
     },
     {
@@ -16238,7 +16269,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0013
+        "order": 899.0014
       }
     },
     {
@@ -16249,7 +16280,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0014
+        "order": 899.0015
       }
     },
     {
@@ -16260,7 +16291,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0015
+        "order": 899.0016
       }
     },
     {
@@ -16271,7 +16302,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0016
+        "order": 899.0017
       }
     },
     {
@@ -16282,7 +16313,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0017
+        "order": 899.0018
       }
     },
     {
@@ -16293,7 +16324,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0018
+        "order": 899.0019
       }
     },
     {
@@ -16304,7 +16335,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0019
+        "order": 899.002
       }
     },
     {
@@ -16315,7 +16346,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.002
+        "order": 899.0021
       }
     },
     {
@@ -16337,7 +16368,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 899.0021
+        "order": 899.0022
       }
     },
     {
@@ -23689,6 +23720,17 @@
       }
     },
     {
+      "name": "⚖️test-worker-cell🧊️wgpu🟦️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-worker-cell",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.0521
+      }
+    },
+    {
       "name": "⚖️agent-bridge-check🧑‍🎨engine🎯️targets⚛️react🟦️",
       "type": "node-terminal",
       "request": "launch",
@@ -23696,7 +23738,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0521
+        "order": 900.0522
       }
     },
     {
@@ -23707,7 +23749,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0522
+        "order": 900.0523
       }
     },
     {
@@ -23729,7 +23771,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0523
+        "order": 900.0524
       }
     },
     {
@@ -23740,7 +23782,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0524
+        "order": 900.0525
       }
     },
     {
@@ -23751,7 +23793,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0525
+        "order": 900.0526
       }
     },
     {
@@ -23762,7 +23804,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0526
+        "order": 900.0527
       }
     },
     {
@@ -23773,7 +23815,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0527
+        "order": 900.0528
       }
     },
     {
@@ -23784,7 +23826,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0528
+        "order": 900.0529
       }
     },
     {
@@ -23795,7 +23837,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0529
+        "order": 900.053
       }
     },
     {
@@ -23806,7 +23848,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.053
+        "order": 900.0531
       }
     },
     {
@@ -23817,7 +23859,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0531
+        "order": 900.0532
       }
     },
     {
@@ -23828,7 +23870,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0532
+        "order": 900.0533
       }
     },
     {
@@ -23839,7 +23881,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0533
+        "order": 900.0534
       }
     },
     {
@@ -23850,7 +23892,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0534
+        "order": 900.0535
       }
     },
     {
@@ -23861,7 +23903,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0535
+        "order": 900.0536
       }
     },
     {
@@ -23872,7 +23914,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0536
+        "order": 900.0537
       }
     },
     {
@@ -23883,7 +23925,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0537
+        "order": 900.0538
       }
     },
     {
@@ -23894,7 +23936,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0538
+        "order": 900.0539
       }
     },
     {
@@ -23905,7 +23947,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0539
+        "order": 900.054
       }
     },
     {
@@ -23916,7 +23958,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.054
+        "order": 900.0541
       }
     },
     {
@@ -23927,7 +23969,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0541
+        "order": 900.0542
       }
     },
     {
@@ -23938,7 +23980,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0542
+        "order": 900.0543
       }
     },
     {
@@ -23949,7 +23991,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0543
+        "order": 900.0544
       }
     },
     {
@@ -23960,7 +24002,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0544
+        "order": 900.0545
       }
     },
     {
@@ -23982,7 +24024,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0545
+        "order": 900.0546
       }
     },
     {
@@ -24026,7 +24068,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0546
+        "order": 900.0547
       }
     },
     {
@@ -24037,7 +24079,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0547
+        "order": 900.0548
       }
     },
     {
@@ -24048,7 +24090,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0548
+        "order": 900.0549
       }
     },
     {
@@ -24059,7 +24101,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0549
+        "order": 900.055
       }
     },
     {
@@ -24092,7 +24134,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.055
+        "order": 900.0551
       }
     },
     {
@@ -24103,7 +24145,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0551
+        "order": 900.0552
       }
     },
     {
@@ -24114,7 +24156,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0552
+        "order": 900.0553
       }
     },
     {
@@ -24147,7 +24189,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0553
+        "order": 900.0554
       }
     },
     {
@@ -24191,7 +24233,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0554
+        "order": 900.0555
       }
     },
     {
@@ -24202,7 +24244,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0555
+        "order": 900.0556
       }
     },
     {
@@ -24213,7 +24255,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0556
+        "order": 900.0557
       }
     },
     {
@@ -24224,7 +24266,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0557
+        "order": 900.0558
       }
     },
     {
@@ -24246,7 +24288,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0558
+        "order": 900.0559
       }
     },
     {
@@ -24257,7 +24299,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0559
+        "order": 900.056
       }
     },
     {
@@ -24268,7 +24310,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.056
+        "order": 900.0561
       }
     },
     {
@@ -24279,7 +24321,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0561
+        "order": 900.0562
       }
     },
     {
@@ -24290,7 +24332,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0562
+        "order": 900.0563
       }
     },
     {
@@ -24301,7 +24343,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0563
+        "order": 900.0564
       }
     },
     {
@@ -24334,7 +24376,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0564
+        "order": 900.0565
       }
     },
     {
@@ -24345,7 +24387,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0565
+        "order": 900.0566
       }
     },
     {
@@ -24356,7 +24398,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0566
+        "order": 900.0567
       }
     },
     {
@@ -24367,7 +24409,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0567
+        "order": 900.0568
       }
     },
     {
@@ -24378,7 +24420,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0568
+        "order": 900.0569
       }
     },
     {
@@ -24400,7 +24442,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0569
+        "order": 900.057
       }
     },
     {
@@ -24411,7 +24453,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.057
+        "order": 900.0571
       }
     },
     {
@@ -24422,7 +24464,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0571
+        "order": 900.0572
       }
     },
     {
@@ -24433,7 +24475,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0572
+        "order": 900.0573
       }
     },
     {
@@ -24444,7 +24486,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0573
+        "order": 900.0574
       }
     },
     {
@@ -24455,7 +24497,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0574
+        "order": 900.0575
       }
     },
     {
@@ -24466,7 +24508,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0575
+        "order": 900.0576
       }
     },
     {
@@ -24477,7 +24519,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0576
+        "order": 900.0577
       }
     },
     {
@@ -24488,7 +24530,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0577
+        "order": 900.0578
       }
     },
     {
@@ -24499,7 +24541,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0578
+        "order": 900.0579
       }
     },
     {
@@ -24510,7 +24552,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0579
+        "order": 900.058
       }
     },
     {
@@ -24521,7 +24563,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.058
+        "order": 900.0581
       }
     },
     {
@@ -24532,7 +24574,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0581
+        "order": 900.0582
       }
     },
     {
@@ -24543,7 +24585,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0582
+        "order": 900.0583
       }
     },
     {
@@ -24554,7 +24596,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0583
+        "order": 900.0584
       }
     },
     {
@@ -24565,7 +24607,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0584
+        "order": 900.0585
       }
     },
     {
@@ -24576,7 +24618,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0585
+        "order": 900.0586
       }
     },
     {
@@ -24587,7 +24629,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0586
+        "order": 900.0587
       }
     },
     {
@@ -24598,7 +24640,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0587
+        "order": 900.0588
       }
     },
     {
@@ -24609,7 +24651,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0588
+        "order": 900.0589
       }
     },
     {
@@ -24620,7 +24662,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0589
+        "order": 900.059
       }
     },
     {
@@ -24631,7 +24673,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.059
+        "order": 900.0591
       }
     },
     {
@@ -24642,7 +24684,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0591
+        "order": 900.0592
       }
     },
     {
@@ -24653,7 +24695,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0592
+        "order": 900.0593
       }
     },
     {
@@ -24664,7 +24706,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0593
+        "order": 900.0594
       }
     },
     {
@@ -24675,7 +24717,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0594
+        "order": 900.0595
       }
     },
     {
@@ -24686,7 +24728,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0595
+        "order": 900.0596
       }
     },
     {
@@ -24697,7 +24739,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0596
+        "order": 900.0597
       }
     },
     {
@@ -24708,7 +24750,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0597
+        "order": 900.0598
       }
     },
     {
@@ -24719,7 +24761,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0598
+        "order": 900.0599
       }
     },
     {
@@ -24730,7 +24772,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0599
+        "order": 900.06
       }
     },
     {
@@ -24741,7 +24783,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.06
+        "order": 900.0601
       }
     },
     {
@@ -24752,7 +24794,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0601
+        "order": 900.0602
       }
     },
     {
@@ -24763,7 +24805,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0602
+        "order": 900.0603
       }
     },
     {
@@ -24785,7 +24827,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0603
+        "order": 900.0604
       }
     },
     {
@@ -24796,7 +24838,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0604
+        "order": 900.0605
       }
     },
     {
@@ -24807,7 +24849,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0605
+        "order": 900.0606
       }
     },
     {
@@ -24818,7 +24860,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0606
+        "order": 900.0607
       }
     },
     {
@@ -24829,7 +24871,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0607
+        "order": 900.0608
       }
     },
     {
@@ -24840,7 +24882,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0608
+        "order": 900.0609
       }
     },
     {
@@ -24851,7 +24893,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0609
+        "order": 900.061
       }
     },
     {
@@ -24862,7 +24904,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.061
+        "order": 900.0611
       }
     },
     {
@@ -24873,7 +24915,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0611
+        "order": 900.0612
       }
     },
     {
@@ -24884,7 +24926,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0612
+        "order": 900.0613
       }
     },
     {
@@ -24895,7 +24937,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0613
+        "order": 900.0614
       }
     },
     {
@@ -24906,7 +24948,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0614
+        "order": 900.0615
       }
     },
     {
@@ -24917,7 +24959,7 @@
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
-        "order": 900.0615
+        "order": 900.0616
       }
     },
     {
@@ -24973,17 +25015,6 @@
       "presentation": {
         "group": "3_dev",
         "order": 900.0019
-      }
-    },
-    {
-      "name": "⚖️test-e2e🧺️demonstrator",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/mit-bestand-demonstrator:test-e2e",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 900.0616
       }
     },
     {
@@ -25521,6 +25552,22 @@
       "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-root/grapheme-removal"
     },
     {
+      "id": "proctorBackupFile",
+      "type": "promptString",
+      "description": "Proctor backup file to put in place of the dev database (stop the dev proctor first)"
+    },
+    {
+      "id": "proctorEraseHandle",
+      "type": "promptString",
+      "description": "Pseudonym or name of the learner to erase from the dev database (stop the dev proctor first)"
+    },
+    {
+      "id": "proctorPruneAge",
+      "type": "promptString",
+      "description": "Age past which a registration nobody played under is pruned from the dev database: 90m, 36h, 7d, 2w (stop the dev proctor first)",
+      "default": "7d"
+    },
+    {
       "id": "projectTarget.generator",
       "type": "pickString",
       "description": "Project whose 🏭️generator target runs",
@@ -25734,6 +25781,7 @@
         "@semio-tech/norm-vdi3805-rs",
         "@semio-tech/note-note-rs",
         "@semio-tech/os-plugin-describe-rs",
+        "@semio-tech/pets-rs",
         "@semio-tech/playbook-playbook",
         "@semio-tech/playbook-playbook-rs",
         "@semio-tech/print",
@@ -26226,6 +26274,7 @@
         "@semio-tech/framework-renderer-wgpu",
         "@semio-tech/mit-bestand-demonstrator",
         "@semio-tech/mit-bestand-praesentation-projektetage",
+        "@semio-tech/pets-react",
         "@semio-tech/repo-client",
         "@semio-tech/repo-coordinator",
         "@semio-tech/repo-coordinator-go",
@@ -26625,6 +26674,9 @@
         "@semio-tech/note-plugin",
         "@semio-tech/os-plugin-describe-rs",
         "@semio-tech/os-services-rs",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
+        "@semio-tech/pets-rs",
         "@semio-tech/playbook-extension-procedural-rust",
         "@semio-tech/playbook-js",
         "@semio-tech/playbook-playbook",
@@ -26911,6 +26963,16 @@
       ]
     },
     {
+      "id": "projectTarget.test-e2e",
+      "type": "pickString",
+      "description": "Project whose test-e2e target runs",
+      "options": [
+        "@semio-tech/mit-bestand-demonstrator",
+        "@semio-tech/semio-tech-play",
+        "@teaching/architecture-quiz"
+      ]
+    },
+    {
       "id": "projectTarget.test-exhaustive",
       "type": "pickString",
       "description": "Project whose test-exhaustive target runs",
@@ -26992,6 +27054,9 @@
         "@semio-tech/note-plugin",
         "@semio-tech/os-plugin-describe-rs",
         "@semio-tech/os-services-rs",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
+        "@semio-tech/pets-rs",
         "@semio-tech/playbook-extension-procedural-rust",
         "@semio-tech/playbook-plugin",
         "@semio-tech/presentation",
@@ -27198,6 +27263,9 @@
         "@semio-tech/note-plugin",
         "@semio-tech/os-plugin-describe-rs",
         "@semio-tech/os-services-rs",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
+        "@semio-tech/pets-rs",
         "@semio-tech/playbook-extension-procedural-rust",
         "@semio-tech/playbook-plugin",
         "@semio-tech/presentation",
@@ -27429,6 +27497,9 @@
         "@semio-tech/note-plugin",
         "@semio-tech/os-plugin-describe-rs",
         "@semio-tech/os-services-rs",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
+        "@semio-tech/pets-rs",
         "@semio-tech/playbook-extension-procedural-rust",
         "@semio-tech/playbook-plugin",
         "@semio-tech/plugin-extension-store",
@@ -27862,10 +27933,13 @@
         "@semio-tech/framework",
         "@semio-tech/framework-os",
         "@semio-tech/framework-renderer-react",
+        "@semio-tech/pets",
+        "@semio-tech/pets-react",
         "@semio-tech/plugin-window-kits",
         "@semio-tech/quiz-react",
         "@semio-tech/repo-lib",
         "@semio-tech/ui-react",
+        "@teaching/architecture-quiz",
         "os-hub-ts"
       ]
     },

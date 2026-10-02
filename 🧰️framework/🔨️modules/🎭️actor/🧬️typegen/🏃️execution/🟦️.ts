@@ -2,8 +2,8 @@ import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { basename, join } from "node:path";
-
 import { BundleScript } from "../../../🏃️process/🧭️routing/🟦️.ts";
+import { seedGeneratedFile } from "../../../🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { actorTypegenPlan, actorTypegenTarget } from "../📋️plan/🟦️.ts";
 import { publishActorTypegen } from "../📤️publication/🟦️.ts";
 
@@ -74,6 +74,7 @@ async function stagedActorExport(packageRoot: string, repoRoot: string, privateC
 export class TypegenScript extends BundleScript {
   async run(): Promise<void> {
     console.log("framework-actor typegen export started");
+    seedGeneratedFile(actorTypegenTarget(this.repoRoot));
     publishActorTypegen(actorTypegenTarget(this.repoRoot), await stagedActorExport(this.root, this.repoRoot, false), this.repoRoot);
     console.log(`framework-actor typescript mirror refreshed -> ${actorTypegenTarget(this.repoRoot)}`);
   }

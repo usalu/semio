@@ -4,8 +4,8 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { ServerCallError, decodeCommandEnvelope, encodeCommandOutcome, type CommandEnvelope, type CommandOutcome, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
-import type { Command, RecordAnswerCommand } from "@semio-tech/quiz";
+import { ServerCallError, decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, type CommandEnvelope, type CommandOutcome, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
+import { handleActorId, type Command, type RecordAnswerCommand } from "@semio-tech/quiz";
 import {
   Outbox,
   ProctorClient,
@@ -102,7 +102,7 @@ function deduplicatingProctor(): { readonly transport: HttpTransport; readonly e
   };
 }
 
-function outboxOver(send: (command: RecordAnswerCommand, signal: AbortSignal) => Promise<CommandVerdict>, onSettled?: (command: RecordAnswerCommand, verdict: CommandVerdict) => void, area: StorageArea = memoryStorageOrigin().tab()): Outbox {
+function outboxOver(send: (command: Command, signal: AbortSignal) => Promise<CommandVerdict>, onSettled?: (command: Command, verdict: CommandVerdict) => void, area: StorageArea = memoryStorageOrigin().tab()): Outbox {
   return new Outbox({ send, store: localStore(area, "test"), timing: TIMING, onSettled });
 }
 
@@ -251,9 +251,9 @@ describe("📬️ answer outbox", () => {
     const origin = memoryStorageOrigin();
     const area = origin.tab();
     let online = false;
-    const applied: RecordAnswerCommand[] = [];
+    const applied: Command[] = [];
     const attempts: string[] = [];
-    const send = async (command: RecordAnswerCommand): Promise<CommandVerdict> => {
+    const send = async (command: Command): Promise<CommandVerdict> => {
       if (!online) throw new ProctorUnavailable("offline");
       attempts.push(command.id);
       if (!applied.some((known) => known.id === command.id)) applied.push(command);
@@ -372,11 +372,100 @@ describe("📬️ answer outbox", () => {
     expect(stuck.status().pending).toBe(1);
     stuck.stop();
   });
+
+  it("holds every kind of command in the order it was queued, superseding answers only, and delivers a run from its start to its submission", async () => {
+    const origin = memoryStorageOrigin();
+    const sent: Command[] = [];
+    const outbox = outboxOver(
+      async (command) => {
+        sent.push(command);
+        return { kind: "accepted", events: [] };
+      },
+      undefined,
+      origin.tab(),
+    );
+    const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "pseudonym", handle: "Ada" } };
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    const again: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics" };
+    const first = answer("t1", ["a", "b"]);
+    const second = answer("t1", ["b", "a"]);
+    const submit: Command = { type: "submit-run", id: newId(), learner: LEARNER, run: RUN };
+    for (const command of [identify, start, first, second, submit, again]) outbox.enqueue(command);
+    expect(outbox.queued()).toEqual([identify, start, second, submit, again]);
+    expect(outbox.queued(RUN)).toEqual([start, second, submit]);
+    expect(outbox.pendingAnswers(RUN)).toEqual({ t1: second.answer });
+    expect(outbox.waiting((command) => command.type === "submit-run")).toBe(true);
+    expect(outbox.waiting((command) => command.type === "submit-run" && command.run === OTHER_RUN)).toBe(false);
+    expect(outboxOver(async () => ({ kind: "accepted", events: [] }), undefined, origin.tab()).queued()).toEqual([identify, start, second, submit, again]);
+    outbox.start();
+    await outbox.settled(RUN);
+    await outbox.settled(OTHER_RUN);
+    expect(sent).toEqual([identify, start, second, submit, again]);
+    outbox.stop();
+  });
+
+  it("drops a discarded run from its start to its submission and keeps the registration and the other runs", () => {
+    const outbox = outboxOver(async () => ({ kind: "accepted", events: [] }));
+    const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "anonymous" } };
+    const other: Command = { type: "start-run", id: newId(), learner: LEARNER, run: OTHER_RUN, quiz: "physics" };
+    for (const command of [identify, { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" }, answer("t1", ["a"]), { type: "submit-run", id: newId(), learner: LEARNER, run: RUN }, other] satisfies Command[]) outbox.enqueue(command);
+    outbox.discard(RUN);
+    expect(outbox.queued()).toEqual([identify, other]);
+    outbox.forget(LEARNER);
+    expect(outbox.queued()).toEqual([]);
+  });
+
+  it("re-addresses the queued commands of a learner under their own ids, in every tab, and never the one on the wire", async () => {
+    const origin = memoryStorageOrigin();
+    const holder = "d".repeat(32);
+    const wire = gate<CommandVerdict>();
+    const sent: Command[] = [];
+    const left = outboxOver(
+      async (command) => {
+        sent.push(command);
+        return sent.length === 1 ? wire.promise : { kind: "accepted", events: [] };
+      },
+      undefined,
+      origin.tab(),
+    );
+    const right = outboxOver(async () => Promise.reject(new ProctorUnavailable("offline")), undefined, origin.tab());
+    const identify: Command = { type: "identify-learner", id: newId(), learner: LEARNER, identity: { kind: "pseudonym", handle: "Ada" } };
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    const given = answer("t1", ["a", "b"]);
+    const stranger: Command = { type: "start-run", id: newId(), learner: "e".repeat(32), run: OTHER_RUN, quiz: "physics" };
+    right.start();
+    left.start();
+    for (const command of [identify, start, given, stranger]) left.enqueue(command);
+    await tick();
+    expect(right.queued()).toEqual([identify, start, given, stranger]);
+    left.reassign(LEARNER, holder);
+    expect(left.queued()).toEqual([identify, { ...start, learner: holder }, { ...given, learner: holder }, stranger]);
+    await tick();
+    expect(right.queued().map((command) => command.learner)).toEqual([LEARNER, holder, holder, stranger.learner]);
+    right.stop();
+    wire.open({ kind: "rejected", rejection: "handle-claimed" });
+    await left.settled(RUN);
+    await left.settled(OTHER_RUN);
+    expect(sent).toEqual([identify, { ...start, learner: holder }, { ...given, learner: holder }, stranger]);
+    left.stop();
+  });
+
+  it("restores only commands it can read", () => {
+    const area = memoryStorageOrigin().tab();
+    const store = localStore(area, "test");
+    const start: Command = { type: "start-run", id: newId(), learner: LEARNER, run: RUN, quiz: "physics" };
+    store.put("outbox", start.id, { command: start, queuedAt: 2 });
+    store.put("outbox", "no-run", { command: { type: "submit-run", id: "no-run", learner: LEARNER }, queuedAt: 1 });
+    store.put("outbox", "no-identity", { command: { type: "identify-learner", id: "no-identity", learner: LEARNER }, queuedAt: 1 });
+    store.put("outbox", "unknown", { command: { type: "erase-learner", id: "unknown", learner: LEARNER }, queuedAt: 1 });
+    store.put("outbox", "other-key", { command: { ...start, id: newId() }, queuedAt: 1 });
+    expect(outboxOver(async () => ({ kind: "accepted", events: [] }), undefined, area).queued()).toEqual([start]);
+  });
 });
 
 describe("🛂️ proctor wire (design §9a)", () => {
-  it("maps identification onto the roster actor with an anonymous principal", () => {
-    const command: Command = { type: "identify-learner", id: newId(), learner: newId(), identity: { kind: "pseudonym", handle: "Ada" } };
+  it("maps a registration under a pseudonym onto the actor of its handle key, an anonymous one onto its own learner, with an anonymous principal", () => {
+    const command: Command = { type: "identify-learner", id: newId(), learner: newId(), identity: { kind: "pseudonym", handle: "  Ada   L. " } };
     const envelope = commandEnvelope(command, "architecture", 1234);
     expect(envelope).toMatchObject({
       commandId: command.id,
@@ -384,11 +473,37 @@ describe("🛂️ proctor wire (design §9a)", () => {
       kind: "quiz.identify-learner",
       version: 1,
       scope: "architecture",
-      target: { tenant: "architecture", kind: "quiz-roster", id: "roster" },
+      target: { tenant: "architecture", kind: "quiz-handle", id: handleActorId("ada l.") },
       principal: { kind: "anonymous" },
       clientHlc: { millis: 1234, counter: 0 },
     });
+    expect(envelope.target.id).toBe([..."ada l."].map((character) => character.charCodeAt(0).toString(16)).join(""));
     expect(JSON.parse(new TextDecoder().decode(envelope.payload))).toEqual(command);
+    const anonymous: Command = { type: "identify-learner", id: newId(), learner: newId(), identity: { kind: "anonymous" } };
+    expect(commandEnvelope(anonymous, "architecture", 1)).toMatchObject({ target: { tenant: "architecture", kind: "quiz-learner", id: anonymous.learner }, principal: { kind: "anonymous" } });
+  });
+
+  it("names the period, the one quiz and the asking learner in the leaderboard query and asks for a handle as typed", async () => {
+    const queries: unknown[] = [];
+    const transport: HttpTransport = {
+      send: async (request) => {
+        queries.push(JSON.parse(new TextDecoder().decode(decodeQueryEnvelope(JSON.parse(String(request.body))).arguments)));
+        return reply(404, { kind: "notFound", message: "none" });
+      },
+    };
+    const client = new ProctorClient(() => transport, "architecture");
+    await client.leaderboard({ period: "all-time" }, LEARNER).catch(() => undefined);
+    await client.leaderboard({ period: "daily" }, undefined).catch(() => undefined);
+    await client.leaderboard({ period: "weekly", quiz: "heating" }, LEARNER).catch(() => undefined);
+    await client.leaderboard({ period: "monthly", quiz: "cooling" }, undefined).catch(() => undefined);
+    await client.handle("  Ada ").catch(() => undefined);
+    expect(queries).toEqual([
+      { type: "leaderboard", period: "all-time", learner: LEARNER },
+      { type: "leaderboard", period: "daily" },
+      { type: "leaderboard", period: "weekly", quiz: "heating", learner: LEARNER },
+      { type: "leaderboard", period: "monthly", quiz: "cooling" },
+      { type: "handle", handle: "  Ada " },
+    ]);
   });
 
   it("maps learner commands onto the learner actor with the learner as principal", () => {
@@ -430,7 +545,7 @@ describe("🛂️ proctor wire (design §9a)", () => {
       const stopped = new AbortController();
       stopped.abort();
       const client = new ProctorClient((signal) => ({ send: async () => Promise.reject(signal?.reason ?? new Error("sent")) }), "test");
-      await expect(client.leaderboard(undefined, stopped.signal)).rejects.toBe(stopped.signal.reason);
+      await expect(client.leaderboard({ period: "all-time" }, undefined, stopped.signal)).rejects.toBe(stopped.signal.reason);
       await expect(abortable(Promise.reject(new Error("late")), stopped.signal)).rejects.toBe(stopped.signal.reason);
       await new Promise((resolve) => setTimeout(resolve, 20));
       expect(unhandled).toEqual([]);

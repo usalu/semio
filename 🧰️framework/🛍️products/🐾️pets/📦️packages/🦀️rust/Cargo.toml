@@ -1,0 +1,30 @@
+[package]
+name = "semio-framework-pets"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Pets product core: the pets contract types (menageries of rigged species, the stage, its events and frames), validation, deterministic trigonometry in turns, counter-based randomness, the forward kinematics of a rig, animation (clips, springs, blinks), terrain (perches, strides, falls, hops), behaviour (weights, dwells, encounters, needs, casts) and the stage that folds events into frames. Pure functions only, bit for bit the results of the TypeScript twin @semio-tech/pets."
+
+[package.metadata.semio]
+role = "product"
+id = "pets"
+
+[lints]
+workspace = true
+
+[lib]
+name = "pets"
+path = "🦀️.rs"
+
+[features]
+sut = ["dep:serde_json"]
+
+[dependencies]
+serde = { workspace = true }
+# 🎯️ `float_roundtrip`: without it serde_json reads a long decimal one unit in the last place off (measured:
+# 0.9421396472025663 came back as 0.9421396472025664), while JSON.parse and Python round correctly. The subject
+# hosts and the unit tests must feed the twins the very doubles the other languages read, or nothing is bit-exact.
+serde_json = { workspace = true, optional = true, features = ["float_roundtrip"] }
+
+[dev-dependencies]
+serde_json = { workspace = true, features = ["float_roundtrip"] }

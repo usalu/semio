@@ -1,16 +1,75 @@
-# 🔒️ The proctor host of the architecture quiz (`🔣️.json`), served by the Caddy service of compose.yaml: Caddy obtains and
-# renews the certificate itself once DNS points at the host and ports 80/443 reach it, redirects HTTP to HTTPS and forwards
-# to the proctor on the compose network. It sets X-Forwarded-Proto itself and replaces any value a client sent, which is
-# the statement PROCTOR_TRUSTED_FORWARDING=proxy relies on. CORS belongs to the proctor alone (a second source would
-# duplicate Vary and Access-Control-Allow-Origin); WebSocket upgrades (the presence route) pass through reverse_proxy as
-# they are, Origin included. PROCTOR_HOST=localhost switches to Caddy's internal CA for a local check.
+# 🔒️ The proctor host of the architecture quiz (`🔣️.json`), served by the Caddy service of compose.yaml: Caddy redirects
+# HTTP to HTTPS and forwards to the proctor on the compose network. It sets X-Forwarded-Proto itself and replaces any
+# value a client sent, which is the statement PROCTOR_TRUSTED_FORWARDING=proxy relies on. CORS belongs to the proctor
+# alone (a second source would duplicate Vary and Access-Control-Allow-Origin); WebSocket upgrades (the presence and
+# event-stream routes) pass through reverse_proxy as they are, Origin included, and no timeout below applies to an
+# upgraded connection.
+# The certificate comes from one of two places:
+#   - Caddy obtains and renews it itself (Let's Encrypt) once DNS points at the host and ports 80 and 443 reach it from
+#     the internet; nothing to configure.
+#   - The operator supplies it: one PEM file in the `certificates` directory beside compose.yaml (any name ending in
+#     `.pem`; the certificate with its full chain first, the private key after it; owned by root with mode 0600, or
+#     readable by everyone — Caddy runs as root without any capability and refuses to start on a file it cannot read),
+#     then `docker compose up --detach --force-recreate caddy`. A certificate that names the host is served and Caddy
+#     orders none; renewing it is the operator's job (replace the file, recreate again).
+# PROCTOR_HOST=localhost switches to Caddy's internal CA for a local check; that CA's root is never installed into the
+# container's own trust store (its root filesystem is read-only).
+{
+	skip_install_trust
 
-{$PROCTOR_HOST:proctor.quizzes.architektur-und-technologie.de} {
+	# 🤫️ The health check of compose.yaml asks the admin endpoint every few seconds; those lines would bury the rest.
+	log {
+		exclude admin.api
+	}
+
+	servers {
+		# ⏳️ A client that does not finish its headers or its (small) body in time is dropped; idle keep-alives close early.
+		timeouts {
+			read_header 10s
+			read_body 30s
+			idle 2m
+		}
+	}
+}
+
+{$PROCTOR_HOST:semio.iek.uni-hannover.de} {
+	# 🔐️ Every `*.pem` bundle (certificate chain and key in one file) of the mounted `certificates` directory is loaded
+	# at start; with one for this host, Caddy serves it and manages no certificate for the host.
+	tls {
+		load /certificates
+	}
+
 	encode zstd gzip
+
+	# 📏️ The proctor's own limit for a request body, in bytes (PROCTOR_LIMIT_BODY_BYTES, set in `.env` for both services
+	# at once); a larger body is refused here with 413 before the proctor reads any of it: one that declares its length,
+	# before anything is forwarded (the proctor refuses such a request as well and closes the connection, which a body
+	# still on its way would turn into a 502), and one that declares none, as soon as it has grown too long.
+	request_body {
+		max_size {$PROCTOR_LIMIT_BODY_BYTES:16384}
+	}
+	@oversized `{http.request.header.Content-Length} != "" && int({http.request.header.Content-Length}) > {$PROCTOR_LIMIT_BODY_BYTES:16384}`
+	respond @oversized 413
+
+	# 🛡️ An API that answers JSON to one site: never framed, never sniffed, nothing to load, always over TLS.
 	header {
 		Strict-Transport-Security "max-age=31536000"
 		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
 		Referrer-Policy "no-referrer"
+		-Server
+		-Via
 	}
-	reverse_proxy proctor:8791
+
+	# 🔁️ While the proctor container is replaced (an update), a request waits for the new one instead of failing: only a
+	# refused connection is retried, so no command is ever sent twice.
+	reverse_proxy proctor:8791 {
+		lb_try_duration 20s
+		lb_try_interval 250ms
+		transport http {
+			dial_timeout 3s
+			response_header_timeout 30s
+		}
+	}
 }

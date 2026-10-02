@@ -87,6 +87,59 @@
         "command": "bun ./📜️script.ts rebuild"
       },
       "cache": false
+    },
+    "health": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts health"
+      },
+      "cache": false
+    },
+    "backup": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts backup",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "restore": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts restore",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "erase": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts erase",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "prune": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts prune",
+        "forwardAllArgs": true
+      },
+      "cache": false
+    },
+    "capacity": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts capacity",
+        "forwardAllArgs": true
+      },
+      "cache": false
     }
   }
 }

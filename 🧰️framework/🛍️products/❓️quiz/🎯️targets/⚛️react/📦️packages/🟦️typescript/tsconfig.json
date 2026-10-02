@@ -7,6 +7,8 @@
     "paths": {
       "@semio-tech/quiz-react": ["./🟦️.tsx"],
       "@semio-tech/quiz": ["../../../../📦️packages/🟦️typescript/🟦️.ts"],
+      "@semio-tech/pets-react": ["../../../../../🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
+      "@semio-tech/pets": ["../../../../../🐾️pets/📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/framework": ["../../../../../../📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/framework-server": ["../../../../../🖥️server/📦️packages/🟦️typescript/🟦️.ts"],
       "@semio-tech/ui-react/i18n": ["../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🌐️i18n/🟦️.ts"],
@@ -28,8 +30,18 @@
     "../../../../🧪️tests/🚶️learner-journey/🟦️.tsx",
     "../../../../🧪️tests/🗣️translation-completeness/🟦️.tsx",
     "../../../../🧪️tests/🏠️home-grid/🟦️.tsx",
+    "../../../../🧪️tests/🖼️task-icons/🟦️.tsx",
     "../../../../🧪️tests/📡️presence-client/🟦️.tsx",
-    "../../../../🧪️tests/💭️crowd-client/🟦️.tsx"
+    "../../../../🧪️tests/💭️crowd-client/🟦️.tsx",
+    "../../../../🧪️tests/🌍️language-choice/🟦️.tsx",
+    "../../../../🧪️tests/📢️live-regions/🟦️.tsx",
+    "../../../../🧪️tests/🌗️contrast-states/🟦️.tsx",
+    "../../../../🧪️tests/📇️learner-pages/🟦️.tsx",
+    "../../../../🧪️tests/🚦️rate-limits/🟦️.tsx",
+    "../../../../🧪️tests/🎭️identity-step/🟦️.tsx",
+    "../../../../🧪️tests/🔏️privacy-notice/🟦️.tsx",
+    "../../../../🧪️tests/🐾️pet-companions/🟦️.tsx",
+    "../../../../🧪️tests/🚏️navigation/🟦️.tsx"
   ],
   "exclude": ["**/node_modules/**"]
 }

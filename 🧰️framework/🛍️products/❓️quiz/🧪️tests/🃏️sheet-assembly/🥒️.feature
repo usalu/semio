@@ -2,9 +2,9 @@
 @oracle-quiz-python-reference
 @comparison-ordered-json-v1
 Feature: A quiz and a seed assemble the same solution-free sheet in every language
-  A run is presented as a sheet: the task order, the drawn items in their order, the category order
+  A run is presented as a sheet: the first task remains first and the remaining task order, the drawn items in their order, the category order
   and the card order, and nothing that reveals a solution (design §4). The sheet is a pure function of
-  (quiz, seed) and consumes the MT19937 stream in a fixed order — the task order first, then every task
+  (quiz, seed) and consumes the MT19937 stream in a fixed order — the task order is shuffled first while keeping its first task in place, then every task
   in definition order: its items (then the draw), a classification task's categories, a matching
   task's cards per dimension in definition order. A sorting task whose drawn order happens to equal its
   true ascending order (by value, ties by definition index) is rotated left by one without a draw.

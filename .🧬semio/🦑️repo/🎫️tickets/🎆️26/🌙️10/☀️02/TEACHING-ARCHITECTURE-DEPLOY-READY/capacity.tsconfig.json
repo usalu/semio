@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "tsBuildInfoFile": null
+  },
+  "include": ["../../../../../../../🎓️teaching/🛂️proctor/🧪️tests/🏋️capacity/🟦️.ts"],
+  "exclude": ["**/node_modules/**"]
+}

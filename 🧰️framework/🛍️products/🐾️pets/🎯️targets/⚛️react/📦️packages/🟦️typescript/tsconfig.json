@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/pets-react-typecheck.tsbuildinfo",
+    "types": ["bun", "react", "react-dom", "vite/client"],
+    "paths": {
+      "@semio-tech/pets-react": ["./🟦️.tsx"],
+      "@semio-tech/pets": ["../../../../📦️packages/🟦️typescript/🟦️.ts"]
+    }
+  },
+  "include": ["./🟦️.tsx", "../../🟦️.tsx", "../../🔨️modules/**/*.ts", "../../🔨️modules/**/*.tsx", "../../📖️stories/**/*.ts", "../../📖️stories/**/*.tsx", "../../🧪️tests/**/*.ts", "../../../../🧪️tests/*/🟦️.tsx"],
+  "exclude": ["**/node_modules/**"]
+}

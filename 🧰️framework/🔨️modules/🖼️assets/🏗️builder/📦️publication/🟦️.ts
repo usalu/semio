@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative } from "node:path";
+import { dirname, join, relative, sep } from "node:path";
 import { renderCatalogArtifacts, type AssetArtifact } from "../../🔣️icons/🏗️builder/📽️projection/🟦️.ts";
 import { renderMetabolismArtifacts } from "../../🌱️metabolism/🏗️builder/📽️projection/🟦️.ts";
 
@@ -18,6 +18,11 @@ function assetOutputRoots(): readonly string[] {
   ];
 }
 
+/** 📂️ Whether `path` lies below the directory `root`, with the separator of this platform's joined paths. */
+function below(path: string, root: string): boolean {
+  return path.startsWith(`${root}${sep}`);
+}
+
 function allAssetArtifacts(): readonly AssetArtifact[] {
   return [...renderCatalogArtifacts("all"), ...renderMetabolismArtifacts()];
 }
@@ -31,9 +36,9 @@ function validateAssetOutputManifest(artifacts: readonly AssetArtifact[]): void 
   const paths = artifacts.map((artifact) => artifact.path);
   if (new Set(paths).size !== paths.length) throw new Error("asset output manifest contains duplicate paths");
   const roots = assetOutputRoots();
-  for (const path of paths) if (!roots.some((root) => path === root || path.startsWith(`${root}/`))) throw new Error(`asset output escapes owned roots: ${path}`);
+  for (const path of paths) if (!roots.some((root) => path === root || below(path, root))) throw new Error(`asset output escapes owned roots: ${path}`);
   const uiDuplicate = join(assetsRoot(), "..", "🖱️ui", "🖼️assets", "🔣️icons", "🤖️generated");
-  if (paths.some((path) => path === uiDuplicate || path.startsWith(`${uiDuplicate}/`))) throw new Error("asset owner must not adopt the unresolved UI icon duplicate");
+  if (paths.some((path) => path === uiDuplicate || below(path, uiDuplicate))) throw new Error("asset owner must not adopt the unresolved UI icon duplicate");
 }
 
 function listAssetFiles(root: string): string[] {
@@ -59,9 +64,9 @@ function ownedAssetMembership(artifacts: readonly AssetArtifact[]): { actual: st
 function assetExpectedNodePaths(artifacts: readonly AssetArtifact[]): Set<string> {
   const roots = assetOutputRoots();
   const expected = new Set(artifacts.map((artifact) => artifact.path));
-  for (const root of roots) if (artifacts.some((artifact) => artifact.path.startsWith(`${root}/`))) expected.add(root);
+  for (const root of roots) if (artifacts.some((artifact) => below(artifact.path, root))) expected.add(root);
   for (const artifact of artifacts) {
-    const root = roots.find((candidate) => artifact.path.startsWith(`${candidate}/`));
+    const root = roots.find((candidate) => below(artifact.path, candidate));
     if (!root) continue;
     for (let dir = dirname(artifact.path); dir !== dirname(root); dir = dirname(dir)) expected.add(dir);
   }

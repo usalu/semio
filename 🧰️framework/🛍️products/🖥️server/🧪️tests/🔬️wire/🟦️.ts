@@ -7,14 +7,15 @@ type TestSource = { readonly directory: string; readonly url: string };
 
 /** 🔌️ The TypeScript half of the server wire gate: every shared vector round-trips byte-for-byte, the route table mirrors the
  * gateway router, and the typed client speaks the same wire shape. */
-export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "PRESENCE_PROTOCOL" | "SERVER_ROUTES" | "ServerClient" | "WireError" | "decodeActorKey" | "decodeCommandEnvelope" | "decodeCommandOutcome" | "decodeCommandReceipt" | "decodeDocumentFrame" | "decodeEphemeralFrame" | "decodeEventRecord" | "decodeEventStreamFrame" | "decodeFrontierSummary" | "decodeHybridLogicalClock" | "decodePresenceFrame" | "decodePrincipal" | "decodeQueryConsistency" | "decodeQueryEnvelope" | "decodeQueryResult" | "decodeRejection" | "decodeServerInstanceDefinition" | "decodeTraceContext" | "documentLane" | "encodeActorKey" | "encodeCommandEnvelope" | "encodeCommandOutcome" | "encodeCommandReceipt" | "encodeEphemeralFrame" | "encodeEventRecord" | "encodeFrontierSummary" | "encodeHybridLogicalClock" | "encodePresenceFrame" | "encodePrincipal" | "encodeQueryConsistency" | "encodeQueryEnvelope" | "encodeQueryResult" | "encodeRejection" | "encodeServerInstanceDefinition" | "encodeTraceContext" | "ephemeralLane" | "fetchTransport" | "presenceLane" | "presenceSocketUrl" | "socketRoot" | "streamLane">, source: TestSource): Promise<void> {
-  const { PRESENCE_PROTOCOL, SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane } = dependencies;
-  const { describe, expect, it } = vitest;
+export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: Pick<typeof import("../../🟦️.ts"), "PRESENCE_PROTOCOL" | "SERVER_ERRORS" | "SERVER_ROUTES" | "ServerCallError" | "ServerClient" | "WireError" | "decodeErrorBody" | "encodeErrorBody" | "serverCallError" | "decodeActorKey" | "decodeCommandEnvelope" | "decodeCommandOutcome" | "decodeCommandReceipt" | "decodeDocumentFrame" | "decodeEphemeralFrame" | "decodeEventRecord" | "decodeEventStreamFrame" | "decodeFrontierSummary" | "decodeHybridLogicalClock" | "decodePresenceFrame" | "decodePrincipal" | "decodeQueryConsistency" | "decodeQueryEnvelope" | "decodeQueryResult" | "decodeRejection" | "decodeServerInstanceDefinition" | "decodeTraceContext" | "documentLane" | "encodeActorKey" | "encodeCommandEnvelope" | "encodeCommandOutcome" | "encodeCommandReceipt" | "encodeEphemeralFrame" | "encodeEventRecord" | "encodeFrontierSummary" | "encodeHybridLogicalClock" | "encodePresenceFrame" | "encodePrincipal" | "encodeQueryConsistency" | "encodeQueryEnvelope" | "encodeQueryResult" | "encodeRejection" | "encodeServerInstanceDefinition" | "encodeTraceContext" | "ephemeralLane" | "fetchTransport" | "presenceLane" | "presenceSocketUrl" | "socketRoot" | "streamLane">, source: TestSource): Promise<void> {
+  const { PRESENCE_PROTOCOL, SERVER_ERRORS, SERVER_ROUTES, ServerCallError, ServerClient, WireError, decodeErrorBody, encodeErrorBody, serverCallError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane } = dependencies;
+  const { describe, expect, it, vi } = vitest;
 
   const productRoot = dirname(fileURLToPath(source.url));
   const fixture = JSON.parse(readFileSync(resolve(productRoot, "🧫️fixtures/🔌️wire/🔣️.json"), "utf8")) as {
     schema: string;
-    routes: { method: string; path: string }[];
+    routes: { method: string; path: string; group: string }[];
+    errors: { status: number; kind: string }[];
     vectors: { name: string; type: string; json: unknown }[];
   };
 
@@ -35,6 +36,7 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     queryResult: (value) => encodeQueryResult(decodeQueryResult(value)),
     serverInstanceDefinition: (value) => encodeServerInstanceDefinition(decodeServerInstanceDefinition(value)),
     presenceFrame: (value) => encodePresenceFrame(decodePresenceFrame(value)),
+    errorBody: (value) => encodeErrorBody(decodeErrorBody(value)),
   };
 
   describe("🔌️wire", () => {
@@ -82,18 +84,27 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     const routerSource = readFileSync(resolve(productRoot, "🔨️modules/📡️gateway/🦀️.rs"), "utf8");
     const baseRouter = routerSource.slice(routerSource.indexOf("fn base_router<I: ServerInstance>"));
     const block = baseRouter.slice(0, baseRouter.indexOf("\n}"));
-    const mounted = block
-      .split("\n")
-      .filter((line) => line.includes('.route("'))
-      .flatMap((line) => {
-        const path = /\.route\("([^"]+)"/u.exec(line)![1];
-        const verbs = line.slice(line.indexOf(path) + path.length);
-        return [...verbs.matchAll(/\b(get|post|put|head)\(/gu)].map(([, verb]) => ({ method: verb.toUpperCase(), path }));
-      });
+    let group = "core";
+    const mounted = block.split("\n").flatMap((line) => {
+      const condition = /^\s*if (?:groups\.(\w+)|\w+) \{$/u.exec(line.trimEnd());
+      if (condition) group = condition[1] ?? "documents";
+      if (!line.includes('.route("')) return [];
+      const path = /\.route\("([^"]+)"/u.exec(line)![1];
+      const verbs = line.slice(line.indexOf(path) + path.length);
+      return [...verbs.matchAll(/\b(get|post|put|head)\(/gu)].map(([, verb]) => ({ method: verb.toUpperCase(), path, group }));
+    });
 
-    it("mirrors the router the gateway actually mounts", () => {
+    it("mirrors the router the gateway actually mounts, group by group", () => {
       expect(mounted).toEqual(fixture.routes);
       expect(SERVER_ROUTES).toEqual(fixture.routes);
+      expect(SERVER_ROUTES.filter((route) => route.group === "core").map((route) => route.path)).toEqual(["/instance", "/commands", "/queries", "/scopes/{scope}/presence/ws", "/actors/{tenant}/{kind}/{id}/events", "/actors/{tenant}/{kind}/{id}/events/ws"]);
+    });
+
+    it("names every error the gateway answers with", () => {
+      expect(SERVER_ERRORS).toEqual(fixture.errors);
+      const gateway = routerSource.slice(routerSource.indexOf("pub fn kind(&self) -> &'static str"));
+      const kinds = [...gateway.slice(0, gateway.indexOf("\n    }")).matchAll(/=> "(\w+)"/gu)].map(([, kind]) => kind);
+      expect(kinds).toEqual(fixture.errors.map((error) => error.kind));
     });
 
     it("keys the same lanes the gateway does", () => {
@@ -142,6 +153,35 @@ export async function registerServerWireTests(vitest: NonNullable<ImportMeta["vi
     it("turns a gateway refusal into an error carrying its own tag", async () => {
       const { transport } = recording(() => ({ status: 403, body: JSON.stringify({ kind: "forbidden", message: "no" }) }));
       await expect(new ServerClient(transport).apps()).rejects.toMatchObject({ name: "ServerCallError", kind: "forbidden", status: 403 });
+    });
+
+    it("carries the wait of a refusal that passes and survives an answer that is no gateway error", async () => {
+      const throttled = recording(() => ({ status: 429, body: JSON.stringify({ kind: "throttled", message: "too many requests", retryAfterMs: 1500 }) }));
+      await expect(new ServerClient(throttled.transport).instance()).rejects.toMatchObject({ name: "ServerCallError", kind: "throttled", status: 429, retryAfterMs: 1500, allowance: undefined });
+      const spent = recording(() => ({ status: 429, body: JSON.stringify({ kind: "throttled", message: "the sign-up allowance of this address is spent", retryAfterMs: 36000, allowance: "sign-up" }) }));
+      await expect(new ServerClient(spent.transport).instance()).rejects.toMatchObject({ name: "ServerCallError", kind: "throttled", status: 429, retryAfterMs: 36000, allowance: "sign-up" });
+      expect(() => decodeErrorBody({ kind: "throttled", message: "m", allowance: 7 })).toThrow("error.allowance");
+      for (const body of ["", "<html>502 Bad Gateway</html>", "null", JSON.stringify({ kind: 7 })]) {
+        const proxy = recording(() => ({ status: 502, body }));
+        await expect(new ServerClient(proxy.transport).instance(), body).rejects.toMatchObject({ name: "ServerCallError", kind: "unexpected", status: 502, retryAfterMs: undefined });
+      }
+      expect(serverCallError(403, JSON.stringify({ kind: "forbidden", message: "forbidden" }))).toBeInstanceOf(ServerCallError);
+      expect(() => decodeErrorBody({ kind: "throttled", message: "m", retryAfterMs: -1 })).toThrow("error.retryAfterMs");
+    });
+
+    it("sends no credentials with a request", async () => {
+      const seen: (RequestInit | undefined)[] = [];
+      vi.stubGlobal("fetch", async (_url: string, init?: RequestInit) => {
+        seen.push(init);
+        return new Response("[]", { status: 200 });
+      });
+      try {
+        await new ServerClient(fetchTransport("https://proctor.example"), { bearer: "token-1" }).events({ tenant: "t1", kind: "counter", id: "c1" });
+      } finally {
+        vi.unstubAllGlobals();
+      }
+      expect(seen.map((init) => init?.credentials)).toEqual(["omit"]);
+      expect((seen[0]?.headers as Record<string, string>).authorization).toBe("Bearer token-1");
     });
 
     it("answers a blob negotiation from the status alone", async () => {

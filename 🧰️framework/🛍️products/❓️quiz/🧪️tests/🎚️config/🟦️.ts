@@ -1,9 +1,13 @@
 // #region 🔌️Adapters
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 // #endregion 🔌️Adapters
 
-const root = resolve(dirname(fileURLToPath(import.meta.url)), "../../📦️packages/🟦️typescript");
+const here = dirname(fileURLToPath(import.meta.url));
+const root = resolve(here, "../../📦️packages/🟦️typescript");
+
+/** 🧭️ A suite named relative to this file, as Vitest reads it: relative to `root`. */
+const suite = (path: string): string => relative(root, resolve(here, path)).replaceAll("\\", "/");
 
 /** 🧪️ Vitest for `@semio-tech/quiz`: the unit suites of the core modules (the Protocol v2 cases run through the repo test harness). */
 export default {
@@ -29,7 +33,7 @@ export default {
       "../🗃️shared-vectors/🟦️.ts",
       "../🫂️presence-roster/🟦️.ts",
       "../🗳️crowd-answers/🟦️.ts",
-    ],
+    ].map(suite),
     coverage: { include: ["🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/🟦️.ts"] },
     passWithNoTests: false,
   },

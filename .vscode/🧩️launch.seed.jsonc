@@ -3297,6 +3297,7 @@
         "uriFormat": "%s"
       }
     },
+    {"name":"🛠️dev🎓️teaching🏛️architecture❓️quiz🌐️site","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:dev-site","cwd":"${workspaceFolder}","env":{"TEACHING_ARCHITECTURE_QUIZ_PORT":"6061","PROCTOR_PORT":"8791"},"presentation":{"group":"3_dev","order":213.605},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6061)","uriFormat":"%s"}},
     {
       "name": "🛠️dev🎓️teaching🛂️proctor",
       "type": "node-terminal",
@@ -3322,6 +3323,13 @@
         "order": 213.611
       }
     },
+    {"name":"🩺️health🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:health","cwd":"${workspaceFolder}","env":{"PROCTOR_PORT":"8791"},"presentation":{"group":"3_dev","order":213.612}},
+    {"name":"💾️backup🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:backup","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.613}},
+    {"name":"♻️restore🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:restore -- \"${input:proctorBackupFile}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.614}},
+    {"name":"🧨️erase🎓️teaching🛂️proctor🔍️dry-run","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:erase -- --handle \"${input:proctorEraseHandle}\" --dry-run","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.615}},
+    {"name":"🧨️erase🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:erase -- --handle \"${input:proctorEraseHandle}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.616}},
+    {"name":"🧹️prune🎓️teaching🛂️proctor🔍️dry-run","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:prune -- --older-than \"${input:proctorPruneAge}\" --dry-run","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.617}},
+    {"name":"🧹️prune🎓️teaching🛂️proctor","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:prune -- --older-than \"${input:proctorPruneAge}\"","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.618}},
     {
       "name": "🧪️test❓️quiz🟦️",
       "type": "node-terminal",
@@ -3388,6 +3396,14 @@
         "order": 213.68
       }
     },
+    {"name":"🛠️dev🎓️teaching🏛️architecture❓️quiz🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.685}},
+    {"name":"🧪️test🐾️pets🟦️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.69}},
+    {"name":"🧪️test🐾️pets⚛️react","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.7}},
+    {"name":"🧪️test🐾️pets🦀️","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-rs:test","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.71}},
+    {"name":"🛠️dev🐾️pets🟦️🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.715}},
+    {"name":"🛠️dev🐾️pets⚛️react🪁️typecheck","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:typecheck","cwd":"${workspaceFolder}","presentation":{"group":"3_dev","order":213.72}},
+    {"name":"🛠️dev🐾️pets📖️stories","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:dev","cwd":"${workspaceFolder}","env":{"PETS_STORIES_PORT":"6069"},"presentation":{"group":"3_dev","order":213.73},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6069)","uriFormat":"%s"}},
+    {"name":"🛠️dev🎓️teaching🏛️architecture🐾️pets📖️stories","type":"node-terminal","request":"launch","command":"bun nx run @semio-tech/pets-react:dev","cwd":"${workspaceFolder}","env":{"PETS_STORIES_PORT":"6074","PETS_MENAGERIE":"🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts"},"presentation":{"group":"3_dev","order":213.74},"serverReadyAction":{"action":"openExternally","pattern":"(http://(?:127\\.0\\.0\\.1|localhost|0\\.0\\.0\\.0):6074)","uriFormat":"%s"}},
     "@generated:generator:react",
     "@generated:koordinator:react",
     "@generated:aussuchen:react",
@@ -4819,6 +4835,7 @@
         "order": 11.35
       }
     },
+    {"name":"📦️bundle🎓️teaching🏛️architecture❓️quiz🐳️docker-stack","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:docker-stack-bundle","cwd":"${workspaceFolder}","presentation":{"group":"4_build","order":11.4}},
     {
       "name": "✅️check🎓️teaching🏛️architecture❓️quiz📚️catalog",
       "type": "node-terminal",
@@ -4841,6 +4858,8 @@
         "order": 11.15
       }
     },
+    {"name":"⚖️gate🎓️teaching🛂️proctor🏋️capacity","type":"node-terminal","request":"launch","command":"bun nx run @teaching/proctor:capacity","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.16}},
+    {"name":"⚖️gate🎓️teaching🏛️architecture❓️quiz🎭️e2e","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:test-e2e","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.17}},
     {
       "name": "⚖️gate🎓️teaching🏛️architecture❓️quiz🐳️docker-image",
       "type": "node-terminal",
@@ -4863,6 +4882,7 @@
         "order": 11.25
       }
     },
+    {"name":"⚖️gate🎓️teaching🏛️architecture❓️quiz🚀️deploy","type":"node-terminal","request":"launch","command":"bun nx run @teaching/architecture-quiz:deploy-check","cwd":"${workspaceFolder}","presentation":{"group":"4_gate","order":11.3}},
     {
       "name": "📦️build🧩️puzzle🏙️3d",
       "type": "node-terminal",
@@ -9484,6 +9504,22 @@
       "type": "promptString",
       "description": "Ticket-owned identity contract output directory relative to workspace",
       "default": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-root/grapheme-removal"
+    },
+    {
+      "id": "proctorBackupFile",
+      "type": "promptString",
+      "description": "Proctor backup file to put in place of the dev database (stop the dev proctor first)"
+    },
+    {
+      "id": "proctorEraseHandle",
+      "type": "promptString",
+      "description": "Pseudonym or name of the learner to erase from the dev database (stop the dev proctor first)"
+    },
+    {
+      "id": "proctorPruneAge",
+      "type": "promptString",
+      "description": "Age past which a registration nobody played under is pruned from the dev database: 90m, 36h, 7d, 2w (stop the dev proctor first)",
+      "default": "7d"
     }
   ],
 

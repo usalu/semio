@@ -3,15 +3,19 @@
 
 Written from the design text alone. An answer is valid when its kind matches the sheet task, every
 item, category and dimension it names exists in that sheet task, every card index is in range and used
-at most once per dimension, and a sorting order is a permutation of the sheet items; partial
-classification and matching answers stay valid. Completeness is asked only of valid answers: every
-sheet item assigned (in every dimension, for matching), and a recorded sorting answer is always complete.
+at most once per dimension, and a sorting order is a permutation of the sheet items whose optional
+numeric ``guesses`` (item id to guess in the quantity's base unit) name sheet items only, are finite
+numbers (positive on a logarithmic quantity) and stand in non-decreasing guess order along the order,
+ties allowed and unguessed items unconstrained; partial classification and matching answers stay
+valid. Completeness is asked only of valid answers: every sheet item assigned (in every dimension,
+for matching), and a recorded sorting answer is always complete.
 
 @see ../../🧫️fixtures/✅️answer-validation/🔣️.json
 """
 
 # region 🔖️Imports
 import json
+import math
 from collections import Counter
 
 from semio_repo_test import Adapter, Outcome
@@ -23,6 +27,20 @@ from semio_repo_test import Adapter, Outcome
 VECTORS = "shared://✅️answer-validation/🔣️.json"
 
 
+def guesses_fit(sheet_task, answer):
+    """🔢️ Whether the optional ``guesses`` of a sorting answer are an object of finite numbers over sheet items, in non-decreasing order along ``order``."""
+    guesses = answer.get("guesses", {})
+    if not isinstance(guesses, dict):
+        return False
+    items = {item["id"] for item in sheet_task["items"]}
+    logarithmic = sheet_task["quantity"]["scale"] == "logarithmic"
+    for item, guess in guesses.items():
+        if item not in items or isinstance(guess, bool) or not isinstance(guess, (int, float)) or not math.isfinite(guess) or (logarithmic and guess <= 0):
+            return False
+    guessed = [guesses[item] for item in answer["order"] if item in guesses]
+    return all(before <= after for before, after in zip(guessed, guessed[1:]))
+
+
 def answer_rejection(sheet_task, answer):
     """🚫️ ``answer-invalid`` for an answer the sheet task cannot hold, ``None`` otherwise."""
     if answer["kind"] != sheet_task["kind"]:
@@ -32,7 +50,8 @@ def answer_rejection(sheet_task, answer):
         categories = {category["id"] for category in sheet_task["categories"]}
         return None if all(item in items and category in categories for item, category in answer["assignments"].items()) else "answer-invalid"
     if answer["kind"] == "sorting":
-        return None if Counter(answer["order"]) == Counter(item["id"] for item in sheet_task["items"]) else "answer-invalid"
+        permutation = Counter(answer["order"]) == Counter(item["id"] for item in sheet_task["items"])
+        return None if permutation and guesses_fit(sheet_task, answer) else "answer-invalid"
     cards = {dimension["id"]: len(dimension["cards"]) for dimension in sheet_task["dimensions"]}
     for dimension, assignments in answer["assignments"].items():
         if dimension not in cards:
@@ -70,7 +89,7 @@ def verdicts(ctx):
     vectors = json.loads(ctx.fixture_bytes(VECTORS))
     tasks = {task["id"]: task for task in vectors["sheetTasks"]}
     produced = {}
-    for vector in vectors["vectors"]:
+    for vector in vectors["vectors"] + vectors["malformed"]:
         produced[vector["id"]] = verdict(tasks[vector["sheetTask"]], vector.get("answer"))
         if produced[vector["id"]] != vector["expected"]:
             raise AssertionError("verdicts/%s: the reference says %r, the committed vector %r" % (vector["id"], produced[vector["id"]], vector["expected"]))

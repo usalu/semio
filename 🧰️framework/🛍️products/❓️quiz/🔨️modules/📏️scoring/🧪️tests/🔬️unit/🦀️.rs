@@ -8,12 +8,12 @@ use crate::sheet::sheet_of;
 use crate::sheet::tests::{classification, matching, quantity, quiz, sorting, text};
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id) }).collect()
+    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), icon: None }).collect()
 }
 
 fn sort(task: &SortingTask, order: &[&str]) -> Option<TaskResult> {
-    let sheet = SheetTask::Sorting(SheetSortingTask { id: task.id.clone(), title: task.title.clone(), prompt: task.prompt.clone(), quantity: task.quantity.clone(), items: items(order) });
-    score_task(&Task::Sorting(task.clone()), &sheet, &Answer::Sorting(SortingAnswer { order: order.iter().map(|id| (*id).to_string()).collect() }))
+    let sheet = SheetTask::Sorting(SheetSortingTask { id: task.id.clone(), title: task.title.clone(), prompt: task.prompt.clone(), icon: None, quantity: task.quantity.clone(), items: items(order) });
+    score_task(&Task::Sorting(task.clone()), &sheet, &Answer::Sorting(SortingAnswer { order: order.iter().map(|id| (*id).to_string()).collect(), guesses: BTreeMap::new() }))
 }
 
 fn score(result: Option<TaskResult>) -> f64 {
@@ -54,12 +54,25 @@ fn sorting_results_follow_the_learner_order_with_true_ranks() {
     assert_eq!(summary, [("s2", 0, 2), ("s1", 1, 0), ("s0", 2, 1)]);
 }
 
+#[test]
+fn sorting_guesses_never_influence_the_score() {
+    let task = sorting("power", &[1.0, 60.0, 2000.0, 1.0e6, 1.0e9], Scale::Logarithmic, None);
+    let order = ["s1", "s0", "s2", "s4", "s3"];
+    let sheet = SheetTask::Sorting(SheetSortingTask { id: task.id.clone(), title: task.title.clone(), prompt: task.prompt.clone(), icon: None, quantity: task.quantity.clone(), items: items(&order) });
+    let guessed = |guesses: &[(&str, f64)]| Answer::Sorting(SortingAnswer { order: order.iter().map(|id| (*id).to_string()).collect(), guesses: guesses.iter().map(|(item, guess)| ((*item).to_string(), *guess)).collect() });
+    let plain = score_task(&Task::Sorting(task.clone()), &sheet, &guessed(&[]));
+    assert!(plain.is_some());
+    for guesses in [&[("s1", 60.0), ("s0", 1.0e9)][..], &[("s1", 1.0), ("s0", 1.0), ("s2", 1.0), ("s4", 1.0), ("s3", 1.0)], &[("s3", 5.0)]] {
+        assert_eq!(score_task(&Task::Sorting(task.clone()), &sheet, &guessed(guesses)), plain, "{guesses:?}");
+    }
+}
+
 fn matched(truth: &[f64], cards: &[f64], picks: &[usize]) -> Option<TaskResult> {
     let rows: Vec<(f64, f64)> = truth.iter().map(|&value| (value, value)).collect();
     let mut task = matching("m", &rows, None);
     task.dimensions.truncate(1);
     let ids: Vec<String> = (0..truth.len()).map(|index| format!("m{index}")).collect();
-    let sheet = SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), cards: cards.to_vec() }], items: items(&ids.iter().map(String::as_str).collect::<Vec<_>>()) });
+    let sheet = SheetTask::Matching(SheetMatchingTask { id: "m".to_string(), title: text("m"), prompt: text("m"), icon: None, dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), icon: None, cards: cards.to_vec() }], items: items(&ids.iter().map(String::as_str).collect::<Vec<_>>()) });
     let answer = Answer::Matching(MatchingAnswer { assignments: BTreeMap::from([("load".to_string(), ids.iter().cloned().zip(picks.iter().copied()).collect())]) });
     score_task(&Task::Matching(task), &sheet, &answer)
 }
@@ -80,7 +93,8 @@ fn matching_task_score_is_the_mean_over_dimensions() {
         id: "m".to_string(),
         title: text("m"),
         prompt: text("m"),
-        dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), cards: vec![10.0, 40.0, 120.0] }, SheetDimension { id: "demand".to_string(), quantity: quantity("kWh", Scale::Logarithmic), cards: vec![250.0, 90.0, 15.0] }],
+        icon: None,
+        dimensions: vec![SheetDimension { id: "load".to_string(), quantity: quantity("W", Scale::Linear), icon: None, cards: vec![10.0, 40.0, 120.0] }, SheetDimension { id: "demand".to_string(), quantity: quantity("kWh", Scale::Logarithmic), icon: None, cards: vec![250.0, 90.0, 15.0] }],
         items: items(&["m0", "m1", "m2"]),
     });
     let answer = Answer::Matching(MatchingAnswer {
@@ -95,7 +109,7 @@ fn matching_task_score_is_the_mean_over_dimensions() {
 }
 
 fn classify(task: &ClassificationTask, pairs: &[(&str, &str)]) -> Option<TaskResult> {
-    let sheet = SheetTask::Classification(SheetClassificationTask { id: task.id.clone(), title: task.title.clone(), prompt: task.prompt.clone(), axes: task.axes.clone(), categories: task.categories.clone(), items: items(&pairs.iter().map(|(item, _)| *item).collect::<Vec<_>>()) });
+    let sheet = SheetTask::Classification(SheetClassificationTask { id: task.id.clone(), title: task.title.clone(), prompt: task.prompt.clone(), icon: None, axes: task.axes.clone(), categories: task.categories.clone(), items: items(&pairs.iter().map(|(item, _)| *item).collect::<Vec<_>>()) });
     let answer = Answer::Classification(ClassificationAnswer { assignments: pairs.iter().map(|(item, category)| ((*item).to_string(), (*category).to_string())).collect() });
     score_task(&Task::Classification(task.clone()), &sheet, &answer)
 }
@@ -129,8 +143,8 @@ fn invalid_or_incomplete_answers_are_not_scored() {
     let task = classification("standards", None);
     assert!(classify(&task, &[("a", "future")]).is_none());
     let sorting_task = sorting("s", &[1.0, 2.0], Scale::Linear, None);
-    let sheet = SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), quantity: quantity("W", Scale::Linear), items: items(&["s0", "s1"]) });
-    assert!(score_task(&Task::Sorting(sorting_task.clone()), &sheet, &Answer::Sorting(SortingAnswer { order: vec!["s0".to_string()] })).is_none());
+    let sheet = SheetTask::Sorting(SheetSortingTask { id: "s".to_string(), title: text("s"), prompt: text("s"), icon: None, quantity: quantity("W", Scale::Linear), items: items(&["s0", "s1"]) });
+    assert!(score_task(&Task::Sorting(sorting_task.clone()), &sheet, &Answer::Sorting(SortingAnswer { order: vec!["s0".to_string()], guesses: BTreeMap::new() })).is_none());
     assert!(score_task(&Task::Sorting(sorting_task), &sheet, &Answer::Classification(ClassificationAnswer { assignments: BTreeMap::new() })).is_none());
 }
 
@@ -142,7 +156,7 @@ fn run_score_is_the_mean_of_task_scores_in_sheet_order() {
     for task in &sheet.tasks {
         let answer = match task {
             SheetTask::Classification(task) => Answer::Classification(ClassificationAnswer { assignments: task.items.iter().map(|item| (item.id.clone(), "old".to_string())).collect() }),
-            SheetTask::Sorting(task) => Answer::Sorting(SortingAnswer { order: task.items.iter().map(|item| item.id.clone()).collect() }),
+            SheetTask::Sorting(task) => Answer::Sorting(SortingAnswer { order: task.items.iter().map(|item| item.id.clone()).collect(), guesses: BTreeMap::new() }),
             SheetTask::Matching(task) => Answer::Matching(MatchingAnswer { assignments: task.dimensions.iter().map(|dimension| (dimension.id.clone(), task.items.iter().enumerate().map(|(index, item)| (item.id.clone(), index)).collect())).collect() }),
         };
         answers.insert(task.id().clone(), answer);

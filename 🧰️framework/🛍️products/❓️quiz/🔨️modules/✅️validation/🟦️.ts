@@ -1,13 +1,19 @@
-/** ✅️ Structural and semantic validation of quizzes, catalogs, answers, handles and presence states without any schema library.
+/** ✅️ Structural and semantic validation of quizzes, catalogs, answers, ids, handles and presence states without any schema library.
  *
  * Issues carry a JSON pointer into the validated document and a stable kebab-case code; they are returned
  * deduplicated and sorted by path, then code, in Unicode code point order.
  *
- * @see ../../🧬️schema/🔣️.json — the structure checked here
- * @see ../../README.md — the issue code table
+ * The handle policy owns its tables: the White_Space set and the Latin letters of `$defs/Handle` are written out here
+ * as code point ranges, so both cores accept the same handles whatever Unicode version their runtime ships. Every
+ * string over the handle alphabet is in Normalization Form C (it holds no combining mark and no character with a
+ * canonical decomposition that recomposes differently), which is how NFC equivalence holds without a normalizer.
+ *
+ * @see ../../🧬️schema/🔣️.json — the structure checked here, `Handle` for the alphabet
+ * @see ../../README.md — the issue code table and the handle policy
+ * @see https://www.unicode.org/reports/tr15/ — Unicode normalization forms
  * @see ./🦀️.rs — the Rust twin
  */
-import { SCALES, SCREENS, TASK_KINDS, type Answer, type Quiz, type Rejection, type SheetTask } from "../../🧬️schema/🟦️.ts";
+import { MOTIONS, SCALES, SCREENS, TASK_KINDS, type Answer, type Command, type Query, type Quiz, type Rejection, type Scale, type SheetTask } from "../../🧬️schema/🟦️.ts";
 
 /** 🩺️ One finding: where (JSON pointer) and what (kebab-case code). */
 export type ValidationIssue = { readonly path: string; readonly code: string };
@@ -19,10 +25,55 @@ type Report = (path: string, code: string) => void;
 export type NormalizedHandle = { readonly display: string; readonly key: string };
 
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/u;
+const ID = /^[0-9a-f]{32}$/u;
 const TAG = /^[0-9a-f]{8}$/u;
 const ANCHOR = /^[a-z0-9]+(?:[:-][a-z0-9]+)*$/u;
-const WHITESPACE = /\p{White_Space}+/gu;
-const HANDLE_MAX = 64;
+
+/** 📏️ The most code points a handle holds. */
+export const HANDLE_MAX = 64;
+
+/** 🧵️ The most code points a handle may be typed with before it is normalized. */
+export const HANDLE_INPUT_MAX = 256;
+
+/** ⬜️ The Unicode `White_Space` code points as inclusive ranges: what collapses to one space between the words of a handle. */
+export const WHITE_SPACE: readonly (readonly [number, number])[] = [
+  [0x0009, 0x000d],
+  [0x0020, 0x0020],
+  [0x0085, 0x0085],
+  [0x00a0, 0x00a0],
+  [0x1680, 0x1680],
+  [0x2000, 0x200a],
+  [0x2028, 0x2029],
+  [0x202f, 0x202f],
+  [0x205f, 0x205f],
+  [0x3000, 0x3000],
+];
+
+/** 🔤️ The letters of a handle as inclusive code point ranges: the upper- and lowercase letters of Basic Latin, Latin-1 Supplement, Latin Extended-A, Latin Extended-B and Latin Extended Additional without a compatibility decomposition. */
+export const HANDLE_LETTERS: readonly (readonly [number, number])[] = [
+  [0x0041, 0x005a],
+  [0x0061, 0x007a],
+  [0x00c0, 0x00d6],
+  [0x00d8, 0x00f6],
+  [0x00f8, 0x0131],
+  [0x0134, 0x013e],
+  [0x0141, 0x0148],
+  [0x014a, 0x017e],
+  [0x0180, 0x01ba],
+  [0x01bc, 0x01bf],
+  [0x01cd, 0x01f0],
+  [0x01f4, 0x024f],
+  [0x1e00, 0x1e99],
+  [0x1e9c, 0x1eff],
+];
+
+/** ❜️ The punctuation of a handle: apostrophe, hyphen-minus, full stop, underscore. */
+export const HANDLE_PUNCTUATION: readonly number[] = [0x27, 0x2d, 0x2e, 0x5f];
+
+const TYPOGRAPHIC_APOSTROPHE = 0x2019;
+const APOSTROPHE = 0x27;
+const SPACE = 0x20;
+const UTF8 = new TextEncoder();
 const IDENTITY_KINDS = ["anonymous", "pseudonym", "name"] as const;
 const QUIZ_SCHEMA = "semio.quiz/v1";
 const CATALOG_SCHEMA = "semio.quiz.catalog/v1";
@@ -75,7 +126,7 @@ function string(value: unknown, path: string, report: Report, min = 0, max = Inf
 /** 🏷️ A slug. */
 function slug(value: unknown, path: string, report: Report): value is string {
   if (typeof value !== "string") return report(path, "type-invalid"), false;
-  if (value.length > 64 || !SLUG.test(value)) return report(path, "slug-invalid"), false;
+  if (!isSlug(value)) return report(path, "slug-invalid"), false;
   return true;
 }
 
@@ -152,6 +203,7 @@ function quantity(value: unknown, path: string, report: Report): string | undefi
 function itemHead(json: Json, path: string, report: Report): void {
   if (Object.hasOwn(json, "id")) slug(json.id, at(path, "id"), report);
   if (Object.hasOwn(json, "label")) text(json.label, at(path, "label"), report);
+  if (Object.hasOwn(json, "icon")) icon(json.icon, at(path, "icon"), report);
   if (Object.hasOwn(json, "explanation")) text(json.explanation, at(path, "explanation"), report);
 }
 
@@ -183,10 +235,11 @@ function classificationTask(json: Json, path: string, report: Report): void {
   });
   const categories = Object.hasOwn(json, "categories")
     ? array(json.categories, at(path, "categories"), report, 2, (entry, entryPath) => {
-        const category = object(entry, entryPath, report, ["id", "label"], ["description", "profile"]);
+        const category = object(entry, entryPath, report, ["id", "label"], ["icon", "description", "profile"]);
         if (!category) return;
         if (Object.hasOwn(category, "id")) slug(category.id, at(entryPath, "id"), report);
         if (Object.hasOwn(category, "label")) text(category.label, at(entryPath, "label"), report);
+        if (Object.hasOwn(category, "icon")) icon(category.icon, at(entryPath, "icon"), report);
         if (Object.hasOwn(category, "description")) text(category.description, at(entryPath, "description"), report);
         if (!Object.hasOwn(category, "profile")) return;
         const profilePath = at(entryPath, "profile");
@@ -205,7 +258,7 @@ function classificationTask(json: Json, path: string, report: Report): void {
   const categoryIds = uniqueIds(categories, at(path, "categories"), report);
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "category"], ["explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "category"], ["icon", "explanation"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         if (Object.hasOwn(item, "category") && slug(item.category, at(entryPath, "category"), report) && categories && !categoryIds.has(item.category)) report(at(entryPath, "category"), "category-unknown");
@@ -220,7 +273,7 @@ function sortingTask(json: Json, path: string, report: Report): void {
   const scale = Object.hasOwn(json, "quantity") ? quantity(json.quantity, at(path, "quantity"), report) : undefined;
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "value"], ["explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "value"], ["icon", "explanation"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         if (Object.hasOwn(item, "value") && number(item.value, at(entryPath, "value"), report) && scale === "logarithmic" && item.value <= 0) report(at(entryPath, "value"), "value-not-positive");
@@ -235,16 +288,17 @@ function matchingTask(json: Json, path: string, report: Report): void {
   const scales = new Map<string, string | undefined>();
   const dimensions = Object.hasOwn(json, "dimensions")
     ? array(json.dimensions, at(path, "dimensions"), report, 1, (entry, entryPath) => {
-        const dimension = object(entry, entryPath, report, ["id", "quantity"]);
+        const dimension = object(entry, entryPath, report, ["id", "quantity"], ["icon"]);
         if (!dimension) return;
         const scale = Object.hasOwn(dimension, "quantity") ? quantity(dimension.quantity, at(entryPath, "quantity"), report) : undefined;
+        if (Object.hasOwn(dimension, "icon")) icon(dimension.icon, at(entryPath, "icon"), report);
         if (Object.hasOwn(dimension, "id") && slug(dimension.id, at(entryPath, "id"), report) && !scales.has(dimension.id)) scales.set(dimension.id, scale);
       })
     : undefined;
   uniqueIds(dimensions, at(path, "dimensions"), report);
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "values"], ["explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "values"], ["icon", "explanation"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         if (!Object.hasOwn(item, "values")) return;
@@ -262,6 +316,14 @@ function matchingTask(json: Json, path: string, report: Report): void {
   draw(json, path, report, items);
 }
 
+/** 🖼️ An icon: an emoji of 1…16 code points and one of the motions. */
+function icon(value: unknown, path: string, report: Report): void {
+  const json = object(value, path, report, ["emoji", "motion"]);
+  if (!json) return;
+  if (Object.hasOwn(json, "emoji")) string(json.emoji, at(path, "emoji"), report, 1, 16);
+  if (Object.hasOwn(json, "motion")) literal(json.motion, at(path, "motion"), report, MOTIONS);
+}
+
 /** 🧩️ A task, dispatched on its kind. */
 function task(value: unknown, path: string, report: Report): void {
   if (!isObject(value)) return report(path, "type-invalid");
@@ -270,14 +332,15 @@ function task(value: unknown, path: string, report: Report): void {
   const shared = ["kind", "id", "title", "prompt"];
   const json =
     value.kind === "classification"
-      ? object(value, path, report, [...shared, "categories", "items"], ["axes", "draw"])
+      ? object(value, path, report, [...shared, "categories", "items"], ["axes", "draw", "icon"])
       : value.kind === "sorting"
-        ? object(value, path, report, [...shared, "quantity", "items"], ["draw"])
-        : object(value, path, report, [...shared, "dimensions", "items"], ["draw"]);
+        ? object(value, path, report, [...shared, "quantity", "items"], ["draw", "icon"])
+        : object(value, path, report, [...shared, "dimensions", "items"], ["draw", "icon"]);
   if (!json) return;
   if (Object.hasOwn(json, "id")) slug(json.id, at(path, "id"), report);
   if (Object.hasOwn(json, "title")) text(json.title, at(path, "title"), report);
   if (Object.hasOwn(json, "prompt")) text(json.prompt, at(path, "prompt"), report);
+  if (Object.hasOwn(json, "icon")) icon(json.icon, at(path, "icon"), report);
   if (value.kind === "classification") classificationTask(json, path, report);
   else if (value.kind === "sorting") sortingTask(json, path, report);
   else matchingTask(json, path, report);
@@ -359,11 +422,83 @@ export function catalogIssues(catalog: unknown, quizzes: readonly Quiz[]): Valid
   });
 }
 
-/** ✂️ The display handle (trimmed, inner Unicode whitespace runs collapsed to one space) and its key (lowercased), or `undefined` outside 1…64 code points. */
+/** 🎯️ Whether `point` lies in one of the inclusive ranges. */
+function within(ranges: readonly (readonly [number, number])[], point: number): boolean {
+  return ranges.some(([low, high]) => point >= low && point <= high);
+}
+
+/** ✂️ The display handle and its key, or `undefined` for a handle outside the policy of `$defs/Handle`.
+ *
+ * `White_Space` runs collapse to one space and are trimmed, the typographic apostrophe U+2019 becomes `'`; what remains
+ * must be 1…{@link HANDLE_MAX} code points of {@link HANDLE_LETTERS}, ASCII digits, {@link HANDLE_PUNCTUATION} and
+ * single spaces, with at least one letter or digit. Control and format characters, combining marks (so every NFD
+ * spelling), other scripts, lone surrogates and input over {@link HANDLE_INPUT_MAX} code points are refused. The key
+ * is the lowercased display. */
 export function normalizeHandle(handle: string): NormalizedHandle | undefined {
-  const display = handle.replace(WHITESPACE, " ").replace(/^ | $/gu, "");
-  const length = [...display].length;
-  return length >= 1 && length <= HANDLE_MAX ? { display, key: display.toLowerCase() } : undefined;
+  if (typeof handle !== "string" || handle.length > 2 * HANDLE_INPUT_MAX) return undefined;
+  const points = Array.from(handle, (character) => character.codePointAt(0)!);
+  if (points.length > HANDLE_INPUT_MAX) return undefined;
+  const display: number[] = [];
+  let gap = false;
+  let worded = false;
+  for (const typed of points) {
+    if (within(WHITE_SPACE, typed)) {
+      gap = display.length > 0;
+      continue;
+    }
+    const point = typed === TYPOGRAPHIC_APOSTROPHE ? APOSTROPHE : typed;
+    const word = within(HANDLE_LETTERS, point) || (point >= 0x30 && point <= 0x39);
+    if (!word && !HANDLE_PUNCTUATION.includes(point)) return undefined;
+    if (gap) display.push(SPACE);
+    gap = false;
+    worded ||= word;
+    display.push(point);
+  }
+  if (!worded || display.length > HANDLE_MAX) return undefined;
+  const text = String.fromCodePoint(...display);
+  return { display: text, key: text.toLowerCase() };
+}
+
+/** 🪝️ The id of the actor that holds a handle key: the lowercase hex of the key's UTF-8 bytes. */
+export function handleActorId(key: string): string {
+  return Array.from(UTF8.encode(key), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+/** 🔓️ The handle key an actor id names — the inverse of {@link handleActorId} — or `undefined` for anything but lowercase hex of well-formed UTF-8. */
+export function handleKeyOf(actor: string): string | undefined {
+  if (typeof actor !== "string" || actor === "" || !/^(?:[0-9a-f]{2})+$/u.test(actor)) return undefined;
+  const bytes = Uint8Array.from(actor.match(/../gu)!, (pair) => Number.parseInt(pair, 16));
+  try {
+    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(bytes);
+  } catch {
+    return undefined;
+  }
+}
+
+/** 🆔️ Whether `value` is an id: exactly 32 lowercase hex characters. */
+export function isId(value: unknown): value is string {
+  return typeof value === "string" && ID.test(value);
+}
+
+/** 🐌️ Whether `value` is a slug: `^[a-z0-9]+(?:-[a-z0-9]+)*$` and at most 64 characters. */
+export function isSlug(value: unknown): value is string {
+  return typeof value === "string" && value.length <= 64 && SLUG.test(value);
+}
+
+/** 🛃️ `id-invalid` unless every id a command carries has its shape: the command, learner and run ids are ids, the quiz and task ids slugs. */
+export function commandRejection(command: Command): Rejection | undefined {
+  const members = command as Readonly<Record<string, unknown>>;
+  const ids = ["id", "learner", "run"].every((member) => !Object.hasOwn(members, member) || isId(members[member]));
+  const slugs = ["quiz", "task"].every((member) => !Object.hasOwn(members, member) || isSlug(members[member]));
+  return ids && slugs ? undefined : "id-invalid";
+}
+
+/** 🧐️ `id-invalid` for a query whose learner or run is no id or whose quiz is no slug, `handle-invalid` for a `handle` query outside the handle policy. */
+export function queryRejection(query: Query): Rejection | undefined {
+  const members = query as Readonly<Record<string, unknown>>;
+  if (!["learner", "run"].every((member) => !Object.hasOwn(members, member) || isId(members[member]))) return "id-invalid";
+  if (Object.hasOwn(members, "quiz") && !isSlug(members.quiz)) return "id-invalid";
+  return query.type === "handle" && normalizeHandle(query.handle) === undefined ? "handle-invalid" : undefined;
 }
 
 /** 🔰️ Whether `value` is a public learner tag: 8 lowercase hex digits. */
@@ -394,13 +529,15 @@ function unit(value: unknown, path: string, report: Report): void {
   if (!(Number.isFinite(value) && value >= 0 && value <= 1)) report(path, "out-of-range");
 }
 
-/** 🎭️ An identity: a known kind, and a handle of 1…64 code points for pseudonyms and names (`length-invalid`). */
+/** 🎭️ An identity: a known kind, and for pseudonyms and names a handle in its normalized display form (`handle-invalid`). */
 function identity(value: unknown, path: string, report: Report): void {
   if (!isObject(value)) return report(path, "type-invalid");
   if (!Object.hasOwn(value, "kind")) return report(at(path, "kind"), "required");
   if (!literal(value.kind, at(path, "kind"), report, IDENTITY_KINDS)) return;
   const json = value.kind === "anonymous" ? object(value, path, report, ["kind"]) : object(value, path, report, ["kind", "handle"]);
-  if (json && Object.hasOwn(json, "handle")) string(json.handle, at(path, "handle"), report, 1, HANDLE_MAX);
+  if (!json || !Object.hasOwn(json, "handle")) return;
+  if (typeof json.handle !== "string") return report(at(path, "handle"), "type-invalid");
+  if (normalizeHandle(json.handle)?.display !== json.handle) report(at(path, "handle"), "handle-invalid");
 }
 
 /** 🗺️ A place: a known screen and slugs for quiz and task; on a known screen the quiz page, a run and its results name their quiz (`required`), only they name a quiz (`quiz-outside-run`), only a run names a task (`task-without-run`). */
@@ -462,13 +599,13 @@ function slugMap(value: unknown, path: string, report: Report, each: (entry: unk
   }
 }
 
-/** ✍️ A draft answer: structurally valid per the schema (kind, members, slugs; matching values finite numbers, `type-invalid` otherwise), possibly partial, with at most {@link THINKING_LIMIT} entries per map or order (`too-many`) and no repeated item in an order (`duplicate-id`). */
+/** ✍️ A draft answer: structurally valid per the schema (kind, members, slugs; matching values and sorting guesses finite numbers, `type-invalid` otherwise), possibly partial, with at most {@link THINKING_LIMIT} entries per map or order (`too-many`) and no repeated item in an order (`duplicate-id`). */
 function answer(value: unknown, path: string, report: Report): void {
   if (!isObject(value)) return report(path, "type-invalid");
   if (!Object.hasOwn(value, "kind")) return report(at(path, "kind"), "required");
   if (!literal(value.kind, at(path, "kind"), report, TASK_KINDS)) return;
   const member = value.kind === "sorting" ? "order" : value.kind === "matching" ? "values" : "assignments";
-  const json = object(value, path, report, ["kind", member]);
+  const json = object(value, path, report, ["kind", member], value.kind === "sorting" ? ["guesses"] : []);
   if (!json || !Object.hasOwn(json, member)) return;
   if (value.kind === "sorting") {
     const seen = new Set<unknown>();
@@ -478,6 +615,7 @@ function answer(value: unknown, path: string, report: Report): void {
       seen.add(entry);
     });
     if (order && order.length > THINKING_LIMIT) report(at(path, "order"), "too-many");
+    if (Object.hasOwn(json, "guesses")) slugMap(json.guesses, at(path, "guesses"), report, (entry, entryPath) => number(entry, entryPath, report));
   } else if (value.kind === "classification") slugMap(json.assignments, at(path, "assignments"), report, (entry, entryPath) => slug(entry, entryPath, report));
   else
     slugMap(json.values, at(path, "values"), report, (entry, entryPath) =>
@@ -497,7 +635,17 @@ export function thinkingIssues(state: unknown): ValidationIssue[] {
   });
 }
 
-/** 🚧️ Why an answer is rejected for a sheet task (`answer-invalid`), or `undefined` when it is valid; partial classification and matching answers are valid. */
+/** 🔢️ Whether the optional sorting `guesses` fit a valid `order`: an object naming only presented items with finite numbers (positive on a logarithmic scale), where the guessed items stand in non-decreasing guess order. */
+function guessesFit(guesses: unknown, order: readonly string[], items: ReadonlySet<string>, scale: Scale): boolean {
+  if (guesses === undefined) return true;
+  if (!isObject(guesses)) return false;
+  const entries = Object.entries(guesses);
+  if (!entries.every(([item, guess]) => items.has(item) && typeof guess === "number" && Number.isFinite(guess) && (scale !== "logarithmic" || guess > 0))) return false;
+  const guessed = order.filter((item) => Object.hasOwn(guesses, item)).map((item) => guesses[item] as number);
+  return guessed.every((guess, index) => index === 0 || guessed[index - 1]! <= guess);
+}
+
+/** 🚧️ Why an answer is rejected for a sheet task (`answer-invalid`), or `undefined` when it is valid; partial classification and matching answers are valid, and sorting guesses must fit the order. */
 export function answerRejection(sheetTask: SheetTask, answer: Answer): Rejection | undefined {
   const invalid = "answer-invalid" as const;
   if (!isObject(answer) || answer.kind !== sheetTask.kind) return invalid;
@@ -513,7 +661,8 @@ export function answerRejection(sheetTask: SheetTask, answer: Answer): Rejection
       const order = (answer as Json).order;
       if (!Array.isArray(order) || order.length !== items.size) return invalid;
       const seen = new Set<unknown>(order);
-      return seen.size === order.length && order.every((item) => typeof item === "string" && items.has(item)) ? undefined : invalid;
+      if (seen.size !== order.length || !order.every((item) => typeof item === "string" && items.has(item))) return invalid;
+      return guessesFit((answer as Json).guesses, order as readonly string[], items, sheetTask.quantity.scale) ? undefined : invalid;
     }
     case "matching": {
       const assignments = (answer as Json).assignments;

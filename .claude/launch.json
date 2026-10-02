@@ -552,7 +552,21 @@
       }
     },
     {
-      "name": "architecture-quiz",
+      "name": "architecture-quiz-site",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": [
+        "nx",
+        "run",
+        "@teaching/architecture-quiz:dev-site"
+      ],
+      "port": 6061,
+      "env": {
+        "TEACHING_ARCHITECTURE_QUIZ_PORT": "6061",
+        "PROCTOR_PORT": "8791"
+      }
+    },
+    {
+      "name": "architektur-und-technologie-quizze",
       "runtimeExecutable": "bun",
       "runtimeArgs": [
         "nx",
@@ -607,6 +621,24 @@
         "run",
         "@semio-tech/framework-value:test-controlled-construction-source"
       ]
+    },
+    {
+      "name": "pets-stories",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/pets-react:dev"],
+      "port": 6069,
+      "env": {"PETS_STORIES_PORT": "6069", "NX_PLUGIN_NO_TIMEOUTS": "true"}
+    },
+    {
+      "name": "architecture-pets-stories",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/pets-react:dev"],
+      "port": 6074,
+      "env": {
+        "PETS_STORIES_PORT": "6074",
+        "PETS_MENAGERIE": "🎓️teaching/🏛️architecture/🐾️pets/🟦️.ts",
+        "NX_PLUGIN_NO_TIMEOUTS": "true"
+      }
     }
   ]
 }

@@ -5,9 +5,10 @@ import { buildBudgetMs } from "../../🔨️modules/🏃️process/⏱️budget/
 import { runRepositoryExactCargoLaws, runCargoLint, runRepositoryCargoTests, runCmdStatus, runRepositoryTestCommand, runVitest } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { seedGeneratedFile } from "../../🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts";
 import { tmpdir } from "node:os";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, join, relative } from "node:path";
 
 //#region 🧹️WireRetirement
 class WireRetirementSourceScript extends BundleScript {
@@ -228,7 +229,7 @@ function runTypegenExportTest(root: string, outPath?: string): void {
 class GenerateScript extends BundleScript {
   run(_segments: string[]): void {
     const outPath = generatedManifestPath(this.root);
-    mkdirSync(dirname(outPath), { recursive: true });
+    seedGeneratedFile(outPath);
     runTypegenExportTest(this.root, outPath);
     console.log(`framework typescript mirror refreshed -> ${outPath}`);
   }

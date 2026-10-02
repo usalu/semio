@@ -100,7 +100,7 @@ def thinking_problem(state):
         return "too-many"
     for answer in state["answers"].values():
         if answer["kind"] == "sorting":
-            if len(answer["order"]) > THINKING_LIMIT:
+            if len(answer["order"]) > THINKING_LIMIT or len(answer.get("guesses", {})) > THINKING_LIMIT:
                 return "too-many"
             if len(set(answer["order"])) != len(answer["order"]):
                 return "duplicate-id"

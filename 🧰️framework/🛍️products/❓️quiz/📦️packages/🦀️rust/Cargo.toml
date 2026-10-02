@@ -26,3 +26,5 @@ serde_json = { workspace = true, optional = true }
 
 [dev-dependencies]
 serde_json = { workspace = true }
+# 🔮️ Third-party oracle of the handle tables: NFC, NFKC and the composition of pairs.
+unicode-normalization = "0.1.25"

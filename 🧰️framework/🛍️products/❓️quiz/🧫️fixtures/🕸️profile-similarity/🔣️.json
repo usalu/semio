@@ -12,6 +12,10 @@
         "en": "Assign every installation to its heating system.",
         "de": "Ordne jede Anlage ihrem Heizsystem zu."
       },
+      "icon": {
+        "emoji": "🔥",
+        "motion": "float"
+      },
       "axes": [
         {
           "id": "seasonal-efficiency",
@@ -1956,6 +1960,10 @@
           "en": "Assign every installation to its heating system.",
           "de": "Ordne jede Anlage ihrem Heizsystem zu."
         },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
         "axes": [
           {
             "id": "seasonal-efficiency",
@@ -2288,6 +2296,10 @@
           "en": "Assign every installation to its heating system.",
           "de": "Ordne jede Anlage ihrem Heizsystem zu."
         },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
         "axes": [
           {
             "id": "seasonal-efficiency",
@@ -2616,6 +2628,10 @@
           "en": "Assign every installation to its heating system.",
           "de": "Ordne jede Anlage ihrem Heizsystem zu."
         },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
+        },
         "axes": [
           {
             "id": "seasonal-efficiency",
@@ -2939,6 +2955,10 @@
         "prompt": {
           "en": "Assign every installation to its heating system.",
           "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
         },
         "axes": [
           {
@@ -3267,6 +3287,10 @@
         "prompt": {
           "en": "Assign every installation to its heating system.",
           "de": "Ordne jede Anlage ihrem Heizsystem zu."
+        },
+        "icon": {
+          "emoji": "🔥",
+          "motion": "float"
         },
         "axes": [
           {

@@ -25,6 +25,10 @@
             "en": "Assign every installation to its heating system.",
             "de": "Ordne jede Anlage ihrem Heizsystem zu."
           },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "float"
+          },
           "axes": [
             {
               "id": "seasonal-efficiency",
@@ -288,6 +292,10 @@
           "prompt": {
             "en": "Order by recommended temperature, lowest first.",
             "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+          },
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
           },
           "quantity": {
             "label": {
@@ -793,6 +801,51 @@
           "score": 0.23485524130413243,
           "tasks": [
             {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.13369451838802598,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "electric-resistance",
+                  "correct": "district-heating",
+                  "credit": 0
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "heat-pump",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                }
+              ]
+            },
+            {
               "kind": "sorting",
               "task": "power-ratings",
               "score": 0.0,
@@ -865,51 +918,6 @@
                   "value": 18,
                   "position": 2,
                   "rank": 0
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 0.13369451838802598,
-              "items": [
-                {
-                  "item": "ground-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "electric-resistance",
-                  "correct": "district-heating",
-                  "credit": 0
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "heat-pump",
-                  "correct": "electric-resistance",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "district-heating",
-                  "correct": "wood-pellets",
-                  "credit": 0.66847259194013
                 }
               ]
             },
@@ -989,6 +997,51 @@
           "score": 0.5,
           "tasks": [
             {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                }
+              ]
+            },
+            {
               "kind": "sorting",
               "task": "power-ratings",
               "score": 0.0,
@@ -1057,51 +1110,6 @@
                   "value": 18,
                   "position": 2,
                   "rank": 0
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "ground-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "condensing-gas",
-                  "assigned": "gas-boiler",
-                  "correct": "gas-boiler",
-                  "credit": 1
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "wood-pellets",
-                  "correct": "wood-pellets",
-                  "credit": 1
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "electric-resistance",
-                  "correct": "electric-resistance",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "district-heating",
-                  "correct": "district-heating",
-                  "credit": 1
                 }
               ]
             },
@@ -1188,10 +1196,34 @@
       "expected": {
         "quiz": "energy-basics",
         "runs": 3,
+        "scores": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
         "tasks": [
           {
             "task": "heating-systems",
             "kind": "classification",
+            "scores": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
             "items": [
               {
                 "item": "ground-source",
@@ -1278,67 +1310,170 @@
           {
             "task": "power-ratings",
             "kind": "sorting",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "led-bulb",
                 "answers": 2,
-                "meanPosition": 0.5
+                "meanPosition": 0.5,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
               },
               {
                 "item": "tea-light",
                 "answers": 2,
-                "meanPosition": 0.6
+                "meanPosition": 0.6,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
               },
               {
                 "item": "laptop",
                 "answers": 2,
-                "meanPosition": 0.6000000000000001
+                "meanPosition": 0.6000000000000001,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "kettle",
                 "answers": 3,
-                "meanPosition": 0.6666666666666666
+                "meanPosition": 0.6666666666666666,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  2,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "hair-dryer",
                 "answers": 2,
-                "meanPosition": 0.5
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  1,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "wallbox",
                 "answers": 1,
-                "meanPosition": 0.4
+                "meanPosition": 0.4,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "wind-turbine",
                 "answers": 3,
-                "meanPosition": 0.39999999999999997
+                "meanPosition": 0.39999999999999997,
+                "places": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "nuclear-plant",
                 "answers": 3,
-                "meanPosition": 0.3333333333333333
+                "meanPosition": 0.3333333333333333,
+                "places": [
+                  2,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
               }
             ]
           },
           {
             "task": "room-temperatures",
             "kind": "sorting",
+            "scores": [
+              2,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "bedroom",
                 "answers": 3,
-                "meanPosition": 0.6666666666666666
+                "meanPosition": 0.6666666666666666,
+                "places": [
+                  1,
+                  0,
+                  2
+                ]
               },
               {
                 "item": "living-room",
                 "answers": 3,
-                "meanPosition": 0.5
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  3,
+                  0
+                ]
               },
               {
                 "item": "bathroom",
                 "answers": 3,
-                "meanPosition": 0.3333333333333333
+                "meanPosition": 0.3333333333333333,
+                "places": [
+                  2,
+                  0,
+                  1
+                ]
               }
             ]
           },
@@ -1346,6 +1481,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              2
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -1431,6 +1578,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              2
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -1524,6 +1683,51 @@
           "score": 0.23485524130413243,
           "tasks": [
             {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.13369451838802598,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "electric-resistance",
+                  "correct": "district-heating",
+                  "credit": 0
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "heat-pump",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                }
+              ]
+            },
+            {
               "kind": "sorting",
               "task": "power-ratings",
               "score": 0.0,
@@ -1596,51 +1800,6 @@
                   "value": 18,
                   "position": 2,
                   "rank": 0
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 0.13369451838802598,
-              "items": [
-                {
-                  "item": "ground-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "electric-resistance",
-                  "correct": "district-heating",
-                  "credit": 0
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "heat-pump",
-                  "correct": "electric-resistance",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "district-heating",
-                  "correct": "wood-pellets",
-                  "credit": 0.66847259194013
                 }
               ]
             },
@@ -1719,10 +1878,34 @@
       "expected": {
         "quiz": "energy-basics",
         "runs": 1,
+        "scores": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
         "tasks": [
           {
             "task": "heating-systems",
             "kind": "classification",
+            "scores": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "items": [
               {
                 "item": "ground-source",
@@ -1779,57 +1962,144 @@
           {
             "task": "power-ratings",
             "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "items": [
               {
                 "item": "tea-light",
                 "answers": 1,
-                "meanPosition": 1.0
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
               },
               {
                 "item": "laptop",
                 "answers": 1,
-                "meanPosition": 0.8
+                "meanPosition": 0.8,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "kettle",
                 "answers": 1,
-                "meanPosition": 0.6
+                "meanPosition": 0.6,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "hair-dryer",
                 "answers": 1,
-                "meanPosition": 0.4
+                "meanPosition": 0.4,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "wind-turbine",
                 "answers": 1,
-                "meanPosition": 0.2
+                "meanPosition": 0.2,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "nuclear-plant",
                 "answers": 1,
-                "meanPosition": 0.0
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
               }
             ]
           },
           {
             "task": "room-temperatures",
             "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "items": [
               {
                 "item": "bedroom",
                 "answers": 1,
-                "meanPosition": 1.0
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  1
+                ]
               },
               {
                 "item": "living-room",
                 "answers": 1,
-                "meanPosition": 0.5
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "bathroom",
                 "answers": 1,
-                "meanPosition": 0.0
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0
+                ]
               }
             ]
           },
@@ -1837,6 +2107,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -1894,6 +2176,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -2222,10 +2516,34 @@
       "expected": {
         "quiz": "energy-basics",
         "runs": 1,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ],
         "tasks": [
           {
             "task": "heating-systems",
             "kind": "classification",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "ground-source",
@@ -2282,57 +2600,144 @@
           {
             "task": "power-ratings",
             "kind": "sorting",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "led-bulb",
                 "answers": 1,
-                "meanPosition": 0.0
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "tea-light",
                 "answers": 1,
-                "meanPosition": 0.2
+                "meanPosition": 0.2,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "laptop",
                 "answers": 1,
-                "meanPosition": 0.4
+                "meanPosition": 0.4,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "kettle",
                 "answers": 1,
-                "meanPosition": 0.6
+                "meanPosition": 0.6,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "wind-turbine",
                 "answers": 1,
-                "meanPosition": 0.8
+                "meanPosition": 0.8,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "nuclear-plant",
                 "answers": 1,
-                "meanPosition": 1.0
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
               }
             ]
           },
           {
             "task": "room-temperatures",
             "kind": "sorting",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "bedroom",
                 "answers": 1,
-                "meanPosition": 0.0
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0
+                ]
               },
               {
                 "item": "living-room",
                 "answers": 1,
-                "meanPosition": 0.5
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "bathroom",
                 "answers": 1,
-                "meanPosition": 1.0
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  1
+                ]
               }
             ]
           },
@@ -2340,6 +2745,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -2397,6 +2814,18 @@
             "task": "energy-carriers",
             "kind": "matching",
             "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "hydrogen",
@@ -2460,15 +2889,51 @@
       "expected": {
         "quiz": "cooling-basics",
         "runs": 0,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
         "tasks": [
           {
             "task": "cooling-loads",
             "kind": "sorting",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "items": []
           },
           {
             "task": "cooling-strategies",
             "kind": "classification",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "items": []
           }
         ]
@@ -2574,31 +3039,82 @@
       "expected": {
         "quiz": "cooling-basics",
         "runs": 2,
+        "scores": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          1
+        ],
         "tasks": [
           {
             "task": "cooling-loads",
             "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
             "items": [
               {
                 "item": "bedroom",
                 "answers": 1,
-                "meanPosition": 1.0
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  1
+                ]
               },
               {
                 "item": "office",
                 "answers": 2,
-                "meanPosition": 0.25
+                "meanPosition": 0.25,
+                "places": [
+                  1,
+                  1,
+                  0
+                ]
               },
               {
                 "item": "server-room",
                 "answers": 1,
-                "meanPosition": 0.0
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0
+                ]
               }
             ]
           },
           {
             "task": "cooling-strategies",
             "kind": "classification",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              2
+            ],
             "items": [
               {
                 "item": "night-ventilation",
@@ -2626,6 +3142,2149 @@
                 "counts": [
                   {
                     "key": "active",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "scores-on-bin-edges",
+      "quiz": "energy-basics",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "score": 0,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.0949,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.0949,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.8949,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.095,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.995,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.0949,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.095,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.095,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.1,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.9,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.095,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.1,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.095,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.8949,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.5,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.895,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.5,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.5,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.8949,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.8949,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.8949,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.5,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.8949,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.895,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.5,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.8949,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.895,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.895,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.9,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.9,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.895,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.8949,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.995,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.095,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.9,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.995,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.995,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.0949,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 1,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.995,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.8949,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "energy-basics",
+        "runs": 10,
+        "scores": [
+          2,
+          2,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          4
+        ],
+        "tasks": [
+          {
+            "task": "heating-systems",
+            "kind": "classification",
+            "scores": [
+              2,
+              2,
+              0,
+              0,
+              0,
+              2,
+              0,
+              0,
+              0,
+              4
+            ],
+            "items": [
+              {
+                "item": "air-source",
+                "answers": 10,
+                "counts": [
+                  {
+                    "key": "heat-pump",
+                    "count": 10
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "power-ratings",
+            "kind": "sorting",
+            "scores": [
+              5,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              5,
+              0
+            ],
+            "items": [
+              {
+                "item": "laptop",
+                "answers": 10,
+                "meanPosition": 0.0,
+                "places": [
+                  10,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "task": "room-temperatures",
+            "kind": "sorting",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": []
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "energy-density",
+            "scores": [
+              2,
+              2,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              1,
+              4
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 10,
+                "counts": [
+                  {
+                    "key": "120",
+                    "count": 10
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "co2-factor",
+            "scores": [
+              1,
+              4,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              1
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 7,
+                "counts": [
+                  {
+                    "key": "0.2",
+                    "count": 7
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "orders-shorter-and-longer",
+      "quiz": "energy-basics",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "score": 0.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 7,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 6
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 2,
+                  "rank": 5
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 4
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 4,
+                  "rank": 3
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 2
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 6,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 7,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.7401090040277409,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.7401090040277409,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 2
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 3
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 4
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 4,
+                  "rank": 5
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 5,
+                  "rank": 6
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 6,
+                  "rank": 7,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 7,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.46490421798977655,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.46490421798977655,
+              "items": [
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 0,
+                  "rank": 5
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 1,
+                  "rank": 0
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 3
+                },
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 3,
+                  "rank": 6,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 4,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 2
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 6,
+                  "rank": 4
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.4108211734130328,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.4108211734130328,
+              "items": [
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 0,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 5
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 2,
+                  "rank": 0
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 4
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 4,
+                  "rank": 3
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 5,
+                  "rank": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.12284895299602705,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.12284895299602705,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 4,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 1,
+                  "rank": 2
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 2,
+                  "rank": 0
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 3,
+                  "rank": 3
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 4,
+                  "rank": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.386793650365057,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.386793650365057,
+              "items": [
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 0,
+                  "rank": 2
+                },
+                {
+                  "item": "led-bulb",
+                  "value": 9,
+                  "position": 1,
+                  "rank": 0
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 1,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 0,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 1,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 1,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.0,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 1
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 1,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.2272727272727273,
+          "tasks": [
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.2272727272727273,
+              "items": [
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 0,
+                  "rank": 1
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 1,
+                  "rank": 2
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "energy-basics",
+        "runs": 10,
+        "scores": [
+          3,
+          1,
+          1,
+          1,
+          2,
+          0,
+          0,
+          1,
+          0,
+          1
+        ],
+        "tasks": [
+          {
+            "task": "heating-systems",
+            "kind": "classification",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": []
+          },
+          {
+            "task": "power-ratings",
+            "kind": "sorting",
+            "scores": [
+              2,
+              1,
+              0,
+              1,
+              2,
+              0,
+              0,
+              1,
+              0,
+              1
+            ],
+            "items": [
+              {
+                "item": "led-bulb",
+                "answers": 6,
+                "meanPosition": 0.5944444444444444,
+                "places": [
+                  0,
+                  1,
+                  1,
+                  2,
+                  0,
+                  2
+                ]
+              },
+              {
+                "item": "tea-light",
+                "answers": 5,
+                "meanPosition": 0.5047619047619047,
+                "places": [
+                  2,
+                  0,
+                  0,
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "item": "laptop",
+                "answers": 6,
+                "meanPosition": 0.6150793650793651,
+                "places": [
+                  1,
+                  1,
+                  0,
+                  0,
+                  2,
+                  2
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 6,
+                "meanPosition": 0.540079365079365,
+                "places": [
+                  0,
+                  2,
+                  1,
+                  1,
+                  1,
+                  1
+                ]
+              },
+              {
+                "item": "hair-dryer",
+                "answers": 4,
+                "meanPosition": 0.6142857142857143,
+                "places": [
+                  0,
+                  0,
+                  2,
+                  1,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "wallbox",
+                "answers": 5,
+                "meanPosition": 0.32142857142857145,
+                "places": [
+                  2,
+                  1,
+                  0,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "wind-turbine",
+                "answers": 3,
+                "meanPosition": 0.3523809523809524,
+                "places": [
+                  0,
+                  2,
+                  0,
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "nuclear-plant",
+                "answers": 5,
+                "meanPosition": 0.27142857142857146,
+                "places": [
+                  3,
+                  0,
+                  0,
+                  1,
+                  1,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "task": "room-temperatures",
+            "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": [
+              {
+                "item": "bedroom",
+                "answers": 2,
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  2
+                ]
+              },
+              {
+                "item": "living-room",
+                "answers": 1,
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "bathroom",
+                "answers": 2,
+                "meanPosition": 0.25,
+                "places": [
+                  1,
+                  1,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": []
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": []
+          }
+        ]
+      }
+    },
+    {
+      "id": "first-entries-count",
+      "quiz": "energy-basics",
+      "results": [
+        {
+          "quiz": "energy-basics",
+          "score": 0.5,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "power-ratings",
+              "score": 0.25,
+              "items": [
+                {
+                  "item": "laptop",
+                  "assigned": "heat-pump",
+                  "correct": "gas-boiler",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.75,
+              "items": [
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 0,
+                  "rank": 1
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 1,
+                  "rank": 0
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 1
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.05,
+              "items": [
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "wallbox",
+                  "value": 11000,
+                  "position": 1,
+                  "rank": 1
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0,
+              "items": [
+                {
+                  "item": "pellet-stove",
+                  "assigned": "gas-boiler",
+                  "correct": "wood-pellets",
+                  "credit": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.3,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.3,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 50,
+                      "correct": 120
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 120,
+                      "correct": 120
+                    }
+                  ]
+                },
+                {
+                  "dimension": "energy-density",
+                  "score": 0.95,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 29,
+                      "correct": 29
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 1,
+              "dimensions": [
+                {
+                  "dimension": "co2-factor",
+                  "score": 1,
+                  "items": [
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0,
+                      "correct": 0
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "quiz": "energy-basics",
+          "score": 0.23485524130413243,
+          "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.13369451838802598,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "electric-resistance",
+                  "correct": "district-heating",
+                  "credit": 0
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "heat-pump",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "power-ratings",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "nuclear-plant",
+                  "value": 1600000000,
+                  "position": 0,
+                  "rank": 5,
+                  "explanation": {
+                    "en": "About 1.6 GW of electric power.",
+                    "de": "Etwa 1,6 GW elektrische Leistung."
+                  }
+                },
+                {
+                  "item": "wind-turbine",
+                  "value": 3000000,
+                  "position": 1,
+                  "rank": 4
+                },
+                {
+                  "item": "hair-dryer",
+                  "value": 2200,
+                  "position": 2,
+                  "rank": 3
+                },
+                {
+                  "item": "kettle",
+                  "value": 2200,
+                  "position": 3,
+                  "rank": 2
+                },
+                {
+                  "item": "laptop",
+                  "value": 60,
+                  "position": 4,
+                  "rank": 1
+                },
+                {
+                  "item": "tea-light",
+                  "value": 40,
+                  "position": 5,
+                  "rank": 0,
+                  "explanation": {
+                    "en": "A tea light releases about 40 W of heat.",
+                    "de": "Ein Teelicht gibt etwa 40 W Wärme ab."
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 0,
+                  "rank": 2
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 2,
+                  "rank": 0
+                }
+              ]
+            },
+            {
+              "kind": "matching",
+              "task": "energy-carriers",
+              "score": 0.8057264468285038,
+              "dimensions": [
+                {
+                  "dimension": "energy-density",
+                  "score": 0.8660574440362059,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 42.6,
+                      "correct": 29
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 120,
+                      "correct": 50
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 15,
+                      "correct": 15
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 50,
+                      "correct": 120
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 29,
+                      "correct": 42.6
+                    }
+                  ]
+                },
+                {
+                  "dimension": "co2-factor",
+                  "score": 0.7453954496208017,
+                  "items": [
+                    {
+                      "item": "coal",
+                      "assigned": 0.27,
+                      "correct": 0.34
+                    },
+                    {
+                      "item": "natural-gas",
+                      "assigned": 0,
+                      "correct": 0.2
+                    },
+                    {
+                      "item": "firewood",
+                      "assigned": 0.027,
+                      "correct": 0.027
+                    },
+                    {
+                      "item": "hydrogen",
+                      "assigned": 0.2,
+                      "correct": 0
+                    },
+                    {
+                      "item": "diesel",
+                      "assigned": 0.34,
+                      "correct": 0.27
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "quiz": "energy-basics",
+        "runs": 2,
+        "scores": [
+          0,
+          0,
+          1,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0
+        ],
+        "tasks": [
+          {
+            "task": "heating-systems",
+            "kind": "classification",
+            "scores": [
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1
+            ],
+            "items": [
+              {
+                "item": "ground-source",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "air-source",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "gas-boiler",
+                    "count": 1
+                  },
+                  {
+                    "key": "heat-pump",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "lake-water-network",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "electric-resistance",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "pellet-stove",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "district-heating",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "night-storage-heater",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "heat-pump",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "power-ratings",
+            "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "items": [
+              {
+                "item": "tea-light",
+                "answers": 1,
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "laptop",
+                "answers": 2,
+                "meanPosition": 0.65,
+                "places": [
+                  0,
+                  0,
+                  0,
+                  1,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "kettle",
+                "answers": 2,
+                "meanPosition": 0.3,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  1,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "hair-dryer",
+                "answers": 1,
+                "meanPosition": 0.4,
+                "places": [
+                  0,
+                  0,
+                  1,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "wind-turbine",
+                "answers": 1,
+                "meanPosition": 0.2,
+                "places": [
+                  0,
+                  1,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              },
+              {
+                "item": "nuclear-plant",
+                "answers": 1,
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "task": "room-temperatures",
+            "kind": "sorting",
+            "scores": [
+              1,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "items": [
+              {
+                "item": "bedroom",
+                "answers": 1,
+                "meanPosition": 1.0,
+                "places": [
+                  0,
+                  0,
+                  1
+                ]
+              },
+              {
+                "item": "living-room",
+                "answers": 1,
+                "meanPosition": 0.5,
+                "places": [
+                  0,
+                  1,
+                  0
+                ]
+              },
+              {
+                "item": "bathroom",
+                "answers": 1,
+                "meanPosition": 0.0,
+                "places": [
+                  1,
+                  0,
+                  0
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "energy-density",
+            "scores": [
+              0,
+              0,
+              0,
+              1,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 2,
+                "counts": [
+                  {
+                    "key": "50",
+                    "count": 2
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "120",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "29",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "42.6",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "15",
+                    "count": 1
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "task": "energy-carriers",
+            "kind": "matching",
+            "dimension": "co2-factor",
+            "scores": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              1,
+              0,
+              0
+            ],
+            "items": [
+              {
+                "item": "hydrogen",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0.2",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "natural-gas",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "diesel",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0.34",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "coal",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0.27",
+                    "count": 1
+                  }
+                ]
+              },
+              {
+                "item": "firewood",
+                "answers": 1,
+                "counts": [
+                  {
+                    "key": "0.027",
                     "count": 1
                   }
                 ]

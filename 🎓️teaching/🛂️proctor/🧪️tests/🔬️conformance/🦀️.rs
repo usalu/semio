@@ -54,6 +54,7 @@ laws! {
     events_since_returns_only_later_events_of_that_actor => SqliteAuthorityStore,
     snapshots_only_move_forward => SqliteAuthorityStore,
     outbox_delivers_each_entry_exactly_once => SqliteAuthorityStore,
+    a_committed_batch_lands_every_turn_whole_and_a_refused_turn_not_at_all => SqliteAuthorityStore,
     lease_epoch_bump_fences_out_the_previous_holder => SqliteAuthorityStore,
     projection_list_is_prefix_scoped_and_key_ordered => SqliteProjectionStore,
     clearing_a_projection_resets_it_for_rebuild => SqliteProjectionStore,

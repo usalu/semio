@@ -31,13 +31,11 @@ export {
   type LayeredLabels,
   type LayeredMode,
   type LayeredOverviewProps,
-  type LayeredRest,
   type LayeredPane,
   type LayeredPaneState,
 } from "../../../🧱️elements/🥞️LayeredOverview/🟦️.tsx";
 export {
   LAYERED_DEFAULT_LIFECYCLE,
-  LAYERED_VIEW,
   LAYERED_FOLLOW_EPSILON,
   LAYERED_FOLLOW_LERP,
   LAYERED_GLIDE_MS,
@@ -66,15 +64,8 @@ export {
   warmDelay,
   windowAround,
   inWindow,
-  coverPlacement,
-  glideRect,
-  lerpRect,
-  restRect,
-  spanAxisBounds,
-  trackSpans,
-  trackTemplate,
-  veilForRect,
-  viewRect,
+  LAYERED_FOLLOW_FRAME_MS,
+  followFactor,
   type LayeredCell,
   type LayeredGrid,
   type LayeredIdleScheduler,
@@ -86,8 +77,6 @@ export {
   type LayeredWarmStep,
   type LayeredWindow,
   type PaneAxisBounds,
-  type LayeredRect,
-  type LayeredTracks,
 } from "../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 export { Navbar, SemioLogo, ShellBrandLogo, navbarFillItem, type NavbarItem, type NavbarProps } from "../../../🧱️elements/🔝️Navbar/🟦️.tsx";
 export { Icon, type IconName, type IconProps, type IconSource } from "../../../🧱️elements/🔣️Icons/🟦️.tsx";

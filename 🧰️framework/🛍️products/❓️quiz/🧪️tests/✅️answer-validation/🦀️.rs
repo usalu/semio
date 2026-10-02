@@ -8,7 +8,7 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use quiz::serde_json::{self, json, Map, Value};
-    use quiz::{answer_complete, answer_rejection, Answer, SheetTask};
+    use quiz::{answer_complete, answer_rejection, Answer, Rejection, SheetTask};
     use semio_repo_test_host::{parse_json, Context, Outcome};
 
     const VECTORS: &str = "shared://✅️answer-validation/🔣️.json";
@@ -28,15 +28,20 @@ mod subject {
         }
     }
 
-    /// 🗃️ Every committed answer judged against its sheet task.
+    /// 🗃️ Every committed answer judged against its sheet task; an answer the typed twin refuses (a non-numeric
+    /// guess, guesses that are no object) is structurally invalid and judged `answer-invalid`.
     pub fn verdicts(ctx: &Context) -> Result<Outcome, String> {
         let vectors: Value = serde_json::from_slice(&ctx.fixture_bytes(VECTORS)?).map_err(|error| error.to_string())?;
         let tasks = decode!(vectors["sheetTasks"], Vec<SheetTask>)?;
         let mut projection = Map::new();
-        for vector in vectors["vectors"].as_array().ok_or("the vectors carry no vectors")? {
+        for vector in vectors["vectors"].as_array().into_iter().chain(vectors["malformed"].as_array()).flatten() {
             let task = tasks.iter().find(|task| vector["sheetTask"] == task.id().as_str()).ok_or_else(|| format!("unknown sheet task in {vector}"))?;
-            let answer = if vector.get("answer").is_some() { Some(decode!(vector["answer"], Answer)?) } else { None };
-            projection.insert(vector["id"].as_str().unwrap_or_default().to_string(), verdict(task, answer.as_ref()));
+            let judged = match vector.get("answer").map(|answer| serde_json::from_value::<Answer>(answer.clone())) {
+                Some(Err(_)) => json!({ "rejection": Rejection::AnswerInvalid }),
+                Some(Ok(answer)) => verdict(task, Some(&answer)),
+                None => verdict(task, None),
+            };
+            projection.insert(vector["id"].as_str().unwrap_or_default().to_string(), judged);
         }
         Ok(Outcome::projection(parse_json(&Value::Object(projection).to_string())?))
     }

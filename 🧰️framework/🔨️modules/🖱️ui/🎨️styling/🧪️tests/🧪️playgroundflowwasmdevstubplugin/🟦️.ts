@@ -246,6 +246,39 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(html).toContain('<meta http-equiv="Content-Security-Policy" content="default-src \'self\'" />');
       expect(html).toContain("Loading…");
     });
+
+    it("keeps the document of a single-language host as it was: English, no noscript", () => {
+      const html = semioHostHtmlString({ title: "Semio App", entry: "/js/index.tsx", loading: { title: "Loading…" } });
+      expect(html).toContain('<html lang="en">');
+      expect(html).toContain('font:14px system-ui,sans-serif">Loading…</div>');
+      expect(html).not.toContain("<noscript>");
+    });
+
+    it("declares no language for a document offered in several: no lang on the root, the title joined, every part marked", () => {
+      const html = semioHostHtmlString({
+        title: [
+          { lang: "en", text: "Quizzes & more" },
+          { lang: "de", text: "Quizze <und> mehr" },
+        ],
+        entry: "/js/index.tsx",
+        loading: {
+          title: [
+            { lang: "en", text: "Quizzes" },
+            { lang: "de", text: "Quizze" },
+          ],
+        },
+        noscript: [
+          { lang: "en", text: "This site needs JavaScript." },
+          { lang: "de", text: "Diese Seite benötigt JavaScript." },
+        ],
+      });
+      expect(html).toContain("<html>\n");
+      expect(html).not.toMatch(/<html[^>]*lang=/u);
+      expect(html).toContain("<title>Quizzes &amp; more · Quizze &lt;und&gt; mehr</title>");
+      expect(html).toContain('<span lang="en">Quizzes</span> · <span lang="de">Quizze</span></div>');
+      expect(html).toContain('<noscript><p lang="en" style="visibility:visible;margin:1em;font:14px system-ui,sans-serif">This site needs JavaScript.</p><p lang="de" style="visibility:visible;margin:1em;font:14px system-ui,sans-serif">Diese Seite benötigt JavaScript.</p></noscript>');
+      expect([...html.matchAll(/<(?:script|style)[\s>]/gu)]).toHaveLength([...semioHostHtmlString({ title: "Semio App", entry: "/js/index.tsx" }).matchAll(/<(?:script|style)[\s>]/gu)].length);
+    });
   });
 
   describe("semioHostHtmlVitePlugin", () => {

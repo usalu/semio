@@ -15,12 +15,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use proctor::catalog::load_catalog;
-use proctor::config::{CrossOriginPolicy, Forwarding, Gate};
+use proctor::config::{CrossOriginPolicy, Forwarding, Gate, SIGN_UP};
 use proctor::instance::Proctor;
 use semio_framework_async::CancelToken;
 use serde_json::{json, Value};
+use server::contract::EventRecord;
 use server::gateway::{PresenceSettings, PRESENCE_PROTOCOL_V1};
 use server::storage::StorageProfile;
+use server::throttle::{Allowance, Limits, Rate};
 use tungstenite::client::IntoClientRequest;
 use tungstenite::http::{HeaderName, HeaderValue};
 use tungstenite::{HandshakeError, Message, WebSocket};
@@ -90,7 +92,7 @@ impl Running {
 }
 
 fn development() -> Gate {
-    Gate { origins: CrossOriginPolicy::LoopbackDevelopment, forwarding: Forwarding::Untrusted }
+    Gate { origins: CrossOriginPolicy::LoopbackDevelopment, forwarding: Forwarding::Untrusted, limits: Limits::default() }
 }
 //#endregion 🔖️Server
 
@@ -103,10 +105,20 @@ fn text(bytes: &Value) -> String {
     String::from_utf8(bytes.as_array().expect("byte array").iter().map(|byte| byte.as_u64().expect("byte") as u8).collect()).expect("utf-8")
 }
 
+/// 🎯️ The actor a client addresses a command to: the handle of a pseudonym or name being registered —
+/// the lowercase hex of its normalized key, as the browser client computes it — and the learner otherwise.
+fn target(command: &Value) -> Value {
+    let named = command["identity"]["handle"].as_str().filter(|_| command["type"] == "identify-learner").and_then(quiz::normalize_handle);
+    match named {
+        Some(handle) => json!({ "tenant": TENANT, "kind": "quiz-handle", "id": quiz::handle_actor_id(&handle.key) }),
+        None => json!({ "tenant": TENANT, "kind": "quiz-learner", "id": command["learner"] }),
+    }
+}
+
 fn envelope(command: &Value) -> Value {
     let kind = command["type"].as_str().expect("type");
     let learner = command["learner"].as_str().expect("learner");
-    let target = if kind == "identify-learner" { json!({ "tenant": TENANT, "kind": "quiz-roster", "id": "roster" }) } else { json!({ "tenant": TENANT, "kind": "quiz-learner", "id": learner }) };
+    let target = target(command);
     let principal = if kind == "identify-learner" { json!({ "kind": "anonymous" }) } else { json!({ "kind": "user", "id": learner }) };
     json!({
         "commandId": command["id"],
@@ -380,13 +392,25 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     assert_eq!(events, [json!({ "type": "learner-registered", "learner": anonymous, "identity": { "kind": "anonymous" }, "at": events[0]["at"] })]);
     let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(2), "learner": ada, "identity": { "kind": "pseudonym", "handle": "  Ada   Lovelace " } }));
     assert_eq!(events[0]["identity"], json!({ "kind": "pseudonym", "handle": "Ada Lovelace" }));
-    let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(3), "learner": other, "identity": { "kind": "name", "handle": "ada lovelace" } }));
-    assert_eq!((events[0]["type"].as_str(), events[0]["learner"].as_str()), (Some("learner-recalled"), Some(ada.as_str())));
-    assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(4), "learner": other, "identity": { "kind": "pseudonym", "handle": " \t " } })), "handle-invalid");
+    assert_eq!(get(&base, &format!("/actors/{TENANT}/quiz-handle/{}/events", quiz::handle_actor_id("ada lovelace")), &[]).0, 403, "who holds a handle is not readable as a stream");
+    assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(3), "learner": other, "identity": { "kind": "name", "handle": "ada lovelace" } })), "handle-claimed", "a claimed handle registers nobody else");
+    for refused in [" \t ", "A\u{200b}da", "\u{202e}adA", "Ade\u{301}", "\u{410}da"] {
+        assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(4), "learner": other, "identity": { "kind": "pseudonym", "handle": refused } })), "handle-invalid", "{refused:?}");
+    }
+    assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(5), "learner": anonymous, "identity": { "kind": "anonymous" } })), "learner-exists");
+    let recalled = view(&base, &json!({ "type": "handle", "handle": " ADA  lovelace" }));
+    assert_eq!(recalled, json!({ "display": "ADA lovelace", "holder": { "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada Lovelace" } } }), "a handle is recalled by a read, however it is typed");
+    assert_eq!(view(&base, &json!({ "type": "handle", "handle": "Grace" })), json!({ "display": "Grace" }), "a free handle has no holder");
+    let (status, refusal) = query(&base, &json!({ "type": "handle", "handle": "A\u{200b}da" }));
+    assert!(status == 400 && refusal["message"].as_str().is_some_and(|message| message.contains("handle-invalid")), "{status} {refusal}");
+    let (status, refusal) = query(&base, &json!({ "type": "learner", "learner": "../../etc/passwd" }));
+    assert!(status == 400 && refusal["message"].as_str().is_some_and(|message| message.contains("id-invalid")), "{status} {refusal}");
     let learner = view(&base, &json!({ "type": "learner", "learner": ada }));
     assert_eq!((learner["identity"]["handle"].as_str(), learner["runs"].as_array().map(Vec::len)), (Some("Ada Lovelace"), Some(0)));
     assert_eq!(view(&base, &json!({ "type": "learner", "learner": anonymous }))["identity"], json!({ "kind": "anonymous" }));
     assert_eq!(query(&base, &json!({ "type": "learner", "learner": other })).0, 404);
+    let (_, _, registered) = get(&base, &format!("/actors/{TENANT}/quiz-learner/{ada}/events"), &[]);
+    assert_eq!(serde_json::from_str::<Vec<Value>>(&registered).expect("event records").len(), 1, "recalling a handle appended nothing to its learner");
 
     let run = id(0x100);
     let events = accepted(&base, &json!({ "type": "start-run", "id": id(10), "learner": ada, "run": run, "quiz": "power" }));
@@ -405,7 +429,6 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let stream: Vec<Value> = serde_json::from_str(&stream).expect("event records");
     assert_eq!(stream.iter().filter(|record| record["kind"] == "quiz.answer-recorded").count(), 1);
     assert_eq!(stream[0]["kind"], "quiz.learner-registered");
-    assert_eq!(get(&base, &format!("/actors/{TENANT}/quiz-roster/roster/events"), &[]).0, 403, "the handle index is not readable");
     assert_eq!(rejected(&base, &json!({ "type": "submit-run", "id": id(21), "learner": ada, "run": run })), "run-incomplete");
     assert_eq!(rejected(&base, &record(&ada, &run, &tasks[1], &json!({ "kind": "sorting", "order": [] }), 22)), "answer-invalid");
     accepted(&base, &record(&ada, &run, &tasks[1], &perfect(&document, &tasks[1]), 23));
@@ -423,23 +446,54 @@ fn a_learner_plays_through_the_real_api_and_the_facts_survive_a_restart() {
     let learner = view(&base, &json!({ "type": "learner", "learner": ada }));
     assert_eq!((learner["best"]["power"].as_f64(), learner["total"].as_f64()), (Some(1.0), Some(100.0)));
     assert_eq!(learner["badges"].as_array().expect("badges").iter().map(|award| award["badge"].as_str().expect("badge")).collect::<Vec<_>>(), ["perfect-power", "sorter"]);
-    let board = view(&base, &json!({ "type": "leaderboard" }));
+    let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": ada }));
     assert_eq!(board["rows"].as_array().expect("rows").iter().map(|row| (row["rank"].as_u64(), row["tag"].as_str(), row["total"].as_f64())).collect::<Vec<_>>(), [(Some(1), Some(quiz::learner_tag(&ada).as_str()), Some(100.0))]);
+    assert_eq!((board["learners"].as_u64(), &board["own"]), (Some(1), &board["rows"][0]), "the board counts the ranked learners and answers the caller's own row");
+    assert_eq!(board.as_object().map(|board| board.keys().map(String::as_str).collect::<std::collections::BTreeSet<_>>()), Some(["learners", "own", "period", "rows", "submissions"].into()), "the all-time board is exactly its period, its top rows, its counts and the caller's row");
+    assert_eq!((board["period"].as_str(), board["submissions"].as_u64()), (Some("all-time"), Some(1)));
     assert!(!board.to_string().contains(ada.as_str()), "the public leaderboard never carries a learner id");
-    let before = (learner, finished, board);
+    let submitted_at = finished["submittedAt"].as_u64().expect("submittedAt");
+    for period in ["daily", "weekly", "monthly"] {
+        for (quiz, played) in [(None, true), (Some("power"), true), (Some("homes"), false)] {
+            let mut asked = json!({ "type": "leaderboard", "period": period, "learner": ada });
+            if let Some(quiz) = quiz {
+                asked["quiz"] = json!(quiz);
+            }
+            let scoped = view(&base, &asked);
+            let (from, until) = (scoped["window"]["from"].as_u64().expect("from"), scoped["window"]["until"].as_u64().expect("until"));
+            let counted = played && from <= submitted_at && submitted_at < until;
+            assert_eq!((scoped["period"].as_str(), scoped["quiz"].as_str(), scoped["submissions"].as_u64()), (Some(period), quiz, Some(1)), "{scoped}");
+            assert_eq!((scoped["learners"].as_u64(), scoped["rows"].as_array().map(Vec::len), scoped.get("own").is_some()), (Some(u64::from(counted)), Some(usize::from(counted)), counted), "the {period} board of {quiz:?} counts the runs of its window and quiz: {scoped}");
+            assert!(from < until && until - from <= 31 * 86_400_000, "{scoped}");
+            if counted {
+                assert_eq!((&scoped["rows"], &scoped["own"]), (&board["rows"], &board["own"]), "the only run there is makes the same row on every board that counts it");
+            }
+        }
+    }
+    assert_eq!(query(&base, &json!({ "type": "leaderboard", "period": "weekly", "quiz": "cooling" })).0, 404, "a quiz the catalog does not list has no leaderboard");
+    assert_eq!(query(&base, &json!({ "type": "leaderboard" })).0, 400, "a leaderboard query names its period");
+    assert_eq!(query(&base, &json!({ "type": "leaderboard", "period": "yearly" })).0, 400);
+    assert_eq!(query(&base, &json!({ "type": "leaderboard", "period": "daily", "quiz": "Power" })).0, 400);
+    let unranked = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": anonymous }));
+    assert_eq!((unranked["rows"].clone(), unranked["learners"].as_u64(), unranked.get("own")), (board["rows"].clone(), Some(1), None), "a learner without a submitted run has no row of its own");
+    assert_eq!(view(&base, &json!({ "type": "leaderboard", "period": "all-time" })), unranked, "nor has a caller that names nobody");
+    let before = (learner, finished, board, recalled);
     running.shut_down();
 
     let running = boot(&data.0, development());
     let base = running.base.clone();
-    let after = (view(&base, &json!({ "type": "learner", "learner": ada })), view(&base, &json!({ "type": "run", "run": run })), view(&base, &json!({ "type": "leaderboard" })));
+    let after = (view(&base, &json!({ "type": "learner", "learner": ada })), view(&base, &json!({ "type": "run", "run": run })), view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": ada })), view(&base, &json!({ "type": "handle", "handle": " ADA  lovelace" })));
     assert_eq!(after, before, "the reopened SQLite file answers the same views");
+    assert_eq!(rejected(&base, &json!({ "type": "identify-learner", "id": id(6), "learner": other, "identity": { "kind": "pseudonym", "handle": "ADA LOVELACE" } })), "handle-claimed", "the handle is still held after a restart");
     let completed = play(&base, &ada, &id(0x200), "homes", 30);
     assert!(completed.iter().any(|event| event["badge"] == "complete"), "{completed:?}");
     let (_, _, stream) = get(&base, &format!("/actors/{TENANT}/quiz-learner/{ada}/events"), &[]);
     let sequences: Vec<u64> = serde_json::from_str::<Vec<Value>>(&stream).expect("records").iter().map(|record| record["seq"].as_u64().expect("seq")).collect();
     assert_eq!(sequences, (1..=sequences.len() as u64).collect::<Vec<_>>(), "the restarted authority appends after its history");
-    let board = view(&base, &json!({ "type": "leaderboard" }));
-    assert_eq!((board["rows"][0]["total"].as_f64(), board["rows"][0]["badges"].as_array().map(Vec::len)), (Some(200.0), Some(3)));
+    let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time" }));
+    assert_eq!((board["rows"][0]["total"].as_f64(), board["rows"][0]["badges"].as_array().map(Vec::len), board["submissions"].as_u64()), (Some(200.0), Some(3), Some(2)));
+    let homes = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "quiz": "homes", "learner": ada }));
+    assert_eq!((homes["own"]["total"].as_f64(), homes["own"]["best"].clone(), homes["own"]["runs"].as_u64(), homes["own"]["badges"].clone(), homes["submissions"].as_u64()), (Some(100.0), json!({ "homes": 1.0 }), Some(1), json!(["complete"]), Some(2)), "the board of one quiz is made of that quiz's runs and the badges they earned: {homes}");
     running.shut_down();
 }
 
@@ -448,7 +502,7 @@ fn the_api_serves_the_cdn_site_across_origins_behind_the_gate() {
     const SITE: &str = "https://quizzes.example";
     const FOREIGN: &str = "https://evil.example";
     let data = scratch("gate-data");
-    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy });
+    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy, limits: Limits::default() });
     let base = running.base.clone();
     let https = [("x-forwarded-proto", "https")];
 
@@ -480,7 +534,7 @@ fn the_api_serves_the_cdn_site_across_origins_behind_the_gate() {
     let (status, headers, result) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": learner })), &[("origin", SITE), ("x-forwarded-proto", "https")]);
     assert_eq!((status, result["kind"].as_str(), header(&headers, "access-control-allow-origin")), (200, Some("snapshot"), Some(SITE)), "{result}");
     assert_eq!(serde_json::from_str::<Value>(&text(&result["value"])).expect("learner view")["identity"], json!({ "kind": "anonymous" }));
-    let (status, headers, _) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "leaderboard" })), &[("origin", FOREIGN), ("x-forwarded-proto", "https")]);
+    let (status, headers, _) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "leaderboard", "period": "all-time" })), &[("origin", FOREIGN), ("x-forwarded-proto", "https")]);
     assert_eq!((status, header(&headers, "access-control-allow-origin"), header(&headers, "vary")), (200, None, Some("Origin")));
     running.shut_down();
 }
@@ -554,7 +608,7 @@ fn learners_share_presence_and_cursors_through_the_gateway() {
 fn a_production_proctor_opens_presence_to_the_site_origin_only() {
     const SITE: &str = "https://quizzes.example";
     let data = scratch("presence-gate");
-    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy });
+    let running = boot(&data.0, Gate { origins: CrossOriginPolicy::Allowlist(vec![SITE.to_string()]), forwarding: Forwarding::TerminatingProxy, limits: Limits::default() });
     let https = ("x-forwarded-proto", "https");
     assert_eq!(presence(running.address, TENANT, "home", &[("origin", SITE)]).err(), Some((403, Some("insecure-transport".to_string()))));
     assert_eq!(presence(running.address, TENANT, "home", &[("origin", "https://evil.example"), https]).err(), Some((403, None)), "a foreign page may not open a socket");
@@ -646,9 +700,616 @@ fn learners_see_what_the_others_think_live_and_what_they_answered() {
     assert_eq!(answered["runs"], 2);
     let means: Vec<f64> = answered["tasks"][0]["items"].as_array().expect("sorting items").iter().map(|item| item["meanPosition"].as_f64().expect("a mean")).collect();
     assert!(means.iter().all(|mean| (mean - 0.5).abs() < 1e-12), "a perfect and a reversed order meet in the middle: {means:?}");
+    let counts = |bins: &Value| -> Vec<u64> { bins.as_array().expect("counts").iter().map(|count| count.as_u64().expect("a count")).collect() };
+    let scores: Vec<Vec<u64>> = std::iter::once(&answered).chain(answered["tasks"].as_array().expect("tasks")).map(|scored| counts(&scored["scores"])).collect();
+    assert!(scores.iter().all(|bins| bins.len() == quiz::CROWD_SCORE_BINS && bins.iter().sum::<u64>() == 2), "both runs fall into the ten score bins of the quiz, of every task and of every dimension: {scores:?}");
+    assert_eq!((scores[0][9], scores[1][9]), (1, 1), "the perfect run and its perfect order are in the last bin: {scores:?}");
+    for item in answered["tasks"][0]["items"].as_array().expect("sorting items") {
+        let places = counts(&item["places"]);
+        assert_eq!((places.len(), places.iter().sum::<u64>(), places.iter().rev().copied().collect::<Vec<_>>()), (document["tasks"][0]["items"].as_array().expect("items").len(), 2, places.clone()), "a perfect and a reversed order put an item at mirrored places");
+    }
     running.shut_down();
 
     let running = boot(&data.0, development());
     assert_eq!(crowd(&running.base), oracle, "the crowd survives a restart");
     running.shut_down();
 }
+
+/// ⌨️ Run the built `proctor` binary over `data` with `stdin`, answering its exit success and stdout.
+fn operator(data: &Path, port: u16, arguments: &[&str], stdin: &[u8]) -> (bool, Vec<u8>) {
+    let mut child = std::process::Command::new(env!("CARGO_BIN_EXE_proctor"))
+        .args(arguments)
+        .env("PROCTOR_DATA", data)
+        .env("PROCTOR_PORT", port.to_string())
+        .env_remove("PROCTOR_BIND")
+        .stdin(std::process::Stdio::piped())
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::null())
+        .spawn()
+        .expect("the proctor binary runs");
+    child.stdin.take().expect("stdin").write_all(stdin).expect("stdin written");
+    let output = child.wait_with_output().expect("the proctor binary exits");
+    (output.status.success(), output.stdout)
+}
+
+/// 🗂️ The file names in `directory`, ascending.
+fn files(directory: &Path) -> Vec<String> {
+    let mut names: Vec<String> = std::fs::read_dir(directory).expect("listing").filter_map(Result::ok).map(|entry| entry.file_name().to_string_lossy().into_owned()).collect();
+    names.sort();
+    names
+}
+
+/// 🔍️ Whether any file of `directory` holds the bytes of `needle`.
+fn holds(directory: &Path, needle: &str) -> bool {
+    files(directory).iter().any(|file| std::fs::read(directory.join(file)).expect("file").windows(needle.len()).any(|window| window == needle.as_bytes()))
+}
+
+#[test]
+fn the_operator_probes_backs_up_while_serving_and_restores_elsewhere() {
+    let (data, elsewhere, backups, third) = (scratch("operator"), scratch("operator-restore"), scratch("operator-backups"), scratch("operator-restore-file"));
+    let running = boot(&data.0, development());
+    let (base, port) = (running.base.clone(), running.address.port());
+    assert!(operator(&data.0, port, &["health"], b"").0, "a serving proctor is healthy");
+
+    let (ada, run) = (id(0xada), id(0x100));
+    accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada" } }));
+    play(&base, &ada, &run, "power", 10);
+    let views = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": run }), json!({ "type": "leaderboard", "period": "all-time", "learner": ada }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada" }), json!({ "type": "catalog" })].map(|asked| view(base, &asked));
+    let before = views(&base);
+
+    let (backed_up, backup) = operator(&data.0, port, &["backup", "-"], b"");
+    assert!(backed_up, "a backup is taken while the proctor serves");
+    assert_eq!(&backup[..16], b"SQLite format 3\0");
+    let directory = backups.0.to_string_lossy().into_owned();
+    let (filed, printed) = operator(&data.0, port, &["backup", &directory], b"");
+    let file = PathBuf::from(String::from_utf8(printed).expect("a path").trim_end());
+    let name = file.file_name().expect("a file name").to_string_lossy().into_owned();
+    assert!(filed && file.parent() == Some(backups.0.as_path()) && name.starts_with("proctor-2") && name.ends_with("Z.sqlite") && name.len() == 31, "a backup into a directory prints the timestamped file it wrote: {}", file.display());
+    assert_eq!((files(&backups.0), std::fs::read(&file).expect("the backup").len()), (vec![name], backup.len()), "one whole file and nothing partial beside it");
+    assert!(!operator(&data.0, port, &["backup", &file.to_string_lossy()], b"").0, "a backup is never overwritten");
+    assert_eq!(files(&data.0).iter().filter(|name| name.contains(".backup-") || name.contains(".partial-")).count(), 0, "the spool file is gone");
+
+    play(&base, &ada, &id(0x200), "homes", 100);
+    assert_ne!(views(&base), before, "the proctor kept committing after the backup");
+    assert!(!operator(&data.0, port, &["restore", "-"], &backup).0, "a serving proctor's database is never replaced");
+    running.shut_down();
+    assert!(!operator(&data.0, port, &["health"], b"").0, "a stopped proctor is not healthy");
+
+    assert!(operator(&elsewhere.0, port, &["restore", "-"], &backup).0, "the backup restores into an empty directory");
+    let restored = boot(&elsewhere.0, development());
+    assert_eq!(views(&restored.base), before, "the proctor started on the copy answers the views of the moment the backup was taken");
+    let completed = play(&restored.base, &ada, &id(0x300), "homes", 200);
+    assert!(completed.iter().any(|event| event["badge"] == "complete"), "the restored authority appends after its history: {completed:?}");
+    restored.shut_down();
+
+    assert!(operator(&third.0, port, &["restore", &file.to_string_lossy()], b"").0, "the backup file restores as well");
+    let restored = boot(&third.0, development());
+    assert_eq!(views(&restored.base), before, "and answers the same");
+    restored.shut_down();
+}
+
+#[test]
+fn the_operator_erases_one_learner_on_request_and_its_handle_is_free_again() {
+    const NAME: &str = "Ada Lovelace";
+    let data = scratch("operator-erase");
+    let running = boot(&data.0, development());
+    let (base, port) = (running.base.clone(), running.address.port());
+    let (ada, grace) = (id(0xada), id(0x9ace));
+    accepted(&base, &json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "name", "handle": NAME } }));
+    accepted(&base, &json!({ "type": "identify-learner", "id": id(2), "learner": grace, "identity": { "kind": "anonymous" } }));
+    play(&base, &ada, &id(0x100), "power", 10);
+    play(&base, &grace, &id(0x101), "power", 100);
+    let others = |base: &str| [json!({ "type": "learner", "learner": grace }), json!({ "type": "run", "run": id(0x101) })].map(|asked| view(base, &asked));
+    let before = others(&base);
+    let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": grace }));
+    assert_eq!((board["learners"].as_u64(), board["own"]["rank"].as_u64(), board["rows"][0]["identity"]["handle"].as_str()), (Some(2), Some(2), Some(NAME)));
+    assert_eq!(view(&base, &json!({ "type": "crowd", "quiz": "power" }))["runs"], 2);
+    assert!(!operator(&data.0, port, &["erase", "--handle", NAME], b"").0, "nobody is erased from a database that is being served");
+    running.shut_down();
+
+    let tag = quiz::learner_tag(&ada);
+    let (dry, report) = operator(&data.0, port, &["erase", "--tag", &tag, "--dry-run"], b"");
+    let report = String::from_utf8(report).expect("a report");
+    assert!(dry && report.starts_with(&format!("would erase learner #{tag} name {NAME:?} of catalog {TENANT}\n")) && report.contains("  handle \"ada lovelace\": 1 events") && report.ends_with("dry run: nothing was changed\n"), "{report}");
+    assert!(holds(&data.0, NAME) && holds(&data.0, &ada), "a dry run changes nothing");
+    assert!(!operator(&data.0, port, &["erase", "--handle", "Grace Hopper"], b"").0, "nobody holds that handle");
+    let (erased, report) = operator(&data.0, port, &["erase", "--handle", " ada  LOVELACE "], b"");
+    let report = String::from_utf8(report).expect("a report");
+    assert!(erased && report.starts_with(&format!("erased learner #{tag} name {NAME:?} of catalog {TENANT}\n")) && !report.contains(&ada), "{report}");
+    assert!(!holds(&data.0, NAME) && !holds(&data.0, "ada lovelace") && !holds(&data.0, &ada) && holds(&data.0, &grace), "neither the name nor the learner id is left in any file of the data directory: {:?}", files(&data.0));
+    assert!(!operator(&data.0, port, &["erase", "--learner", &ada], b"").0, "an erased learner is nobody");
+
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    assert_eq!(others(&base), before, "the other learner's views are what they were");
+    assert_eq!(query(&base, &json!({ "type": "learner", "learner": ada })).0, 404);
+    assert_eq!(query(&base, &json!({ "type": "run", "run": id(0x100) })).0, 404);
+    assert_eq!(view(&base, &json!({ "type": "handle", "handle": NAME })), json!({ "display": NAME }), "the handle is free");
+    let board = view(&base, &json!({ "type": "leaderboard", "period": "all-time", "learner": grace }));
+    assert_eq!((board["learners"].as_u64(), board["own"]["rank"].as_u64(), board["rows"].as_array().map(Vec::len)), (Some(1), Some(1), Some(1)), "the erased scores are gone from the board: {board}");
+    assert!(!board.to_string().contains(NAME) && !board.to_string().contains(&tag), "{board}");
+    assert_eq!(view(&base, &json!({ "type": "crowd", "quiz": "power" }))["runs"], 1, "and from the crowd");
+    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(20), "learner": ada, "run": id(0x102), "quiz": "power" })), "unknown-learner");
+    let successor = id(0xb0b);
+    let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(21), "learner": successor, "identity": { "kind": "pseudonym", "handle": NAME } }));
+    assert_eq!((events[0]["type"].as_str(), events[0]["learner"].as_str()), (Some("learner-registered"), Some(successor.as_str())), "somebody else takes the freed handle");
+    assert_eq!(view(&base, &json!({ "type": "handle", "handle": NAME }))["holder"]["learner"], successor.as_str());
+    running.shut_down();
+}
+
+/// 🧮️ How many registrations a proctor booted over the stopped `data` directory counts: what its
+/// cap of learners is held against.
+fn registrations(data: &Path) -> u64 {
+    let data = data.to_string_lossy().into_owned();
+    tokio::runtime::Builder::new_multi_thread().worker_threads(2).enable_all().build().expect("runtime").block_on(async move {
+        let catalog = Arc::new(load_catalog(&fixtures().join("📚️catalog/🔣️.json")).expect("fixture catalog"));
+        let proctor = Proctor::assemble(StorageProfile::Embedded { data_dir: data }, catalog, development(), PresenceSettings::default()).await.expect("assembled");
+        proctor.prepare().await.expect("prepared");
+        proctor.reconcile().await.expect("reconciled");
+        proctor.settle(&CancelToken::root_now(), |_| {}).await.expect("settled");
+        proctor.admission().learners()
+    })
+}
+
+#[test]
+fn the_operator_prunes_the_registrations_nobody_played_under_and_every_player_stays() {
+    let data = scratch("operator-prune");
+    let running = boot(&data.0, development());
+    let (base, port) = (running.base.clone(), running.address.port());
+    let (ada, grace, hoarder, linus) = (id(0xada), id(0x9ace), id(0x5200), id(0x11a5));
+    let register = |seed: u32, learner: &str, identity: Value| accepted(&base, &json!({ "type": "identify-learner", "id": id(seed), "learner": learner, "identity": identity }));
+    register(1, &ada, json!({ "kind": "name", "handle": "Ada Lovelace" }));
+    register(2, &grace, json!({ "kind": "anonymous" }));
+    play(&base, &ada, &id(0x100), "power", 10);
+    play(&base, &grace, &id(0x101), "power", 100);
+    for junk in 0..40 {
+        register(0x6000 + junk, &id(0x5000 + junk), json!({ "kind": "anonymous" }));
+    }
+    for junk in 0..20 {
+        register(0x6100 + junk, &id(0x5100 + junk), json!({ "kind": "pseudonym", "handle": format!("Junk Number {junk:02}") }));
+    }
+    register(0x6200, &hoarder, json!({ "kind": "anonymous" }));
+    for hoard in 0..5 {
+        register(0x6201 + hoard, &hoarder, json!({ "kind": "pseudonym", "handle": format!("Hoard Number {hoard}") }));
+    }
+    for spare in 0..3 {
+        register(0x6300 + spare, &ada, json!({ "kind": "pseudonym", "handle": format!("Spare Number {spare}") }));
+    }
+    register(3, &linus, json!({ "kind": "name", "handle": "Linus Halfway" }));
+    accepted(&base, &json!({ "type": "start-run", "id": id(4), "learner": linus, "run": id(0x400), "quiz": "power" }));
+    let players = |base: &str| [json!({ "type": "learner", "learner": ada }), json!({ "type": "run", "run": id(0x100) }), json!({ "type": "learner", "learner": grace }), json!({ "type": "leaderboard", "period": "all-time", "learner": grace }), json!({ "type": "crowd", "quiz": "power" }), json!({ "type": "handle", "handle": "ada lovelace" })].map(|asked| view(base, &asked));
+    let before = players(&base);
+    assert_eq!(view(&base, &json!({ "type": "handle", "handle": "junk number 07" }))["holder"]["learner"], id(0x5107).as_str());
+    assert!(!operator(&data.0, port, &["prune", "--older-than", "1s"], b"").0, "nothing is pruned from a database that is being served");
+    running.shut_down();
+    assert_eq!(registrations(&data.0), 72, "forty-two anonymous learners and thirty handles");
+
+    let junk = ["Junk Number 07", "junk number 07", "Hoard Number 3", "Spare Number 1", "spare number 1", "Linus Halfway"];
+    let strangers = [id(0x5007), id(0x5107), id(0x6007), id(0x6107), hoarder.clone(), linus.clone(), quiz::handle_actor_id("junk number 07"), quiz::handle_actor_id("spare number 1")];
+    for wrong in [&["prune"][..], &["prune", "--older-than", "7"], &["prune", "--older-than", "soon"], &["prune", "--dry-run"]] {
+        assert!(!operator(&data.0, port, wrong, b"").0, "{wrong:?}");
+    }
+    let (recent, report) = operator(&data.0, port, &["prune", "--older-than", "1h"], b"");
+    let report = String::from_utf8(report).expect("a report");
+    assert!(recent && report.starts_with(&format!("pruning 0 registrations of catalog {TENANT} older than 1h (registered before 2")) && report.ends_with("nothing to prune: nothing was changed\n"), "{report}");
+    std::thread::sleep(Duration::from_millis(1500));
+    let (dry, report) = operator(&data.0, port, &["prune", "--older-than", "1s", "--dry-run"], b"");
+    let report = String::from_utf8(report).expect("a report");
+    assert!(dry && report.starts_with(&format!("would prune 70 registrations of catalog {TENANT} older than 1s (registered before 2")), "{report}");
+    assert!(report.ends_with("Z)\n  learners that never submitted a run: 62 (41 anonymous, 20 under a pseudonym, 1 under a name), holding 26 handles\n  handles claimed beside the identity of a learner that stays: 3\n  staying: 2 learners (2 of them submitted a run), 1 handles, 2 registrations\ndry run: nothing was changed\n"), "{report}");
+    assert!(junk.iter().all(|name| holds(&data.0, name)) && strangers.iter().all(|stranger| holds(&data.0, stranger)), "a dry run changes nothing");
+    assert!(!junk.iter().any(|name| report.contains(name)) && !strangers.iter().any(|stranger| report.contains(stranger.as_str())), "and its report counts, it names nobody: {report}");
+    assert_eq!(registrations(&data.0), 72);
+
+    let (pruned, report) = operator(&data.0, port, &["prune", "--older-than", "1s"], b"");
+    let report = String::from_utf8(report).expect("a report");
+    assert!(pruned && report.starts_with("pruning 70 registrations") && report.contains("\nremoved 91 of 91 streams: 92 events, ") && report.ends_with("done: the handles are free again, the learner ids are unknown to the proctor; 2 registrations are left\n"), "{report}");
+    assert!(junk.iter().all(|name| !holds(&data.0, name)) && strangers.iter().all(|stranger| !holds(&data.0, stranger)), "no name, learner id, command id or handle stream of theirs is left in any file of the data directory: {:?}", files(&data.0));
+    assert!(holds(&data.0, &ada) && holds(&data.0, &grace) && holds(&data.0, "Ada Lovelace"));
+    let (again, report) = operator(&data.0, port, &["prune", "--older-than", "1s"], b"");
+    assert!(again && String::from_utf8(report).expect("a report").ends_with("nothing to prune: nothing was changed\n"));
+    assert_eq!(registrations(&data.0), 2, "the count the cap is held against went down to who played");
+
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    assert_eq!(players(&base), before, "the views of everybody who played are what they were");
+    for gone in [id(0x5007), id(0x5107), hoarder, linus.clone()] {
+        assert_eq!(query(&base, &json!({ "type": "learner", "learner": gone })).0, 404, "{gone}");
+    }
+    for free in ["Junk Number 07", "Hoard Number 3", "Spare Number 1", "Linus Halfway"] {
+        assert_eq!(view(&base, &json!({ "type": "handle", "handle": free })), json!({ "display": free }), "the handle is free");
+    }
+    assert_eq!(rejected(&base, &json!({ "type": "start-run", "id": id(5), "learner": linus, "run": id(0x401), "quiz": "power" })), "unknown-learner");
+    let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(0x6007), "learner": id(0x5007), "identity": { "kind": "anonymous" } }));
+    assert_eq!(events.len(), 1, "a pruned learner id and its command id are unknown again, not a replay");
+    for (seed, successor, handle) in [(6, id(0xb0b), "junk number 07"), (7, id(0xb0c), "Spare Number 1")] {
+        let events = accepted(&base, &json!({ "type": "identify-learner", "id": id(seed), "learner": successor, "identity": { "kind": "name", "handle": handle } }));
+        assert_eq!((events[0]["type"].as_str(), events[0]["identity"]["handle"].as_str()), (Some("learner-registered"), Some(handle)), "somebody takes a pruned handle");
+        assert_eq!(view(&base, &json!({ "type": "learner", "learner": successor }))["identity"]["handle"], handle, "and is relayed to its learner, whoever the handle was relayed to before");
+    }
+    running.shut_down();
+}
+
+//#region 🔖️Edge
+const EDGE_SITE: &str = "https://quizzes.example";
+
+/// 🛡️ The gate of a proctor behind its terminating proxy, with `limits` at the edge.
+fn proxied(limits: Limits) -> Gate {
+    Gate { origins: CrossOriginPolicy::Allowlist(vec![EDGE_SITE.to_string()]), forwarding: Forwarding::TerminatingProxy, limits }
+}
+
+/// 📨️ The headers the terminating proxy forwards a request of the site with, for the client at `address`.
+fn forwarded(address: &'static str) -> [(&'static str, &'static str); 3] {
+    [("x-forwarded-proto", "https"), ("x-forwarded-for", address), ("origin", EDGE_SITE)]
+}
+
+fn sign_up(seed: u32, learner: &str) -> Value {
+    json!({ "type": "identify-learner", "id": id(seed), "learner": learner, "identity": { "kind": "anonymous" } })
+}
+
+/// 📏️ The size of the largest `record-answer` body a catalog can produce: every item of every task
+/// answered, encoded as the client sends it.
+fn largest_answer(catalog: &Path) -> usize {
+    let read = |path: &Path| -> Value { serde_json::from_str(&std::fs::read_to_string(path).unwrap_or_else(|error| panic!("{}: {error}", path.display()))).expect("json") };
+    let ids = |values: &Value| -> Vec<String> { values.as_array().map(|values| values.iter().map(|value| value["id"].as_str().expect("id").to_string()).collect()).unwrap_or_default() };
+    let (learner, run) = (id(0xffff_ffff), id(0xffff_fffe));
+    let mut largest = 0;
+    for quiz in read(catalog)["quizzes"].as_array().expect("quizzes") {
+        let document = read(&catalog.parent().expect("a directory").join(quiz.as_str().expect("a quiz path")));
+        for task in document["tasks"].as_array().expect("tasks") {
+            let items = ids(&task["items"]);
+            let answer = match task["kind"].as_str().expect("kind") {
+                "sorting" => json!({ "kind": "sorting", "order": items }),
+                "classification" => {
+                    let category = ids(&task["categories"]).into_iter().max_by_key(String::len).expect("a category");
+                    json!({ "kind": "classification", "assignments": items.iter().map(|item| (item.clone(), json!(category))).collect::<serde_json::Map<_, _>>() })
+                }
+                _ => json!({ "kind": "matching", "assignments": ids(&task["dimensions"]).into_iter().map(|dimension| (dimension, Value::Object(items.iter().enumerate().map(|(card, item)| (item.clone(), json!(1000 + card))).collect()))).collect::<serde_json::Map<_, _>>() }),
+            };
+            largest = largest.max(envelope(&record(&learner, &run, task, &answer, 0xffff_fffd)).to_string().len());
+        }
+    }
+    largest
+}
+
+/// 🔌️ Open any websocket of the proctor at `path`.
+fn socket(address: SocketAddr, path: &str, headers: &[(&str, &str)]) -> Socket {
+    let mut request = format!("ws://{address}{path}").into_client_request().expect("a websocket request");
+    for (name, value) in headers {
+        request.headers_mut().insert(HeaderName::from_bytes(name.as_bytes()).expect("a header name"), HeaderValue::from_str(value).expect("a header value"));
+    }
+    let stream = TcpStream::connect(address).expect("connect");
+    stream.set_read_timeout(Some(Duration::from_secs(10))).expect("timeout");
+    tungstenite::client(request, stream).expect("the socket opens").0
+}
+
+/// 🔚️ Read until the server has ended the socket; the frames it still sent before.
+fn until_closed(socket: &mut Socket) -> Vec<Value> {
+    let mut seen = Vec::new();
+    loop {
+        match socket.read() {
+            Ok(Message::Text(text)) => seen.push(serde_json::from_str(text.as_str()).expect("a json frame")),
+            Ok(Message::Close(_)) | Err(_) => return seen,
+            Ok(_) => {}
+        }
+    }
+}
+
+#[test]
+fn an_anonymous_caller_can_neither_read_nor_occupy_an_enrollment_key() {
+    let (ada, intruder) = (id(0xada), id(0xbad));
+    let named = json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "pseudonym", "handle": "Ada Lovelace" } });
+    let probes = |key: &str| {
+        let occupying = envelope(&json!({ "type": "identify-learner", "id": key, "learner": intruder, "identity": { "kind": "anonymous" } }));
+        let elsewhere = envelope(&json!({ "type": "start-run", "id": key, "learner": intruder, "run": id(0x666), "quiz": "power" }));
+        let mut relayed = elsewhere.clone();
+        relayed["kind"] = json!("quiz.enroll-learner");
+        relayed["principal"] = json!({ "kind": "serviceAccount", "id": "proctor" });
+        [occupying, elsewhere, relayed]
+    };
+
+    let rehearsal = scratch("edge-key-read");
+    let running = boot(&rehearsal.0, development());
+    let (outcome, _) = command(&running.base, &named);
+    assert_eq!(outcome["status"], "accepted", "{outcome}");
+    let committed: EventRecord = serde_json::from_value(outcome["events"][0].clone()).expect("the committed event record");
+    let key = proctor::actors::enrollment(&committed).expect("a named sign-up is relayed to its learner").command_id.0;
+    assert_eq!(view(&running.base, &json!({ "type": "learner", "learner": ada }))["identity"]["handle"], "Ada Lovelace", "the relay ran under that key");
+    for probe in probes(&key) {
+        let (status, _, answer) = post_with(&running.base, "/commands", &probe, &[]);
+        assert!(!answer.to_string().contains(&ada), "replaying the enrollment key {key} answered a learner id ({status}): {answer}");
+        assert!(answer["status"] != "accepted" || answer["receipt"]["actor"]["id"] != ada.as_str(), "{answer}");
+    }
+    running.shut_down();
+
+    let data = scratch("edge-key-occupy");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    for probe in probes(&key) {
+        assert_eq!(post(&base, "/commands", &probe).0, 200);
+    }
+    let events = accepted(&base, &named);
+    assert_eq!((events[0]["type"].as_str(), events[0]["learner"].as_str()), (Some("learner-registered"), Some(ada.as_str())));
+    assert_eq!(view(&base, &json!({ "type": "learner", "learner": ada }))["identity"]["handle"], "Ada Lovelace", "the real sign-up is relayed although its key was asked for first");
+    assert_eq!(accepted(&base, &json!({ "type": "start-run", "id": id(2), "learner": ada, "run": id(0x100), "quiz": "power" }))[0]["type"], "run-started");
+    running.shut_down();
+}
+
+#[test]
+fn a_command_for_an_id_no_actor_can_have_is_refused_before_it_costs_anything() {
+    let data = scratch("edge-ids");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let learner = id(7);
+    accepted(&base, &sign_up(1, &learner));
+    let long = "a".repeat(4000);
+    for (seed, target) in [long.as_str(), "not-a-learner-id", "0000000000000000000000000000000G", "", " ", "enroll:proctor-fixture:roster:1"].into_iter().enumerate() {
+        let mut sent = envelope(&json!({ "type": "start-run", "id": id(100 + seed as u32), "learner": learner, "run": id(200 + seed as u32), "quiz": "power" }));
+        sent["target"]["id"] = json!(target);
+        let (status, outcome) = post(&base, "/commands", &sent);
+        assert_eq!((status, outcome["status"].as_str(), outcome["reason"]["kind"].as_str()), (200, Some("rejected"), Some("invalid")), "{outcome}");
+        assert!(outcome["reason"]["detail"].as_str().is_some_and(|detail| detail.starts_with("id-invalid")), "target {:?}: {outcome}", &target[..target.len().min(40)]);
+    }
+    let mut keyed = envelope(&json!({ "type": "start-run", "id": id(300), "learner": learner, "run": id(301), "quiz": "power" }));
+    keyed["commandId"] = json!("k".repeat(4000));
+    keyed["idempotencyKey"] = keyed["commandId"].clone();
+    let (_, outcome) = post(&base, "/commands", &keyed);
+    assert_eq!((outcome["status"].as_str(), outcome["reason"]["kind"].as_str()), (Some("rejected"), Some("invalid")), "an oversized key is no key: {outcome}");
+    assert_eq!(accepted(&base, &json!({ "type": "start-run", "id": id(400), "learner": learner, "run": id(401), "quiz": "power" }))[0]["type"], "run-started", "the learner is untouched by the refusals");
+    running.shut_down();
+}
+
+#[test]
+fn a_body_past_the_limit_is_refused_and_the_largest_real_command_is_far_below_it() {
+    let limit = Limits::default().body_bytes.expect("the production limits cap the body");
+    for catalog in [fixtures().join("📚️catalog/🔣️.json"), Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../🏛️architecture/❓️quiz/🔣️.json")] {
+        let largest = largest_answer(&catalog);
+        assert!(largest > 1000 && largest * 4 <= limit, "{}: the largest answer is {largest} bytes, the limit {limit}", catalog.display());
+    }
+    let data = scratch("edge-body");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let mut padded = envelope(&sign_up(1, &id(7)));
+    assert_eq!(post(&base, "/commands", &padded).1["status"], "accepted");
+    padded["commandId"] = json!(id(2));
+    padded["idempotencyKey"] = json!(id(2));
+    padded["trace"]["span_id"] = json!("x".repeat(limit));
+    for path in ["/commands", "/queries"] {
+        let (status, _, answer) = post_with(&base, path, &padded, &[]);
+        assert_eq!((status, answer["kind"].as_str()), (413, Some("payloadTooLarge")), "{path}: {answer}");
+    }
+    let (status, _, answer) = post_with(&base, "/commands", &Value::Null, &[]);
+    assert_eq!((status, answer["kind"].as_str()), (400, Some("badRequest")), "{answer}");
+    running.shut_down();
+}
+
+#[test]
+fn one_address_past_its_allowance_is_told_to_wait_and_no_other_is_slowed() {
+    let data = scratch("edge-throttle");
+    let running = boot(&data.0, proxied(Limits { writes: Rate::per_second(1, 3), ..Limits::default() }));
+    let base = running.base.clone();
+    let script = forwarded("203.0.113.66");
+    let (status, _, outcome) = post_with(&base, "/commands", &envelope(&sign_up(1, &id(0x103))), &script);
+    assert_eq!((status, outcome["status"].as_str()), (200, Some("accepted")), "{outcome}");
+    let spent = (0..50).find(|_| post_with(&base, "/commands", &json!({}), &script).0 == 429);
+    assert!(spent.is_some_and(|posts| posts >= 2), "the burst is three commands and then the address waits: {spent:?}");
+    let refused = id(0x104);
+    let (status, headers, answer) = post_with(&base, "/commands", &envelope(&sign_up(4, &refused)), &script);
+    assert_eq!((status, answer["kind"].as_str(), header(&headers, "retry-after")), (429, Some("throttled"), Some("1")), "{answer}");
+    assert!(answer["retryAfterMs"].as_u64().is_some_and(|wait| (1..=1000).contains(&wait)), "{answer}");
+    assert_eq!((header(&headers, "access-control-allow-origin"), header(&headers, "access-control-expose-headers"), header(&headers, "access-control-allow-credentials")), (Some(EDGE_SITE), Some("retry-after"), None), "a page of the site reads the refusal and its wait, and no credentials are allowed");
+    let behind_a_claim = [("x-forwarded-proto", "https"), ("x-forwarded-for", "198.51.100.9, 203.0.113.66"), ("origin", EDGE_SITE)];
+    assert_eq!(post_with(&base, "/commands", &envelope(&sign_up(5, &id(0x105))), &behind_a_claim).0, 429, "an address claimed in front of the proxy's own entry buys no allowance");
+
+    let hall = forwarded("203.0.113.7");
+    let (status, headers, outcome) = post_with(&base, "/commands", &envelope(&sign_up(6, &id(0x106))), &hall);
+    assert_eq!((status, outcome["status"].as_str(), header(&headers, "access-control-allow-credentials")), (200, Some("accepted"), None), "another address is served: {outcome}");
+    let (status, _, _) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": refused })), &script);
+    assert_eq!(status, 404, "the throttled address still reads, and the refused sign-up reached no turn");
+    let (status, _, result) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": id(0x103) })), &script);
+    assert_eq!((status, result["kind"].as_str()), (200, Some("snapshot")), "{result}");
+    running.shut_down();
+}
+
+#[test]
+fn sign_ups_are_counted_per_address_by_what_they_register_and_a_spent_allowance_is_named() {
+    let data = scratch("edge-sign-ups");
+    let running = boot(&data.0, proxied(Limits { allowances: vec![Allowance { name: SIGN_UP, rate: Rate::per_hour(60, 3) }], ..Limits::default() }));
+    let base = running.base.clone();
+    let (hall, script) = (forwarded("198.51.100.10"), forwarded("203.0.113.66"));
+    let sent = |command: &Value, from: &[(&str, &str)]| post_with(&base, "/commands", &envelope(command), from);
+    let registered = |command: &Value, from: &[(&str, &str)]| {
+        let (status, _, outcome) = sent(command, from);
+        assert_eq!((status, outcome["status"].as_str(), outcome["events"].as_array().map(Vec::len)), (200, Some("accepted"), Some(1)), "{outcome}");
+    };
+    let nothing = |command: &Value, from: &[(&str, &str)], expected: &str| {
+        let (status, _, outcome) = sent(command, from);
+        let answered = outcome["reason"]["detail"].as_str().map_or_else(|| format!("{} with {} events", outcome["status"].as_str().unwrap_or("?"), outcome["events"].as_array().map_or(0, Vec::len)), str::to_string);
+        assert_eq!((status, answered.as_str()), (200, expected), "{outcome}");
+    };
+    let (ada, bob, cy) = (id(0xada), id(0xb0b), id(0xc1));
+    let named = json!({ "type": "identify-learner", "id": id(1), "learner": ada, "identity": { "kind": "name", "handle": "Ada Lovelace" } });
+    registered(&named, &hall);
+    for attempt in 0..6u32 {
+        nothing(&json!({ "type": "identify-learner", "id": id(10 + attempt), "learner": id(0x700 + attempt), "identity": { "kind": "pseudonym", "handle": "ada  LOVELACE" } }), &hall, "handle-claimed");
+        nothing(&json!({ "type": "identify-learner", "id": id(20 + attempt), "learner": id(0x700 + attempt), "identity": { "kind": "pseudonym", "handle": "A\u{200b}da" } }), &hall, "handle-invalid");
+        nothing(&named, &hall, "accepted with 0 events");
+    }
+    registered(&sign_up(2, &bob), &hall);
+    for _ in 0..6 {
+        nothing(&json!({ "type": "identify-learner", "id": id(30), "learner": bob, "identity": { "kind": "anonymous" } }), &hall, "learner-exists");
+    }
+    registered(&json!({ "type": "identify-learner", "id": id(3), "learner": cy, "identity": { "kind": "pseudonym", "handle": "Cy" } }), &hall);
+
+    let late = id(0xd0);
+    let (status, headers, answer) = sent(&sign_up(4, &late), &hall);
+    assert!(status == 429 && header(&headers, "retry-after").and_then(|seconds| seconds.parse::<u64>().ok()).is_some_and(|seconds| (55..=60).contains(&seconds)), "twenty-four refused sign-ups and replays cost nothing, the fourth registration of the address waits: {status} {headers:?} {answer}");
+    assert_eq!((answer["kind"].as_str(), answer["allowance"].as_str(), answer["message"].as_str()), (Some("throttled"), Some("sign-up"), Some("the sign-up allowance of this address is spent")), "{answer}");
+    assert!(answer["retryAfterMs"].as_u64().is_some_and(|wait| (55_000..=60_000).contains(&wait)), "the wait is the time the next sign-up takes at sixty per hour: {answer}");
+    assert_eq!((header(&headers, "access-control-allow-origin"), header(&headers, "access-control-expose-headers")), (Some(EDGE_SITE), Some("retry-after")), "a page of the site reads the refusal");
+    let (status, _, _) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": late })), &hall);
+    assert_eq!(status, 404, "the refused sign-up registered nobody");
+    let (status, _, refused) = sent(&json!({ "type": "identify-learner", "id": id(5), "learner": id(0xd1), "identity": { "kind": "name", "handle": "Dee" } }), &hall);
+    assert_eq!((status, refused["allowance"].as_str()), (429, Some("sign-up")), "a handle claim is a sign-up like an anonymous one");
+
+    let (status, _, started) = sent(&json!({ "type": "start-run", "id": id(40), "learner": ada, "run": id(0x100), "quiz": "power" }), &hall);
+    assert_eq!((status, started["status"].as_str()), (200, Some("accepted")), "who is registered plays on: only sign-ups are spent: {started}");
+    let (status, _, recalled) = post_with(&base, "/queries", &query_envelope(&json!({ "type": "handle", "handle": "ada lovelace" })), &hall);
+    assert_eq!((status, serde_json::from_str::<Value>(&text(&recalled["value"])).expect("a view")["holder"]["learner"].as_str().map(str::to_string)), (200, Some(ada)), "and a returning learner is recalled by a read, which is no sign-up");
+
+    for seed in 0..3u32 {
+        registered(&sign_up(50 + seed, &id(0x800 + seed)), &script);
+    }
+    let (status, _, refused) = sent(&sign_up(53, &id(0x803)), &script);
+    assert_eq!((status, refused["allowance"].as_str()), (429, Some("sign-up")), "another address has an allowance of its own, and no more");
+    nothing(&json!({ "type": "start-run", "id": id(54), "learner": id(0x804), "run": id(0x101), "quiz": "power" }), &script, "unknown-learner");
+    running.shut_down();
+    assert_eq!(registrations(&data.0), 6, "three registrations per address were made, whatever was asked");
+}
+
+#[test]
+fn the_proctor_answers_on_its_own_routes_only_and_says_nothing_of_its_policy() {
+    let data = scratch("edge-routes");
+    let running = boot(&data.0, development());
+    let base = running.base.clone();
+    let hash = "00".repeat(32);
+    for request in ["GET /apps".to_string(), "GET /apps/admin/index.html".to_string(), format!("GET /blobs/{hash}"), format!("HEAD /blobs/{hash}"), format!("PUT /blobs/{hash}"), format!("POST /scopes/{TENANT}/ephemeral")] {
+        let answer = raw(running.address, &format!("{request} HTTP/1.1\r\nHost: proctor\r\nContent-Type: application/json\r\nContent-Length: 2\r\nConnection: close\r\n\r\n{{}}"));
+        assert!(answer.starts_with("HTTP/1.1 404"), "{request}: {answer}");
+        assert!(request.starts_with("HEAD") || answer.contains("\"kind\":\"notFound\""), "{request}: {answer}");
+    }
+    let (status, _, instance) = get(&base, "/instance", &[]);
+    let instance: Value = serde_json::from_str(&instance).expect("instance json");
+    assert_eq!((status, instance["id"].as_str(), instance["modules"][0]["policies"].as_array().map(Vec::len)), (200, Some("teaching-proctor"), Some(0)), "the instance document publishes no policy template");
+    assert!(instance["modules"][0]["commands"].as_array().is_some_and(|commands| !commands.is_empty()) && !instance.to_string().contains("grants"), "{instance}");
+    let (status, _, denied) = get(&base, &format!("/actors/{TENANT}/no-such-kind/{}/events", id(1)), &[]);
+    assert_eq!((status, serde_json::from_str::<Value>(&denied).expect("an error body")), (403, json!({ "kind": "forbidden", "message": "forbidden" })), "a denial names neither the principal nor the grant that was missing");
+    running.shut_down();
+}
+
+#[test]
+fn sockets_are_counted_per_address_and_an_oversized_message_ends_the_socket() {
+    let data = scratch("edge-sockets");
+    let running = boot(&data.0, Gate { limits: Limits { sockets_per_client: 3, ..Limits::default() }, ..development() });
+    let address = running.address;
+    let local = [("origin", "http://localhost:6061")];
+    let mut first = presence(address, TENANT, "home", &local).expect("the first socket");
+    let (session, _) = welcome(&mut first);
+    let mut second = presence(address, &format!("{TENANT}/home"), "home", &local).expect("the second socket");
+    welcome(&mut second);
+    let learner = id(7);
+    let mut stream = socket(address, &format!("/actors/{TENANT}/quiz-learner/{learner}/events/ws"), &[]);
+    assert_eq!(presence(address, TENANT, "home", &local).err(), Some((429, None)), "one address holds no more sockets than its cap");
+
+    stream.send(Message::text("x".repeat(2048))).expect("sent");
+    assert!(until_closed(&mut stream).is_empty(), "the durable lane takes no message from its client");
+    let mut third = None;
+    for _ in 0..100 {
+        match presence(address, TENANT, "home", &local) {
+            Ok(opened) => {
+                third = Some(opened);
+                break;
+            }
+            Err(refused) => assert_eq!(refused, (429, None)),
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    let mut third = third.expect("a closed socket frees its place");
+    welcome(&mut third);
+
+    share(&mut second, &json!({ "tag": "0a1b2c3d", "padding": "x".repeat(3000) }));
+    assert_eq!(refusal(&mut second), "state-too-large", "a state somewhat over the limit is read and refused");
+    first.send(Message::text(json!({ "type": "state", "state": { "padding": "x".repeat(8192) } }).to_string())).expect("sent");
+    let before_the_end = until_closed(&mut first);
+    assert!(before_the_end.iter().all(|frame| frame["type"] != "refused"), "a message past the protocol limit is never read, so never answered: {before_the_end:?}");
+    until(&mut third, |frame| departs(frame, &session));
+    close(second);
+    close(third);
+    running.shut_down();
+}
+
+/// 📨️ The head of a `POST` of `length` body bytes as the terminating proxy forwards it for `client`.
+fn posting(path: &str, client: &str, length: usize) -> String {
+    format!("POST {path} HTTP/1.1\r\nHost: proctor\r\nContent-Type: application/json\r\nContent-Length: {length}\r\nX-Forwarded-Proto: https\r\nX-Forwarded-For: {client}\r\nOrigin: {EDGE_SITE}\r\n\r\n")
+}
+
+/// 📬️ Read one HTTP/1.1 response off an open connection: its status, its head in lowercase and its body.
+fn answer(stream: &mut TcpStream) -> (u16, String, String) {
+    let mut received = Vec::new();
+    let mut byte = [0u8; 1];
+    while !received.ends_with(b"\r\n\r\n") {
+        assert_eq!(stream.read(&mut byte).expect("the connection is still open"), 1, "the server closed the connection: {:?}", String::from_utf8_lossy(&received));
+        received.push(byte[0]);
+    }
+    let head = String::from_utf8(received).expect("an ascii head").to_ascii_lowercase();
+    let status = head.split(' ').nth(1).and_then(|status| status.parse().ok()).expect("a status line");
+    let length = head.lines().find_map(|line| line.strip_prefix("content-length: ")).and_then(|length| length.trim().parse::<usize>().ok()).unwrap_or(0);
+    let mut body = vec![0u8; length];
+    stream.read_exact(&mut body).expect("the whole body");
+    (status, head, String::from_utf8(body).expect("a utf-8 body"))
+}
+
+#[test]
+fn a_refused_request_keeps_its_connection_and_a_body_that_trickles_holds_no_place() {
+    let data = scratch("edge-bodies");
+    let running = boot(&data.0, proxied(Limits { writes: Rate::per_second(1, 2), in_flight: 2, body_patience: Duration::from_millis(400), ..Limits::default() }));
+    let script = "203.0.113.66";
+
+    let mut connection = TcpStream::connect(running.address).expect("connect");
+    connection.set_nodelay(true).expect("nodelay");
+    connection.set_read_timeout(Some(Duration::from_secs(30))).expect("timeout");
+    let mut statuses = Vec::new();
+    for seed in 0..8u32 {
+        let body = envelope(&sign_up(1 + seed, &id(0x200 + seed))).to_string();
+        connection.write_all(posting("/commands", script, body.len()).as_bytes()).expect("the head");
+        std::thread::sleep(Duration::from_millis(40));
+        connection.write_all(body.as_bytes()).expect("the body");
+        let (status, head, _) = answer(&mut connection);
+        assert!(!head.contains("connection: close"), "request {seed} ({status}) costs the connection: {head}");
+        statuses.push(status);
+    }
+    assert!(statuses[..2] == [200, 200] && statuses.iter().all(|status| [200, 429].contains(status)) && statuses.iter().filter(|status| **status == 429).count() >= 4, "eight commands whose bodies follow their heads, on one connection: the burst is served and every refusal still reads its body: {statuses:?}");
+
+    let stalled: Vec<TcpStream> = (0..4)
+        .map(|slow| {
+            let mut stream = TcpStream::connect(running.address).expect("connect");
+            stream.set_read_timeout(Some(Duration::from_secs(30))).expect("timeout");
+            stream.write_all(posting("/queries", &format!("203.0.113.{}", 70 + slow), 600).as_bytes()).expect("the head");
+            stream.write_all(b"{\"queryId\":").expect("the beginning of a body");
+            stream
+        })
+        .collect();
+    std::thread::sleep(Duration::from_millis(100));
+    let (status, _, result) = post_with(&running.base, "/queries", &query_envelope(&json!({ "type": "learner", "learner": id(0x200) })), &forwarded("203.0.113.7"));
+    assert_eq!((status, result["kind"].as_str()), (200, Some("snapshot")), "four bodies on their way hold none of the two places requests are served in: {result}");
+    for mut stream in stalled {
+        let (status, _, body) = answer(&mut stream);
+        assert_eq!((status, serde_json::from_str::<Value>(&body).expect("an error body")["kind"].as_str().map(str::to_string)), (408, Some("stalled".to_string())), "a body that does not arrive is given up on");
+    }
+    running.shut_down();
+}
+
+#[test]
+fn every_sign_up_reads_itself_back_while_others_sign_up() {
+    let data = scratch("edge-read-your-writes");
+    let running = boot(&data.0, development());
+    let signing: Vec<_> = (0..16u32)
+        .map(|hall| {
+            let base = running.base.clone();
+            std::thread::spawn(move || {
+                for round in 0..8u32 {
+                    let seed = 0x1000 + hall * 0x100 + round;
+                    let (learner, handle) = (id(seed), format!("Hall {hall} round {round}"));
+                    accepted(&base, &json!({ "type": "identify-learner", "id": id(seed | 0x4000_0000), "learner": learner, "identity": { "kind": "pseudonym", "handle": handle } }));
+                    let (status, found) = query(&base, &json!({ "type": "learner", "learner": learner }));
+                    assert_eq!((status, found["identity"]["handle"].as_str()), (200, Some(handle.as_str())), "a named sign-up is relayed and folded before its command answers, whoever else commits meanwhile: {found}");
+                }
+            })
+        })
+        .collect();
+    for hall in signing {
+        hall.join().expect("every sign-up read itself back");
+    }
+    running.shut_down();
+}
+//#endregion 🔖️Edge

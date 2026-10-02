@@ -27,6 +27,12 @@
         "responsibility": "Provides the render-independent declarative quiz model — catalogs, tasks, seeded sheets, partial-credit scoring, badges, the learner run lifecycle and leaderboard — and its React renderer."
       },
       {
+        "directory": "🐾️pets",
+        "id": "framework.product.pets",
+        "kind": "product",
+        "responsibility": "Provides the render-independent deterministic pets model — menageries of rigged species, keyframed clips, bonds and casts, and the stage that folds events into frames — and its React renderer."
+      },
+      {
         "directory": "🦑️repo",
         "id": "framework.product.repo",
         "kind": "product",

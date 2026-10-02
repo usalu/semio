@@ -95,6 +95,65 @@ export function formatQuantity(value: number, quantity: Pick<Quantity, "unit" | 
   return withUnit(formatter(locale, { maximumSignificantDigits: SIGNIFICANT_DIGITS }).format(mantissa), `${prefix}${quantity.unit}`);
 }
 
+const PREFIX_EXPONENTS: ReadonlyMap<string, number> = new Map([
+  ...Object.entries(SI_PREFIXES)
+    .filter(([, symbol]) => symbol !== "")
+    .map(([exponent, symbol]): [string, number] => [symbol, Number(exponent)]),
+  ["u", -6],
+  ["μ", -6],
+  ["K", 3],
+]);
+
+const TYPED_NUMBER = /^([+-])?(\d[\d.,\s'’]*|[.,]\d+)(?:[eE]([+-]?\d+))?\s*(.*)$/su;
+
+/** 🔣️ The group mark of `locale`'s numbers. */
+function groupMark(locale: QuizLocale): string {
+  return formatter(locale, {}).formatToParts(11111.1).find((part) => part.type === "group")?.value ?? ",";
+}
+
+/** 🔢️ The digits of a typed mantissa as a plain decimal string, or `undefined` when it is no number: spaces and
+ * apostrophes group by three digits; of `.` and `,` the one occurring last is the decimal mark when both occur, a
+ * repeated one groups, and a single one groups only when it is the locale's group mark between three digits. */
+function plainMantissa(typed: string, locale: QuizLocale): string | undefined {
+  const raw = typed.trim();
+  if (/[\s'’](?!\d{3}(?!\d))/u.test(raw)) return undefined;
+  const compact = raw.replace(/[\s'’]/gu, "");
+  const kinds = [...new Set(compact.match(/[.,]/gu))];
+  const only = kinds[0] ?? "";
+  const grouped = kinds.length === 1 && (compact.split(only).length > 2 || (only === groupMark(locale) && /^\d{1,3}[.,]\d{3}$/u.test(compact)));
+  const mark = kinds.length === 2 ? compact[Math.max(compact.lastIndexOf("."), compact.lastIndexOf(","))]! : grouped ? "" : only;
+  const split = mark === "" ? compact.length : compact.lastIndexOf(mark);
+  const whole = compact.slice(0, split);
+  const fraction = compact.slice(split + 1);
+  if (/[.,]/u.test(whole) ? !/^\d{1,3}(?:([.,])\d{3}(?:\1\d{3})*)?$/u.test(whole) : !/^\d*$/u.test(whole)) return undefined;
+  if (!/^\d*$/u.test(fraction) || (whole === "" && fraction === "")) return undefined;
+  const digits = whole.replace(/[.,]/gu, "") || "0";
+  return fraction === "" ? digits : `${digits}.${fraction}`;
+}
+
+/** ⚖️ The power of ten of the SI prefix in a typed unit part (`k`, `kW`, `W`, empty), or `undefined` when it is none. */
+function typedExponent(typed: string, quantity: Pick<Quantity, "unit" | "prefixed">): number | undefined {
+  const text = typed.trim();
+  const prefix = text.toLowerCase().endsWith(quantity.unit.toLowerCase()) ? text.slice(0, text.length - quantity.unit.length).trim() : text;
+  if (prefix === "") return 0;
+  return quantity.prefixed ? PREFIX_EXPONENTS.get(prefix) : undefined;
+}
+
+/** 🔍️ The value a learner typed for `quantity` in `locale`: a number with optional exponent (`1.5e3`) and optional SI
+ * prefix and unit (`2 kW`, `5 M`, `3,5 MWh`), in the unit's base — the inverse of {@link formatQuantity}. The decimal
+ * mark of `locale` is read as such, a lone `.` or `,` elsewhere too unless it groups three digits. `undefined` when the
+ * text is no such number, or not positive on a logarithmic scale. */
+export function parseQuantity(text: string, quantity: Pick<Quantity, "unit" | "prefixed" | "scale">, locale: QuizLocale): number | undefined {
+  const match = TYPED_NUMBER.exec(text.trim());
+  if (match === null) return undefined;
+  const [, sign = "", typed = "", exponent = "0", unit = ""] = match;
+  const mantissa = plainMantissa(typed, locale);
+  const prefix = typedExponent(unit, quantity);
+  if (mantissa === undefined || prefix === undefined) return undefined;
+  const value = Number(`${sign}${mantissa}e${Number(exponent) + prefix}`);
+  return Number.isFinite(value) && (quantity.scale !== "logarithmic" || value > 0) ? value : undefined;
+}
+
 /** 💯️ A score in [0, 1] as a percentage in `locale`: whole when whole, else one decimal ({@link oneDecimal}), so 0.997
  * reads 99.7 % and only a perfect score reads 100 %. */
 export function formatScore(score: number, locale: QuizLocale): string {

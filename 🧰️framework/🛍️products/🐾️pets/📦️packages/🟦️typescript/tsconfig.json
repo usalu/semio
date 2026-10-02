@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/pets-typecheck.tsbuildinfo",
+    "types": ["bun"],
+    "paths": {
+      "@semio-tech/pets": ["./🟦️.ts"]
+    }
+  },
+  "include": ["./🟦️.ts", "../../🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/*.ts", "../../🧪️tests/*/🟦️.ts"],
+  "exclude": ["**/node_modules/**"]
+}

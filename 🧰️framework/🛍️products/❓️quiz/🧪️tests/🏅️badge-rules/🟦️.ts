@@ -3,11 +3,6 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🏅️badges/🟦️.ts
  */
-/** 🏅️ Subject adapter of the badge-rules case: `earnedBadges` of `@semio-tech/quiz` for every committed set of results.
- *
- * @see ./🥒️.feature
- * @see ../../🔨️modules/🏅️badges/🟦️.ts
- */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type Badge, type Quiz, type RunResult, earnedBadges } from "../../📦️packages/🟦️typescript/🟦️.ts";
 

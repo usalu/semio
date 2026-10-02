@@ -108,6 +108,10 @@
         "en": "Order by recommended temperature, lowest first.",
         "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
       },
+      "icon": {
+        "emoji": "🌡️",
+        "motion": "pulse"
+      },
       "quantity": {
         "label": {
           "en": "Temperature",
@@ -3385,6 +3389,10 @@
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
         },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
         "quantity": {
           "label": {
             "en": "Temperature",
@@ -3486,6 +3494,10 @@
         "prompt": {
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
         },
         "quantity": {
           "label": {
@@ -3590,6 +3602,10 @@
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
         },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
         "quantity": {
           "label": {
             "en": "Temperature",
@@ -3693,6 +3709,10 @@
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
         },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
+        },
         "quantity": {
           "label": {
             "en": "Temperature",
@@ -3793,6 +3813,10 @@
         "prompt": {
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
         },
         "quantity": {
           "label": {
@@ -3896,6 +3920,10 @@
         "prompt": {
           "en": "Order by recommended temperature, lowest first.",
           "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+        },
+        "icon": {
+          "emoji": "🌡️",
+          "motion": "pulse"
         },
         "quantity": {
           "label": {

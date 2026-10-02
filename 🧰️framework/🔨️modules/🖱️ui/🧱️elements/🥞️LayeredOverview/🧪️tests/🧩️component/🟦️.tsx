@@ -2,7 +2,7 @@
 import { act, fireEvent, render, screen, within } from "@testing-library/react";
 import * as React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { centeredLastRowCells, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
+import { centeredLastRowCells, followFactor, veilClip, veilClipPath, type LayeredCell } from "../../../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
 import { OverviewCard, OverviewCardAction } from "../../../🃏️OverviewCard/🟦️.tsx";
 import { LayeredOverview, capturePosterFromCanvases, type LayeredCardState, type LayeredOverviewProps, type LayeredPane } from "../../🟦️.tsx";
 // #endregion 🔌️Adapters
@@ -45,6 +45,8 @@ const offsetOf = (transform: string, columns: number, rows: number) => {
   const [x = 0, y = 0] = numbers(transform.replace(/^translate3d/u, ""));
   return { x: (-x * columns) / 100, y: (-y * rows) / 100 };
 };
+const sized = (root: HTMLElement) => vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 900, height: 900, right: 900, bottom: 900, x: 0, y: 0, toJSON: () => ({}) });
+const moveMouse = (clientX: number, clientY: number, pointerType: string = "mouse") => act(() => void window.dispatchEvent(new PointerEvent("pointermove", { clientX, clientY, pointerType })));
 
 beforeEach(() => window.history.replaceState(null, "", "/"));
 afterEach(() => {
@@ -156,22 +158,70 @@ describe("LayeredOverview", () => {
     expect(middle.x).toBeLessThan(2);
   });
 
-  it("follows the mouse across the strip with the 0.12 lerp and settles exactly", () => {
+  it("follows the mouse across the strip, closing 12 % of the gap per 60 Hz frame by elapsed time, and settles exactly", () => {
     fakeClock();
     const { root, strip } = renderHome({ reducedMotion: "never" });
     vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 900, height: 900, right: 900, bottom: 900, x: 0, y: 0, toJSON: () => ({}) });
     act(() => void window.dispatchEvent(new PointerEvent("pointermove", { clientX: 900, clientY: 450, pointerType: "mouse" })));
     frames(16);
-    expect(offsetOf(strip().style.transform, 3, 3).x).toBeCloseTo(0.24, 3);
+    expect(offsetOf(strip().style.transform, 3, 3).x).toBeCloseTo(2 * followFactor(16), 3);
     frames(3000);
     expect(strip().style.transform).toBe("translate3d(-66.6667%, -33.3333%, 0)");
   });
 
-  it("snaps instead of gliding when the user prefers reduced motion", () => {
+  it("pans as far in the same time whether the browser paints sixty frames a second or ten", () => {
+    const after = (frameMs: number): number => {
+      vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "setInterval", "clearInterval", "performance", "Date"] });
+      let next = 0;
+      const queued = new Map<number, FrameRequestCallback>();
+      vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => (queued.set((next += 1), callback), next));
+      vi.stubGlobal("cancelAnimationFrame", (handle: number) => void queued.delete(handle));
+      const { root, strip, unmount } = renderHome({ reducedMotion: "never" });
+      sized(root);
+      moveMouse(900, 450);
+      for (let spent = 0; spent < 300; spent += frameMs) {
+        act(() => void vi.advanceTimersByTime(frameMs));
+        const due = [...queued.values()];
+        queued.clear();
+        act(() => due.forEach((callback) => callback(performance.now())));
+      }
+      const x = offsetOf(strip().style.transform, 3, 3).x;
+      unmount();
+      vi.useRealTimers();
+      vi.unstubAllGlobals();
+      return x;
+    };
+    const [smooth, slow] = [after(1000 / 60), after(100)];
+    expect(smooth).toBeCloseTo(2 * followFactor(300), 2);
+    expect(slow).toBeCloseTo(smooth, 2);
+  });
+
+  it("pans and glides by default whatever the device says about motion, and gives way to a device that asks for less only for an app that says `auto`", () => {
+    fakeClock();
     vi.stubGlobal("matchMedia", (query: string) => ({ matches: query.includes("reduce"), media: query, onchange: null, addEventListener: () => undefined, removeEventListener: () => undefined, addListener: () => undefined, removeListener: () => undefined, dispatchEvent: () => false }));
-    const { strip, cardOf } = renderHome();
-    fireEvent.pointerEnter(cardOf("prefs"), { pointerType: "mouse" });
-    expect(strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    const moving = renderHome();
+    sized(moving.root);
+    expect(moving.root.dataset.pan).toBe("pointer");
+    moveMouse(900, 900);
+    frames(3000);
+    expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    fireEvent.pointerEnter(moving.cardOf("learner"), { pointerType: "mouse" });
+    expect(moving.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
+    frames(250);
+    const middle = offsetOf(moving.strip().style.transform, 3, 3);
+    expect(middle.x).toBeGreaterThan(0);
+    expect(middle.x).toBeLessThan(2);
+    frames(300);
+    expect(moving.strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    moving.unmount();
+    const still = renderHome({ reducedMotion: "auto" });
+    sized(still.root);
+    expect(still.root.dataset.pan).toBe("none");
+    moveMouse(900, 900);
+    frames(3000);
+    expect(still.strip().style.transform).toBe("translate3d(0%, 0%, 0)");
+    fireEvent.pointerEnter(still.cardOf("prefs"), { pointerType: "mouse" });
+    expect(still.strip().style.transform).toBe("translate3d(-66.6667%, -66.6667%, 0)");
   });
 
   it("reveals on keyboard focus and conceals when focus leaves the card", () => {
@@ -214,6 +264,35 @@ describe("LayeredOverview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Overview" }));
     expect(openedPane()).toBeNull();
     expect(document.activeElement).toBe(screen.getByRole("link", { name: "Demand" }));
+  });
+
+  it("shows no Overview button of its own for an app that names none, whose chrome closes the page and keeps the focus", () => {
+    const { overview: _, ...named } = LABELS;
+    function App(): React.ReactElement {
+      const [openedId, setOpenedId] = React.useState<string | null>("demand");
+      return (
+        <>
+          <button type="button" onClick={() => setOpenedId(null)}>
+            Back to all
+          </button>
+          <LayeredOverview panes={pages(HOME)} cells={GRID} renderCard={card} labels={named} lifecycle={LATER} reducedMotion="always" routing="none" openedId={openedId} onOpenedIdChange={setOpenedId} />
+        </>
+      );
+    }
+    const { container } = render(<App />);
+    expect(openedPane()?.dataset.layeredPane).toBe("demand");
+    expect(container.querySelector("[data-layered-overview-button]")).toBeNull();
+    const chrome = screen.getByRole("button", { name: "Back to all" });
+    act(() => chrome.focus());
+    fireEvent.click(chrome);
+    expect(openedPane()).toBeNull();
+    expect(document.activeElement).toBe(chrome);
+    fireEvent.click(screen.getByRole("button", { name: "Open Board" }));
+    expect(openedPane()?.dataset.layeredPane).toBe("board");
+    expect(container.querySelector("[data-layered-overview-button]")).toBeNull();
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(openedPane()).toBeNull();
+    expect(window.location.hash).toBe("");
   });
 
   it("follows hash changes and leaves a hash naming no pane alone", () => {
@@ -289,6 +368,14 @@ describe("LayeredOverview", () => {
     expect(mounted()).toEqual(["learner"]);
   });
 
+  it("boots the pages at once, in cell order and within the budget, when the warm pace is zero", () => {
+    const all = renderHome({ reducedMotion: "always", lifecycle: { budget: 9, warmStartMs: 0, warmIntervalMs: 0 } });
+    expect([...all.root.querySelectorAll<HTMLElement>("[data-page]")].map((element) => element.dataset.page)).toEqual([...HOME]);
+    all.unmount();
+    const some = renderHome({ reducedMotion: "always", lifecycle: { budget: 3, warmStartMs: 0, warmIntervalMs: 0 } });
+    expect([...some.root.querySelectorAll<HTMLElement>("[data-page]")].map((element) => element.dataset.page)).toEqual(["learner", "physics", "intro"]);
+  });
+
   it("gives a DOM-only page no poster but shows a poster function's still once released", () => {
     const poster = "data:image/png;base64,AAAA";
     const { container } = render(
@@ -336,80 +423,37 @@ describe("LayeredOverview", () => {
     expect(container.querySelector<HTMLElement>("[data-layered-strip]")!.style.width).toBe("1300%");
   });
 
-  it("grid rest: every page is live at rest, covering its card's cell, inert, and the pointer never pans", () => {
+  it("never pans under reduced motion, with `pan=\"none\"` or for a touch pointer, and says on its root whether the mouse pans", () => {
     fakeClock();
-    const rendered: string[] = [];
-    const { root, strip, veil } = renderHome({ rest: "grid", reducedMotion: "never", lifecycle: { ...LATER, budget: 9 } }, rendered);
-    expect(root.dataset.rest).toBe("grid");
-    expect(new Set(rendered)).toEqual(new Set(HOME));
-    expect(strip().style.transform).toBe("");
-    expect(pane(root, "learner").style.transform).toBe("translate3d(0%, 0%, 0) scale(0.333333)");
-    expect(pane(root, "board").style.transform).toBe("translate3d(33.3333%, 33.3333%, 0) scale(0.333333)");
-    expect(pane(root, "prefs").style.transform).toBe("translate3d(66.6667%, 66.6667%, 0) scale(0.333333)");
-    expect(pane(root, "board").style.clipPath).toBe("inset(0% 0% 0% 0%)");
-    for (const id of HOME) {
-      expect(pane(root, id).hasAttribute("inert")).toBe(true);
-      expect(pane(root, id).getAttribute("aria-hidden")).toBe("true");
+    for (const [props, pan, pointerType] of [[{ reducedMotion: "always" }, "none", "mouse"], [{ reducedMotion: "never", pan: "none" }, "none", "mouse"], [{ reducedMotion: "never" }, "pointer", "touch"], [{ reducedMotion: "never" }, "pointer", "mouse"]] as const) {
+      const { root, strip, unmount } = renderHome(props);
+      sized(root);
+      expect(root.dataset.pan).toBe(pan);
+      moveMouse(900, 900, pointerType);
+      frames(3000);
+      expect(strip().style.transform).toBe(pan === "pointer" && pointerType === "mouse" ? "translate3d(-66.6667%, -66.6667%, 0)" : "translate3d(0%, 0%, 0)");
+      unmount();
     }
-    expect(veil()!.dataset.veil).toBe("whole");
-    const overlay = root.querySelector<HTMLElement>("[data-layered-overlay]")!;
-    expect(overlay.style.getPropertyValue("--layered-columns")).toBe("minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)");
-    vi.spyOn(root, "getBoundingClientRect").mockReturnValue({ left: 0, top: 0, width: 900, height: 900, right: 900, bottom: 900, x: 0, y: 0, toJSON: () => ({}) });
-    act(() => void window.dispatchEvent(new PointerEvent("pointermove", { clientX: 900, clientY: 900, pointerType: "mouse" })));
-    frames(200);
-    expect(strip().style.transform).toBe("");
-    expect(pane(root, "board").style.transform).toBe("translate3d(33.3333%, 33.3333%, 0) scale(0.333333)");
-    expect(veil()!.dataset.veil).toBe("whole");
   });
 
-  it("grid rest: a reveal zooms its page to full size with the hole on its current view, and leaving zooms back out", () => {
+  it("holds the revealed page while the mouse moves over its card, and pans again once the mouse is between the cards", () => {
     fakeClock();
-    const { root, veil, cardOf } = renderHome({ rest: "grid", reducedMotion: "never", lifecycle: { ...LATER, budget: 9 } });
+    const { root, strip, veil, cardOf } = renderHome({ reducedMotion: "never" });
+    sized(root);
     fireEvent.pointerEnter(cardOf("board"), { pointerType: "mouse" });
-    expect(veil()!.dataset.veil).toBe("hole");
-    expect(numbers(veil()!.style.clipPath).slice(10)).toEqual([33.3333, 33.3333, 66.6667, 33.3333, 66.6667, 66.6667, 33.3333, 66.6667, 33.3333, 33.3333]);
-    frames(250);
-    const [x = 0, , , scale = 0] = numbers(pane(root, "board").style.transform.replace(/^translate3d/u, ""));
-    expect(scale).toBeGreaterThan(0.34);
-    expect(scale).toBeLessThan(1);
-    const hole = numbers(veil()!.style.clipPath).slice(10);
-    expect(hole[0]).toBeCloseTo(x, 2);
-    expect(hole[2]! - hole[0]!).toBeCloseTo(scale * 100, 2);
-    frames(400);
-    expect(pane(root, "board").style.transform).toBe("translate3d(0%, 0%, 0) scale(1)");
-    expect(pane(root, "learner").style.transform).toBe("translate3d(-100%, -100%, 0) scale(1)");
+    frames(600);
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     expect(veil()!.dataset.veil).toBe("clear");
+    moveMouse(900, 900);
+    frames(600);
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
     fireEvent.pointerLeave(cardOf("board"), { pointerType: "mouse" });
     expect(veil()!.dataset.veil).toBe("whole");
-    frames(600);
-    expect(pane(root, "board").style.transform).toBe("translate3d(33.3333%, 33.3333%, 0) scale(0.333333)");
-  });
-
-  it("grid rest: track weights put each page behind the app's uneven card cells", () => {
-    const { root } = renderHome({ rest: "grid", reducedMotion: "always", gridTracks: { columns: [1, 1.5, 1], rows: [1, 1.4, 1] }, lifecycle: { ...LATER, budget: 9 } });
-    expect(pane(root, "board").style.transform).toBe("translate3d(28.5714%, 29.4118%, 0) scale(0.428571)");
-    expect(pane(root, "board").style.clipPath).toBe("inset(0% 0% 3.9216% 0%)");
-    expect(root.querySelector<HTMLElement>("[data-layered-overlay]")!.style.getPropertyValue("--layered-rows")).toBe("minmax(0, 1fr) minmax(0, 1.4fr) minmax(0, 1fr)");
-  });
-
-  it("grid rest: opening shows the page full size, closing zooms back out once focus leaves the card", () => {
-    const { root } = renderHome({ rest: "grid", reducedMotion: "always", lifecycle: { ...LATER, budget: 9 } });
-    fireEvent.click(screen.getByRole("button", { name: "Open Heating" }));
-    expect(document.activeElement).toBe(pane(root, "heating"));
-    expect(pane(root, "heating").style.transform).toBe("translate3d(0%, 0%, 0) scale(1)");
-    fireEvent.keyDown(window, { key: "Escape" });
-    const link = screen.getByRole("link", { name: "Heating" });
-    expect(document.activeElement).toBe(link);
-    act(() => link.blur());
-    expect(pane(root, "heating").style.transform).toBe("translate3d(0%, 33.3333%, 0) scale(0.333333)");
-  });
-
-  it("grid rest: a deep link opens its page full size at mount", () => {
-    window.history.replaceState(null, "", "/#cooling");
-    const { root } = renderHome({ rest: "grid", lifecycle: { ...LATER, budget: 9 } });
-    expect(pane(root, "cooling").style.transform).toBe("translate3d(0%, 0%, 0) scale(1)");
-    expect(pane(root, "learner").style.transform).toBe("translate3d(-200%, -100%, 0) scale(1)");
-    expect(screen.getByRole("region", { name: "Cooling" })).toBe(pane(root, "cooling"));
+    expect(strip().style.transform).toBe("translate3d(-33.3333%, -33.3333%, 0)");
+    moveMouse(0, 900);
+    frames(3000);
+    expect(strip().style.transform).toBe("translate3d(0%, -66.6667%, 0)");
+    expect(veil()!.dataset.veil).toBe("whole");
   });
 
   it("lists one snap section per pane under its own glass (near the view only), and locks the list while a page is open", () => {

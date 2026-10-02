@@ -25,6 +25,10 @@
             "en": "Assign every installation to its heating system.",
             "de": "Ordne jede Anlage ihrem Heizsystem zu."
           },
+          "icon": {
+            "emoji": "🔥",
+            "motion": "float"
+          },
           "axes": [
             {
               "id": "seasonal-efficiency",
@@ -288,6 +292,10 @@
           "prompt": {
             "en": "Order by recommended temperature, lowest first.",
             "de": "Ordne nach empfohlener Temperatur, die tiefste zuerst."
+          },
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
           },
           "quantity": {
             "label": {
@@ -708,6 +716,51 @@
           "score": 1.0,
           "tasks": [
             {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                }
+              ]
+            },
+            {
               "kind": "matching",
               "task": "energy-carriers",
               "score": 1.0,
@@ -773,51 +826,6 @@
                       "correct": 0.34
                     }
                   ]
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "ground-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "wood-pellets",
-                  "correct": "wood-pellets",
-                  "credit": 1
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "electric-resistance",
-                  "correct": "electric-resistance",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "district-heating",
-                  "correct": "district-heating",
-                  "credit": 1
                 }
               ]
             },
@@ -912,6 +920,47 @@
           "quiz": "energy-basics",
           "score": 0.6611022844259731,
           "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "electric-resistance",
+                  "correct": "electric-resistance",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                }
+              ]
+            },
             {
               "kind": "sorting",
               "task": "room-temperatures",
@@ -1058,47 +1107,6 @@
                       "correct": 0.027
                     }
                   ]
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "condensing-gas",
-                  "assigned": "gas-boiler",
-                  "correct": "gas-boiler",
-                  "credit": 1
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "electric-resistance",
-                  "correct": "electric-resistance",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "wood-pellets",
-                  "correct": "wood-pellets",
-                  "credit": 1
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "district-heating",
-                  "correct": "district-heating",
-                  "credit": 1
                 }
               ]
             }
@@ -1316,6 +1324,31 @@
           "score": 1.0,
           "tasks": [
             {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
               "kind": "classification",
               "task": "cooling-strategies",
               "score": 1.0,
@@ -1341,31 +1374,6 @@
                   "assigned": "passive",
                   "correct": "passive",
                   "credit": 1
-                }
-              ]
-            },
-            {
-              "kind": "sorting",
-              "task": "cooling-loads",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "bedroom",
-                  "value": 15,
-                  "position": 0,
-                  "rank": 0
-                },
-                {
-                  "item": "office",
-                  "value": 40,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "server-room",
-                  "value": 1000,
-                  "position": 2,
-                  "rank": 2
                 }
               ]
             }
@@ -1590,6 +1598,31 @@
           "score": 1.0,
           "tasks": [
             {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
               "kind": "classification",
               "task": "cooling-strategies",
               "score": 1.0,
@@ -1615,31 +1648,6 @@
                   "assigned": "passive",
                   "correct": "passive",
                   "credit": 1
-                }
-              ]
-            },
-            {
-              "kind": "sorting",
-              "task": "cooling-loads",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "bedroom",
-                  "value": 15,
-                  "position": 0,
-                  "rank": 0
-                },
-                {
-                  "item": "office",
-                  "value": 40,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "server-room",
-                  "value": 1000,
-                  "position": 2,
-                  "rank": 2
                 }
               ]
             }
@@ -1865,6 +1873,31 @@
           "score": 1.0,
           "tasks": [
             {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
               "kind": "classification",
               "task": "cooling-strategies",
               "score": 1.0,
@@ -1892,31 +1925,6 @@
                   "credit": 1
                 }
               ]
-            },
-            {
-              "kind": "sorting",
-              "task": "cooling-loads",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "bedroom",
-                  "value": 15,
-                  "position": 0,
-                  "rank": 0
-                },
-                {
-                  "item": "office",
-                  "value": 40,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "server-room",
-                  "value": 1000,
-                  "position": 2,
-                  "rank": 2
-                }
-              ]
             }
           ]
         }
@@ -1938,6 +1946,51 @@
           "quiz": "energy-basics",
           "score": 0.4686575589772475,
           "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.2761266306315667,
+              "items": [
+                {
+                  "item": "ground-source",
+                  "assigned": "wood-pellets",
+                  "correct": "heat-pump",
+                  "credit": 0.3560802806088518,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "gas-boiler",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "heat-pump",
+                  "correct": "gas-boiler",
+                  "credit": 0
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "wood-pellets",
+                  "correct": "heat-pump",
+                  "credit": 0.3560802806088518
+                }
+              ]
+            },
             {
               "kind": "sorting",
               "task": "room-temperatures",
@@ -2011,51 +2064,6 @@
                     "en": "About 1.6 GW of electric power.",
                     "de": "Etwa 1,6 GW elektrische Leistung."
                   }
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 0.2761266306315667,
-              "items": [
-                {
-                  "item": "ground-source",
-                  "assigned": "wood-pellets",
-                  "correct": "heat-pump",
-                  "credit": 0.3560802806088518,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "gas-boiler",
-                  "correct": "electric-resistance",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "district-heating",
-                  "correct": "wood-pellets",
-                  "credit": 0.66847259194013
-                },
-                {
-                  "item": "condensing-gas",
-                  "assigned": "heat-pump",
-                  "correct": "gas-boiler",
-                  "credit": 0
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "wood-pellets",
-                  "correct": "heat-pump",
-                  "credit": 0.3560802806088518
                 }
               ]
             },
@@ -2142,6 +2150,51 @@
           "quiz": "energy-basics",
           "score": 0.41200894133653804,
           "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 0.13369451838802598,
+              "items": [
+                {
+                  "item": "lake-water-network",
+                  "assigned": "electric-resistance",
+                  "correct": "district-heating",
+                  "credit": 0
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "night-storage-heater",
+                  "assigned": "heat-pump",
+                  "correct": "electric-resistance",
+                  "credit": 0,
+                  "explanation": {
+                    "en": "It heats with electricity directly.",
+                    "de": "Er heizt direkt mit Strom."
+                  }
+                },
+                {
+                  "item": "air-source",
+                  "assigned": "gas-boiler",
+                  "correct": "heat-pump",
+                  "credit": 0
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "district-heating",
+                  "correct": "wood-pellets",
+                  "credit": 0.66847259194013
+                }
+              ]
+            },
             {
               "kind": "matching",
               "task": "energy-carriers",
@@ -2259,51 +2312,6 @@
                   "value": 9,
                   "position": 5,
                   "rank": 0
-                }
-              ]
-            },
-            {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 0.13369451838802598,
-              "items": [
-                {
-                  "item": "lake-water-network",
-                  "assigned": "electric-resistance",
-                  "correct": "district-heating",
-                  "credit": 0
-                },
-                {
-                  "item": "ground-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "night-storage-heater",
-                  "assigned": "heat-pump",
-                  "correct": "electric-resistance",
-                  "credit": 0,
-                  "explanation": {
-                    "en": "It heats with electricity directly.",
-                    "de": "Er heizt direkt mit Strom."
-                  }
-                },
-                {
-                  "item": "air-source",
-                  "assigned": "gas-boiler",
-                  "correct": "heat-pump",
-                  "credit": 0
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "district-heating",
-                  "correct": "wood-pellets",
-                  "credit": 0.66847259194013
                 }
               ]
             },
@@ -2613,6 +2621,31 @@
           "score": 0.0,
           "tasks": [
             {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 0.0,
+              "items": [
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 0,
+                  "rank": 2
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 2,
+                  "rank": 0
+                }
+              ]
+            },
+            {
               "kind": "classification",
               "task": "cooling-strategies",
               "score": 0.0,
@@ -2638,31 +2671,6 @@
                   "assigned": "passive",
                   "correct": "active",
                   "credit": 0
-                }
-              ]
-            },
-            {
-              "kind": "sorting",
-              "task": "cooling-loads",
-              "score": 0.0,
-              "items": [
-                {
-                  "item": "server-room",
-                  "value": 1000,
-                  "position": 0,
-                  "rank": 2
-                },
-                {
-                  "item": "office",
-                  "value": 40,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "bedroom",
-                  "value": 15,
-                  "position": 2,
-                  "rank": 0
                 }
               ]
             }
@@ -2746,6 +2754,47 @@
           "quiz": "energy-basics",
           "score": 0.5,
           "tasks": [
+            {
+              "kind": "classification",
+              "task": "heating-systems",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "air-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1
+                },
+                {
+                  "item": "ground-source",
+                  "assigned": "heat-pump",
+                  "correct": "heat-pump",
+                  "credit": 1,
+                  "explanation": {
+                    "en": "A brine circuit feeds a heat pump.",
+                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
+                  }
+                },
+                {
+                  "item": "condensing-gas",
+                  "assigned": "gas-boiler",
+                  "correct": "gas-boiler",
+                  "credit": 1
+                },
+                {
+                  "item": "pellet-stove",
+                  "assigned": "wood-pellets",
+                  "correct": "wood-pellets",
+                  "credit": 1
+                },
+                {
+                  "item": "lake-water-network",
+                  "assigned": "district-heating",
+                  "correct": "district-heating",
+                  "credit": 1
+                }
+              ]
+            },
             {
               "kind": "matching",
               "task": "energy-carriers",
@@ -2841,47 +2890,6 @@
               ]
             },
             {
-              "kind": "classification",
-              "task": "heating-systems",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "air-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1
-                },
-                {
-                  "item": "ground-source",
-                  "assigned": "heat-pump",
-                  "correct": "heat-pump",
-                  "credit": 1,
-                  "explanation": {
-                    "en": "A brine circuit feeds a heat pump.",
-                    "de": "Ein Solekreislauf speist eine Wärmepumpe."
-                  }
-                },
-                {
-                  "item": "condensing-gas",
-                  "assigned": "gas-boiler",
-                  "correct": "gas-boiler",
-                  "credit": 1
-                },
-                {
-                  "item": "pellet-stove",
-                  "assigned": "wood-pellets",
-                  "correct": "wood-pellets",
-                  "credit": 1
-                },
-                {
-                  "item": "lake-water-network",
-                  "assigned": "district-heating",
-                  "correct": "district-heating",
-                  "credit": 1
-                }
-              ]
-            },
-            {
               "kind": "sorting",
               "task": "power-ratings",
               "score": 0.0,
@@ -2939,31 +2947,6 @@
           "score": 0.6736658351455512,
           "tasks": [
             {
-              "kind": "sorting",
-              "task": "room-temperatures",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "bedroom",
-                  "value": 18,
-                  "position": 0,
-                  "rank": 0
-                },
-                {
-                  "item": "living-room",
-                  "value": 21,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "bathroom",
-                  "value": 23.5,
-                  "position": 2,
-                  "rank": 2
-                }
-              ]
-            },
-            {
               "kind": "classification",
               "task": "heating-systems",
               "score": 0.2761266306315667,
@@ -3005,6 +2988,31 @@
                     "en": "It heats with electricity directly.",
                     "de": "Er heizt direkt mit Strom."
                   }
+                }
+              ]
+            },
+            {
+              "kind": "sorting",
+              "task": "room-temperatures",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 18,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "living-room",
+                  "value": 21,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "bathroom",
+                  "value": 23.5,
+                  "position": 2,
+                  "rank": 2
                 }
               ]
             },
@@ -3143,6 +3151,31 @@
           "score": 1.0,
           "tasks": [
             {
+              "kind": "sorting",
+              "task": "cooling-loads",
+              "score": 1.0,
+              "items": [
+                {
+                  "item": "bedroom",
+                  "value": 15,
+                  "position": 0,
+                  "rank": 0
+                },
+                {
+                  "item": "office",
+                  "value": 40,
+                  "position": 1,
+                  "rank": 1
+                },
+                {
+                  "item": "server-room",
+                  "value": 1000,
+                  "position": 2,
+                  "rank": 2
+                }
+              ]
+            },
+            {
               "kind": "classification",
               "task": "cooling-strategies",
               "score": 1.0,
@@ -3168,31 +3201,6 @@
                     "en": "A split unit runs a refrigeration cycle.",
                     "de": "Ein Split-Gerät betreibt einen Kältekreislauf."
                   }
-                }
-              ]
-            },
-            {
-              "kind": "sorting",
-              "task": "cooling-loads",
-              "score": 1.0,
-              "items": [
-                {
-                  "item": "bedroom",
-                  "value": 15,
-                  "position": 0,
-                  "rank": 0
-                },
-                {
-                  "item": "office",
-                  "value": 40,
-                  "position": 1,
-                  "rank": 1
-                },
-                {
-                  "item": "server-room",
-                  "value": 1000,
-                  "position": 2,
-                  "rank": 2
                 }
               ]
             }

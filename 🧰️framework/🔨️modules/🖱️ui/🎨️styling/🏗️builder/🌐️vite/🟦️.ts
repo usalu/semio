@@ -688,20 +688,48 @@ export function semioBrandHtmlVitePlugins(repoRoot: string, brand: ShellBrandHos
   ];
 }
 
+/** @emoji 🗣️ One text of a host document in one language: a BCP 47 tag and the text in that language. */
+export type SemioHostHtmlText = { readonly lang: string; readonly text: string };
+
+/** @emoji 🗣️ A text of a host document: one string in the document's language, or — for a document that assumes no
+ * language — the same text once per offered language, in the order the languages are offered. */
+export type SemioHostHtmlTexts = string | readonly SemioHostHtmlText[];
+
 /** @emoji 🧬️ Full-document spec for a semio host `🌐️.html`: title, entry module, mount point, and
  * optional CSP + pre-mount loading copy — everything an app needs beyond the shared boot scripts so it
- * stops hand-authoring its own splash screen and `<style>` blocks. */
+ * stops hand-authoring its own splash screen and `<style>` blocks. A document whose `title` is given per language
+ * declares no language of its own: `<html>` carries no `lang`, the title joins the languages, every other text marks
+ * each part with its `lang`, and the app sets `lang` once it knows its reader's. `noscript` is what a reader without
+ * scripts is told instead of the app. */
 export type SemioHostHtmlSpec = {
-  readonly title: string;
+  readonly title: SemioHostHtmlTexts;
   readonly entry: string;
   readonly rootId?: string;
   readonly bodyClass?: string;
   readonly csp?: string;
-  readonly loading?: { readonly title: string };
+  readonly loading?: { readonly title: SemioHostHtmlTexts };
+  readonly noscript?: SemioHostHtmlTexts;
   /** 🌐️ Custom domain this app's static build deploys to (e.g. GitHub Pages) — written verbatim into a
    * `CNAME` file at the build root, alongside the always-written `.nojekyll` marker. */
   readonly cnameHost?: string;
 };
+
+const SEMIO_HOST_TEXT_SEPARATOR = " · ";
+
+function semioHostEscapedText(text: string): string {
+  return text.replace(/&/gu, "&amp;").replace(/</gu, "&lt;").replace(/>/gu, "&gt;").replace(/"/gu, "&quot;");
+}
+
+/** @emoji 🏷️ The title of a host document as plain text: the one string, or every language's title joined. */
+export function semioHostTitleText(title: SemioHostHtmlTexts): string {
+  return typeof title === "string" ? title : title.map((part) => semioHostEscapedText(part.text)).join(SEMIO_HOST_TEXT_SEPARATOR);
+}
+
+/** @emoji 🗣️ A text as markup: the one string as it is, or one element per language carrying its `lang`. */
+function semioHostTextsHtml(texts: SemioHostHtmlTexts, tag: "span" | "p", attributes = ""): string {
+  if (typeof texts === "string") return tag === "span" ? texts : `<${tag}${attributes}>${texts}</${tag}>`;
+  return texts.map((part) => `<${tag} lang="${semioHostEscapedText(part.lang)}"${attributes}>${semioHostEscapedText(part.text)}</${tag}>`).join(tag === "span" ? SEMIO_HOST_TEXT_SEPARATOR : "");
+}
 
 /** @emoji 🪧️ Pre-mount placeholder markup shown inside `#{rootId}` until the entry module mounts and
  * replaces it — inline-styled so it renders before any external stylesheet loads. */
@@ -709,7 +737,16 @@ function semioHostLoadingHtml(loading: SemioHostHtmlSpec["loading"]): string {
   if (!loading) {
     return "";
   }
-  return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${loading.title}</div>`;
+  return `<div style="display:flex;align-items:center;justify-content:center;height:100%;font:14px system-ui,sans-serif">${semioHostTextsHtml(loading.title, "span")}</div>`;
+}
+
+/** @emoji 🚫️ What a reader without scripts gets: the boot style keeps `<body>` hidden until a script reveals it, so each
+ * paragraph makes itself visible. */
+function semioHostNoscriptHtml(noscript: SemioHostHtmlSpec["noscript"]): string {
+  if (!noscript) {
+    return "";
+  }
+  return `\n    <noscript>${semioHostTextsHtml(noscript, "p", ' style="visibility:visible;margin:1em;font:14px system-ui,sans-serif"')}</noscript>`;
 }
 
 /** @emoji 📄️ Generates a complete semio host `🌐️.html` document: doctype/head (title, favicon,
@@ -723,16 +760,16 @@ export function semioHostHtmlString(spec: SemioHostHtmlSpec): string {
     .map((tag) => (tag.tag === "style" ? `<style>${tag.children}</style>` : `<script>${tag.children}</script>`))
     .join("\n    ");
   return `<!doctype html>
-<html lang="en">
+<html${typeof spec.title === "string" ? ' lang="en"' : ""}>
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    ${cspTag}<title>${spec.title}</title>
+    ${cspTag}<title>${semioHostTitleText(spec.title)}</title>
     ${SEMIO_FAVICON_HEAD_HTML}
     ${headTags}
   </head>
   <body${spec.bodyClass ? ` class="${spec.bodyClass}"` : ""}>
-    <div id="${rootId}">${semioHostLoadingHtml(spec.loading)}</div>
+    <div id="${rootId}">${semioHostLoadingHtml(spec.loading)}</div>${semioHostNoscriptHtml(spec.noscript)}
     <script>${PLAYGROUND_PLAY_BOOT_REVEAL_SCRIPT}</script>
     <script type="module" src="${spec.entry}"></script>
   </body>

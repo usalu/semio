@@ -1,0 +1,262 @@
+/* 📖️ The look of the stories gallery: a dev page, styled on its own and never loaded by the package. The page's
+   theme is `.dark` on the root; a ground sets its own foreground, so a species can be judged on both at once. */
+
+:root {
+  --page: #f7f3e3;
+  --foreground: #001117;
+  --panel: #c9c8bd;
+  --line: rgb(0 17 23 / 0.22);
+  --accent: #ff344f;
+  color-scheme: light;
+}
+
+:root.dark {
+  --page: #001117;
+  --foreground: #f7f3e3;
+  --panel: #1d2b2f;
+  --line: rgb(247 243 227 / 0.28);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--foreground);
+  font: 14px/1.45 system-ui, sans-serif;
+}
+
+code {
+  font: 12px/1.45 ui-monospace, monospace;
+}
+
+.stories {
+  min-height: 100vh;
+}
+
+.masthead,
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--line);
+  background: var(--page);
+}
+
+.masthead h1 {
+  margin: 0 8px 0 0;
+  font-size: 18px;
+}
+
+.controls {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.control output {
+  min-width: 2.5em;
+  font-variant-numeric: tabular-nums;
+}
+
+.action,
+.card button {
+  padding: 4px 10px;
+  border: 1px solid var(--foreground);
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.action[aria-pressed="true"] {
+  background: var(--foreground);
+  color: var(--page);
+}
+
+.notice {
+  margin: 16px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--accent);
+}
+
+/* Species */
+
+.ground-light {
+  --foreground: #001117;
+  --panel: #c9c8bd;
+  --line: rgb(0 17 23 / 0.22);
+  background: #f7f3e3;
+  color: #001117;
+}
+
+.ground-dark {
+  --foreground: #f7f3e3;
+  --panel: #1d2b2f;
+  --line: rgb(247 243 227 / 0.28);
+  background: #001117;
+  color: #f7f3e3;
+}
+
+.roster,
+.ground {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  padding: 12px 16px;
+}
+
+.roster a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.story {
+  border-top: 1px solid var(--line);
+  scroll-margin-top: 56px;
+}
+
+.story-head {
+  padding: 12px 16px 4px;
+}
+
+.story-head h2 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.story-head p {
+  margin: 2px 0 0;
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-left: 6px;
+  border: 1px solid var(--foreground);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+.specimen {
+  margin: 0;
+}
+
+.specimen figcaption {
+  max-width: 100%;
+  font: 11px/1.3 ui-monospace, monospace;
+  opacity: 0.8;
+}
+
+.specimen-stage {
+  position: relative;
+}
+
+.specimen-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--panel);
+}
+
+.specimen-box {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px dashed var(--line);
+}
+
+/* Sandbox */
+
+.room {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  align-items: end;
+  gap: 72px 24px;
+  padding: 120px 24px 200px;
+}
+
+.card {
+  position: relative;
+  padding: 12px 16px;
+  border: 1px solid var(--foreground);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+.card h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+}
+
+.card p {
+  margin: 0;
+}
+
+.card-low {
+  grid-column: 1 / span 4;
+}
+
+.card-high {
+  grid-column: 5 / span 3;
+  margin-bottom: 64px;
+}
+
+.card-wide {
+  grid-column: 8 / span 5;
+  margin-bottom: 24px;
+}
+
+.room-1 .card-low {
+  grid-column: 7 / span 6;
+  margin-bottom: 48px;
+}
+
+.room-1 .card-high {
+  grid-column: 1 / span 3;
+  margin-bottom: 0;
+}
+
+.room-1 .card-wide {
+  grid-column: 4 / span 3;
+  margin-bottom: 96px;
+}
+
+.card .tab {
+  position: absolute;
+  top: -16px;
+  right: 24px;
+  background: var(--page);
+}
+
+.card .note {
+  position: absolute;
+  bottom: 100%;
+  left: 40%;
+  padding: 2px 8px;
+  border: 1px dashed var(--foreground);
+  border-bottom: 0;
+  border-radius: 6px 6px 0 0;
+}
+
+.shelf {
+  grid-column: 3 / span 8;
+  display: grid;
+  gap: 56px;
+  height: 260px;
+  padding: 56px 16px 16px;
+  overflow: auto;
+  border: 1px dashed var(--line);
+  border-radius: 10px;
+}

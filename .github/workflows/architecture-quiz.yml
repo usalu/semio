@@ -1,12 +1,19 @@
-# 🚚️ Architecture quiz releases, started by hand only (Actions → "architecture quiz" → Run workflow):
+# 🚚️ Architecture quiz releases, started by hand only (Actions → "architecture quiz" → Run workflow → branch `main`):
 #   site    — `bun nx run @teaching/architecture-quiz:publish` builds and verifies the CDN artifact against the production
-#             proctor, then GitHub Pages serves it at quizzes.architektur-und-technologie.de (the artifact's CNAME).
-#   proctor — `bun nx run @teaching/architecture-quiz:docker-image-publish` builds the proctor image and pushes it to
-#             ghcr.io/usalu/architecture-quiz-proctor as `<workspace version>` and `latest`.
-# One-time repository settings: Settings → Pages → Source "GitHub Actions" and custom domain
-# quizzes.architektur-und-technologie.de; after the first push, make the GHCR package public so hosts pull without login.
-# No stored secrets: Pages deploys with the OIDC token, the registry push with GITHUB_TOKEN.
-# @see ../../🎓️teaching/🏛️architecture/❓️quiz/README.md — the operator guide
+#             proctor, then GitHub Pages serves it at quizze.architektur-und-technologie.de.
+#   proctor — `bun nx run @teaching/architecture-quiz:docker-image-build` builds the proctor image;
+#             `bun nx run @teaching/architecture-quiz:docker-image-publish` checks the image and the stack and only then
+#             pushes it to ghcr.io/usalu/architecture-quiz-proctor as `sha-<commit>` (never moved again: the rollback
+#             target), `<workspace version>` and `latest`, printing the digest.
+# Both jobs run on `main` only: a run started from another branch skips them, so nothing but reviewed code reaches the
+# production tag or the public site. Each input deploys one part; both are on by default.
+# One-time repository settings (the runbook lists them in order): Settings → Pages → Source "GitHub Actions", custom
+# domain quizze.architektur-und-technologie.de (with this source the domain is the repository setting; the artifact's
+# `CNAME` file is ignored and dot files are not uploaded) and the domain verified for the account; after the first push,
+# the GHCR package made public so hosts pull without login.
+# No stored secrets: Pages deploys with the OIDC token, the registry push with GITHUB_TOKEN, which no step sees before
+# the image is built. Every action is pinned to a commit; the checkout leaves no credential in the workspace.
+# @see ../../🎓️teaching/🏛️architecture/❓️quiz/README.md — the runbook
 
 name: architecture quiz
 
@@ -18,7 +25,7 @@ on:
         type: boolean
         default: true
       proctor:
-        description: Build and push the proctor image to GHCR
+        description: Build, check and push the proctor image to GHCR
         type: boolean
         default: true
 
@@ -31,27 +38,38 @@ concurrency:
 
 jobs:
   site:
-    if: ${{ inputs.site }}
-    runs-on: ubuntu-latest
+    if: ${{ inputs.site && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.15.0
-      - uses: oven-sh/setup-bun@v2
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install
-        run: bun install --frozen-lockfile
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Test the catalog and the deployment files
+        run: bun nx run @teaching/architecture-quiz:test
       - name: Build and verify the CDN artifact
         run: bun nx run @teaching/architecture-quiz:publish
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
           path: 🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/dist/pages/quizzes
 
   pages:
     needs: site
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     permissions:
       pages: write
       id-token: write
@@ -60,28 +78,38 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
 
   proctor:
-    if: ${{ inputs.proctor }}
-    runs-on: ubuntu-latest
+    if: ${{ inputs.proctor && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
     permissions:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 24.15.0
-      - uses: oven-sh/setup-bun@v2
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version-file: package.json
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
       - name: Install
-        run: bun install --frozen-lockfile
-      - uses: docker/login-action@v3
+        run: bun install --frozen-lockfile --ignore-scripts
+      - name: Build the proctor image
+        run: bun nx run @teaching/architecture-quiz:docker-image-build
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push the proctor image
+      - name: Check the image and the stack, then push
         run: bun nx run @teaching/architecture-quiz:docker-image-publish

@@ -15,6 +15,13 @@
       "type": "string",
       "pattern": "^[0-9a-f]{32}$"
     },
+    "Handle": {
+      "description": "A handle as registered and shown: 1…64 code points of Latin letters (the upper- and lowercase letters of Basic Latin, Latin-1 Supplement, Latin Extended-A, Latin Extended-B and Latin Extended Additional that have no compatibility decomposition), ASCII digits, the apostrophe, full stop, underscore and hyphen-minus, and single spaces between words, with at least one letter or digit. Every string over this alphabet is in Unicode Normalization Form C; control and format characters, combining marks, other scripts and invisible text are outside it. The key identifying a handle is its lowercase.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^(?=.*[0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF])[0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF'._-]+(?: [0-9A-Za-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u0131\\u0134-\\u013E\\u0141-\\u0148\\u014A-\\u017E\\u0180-\\u01BA\\u01BC-\\u01BF\\u01CD-\\u01F0\\u01F4-\\u024F\\u1E00-\\u1E99\\u1E9C-\\u1EFF'._-]+)*$"
+    },
     "Timestamp": {
       "type": "integer",
       "minimum": 0,
@@ -43,6 +50,21 @@
     "TaskKind": {
       "enum": ["classification", "sorting", "matching"]
     },
+    "Motion": {
+      "description": "The looping microanimation of an icon: bounce hops, pulse breathes, spin turns around, sway rocks from side to side, float drifts up and down, flip turns over its vertical axis. Always still for learners who prefer reduced motion.",
+      "enum": ["bounce", "pulse", "spin", "sway", "float", "flip"]
+    },
+    "Icon": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The icon of a task, an item, a category or a dimension (shown on each of its value cards): one emoji grapheme that pictures it, and the microanimation it plays.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["emoji", "motion"],
+      "properties": {
+        "emoji": { "type": "string", "minLength": 1, "maxLength": 16 },
+        "motion": { "$ref": "#/$defs/Motion" }
+      }
+    },
     "Quantity": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
       "description": "A measured quantity: its label, unit symbol, distance scale, and whether display scales the unit with SI prefixes (W → kW → MW …).",
@@ -64,7 +86,8 @@
       "required": ["id", "quantity"],
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
-        "quantity": { "$ref": "#/$defs/Quantity" }
+        "quantity": { "$ref": "#/$defs/Quantity" },
+        "icon": { "$ref": "#/$defs/Icon" }
       }
     },
     "Axis": {
@@ -96,6 +119,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "label": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "description": { "$ref": "#/$defs/Text" },
         "profile": { "$ref": "#/$defs/Profile" }
       }
@@ -108,6 +132,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "label": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "category": { "$ref": "#/$defs/Slug" },
         "explanation": { "$ref": "#/$defs/Text" }
       }
@@ -120,6 +145,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "label": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "value": { "type": "number" },
         "explanation": { "$ref": "#/$defs/Text" }
       }
@@ -132,6 +158,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "label": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "values": {
           "description": "The true value per dimension id.",
           "type": "object",
@@ -153,6 +180,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "axes": { "type": "array", "minItems": 3, "items": { "$ref": "#/$defs/Axis" } },
         "categories": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/Category" } },
         "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/ClassificationItem" } },
@@ -170,6 +198,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "quantity": { "$ref": "#/$defs/Quantity" },
         "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/SortingItem" } },
         "draw": { "type": "integer", "minimum": 2 }
@@ -186,6 +215,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "dimensions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/Dimension" } },
         "items": { "type": "array", "minItems": 2, "items": { "$ref": "#/$defs/MatchingItem" } },
         "draw": { "type": "integer", "minimum": 2 }
@@ -200,7 +230,7 @@
     },
     "Quiz": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "A quiz: an ordered set of tasks. A run presents them randomized and is scored only as a whole.",
+      "description": "A quiz: an ordered set of tasks. A run keeps the first task first, randomizes the rest and is scored only as a whole.",
       "type": "object",
       "additionalProperties": false,
       "required": ["schema", "id", "emoji", "title", "description", "tasks"],
@@ -290,6 +320,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "axes": { "type": "array", "items": { "$ref": "#/$defs/Axis" } },
         "categories": { "type": "array", "items": { "$ref": "#/$defs/Category" } },
         "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
@@ -305,6 +336,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "quantity": { "$ref": "#/$defs/Quantity" },
         "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
       }
@@ -317,6 +349,7 @@
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
         "quantity": { "$ref": "#/$defs/Quantity" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "cards": { "description": "Card values in presentation order; a card is addressed by its index.", "type": "array", "items": { "type": "number" } }
       }
     },
@@ -330,6 +363,7 @@
         "id": { "$ref": "#/$defs/Slug" },
         "title": { "$ref": "#/$defs/Text" },
         "prompt": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" },
         "dimensions": { "type": "array", "items": { "$ref": "#/$defs/SheetDimension" } },
         "items": { "type": "array", "items": { "$ref": "#/$defs/SheetItem" } }
       }
@@ -341,7 +375,8 @@
       "required": ["id", "label"],
       "properties": {
         "id": { "$ref": "#/$defs/Slug" },
-        "label": { "$ref": "#/$defs/Text" }
+        "label": { "$ref": "#/$defs/Text" },
+        "icon": { "$ref": "#/$defs/Icon" }
       }
     },
     "SheetTask": {
@@ -353,7 +388,7 @@
     },
     "Sheet": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "The randomized, solution-free presentation of a quiz for one run seed: task order, drawn items in order, category order and card order. A pure function of (quiz, seed).",
+      "description": "The solution-free presentation of a quiz for one run seed: the first task stays first, remaining task order is randomized, and drawn items, category order and card order are randomized. A pure function of (quiz, seed).",
       "type": "object",
       "additionalProperties": false,
       "required": ["quiz", "seed", "title", "description", "tasks"],
@@ -387,7 +422,13 @@
       "required": ["kind", "order"],
       "properties": {
         "kind": { "const": "sorting" },
-        "order": { "description": "Item ids, smallest first.", "type": "array", "items": { "$ref": "#/$defs/Slug" } }
+        "order": { "description": "Item ids, smallest first.", "type": "array", "items": { "$ref": "#/$defs/Slug" } },
+        "guesses": {
+          "description": "The learner's numeric guess per item id, in the quantity's base unit (never SI-prefixed); positive on a logarithmic scale. Items with a guess stand in `order` in ascending guess order; an item without a guess has none.",
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/Slug" },
+          "additionalProperties": { "type": "number" }
+        }
       }
     },
     "MatchingAnswer": {
@@ -516,7 +557,7 @@
     },
     "Identity": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "How a learner appears. Anonymous learners are always new; pseudonyms and names share one handle namespace and are recalled without a password.",
+      "description": "How a learner appears. Anonymous learners are always new; pseudonyms and names share one handle namespace and are recalled without a password. The handle is the normalized display.",
       "oneOf": [
         {
           "type": "object",
@@ -530,14 +571,48 @@
           "required": ["kind", "handle"],
           "properties": {
             "kind": { "enum": ["pseudonym", "name"] },
-            "handle": { "type": "string", "minLength": 1, "maxLength": 64 }
+            "handle": { "$ref": "#/$defs/Handle" }
           }
         }
       ]
     },
+    "IdentityClaim": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "An identity as a learner asks for it: the handle as typed, at most 256 code points. The proctor normalizes it (White_Space runs collapse to one space and are trimmed, the typographic apostrophe U+2019 becomes the apostrophe) and refuses whatever is not a `Handle` afterwards (`handle-invalid`).",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind"],
+          "properties": { "kind": { "const": "anonymous" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "handle"],
+          "properties": {
+            "kind": { "enum": ["pseudonym", "name"] },
+            "handle": { "type": "string", "minLength": 1, "maxLength": 256 }
+          }
+        }
+      ]
+    },
+    "Limits": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The caps a proctor decides with so that no learner and no client grows its state without bound. The defaults never reach a real class: 100000 learners, 200 submitted runs per learner and quiz, 1000 submitted runs per learner in total, 2000 recorded answers per run.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["learners", "runsPerQuiz", "runs", "answersPerRun"],
+      "properties": {
+        "learners": { "description": "Registered learners in total; a registration beyond it is `roster-full`.", "type": "integer", "minimum": 1 },
+        "runsPerQuiz": { "description": "Submitted runs per learner and quiz; a start beyond it is `runs-exhausted`.", "type": "integer", "minimum": 1 },
+        "runs": { "description": "Submitted runs per learner over all quizzes; a start beyond it is `runs-exhausted`.", "type": "integer", "minimum": 1 },
+        "answersPerRun": { "description": "Recorded answers per run; an answer beyond it is `answers-exhausted`.", "type": "integer", "minimum": 1 }
+      }
+    },
     "Command": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "Learner intent. Every command carries a client-generated id so a retry after a connection shortage is applied exactly once.",
+      "description": "Learner intent. Every command carries a client-generated id so a retry after a connection shortage is applied exactly once. identify-learner registers a learner: an anonymous one in its own stream, a pseudonym or name in the stream of its handle key, which refuses a second claim (`handle-claimed`). A claimed handle is recalled with the `handle` query, never by a command.",
       "oneOf": [
         {
           "type": "object",
@@ -546,8 +621,8 @@
           "properties": {
             "type": { "const": "identify-learner" },
             "id": { "$ref": "#/$defs/Id" },
-            "learner": { "description": "The id a new learner receives; ignored when the handle is recalled.", "$ref": "#/$defs/Id" },
-            "identity": { "$ref": "#/$defs/Identity" }
+            "learner": { "description": "The id the new learner receives.", "$ref": "#/$defs/Id" },
+            "identity": { "$ref": "#/$defs/IdentityClaim" }
           }
         },
         {
@@ -590,6 +665,7 @@
     },
     "Rejection": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Why a command is refused. `id-invalid`: a learner, run or command id is not 32 lowercase hex, or a quiz or task id is not a slug. `handle-invalid`: the handle is outside the `Handle` policy. `handle-claimed`: another learner holds the handle. `learner-exists`: the learner id is already registered. `roster-full`, `runs-exhausted`, `answers-exhausted`: a cap of `Limits` is reached.",
       "enum": [
         "unknown-learner",
         "unknown-quiz",
@@ -600,12 +676,18 @@
         "run-incomplete",
         "answer-invalid",
         "quiz-revised",
-        "handle-invalid"
+        "handle-invalid",
+        "handle-claimed",
+        "id-invalid",
+        "learner-exists",
+        "roster-full",
+        "runs-exhausted",
+        "answers-exhausted"
       ]
     },
     "Event": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "Facts of the learner stream. The quiz revision is the content hash the run was started against.",
+      "description": "Facts of the learner stream; a registration under a pseudonym or name is first the one fact of its handle stream. The quiz revision is the content hash the run was started against.",
       "oneOf": [
         {
           "type": "object",
@@ -615,16 +697,6 @@
             "type": { "const": "learner-registered" },
             "learner": { "$ref": "#/$defs/Id" },
             "identity": { "$ref": "#/$defs/Identity" },
-            "at": { "$ref": "#/$defs/Timestamp" }
-          }
-        },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "required": ["type", "learner", "at"],
-          "properties": {
-            "type": { "const": "learner-recalled" },
-            "learner": { "$ref": "#/$defs/Id" },
             "at": { "$ref": "#/$defs/Timestamp" }
           }
         },
@@ -711,7 +783,8 @@
             "properties": {
               "id": { "$ref": "#/$defs/Slug" },
               "kind": { "$ref": "#/$defs/TaskKind" },
-              "title": { "$ref": "#/$defs/Text" }
+              "title": { "$ref": "#/$defs/Text" },
+              "icon": { "$ref": "#/$defs/Icon" }
             }
           }
         }
@@ -830,18 +903,58 @@
           "additionalProperties": { "$ref": "#/$defs/Score" }
         },
         "badges": { "type": "array", "items": { "$ref": "#/$defs/Slug" } },
-        "runs": { "description": "Submitted runs.", "type": "integer", "minimum": 0 },
-        "lastActivity": { "$ref": "#/$defs/Timestamp" }
+        "runs": { "description": "Submitted runs in the scope of the leaderboard.", "type": "integer", "minimum": 0 },
+        "lastActivity": { "description": "When the learner last submitted a run in the scope of the leaderboard.", "$ref": "#/$defs/Timestamp" }
+      }
+    },
+    "LeaderboardPeriod": {
+      "description": "Which runs a leaderboard counts by when they were submitted: those of the current day, of the current ISO week (from Monday), of the current month — calendar periods in UTC around the proctor's clock — or all of them.",
+      "enum": ["daily", "weekly", "monthly", "all-time"]
+    },
+    "LeaderboardWindow": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "The time a leaderboard period spans: a run counts when it was submitted at or after `from` and before `until`.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "until"],
+      "properties": {
+        "from": { "description": "The first instant inside the window.", "$ref": "#/$defs/Timestamp" },
+        "until": { "description": "The first instant after the window.", "$ref": "#/$defs/Timestamp" }
       }
     },
     "Leaderboard": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "Every learner with at least one submitted run, ordered by total descending, then badge count descending, then reachedAt ascending, then learner id ascending; rank is the 1-based position.",
+      "description": "One leaderboard: the learners with at least one submitted run in its scope — the runs submitted inside `window` (every run when there is none), of `quiz` only when it names one — ordered by total descending, then badge count descending, then reachedAt ascending, then learner id ascending; rank is the 1-based position. Every row is made of the runs in scope only: their best scores, the badges they earned, their count and their last submission; the total of a board of one quiz is that quiz's best score in points. `rows` holds the top rows only, `learners` counts every ranked learner, and `own` is the caller's row when the query names a ranked learner, also when that row is inside the top.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["rows"],
+      "required": ["period", "rows", "learners", "submissions"],
       "properties": {
-        "rows": { "type": "array", "items": { "$ref": "#/$defs/LeaderboardRow" } }
+        "period": { "$ref": "#/$defs/LeaderboardPeriod" },
+        "quiz": { "description": "The one quiz whose runs are counted; every quiz of the catalog when absent.", "$ref": "#/$defs/Slug" },
+        "window": { "description": "The window of `period` the proctor answered for; absent for `all-time`.", "$ref": "#/$defs/LeaderboardWindow" },
+        "rows": { "description": "The top rows by rank.", "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/LeaderboardRow" } },
+        "learners": { "description": "How many learners are ranked in total.", "type": "integer", "minimum": 0 },
+        "submissions": { "description": "How many runs the learners of the catalog have submitted in all, whatever the period and the quiz: it grows with every submission, so a client knows when what submissions change is worth asking for again.", "type": "integer", "minimum": 0 },
+        "own": { "$ref": "#/$defs/LeaderboardRow" }
+      }
+    },
+    "HandleView": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "Who holds a handle: the normalized display of the asked handle and, when it is claimed, the learner holding it with the identity it registered. Recalling a handle is this read; it writes nothing.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["display"],
+      "properties": {
+        "display": { "$ref": "#/$defs/Handle" },
+        "holder": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["learner", "identity"],
+          "properties": {
+            "learner": { "$ref": "#/$defs/Id" },
+            "identity": { "$ref": "#/$defs/Identity" }
+          }
+        }
       }
     },
     "Query": {
@@ -868,14 +981,25 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["type"],
-          "properties": { "type": { "const": "leaderboard" } }
+          "required": ["type", "period"],
+          "properties": {
+            "type": { "const": "leaderboard" },
+            "period": { "$ref": "#/$defs/LeaderboardPeriod" },
+            "quiz": { "description": "The one quiz whose runs are counted; every quiz of the catalog when absent.", "$ref": "#/$defs/Slug" },
+            "learner": { "description": "The caller, whose row the answer carries as `own`.", "$ref": "#/$defs/Id" }
+          }
         },
         {
           "type": "object",
           "additionalProperties": false,
           "required": ["type", "quiz"],
           "properties": { "type": { "const": "crowd" }, "quiz": { "$ref": "#/$defs/Slug" } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "handle"],
+          "properties": { "type": { "const": "handle" }, "handle": { "description": "The handle as typed.", "type": "string", "minLength": 1, "maxLength": 256 } }
         }
       ]
     },
@@ -998,7 +1122,7 @@
     },
     "CrowdItem": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "How often an item was answered and how: counts per category or value in ascending key order, or for sortings the mean of the normalized position (0 smallest … 1 largest) the learners gave it.",
+      "description": "How often an item was answered and how: counts per category or value in ascending key order, or for sortings the mean of the normalized position (0 smallest … 1 largest) the learners gave it and how often they put it at each place.",
       "type": "object",
       "additionalProperties": false,
       "required": ["item", "answers"],
@@ -1006,30 +1130,41 @@
         "item": { "$ref": "#/$defs/Slug" },
         "answers": { "type": "integer", "minimum": 1 },
         "counts": { "type": "array", "items": { "$ref": "#/$defs/CrowdCount" } },
-        "meanPosition": { "type": "number", "minimum": 0, "maximum": 1 }
+        "meanPosition": { "type": "number", "minimum": 0, "maximum": 1 },
+        "places": { "description": "Sorting only: one count per place a sheet of the task presents (m = min(draw, items), all items without draw); a position i in a learner's order of n items counts for place n < 2 ? 0 : ⌊(2·i·(m − 1) + (n − 1)) / (2·(n − 1))⌋. Sums to answers.", "type": "array", "items": { "type": "integer", "minimum": 0 } }
       }
+    },
+    "CrowdScores": {
+      "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
+      "description": "How many scores fell into each of the CROWD_SCORE_BINS = 10 bins [0, 10), [10, 20), … [80, 90), [90, 100] of the whole percent ⌊score·100 + ½⌋: a score counts for bin min(9, ⌊percent / 10⌋).",
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": { "type": "integer", "minimum": 0 }
     },
     "CrowdTask": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
       "type": "object",
       "additionalProperties": false,
-      "required": ["task", "kind", "items"],
+      "required": ["task", "kind", "scores", "items"],
       "properties": {
         "task": { "$ref": "#/$defs/Slug" },
         "kind": { "$ref": "#/$defs/TaskKind" },
         "dimension": { "description": "Set for matching: one crowd task per dimension.", "$ref": "#/$defs/Slug" },
+        "scores": { "description": "The scores of the results that count for the task: the task score of a classification or sorting, the dimension's score of a matching.", "$ref": "#/$defs/CrowdScores" },
         "items": { "description": "In the quiz's definition order; items nobody answered are left out.", "type": "array", "items": { "$ref": "#/$defs/CrowdItem" } }
       }
     },
     "CrowdView": {
       "x-semio-formats": ["🔣️jsonschema", "🦀️rust", "🟦️typescript"],
-      "description": "What the learners answered in the submitted runs of one quiz, aggregated per task (and dimension) and item: persisted shared, a projection of run-submitted events.",
+      "description": "What the learners answered and scored in the submitted runs of one quiz, aggregated per task (and dimension) and item: persisted shared, a projection of run-submitted events.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["quiz", "runs", "tasks"],
+      "required": ["quiz", "runs", "scores", "tasks"],
       "properties": {
         "quiz": { "$ref": "#/$defs/Slug" },
         "runs": { "type": "integer", "minimum": 0 },
+        "scores": { "description": "The run scores of the counted results; sums to runs.", "$ref": "#/$defs/CrowdScores" },
         "tasks": { "description": "Tasks in definition order, matching dimensions in definition order.", "type": "array", "items": { "$ref": "#/$defs/CrowdTask" } }
       }
     }

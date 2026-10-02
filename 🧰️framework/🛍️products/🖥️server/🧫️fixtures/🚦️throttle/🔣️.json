@@ -1,0 +1,68 @@
+{
+  "schema": "semio.framework.server.throttle/v2",
+  "note": "🚦️ The language-agnostic contract of the per-address token bucket: a bucket of `burst` tokens that starts full and gains `tokens` tokens every `perMs` milliseconds — per second for the rate of a request class, per hour for a named allowance. Every request names the instant it arrives at (milliseconds after the first) and what it is answered: admitted, or refused with the wait until the bucket holds a whole token again. The Rust suite (🔨️modules/🚦️throttle/🧪️tests/🔬️unit/🦀️.rs) holds the throttle against these answers and runs the same schedules through an independent implementation of the generic cell rate algorithm.",
+  "cases": [
+    {
+      "name": "a burst is spent at once and refills at the rate",
+      "rate": { "tokens": 2, "perMs": 1000, "burst": 3 },
+      "requests": [
+        { "atMs": 0, "admitted": true },
+        { "atMs": 0, "admitted": true },
+        { "atMs": 0, "admitted": true },
+        { "atMs": 0, "admitted": false, "retryAfterMs": 500 },
+        { "atMs": 250, "admitted": false, "retryAfterMs": 250 },
+        { "atMs": 500, "admitted": true },
+        { "atMs": 500, "admitted": false, "retryAfterMs": 500 },
+        { "atMs": 2500, "admitted": true },
+        { "atMs": 2500, "admitted": true },
+        { "atMs": 2500, "admitted": true },
+        { "atMs": 2500, "admitted": false, "retryAfterMs": 500 }
+      ]
+    },
+    {
+      "name": "a bucket of one token is a steady pace",
+      "rate": { "tokens": 8, "perMs": 1000, "burst": 1 },
+      "requests": [
+        { "atMs": 0, "admitted": true },
+        { "atMs": 62, "admitted": false, "retryAfterMs": 63 },
+        { "atMs": 125, "admitted": true },
+        { "atMs": 126, "admitted": false, "retryAfterMs": 124 },
+        { "atMs": 250, "admitted": true },
+        { "atMs": 10000, "admitted": true },
+        { "atMs": 10000, "admitted": false, "retryAfterMs": 125 }
+      ]
+    },
+    {
+      "name": "an idle bucket never holds more than its burst",
+      "rate": { "tokens": 4, "perMs": 1000, "burst": 2 },
+      "requests": [
+        { "atMs": 0, "admitted": true },
+        { "atMs": 60000, "admitted": true },
+        { "atMs": 60000, "admitted": true },
+        { "atMs": 60000, "admitted": false, "retryAfterMs": 250 },
+        { "atMs": 60250, "admitted": true },
+        { "atMs": 60250, "admitted": false, "retryAfterMs": 250 }
+      ]
+    },
+    {
+      "name": "an allowance refills over hours and says how long its next token takes",
+      "rate": { "tokens": 100, "perMs": 3600000, "burst": 3 },
+      "requests": [
+        { "atMs": 0, "admitted": true },
+        { "atMs": 1, "admitted": true },
+        { "atMs": 2, "admitted": true },
+        { "atMs": 3, "admitted": false, "retryAfterMs": 35997 },
+        { "atMs": 30000, "admitted": false, "retryAfterMs": 6000 },
+        { "atMs": 36000, "admitted": true },
+        { "atMs": 36000, "admitted": false, "retryAfterMs": 36000 },
+        { "atMs": 108000, "admitted": true },
+        { "atMs": 108000, "admitted": true },
+        { "atMs": 108000, "admitted": false, "retryAfterMs": 36000 },
+        { "atMs": 7308000, "admitted": true },
+        { "atMs": 7308000, "admitted": true },
+        { "atMs": 7308000, "admitted": true },
+        { "atMs": 7308000, "admitted": false, "retryAfterMs": 36000 }
+      ]
+    }
+  ]
+}

@@ -2,11 +2,13 @@
 """🧾️ Second implementation of the learner lifecycle (design §3–§8), in Python.
 
 Written from the design text alone — never from the TypeScript or Rust twins. It composes everything a
-proctor decides with: handle normalisation, the roster decider (identify-learner), the learner decider
-(start-run, record-answer, submit-run) with the sheet of §4 over numpy's MT19937, the answer rules of
-§5, the scoring of §6 and the badges of §7, plus the folding ``evolve`` and the learner and run views.
-State is a plain dictionary here; only decisions and schema views are projected, so no twin's private
-state shape is ever compared.
+proctor decides with: the id and slug shapes and the handle policy (the letters are derived from the
+Unicode Character Database through ``unicodedata``, never from the cores' range tables), the handle
+decider (one state per handle key; a claimed handle is refused, never recalled by a command), the
+learner decider (anonymous registration, start-run, record-answer, submit-run) with the caps of
+``Limits``, the sheet of §4 over numpy's MT19937, the answer rules of §5, the scoring of §6 and the
+badges of §7, plus the folding ``evolve`` and the learner and run views. State is a plain dictionary
+here; only decisions and schema views are projected, so no twin's private state shape is ever compared.
 
 @see ../../🧫️fixtures/🧾️learner-lifecycle/🔣️.json
 """
@@ -15,6 +17,9 @@ state shape is ever compared.
 import copy
 import json
 import math
+import os
+import re
+import unicodedata
 from collections import Counter
 
 import numpy
@@ -77,12 +82,17 @@ def ascending(task, items):
     return sorted(items, key=lambda item: (item["value"], index[item["id"]]))
 
 
+def icon_of(source):
+    """🖼️ The icon of a task, an item or a dimension as the optional member its presentation carries."""
+    return {"icon": source["icon"]} if "icon" in source else {}
+
+
 def sheet_task(generator, task):
     """🗒️ One task's solution-free sheet, consuming the stream in the order §4 fixes."""
     items = shuffle(generator, task["items"])
     if "draw" in task and task["draw"] < len(items):
         items = items[: task["draw"]]
-    built = {"kind": task["kind"], "id": task["id"], "title": task["title"], "prompt": task["prompt"]}
+    built = {"kind": task["kind"], "id": task["id"], "title": task["title"], "prompt": task["prompt"], **icon_of(task)}
     if task["kind"] == "classification":
         if "axes" in task:
             built["axes"] = task["axes"]
@@ -92,15 +102,16 @@ def sheet_task(generator, task):
         if len(items) >= 2 and [item["id"] for item in items] == [item["id"] for item in ascending(task, items)]:
             items = items[1:] + items[:1]
     else:
-        built["dimensions"] = [{"id": dimension["id"], "quantity": dimension["quantity"], "cards": shuffle(generator, [item["values"][dimension["id"]] for item in items])} for dimension in task["dimensions"]]
-    built["items"] = [{"id": item["id"], "label": item["label"]} for item in items]
+        built["dimensions"] = [{"id": dimension["id"], "quantity": dimension["quantity"], **icon_of(dimension), "cards": shuffle(generator, [item["values"][dimension["id"]] for item in items])} for dimension in task["dimensions"]]
+    built["items"] = [{"id": item["id"], "label": item["label"], **icon_of(item)} for item in items]
     return built
 
 
 def sheet_of(quiz, seed):
-    """🃏️ ``sheet(quiz, seed)``: task order first, then every task in definition order."""
+    """🃏️ ``sheet(quiz, seed)``: keep the first task first, shuffle the rest, then present tasks in definition order."""
     generator = Mt19937(seed)
-    order = shuffle(generator, range(len(quiz["tasks"])))
+    shuffled_order = shuffle(generator, range(len(quiz["tasks"])))
+    order = [0, *[position for position in shuffled_order if position != 0]] if shuffled_order else []
     built = [sheet_task(generator, task) for task in quiz["tasks"]]
     return {"quiz": quiz["id"], "seed": seed, "title": quiz["title"], "description": quiz["description"], "tasks": [built[position] for position in order]}
 
@@ -311,40 +322,92 @@ def earned_badges(badges, quizzes, results, held):
 # endregion 🔖️Badges
 
 
-# region 🔖️Roster
+# region 🔖️Handles
+WHITE_SPACE = frozenset([*range(0x09, 0x0E), 0x20, 0x85, 0xA0, 0x1680, *range(0x2000, 0x200B), 0x2028, 0x2029, 0x202F, 0x205F, 0x3000])
+LATIN_BLOCKS = [(0x0000, 0x007F), (0x0080, 0x00FF), (0x0100, 0x017F), (0x0180, 0x024F), (0x1E00, 0x1EFF)]
+HANDLE_MAX = 64
+HANDLE_INPUT_MAX = 256
+DEFAULT_LIMITS = {"learners": 100000, "runsPerQuiz": 200, "runs": 1000, "answersPerRun": 2000}
+
+
+def handle_letter(character):
+    """🔤️ Whether a character is a Latin upper- or lowercase letter of the five blocks without a compatibility decomposition."""
+    point = ord(character)
+    return any(low <= point <= high for low, high in LATIN_BLOCKS) and unicodedata.category(character) in ("Lu", "Ll") and unicodedata.normalize("NFKC", character) == character
+
+
 def normalize_handle(handle):
-    """🪪️ ``{display, key}`` of a handle — trimmed, inner whitespace runs collapsed, key lowercased — or ``None``."""
-    display = " ".join(handle.split())
-    return {"display": display, "key": display.lower()} if 1 <= len(display) <= 64 else None
+    """🪪️ ``{display, key}`` of a handle, or ``None`` outside the policy: White_Space runs collapse to one space and are trimmed, U+2019 becomes the apostrophe, then 1…64 letters, ASCII digits, ``'._-`` and single spaces with at least one letter or digit; the key is the lowercase."""
+    if len(handle) > HANDLE_INPUT_MAX:
+        return None
+    words = "".join(" " if ord(character) in WHITE_SPACE else character for character in handle).split(" ")
+    display = " ".join(word for word in words if word).replace("’", "'")
+    worded = [character for character in display if handle_letter(character) or character in "0123456789"]
+    if not worded or len(display) > HANDLE_MAX or any(character not in worded and character not in " '._-" for character in display):
+        return None
+    return {"display": display, "key": display.lower()}
 
 
-def decide_roster(state, command, now):
-    """🛂️ identify-learner: anonymous learners are always new, a claimed handle key recalls its learner."""
+def handle_actor_id(key):
+    """🗝️ The id of the stream of a handle key: the lowercase hex of its UTF-8 bytes."""
+    return key.encode("utf-8").hex()
+
+
+def is_id(value):
+    """🆔️ Exactly 32 lowercase hex characters."""
+    return isinstance(value, str) and re.fullmatch("[0-9a-f]{32}", value) is not None
+
+
+def is_slug(value):
+    """🐌️ Lowercase letters and digits in hyphen-separated words, at most 64 characters."""
+    return isinstance(value, str) and len(value) <= 64 and re.fullmatch("[a-z0-9]+(?:-[a-z0-9]+)*", value) is not None
+
+
+def command_rejection(command):
+    """🛃️ ``id-invalid`` unless the command, learner and run ids are ids and the quiz and task ids slugs."""
+    ids = all(is_id(command[member]) for member in ("id", "learner", "run") if member in command)
+    slugs = all(is_slug(command[member]) for member in ("quiz", "task") if member in command)
+    return None if ids and slugs else "id-invalid"
+
+
+def registration_rejection(learners, limits):
+    """🚧️ ``roster-full`` once the proctor holds its cap of learners."""
+    return "roster-full" if learners >= limits["learners"] else None
+
+
+def empty_handle_state(key):
+    """🌾️ A handle key nobody claimed yet."""
+    return {"key": key, "holder": None}
+
+
+def decide_handle(state, command, now):
+    """🛂️ identify-learner under a pseudonym or name: a free handle of this key registers the learner, a claimed one is refused."""
+    malformed = command_rejection(command)
+    if malformed is not None:
+        return {"rejection": malformed}
     identity = command["identity"]
-    if identity["kind"] == "anonymous":
-        return {"events": [{"type": "learner-registered", "learner": command["learner"], "identity": {"kind": "anonymous"}, "at": now}]}
-    handle = normalize_handle(identity["handle"])
-    if handle is None:
+    handle = normalize_handle(identity["handle"]) if identity["kind"] != "anonymous" else None
+    if handle is None or handle["key"] != state["key"]:
         return {"rejection": "handle-invalid"}
-    if handle["key"] in state:
-        return {"events": [{"type": "learner-recalled", "learner": state[handle["key"]], "at": now}]}
+    if state["holder"] is not None:
+        return {"rejection": "handle-claimed"}
     return {"events": [{"type": "learner-registered", "learner": command["learner"], "identity": {"kind": identity["kind"], "handle": handle["display"]}, "at": now}]}
 
 
-def evolve_roster(state, event):
-    """🗳️ A registered pseudonym or name claims its handle key."""
+def evolve_handle(state, event):
+    """🗳️ The learner registered under a pseudonym or name holds the handle from then on."""
     if event["type"] != "learner-registered" or event["identity"]["kind"] == "anonymous":
         return state
-    return {**state, normalize_handle(event["identity"]["handle"])["key"]: event["learner"]}
+    return {**state, "holder": event["learner"]}
 
 
-# endregion 🔖️Roster
+# endregion 🔖️Handles
 
 
 # region 🔖️Learner
 def empty_learner_state(learner):
     """🌱️ A learner nothing has happened to yet."""
-    return {"learner": learner, "identity": None, "runs": [], "badges": [], "best": {}, "reachedAt": None, "lastActivity": None}
+    return {"learner": learner, "identity": None, "runs": [], "badges": [], "best": {}, "reachedAt": None}
 
 
 def run_of(state, run):
@@ -355,16 +418,17 @@ def run_of(state, run):
 def evolve_learner(state, event):
     """🗂️ Folds one learner event into the state."""
     state = copy.deepcopy(state)
-    state["lastActivity"] = event["at"] if state["lastActivity"] is None else max(state["lastActivity"], event["at"])
     kind = event["type"]
     if kind == "learner-registered":
         state["identity"] = event["identity"]
     elif kind == "run-started":
-        state["runs"].append({"run": event["run"], "quiz": event["quiz"], "revision": event["revision"], "seed": event["seed"], "status": "open", "answers": {}, "result": None, "startedAt": event["at"], "submittedAt": None})
+        state["runs"].append({"run": event["run"], "quiz": event["quiz"], "revision": event["revision"], "seed": event["seed"], "status": "open", "answers": {}, "recorded": 0, "result": None, "startedAt": event["at"], "submittedAt": None})
     elif kind == "run-voided":
         run_of(state, event["run"])["status"] = "voided"
     elif kind == "answer-recorded":
-        run_of(state, event["run"])["answers"][event["task"]] = event["answer"]
+        run = run_of(state, event["run"])
+        run["answers"][event["task"]] = event["answer"]
+        run["recorded"] += 1
     elif kind == "run-submitted":
         run = run_of(state, event["run"])
         run["status"], run["result"], run["submittedAt"] = "submitted", event["result"], event["at"]
@@ -378,20 +442,37 @@ def evolve_learner(state, event):
 
 
 def decide_learner(state, command, context):
-    """🏛️ start-run, record-answer and submit-run against the learner's state and the current quizzes."""
-    now, learner = context["now"], state["learner"]
+    """🏛️ The registration of an anonymous learner, start-run, record-answer and submit-run against the learner's state, the current quizzes and the caps."""
+    now, learner, limits = context["now"], state["learner"], context["limits"]
+    malformed = command_rejection(command)
+    if malformed is not None:
+        return {"rejection": malformed}
+    if command["learner"] != learner:
+        return {"rejection": "unknown-learner"}
+    if command["type"] == "identify-learner":
+        if command["identity"]["kind"] != "anonymous":
+            return {"rejection": "handle-invalid"}
+        if state["identity"] is not None:
+            return {"rejection": "learner-exists"}
+        return {"events": [{"type": "learner-registered", "learner": learner, "identity": {"kind": "anonymous"}, "at": now}]}
     if command["type"] == "start-run":
         if state["identity"] is None:
             return {"rejection": "unknown-learner"}
         if command["quiz"] not in context["quizzes"]:
             return {"rejection": "unknown-quiz"}
+        used = run_of(state, command["run"])
+        if used is not None:
+            return {"rejection": "run-open" if used["status"] == "open" else "run-closed"}
         current = context["quizzes"][command["quiz"]]
         started = {"type": "run-started", "learner": learner, "run": command["run"], "quiz": command["quiz"], "revision": current["revision"], "seed": fnv1a32(command["run"]), "at": now}
         open_run = next((run for run in state["runs"] if run["quiz"] == command["quiz"] and run["status"] == "open"), None)
+        if open_run is not None and open_run["revision"] == current["revision"]:
+            return {"rejection": "run-open"}
+        submitted = [run for run in state["runs"] if run["status"] == "submitted"]
+        if len(submitted) >= limits["runs"] or sum(1 for run in submitted if run["quiz"] == command["quiz"]) >= limits["runsPerQuiz"]:
+            return {"rejection": "runs-exhausted"}
         if open_run is None:
             return {"events": [started]}
-        if open_run["revision"] == current["revision"]:
-            return {"rejection": "run-open"}
         return {"events": [{"type": "run-voided", "learner": learner, "run": open_run["run"], "at": now}, started]}
     run = run_of(state, command["run"])
     if run is None:
@@ -403,6 +484,8 @@ def decide_learner(state, command, context):
     if command["type"] == "record-answer":
         if stale:
             return {"rejection": "quiz-revised"}
+        if run["recorded"] >= limits["answersPerRun"]:
+            return {"rejection": "answers-exhausted"}
         sheet_task_ = next((task for task in sheet_of(current["quiz"], run["seed"])["tasks"] if task["id"] == command["task"]), None)
         if sheet_task_ is None:
             return {"rejection": "unknown-task"}
@@ -478,31 +561,131 @@ def quizzes_at(vectors, revisions):
 
 
 def replay_learner(vectors, sequence):
-    """🎞️ Folds the given events, then decides and folds every step; returns the decisions and the final state."""
+    """🎞️ Folds the given events, then decides and folds every step under the sequence's caps; returns the decisions and the final state."""
     state = empty_learner_state(sequence["learner"])
     for event in sequence["given"]:
         state = evolve_learner(state, event)
     revisions = dict(vectors["revisions"])
+    limits = sequence.get("limits", vectors["limits"])
     decisions = []
     for step in sequence["steps"]:
         revisions.update(step.get("revisions", {}))
-        decision = decide_learner(state, step["command"], {"now": step["now"], "catalog": vectors["catalog"], "quizzes": quizzes_at(vectors, revisions)})
+        decision = decide_learner(state, step["command"], {"now": step["now"], "catalog": vectors["catalog"], "quizzes": quizzes_at(vectors, revisions), "limits": limits})
         decisions.append(decision)
         for event in decision.get("events", []):
             state = evolve_learner(state, event)
     return decisions, state, quizzes_at(vectors, revisions)
 
 
-def replay_roster(sequence):
-    """📼️ Decides and folds every identify-learner step from an empty roster."""
-    state = {}
+def replay_handle(sequence):
+    """📼️ Decides and folds every identify-learner step addressed to one handle key, from the unclaimed key."""
+    state = empty_handle_state(sequence["key"])
     decisions = []
     for step in sequence["steps"]:
-        decision = decide_roster(state, step["command"], step["now"])
+        decision = decide_handle(state, step["command"], step["now"])
         decisions.append(decision)
         for event in decision.get("events", []):
-            state = evolve_roster(state, event)
+            state = evolve_handle(state, event)
     return decisions
+
+
+# endregion 🔖️Replay
+
+
+# region 🔖️Site
+def site_quizzes(repo_root, catalog_path):
+    """🎓️ The catalog at a repository path and its quizzes in catalog order."""
+    with open(os.path.join(repo_root, catalog_path), "r", encoding="utf-8") as handle:
+        catalog = json.load(handle)
+    quizzes = []
+    for path in catalog["quizzes"]:
+        with open(os.path.join(repo_root, os.path.dirname(catalog_path), path), "r", encoding="utf-8") as handle:
+            quizzes.append(json.load(handle))
+    return catalog, quizzes
+
+
+def perfect_answer(task, sheet_task_):
+    """💯️ The answer that scores a sheet task 1: every item in its category, ascending by value (ties in definition order), every item on a card of its own value."""
+    items = {item["id"]: item for item in task["items"]}
+    index = {item["id"]: position for position, item in enumerate(task["items"])}
+    presented = [item["id"] for item in sheet_task_["items"]]
+    if task["kind"] == "classification":
+        return {"kind": "classification", "assignments": {identifier: items[identifier]["category"] for identifier in presented}}
+    if task["kind"] == "sorting":
+        return {"kind": "sorting", "order": sorted(presented, key=lambda identifier: (items[identifier]["value"], index[identifier]))}
+    assignments = {}
+    for dimension in sheet_task_["dimensions"]:
+        free = list(range(len(dimension["cards"])))
+        assignments[dimension["id"]] = {}
+        for identifier in presented:
+            card = next(position for position in free if dimension["cards"][position] == items[identifier]["values"][dimension["id"]])
+            free.remove(card)
+            assignments[dimension["id"]][identifier] = card
+    return {"kind": "matching", "assignments": assignments}
+
+
+def flawed_answer(task, sheet_task_):
+    """🩹️ The perfect answer with exactly one mistake: the first item in the first wrong category, the smallest and the largest item exchanged, or the cards of the first item and of the first later item of another value exchanged in the first dimension."""
+    answer = perfect_answer(task, sheet_task_)
+    items = {item["id"]: item for item in task["items"]}
+    presented = [item["id"] for item in sheet_task_["items"]]
+    if task["kind"] == "classification":
+        first = presented[0]
+        answer["assignments"][first] = next(category["id"] for category in sheet_task_["categories"] if category["id"] != items[first]["category"])
+    elif task["kind"] == "sorting":
+        answer["order"][0], answer["order"][-1] = answer["order"][-1], answer["order"][0]
+    else:
+        dimension = sheet_task_["dimensions"][0]["id"]
+        first = presented[0]
+        other = next(identifier for identifier in presented[1:] if items[identifier]["values"][dimension] != items[first]["values"][dimension])
+        cards = answer["assignments"][dimension]
+        cards[first], cards[other] = cards[other], cards[first]
+    return answer
+
+
+def play(catalog, quizzes, limits, scenario):
+    """🎮️ One registered learner playing the scenario's runs: per run its score and the badges it awards, and every badge held at the end."""
+    loaded = {quiz["id"]: {"quiz": quiz, "revision": "0" * 64} for quiz in quizzes}
+    state = evolve_learner(empty_learner_state(scenario["learner"]), {"type": "learner-registered", "learner": scenario["learner"], "identity": {"kind": "anonymous"}, "at": 0})
+    now = 0
+    scores = []
+    awards = []
+
+    def decided(command):
+        nonlocal state, now
+        now += 1
+        decision = decide_learner(state, command, {"now": now, "catalog": catalog, "quizzes": loaded, "limits": limits})
+        if "events" not in decision:
+            raise AssertionError("site/%s: %s is refused with %s" % (scenario["id"], command["type"], decision["rejection"]))
+        for event in decision["events"]:
+            state = evolve_learner(state, event)
+        return decision["events"]
+
+    for number, run in enumerate(scenario["runs"]):
+        quiz = loaded[run["quiz"]]["quiz"]
+        tasks = {task["id"]: task for task in quiz["tasks"]}
+        command = lambda step, **members: {"type": step, "id": "%032x" % (now + 1 + (number << 64)), "learner": scenario["learner"], "run": run["run"], **members}
+        decided(command("start-run", quiz=run["quiz"]))
+        for sheet_task_ in sheet_of(quiz, fnv1a32(run["run"]))["tasks"]:
+            answer = (flawed_answer if sheet_task_["id"] == run.get("flaw") else perfect_answer)(tasks[sheet_task_["id"]], sheet_task_)
+            decided(command("record-answer", task=sheet_task_["id"], answer=answer))
+        events = decided(command("submit-run"))
+        scores.append(next(event["result"]["score"] for event in events if event["type"] == "run-submitted"))
+        awards.append([event["badge"] for event in events if event["type"] == "badge-awarded"])
+    return {"scores": scores, "awards": awards, "held": [award["badge"] for award in state["badges"]]}
+
+
+def selects(rule, quiz, task):
+    """🧗️ Whether a badge rule depends on one task of one quiz being perfect."""
+    if rule["kind"] == "perfect-quiz":
+        return rule["quiz"] == quiz["id"]
+    return rule["kind"] == "perfect-tasks" and rule.get("quiz", quiz["id"]) == quiz["id"] and rule.get("taskKind", task["kind"]) == task["kind"]
+
+
+# endregion 🔖️Site
+
+
+# region 🔖️Handlers
 
 
 def held_to(scenario, produced, expected):
@@ -518,28 +701,61 @@ def committed(ctx):
     return json.loads(ctx.fixture_bytes(VECTORS))
 
 
-def handles(ctx):
-    """🏷️ ``normalizeHandle`` for every committed handle."""
-    vectors = committed(ctx)["handles"]
-    return held_to("handles", {vector["id"]: normalize_handle(vector["handle"]) for vector in vectors}, {vector["id"]: vector["expected"] for vector in vectors})
+def claims(vectors):
+    """🙋️ Every handle sequence: the well-formed ones and those whose commands carry malformed ids."""
+    return vectors["registrations"] + vectors["malformed"]["registrations"]
 
 
-def roster(ctx):
-    """📇️ Every committed identify-learner sequence."""
-    vectors = committed(ctx)["roster"]
-    return held_to("roster", {sequence["id"]: replay_roster(sequence) for sequence in vectors}, {sequence["id"]: [step["expected"] for step in sequence["steps"]] for sequence in vectors})
+def sequences(vectors):
+    """🧑‍🎓️ Every learner sequence: the well-formed ones and those whose commands carry malformed ids."""
+    return vectors["learners"] + vectors["malformed"]["learners"]
+
+
+def registrations(ctx):
+    """📇️ Every committed identify-learner sequence of a handle key, and every committed learner count against its cap."""
+    vectors = committed(ctx)
+    produced = {"handles": {sequence["id"]: replay_handle(sequence) for sequence in claims(vectors)}, "quotas": {vector["id"]: registration_rejection(vector["learners"], vector["limits"]) for vector in vectors["quotas"]}}
+    expected = {"handles": {sequence["id"]: [step["expected"] for step in sequence["steps"]] for sequence in claims(vectors)}, "quotas": {vector["id"]: vector["expected"] for vector in vectors["quotas"]}}
+    return held_to("registrations", produced, expected)
+
+
+def site_catalog(ctx):
+    """🥇️ Every committed play of the site catalog: perfect runs earn every badge, a single mistake withholds exactly the badges that depend on its task."""
+    site = committed(ctx)["site"]
+    catalog, quizzes = site_quizzes(ctx.repo_root, site["catalog"])
+    every = [badge["id"] for badge in catalog["badges"]]
+    for named in site["named"]:
+        if named not in every:
+            raise AssertionError("site: the catalog has no badge %s" % named)
+    produced = {}
+    for scenario in site["plays"]:
+        played = play(catalog, quizzes, DEFAULT_LIMITS, scenario)
+        withheld = set()
+        for run in scenario["runs"]:
+            if "flaw" in run:
+                quiz = next(quiz for quiz in quizzes if quiz["id"] == run["quiz"])
+                task = next(task for task in quiz["tasks"] if task["id"] == run["flaw"])
+                withheld |= {badge["id"] for badge in catalog["badges"] if selects(badge["rule"], quiz, task)}
+        if not all(score == 1 for score, run in zip(played["scores"], scenario["runs"]) if "flaw" not in run) or any(score >= 1 for score, run in zip(played["scores"], scenario["runs"]) if "flaw" in run):
+            raise AssertionError("site/%s: a perfect run must score 1 and a flawed run below it, got %r" % (scenario["id"], played["scores"]))
+        if sorted(played["held"]) != sorted(set(every) - withheld):
+            raise AssertionError("site/%s: holds %r, must hold every badge but %r" % (scenario["id"], played["held"], sorted(withheld)))
+        if scenario["expected"] != {"awards": played["awards"], "held": played["held"]}:
+            raise AssertionError("site/%s: the reference awards %r, the committed vector %r" % (scenario["id"], played["awards"], scenario["expected"]))
+        produced[scenario["id"]] = played
+    return Outcome(produced)
 
 
 def learner_decisions(ctx):
     """📜️ Every committed learner sequence's decisions."""
     vectors = committed(ctx)
-    return held_to("learner-decisions", {sequence["id"]: replay_learner(vectors, sequence)[0] for sequence in vectors["learners"]}, {sequence["id"]: [step["expected"] for step in sequence["steps"]] for sequence in vectors["learners"]})
+    return held_to("learner-decisions", {sequence["id"]: replay_learner(vectors, sequence)[0] for sequence in sequences(vectors)}, {sequence["id"]: [step["expected"] for step in sequence["steps"]] for sequence in sequences(vectors)})
 
 
 def learner_views(ctx):
     """🪞️ The learner view and the current-revision run views after every committed sequence of a registered learner."""
     vectors = committed(ctx)
-    viewed = [sequence for sequence in vectors["learners"] if "views" in sequence]
+    viewed = [sequence for sequence in sequences(vectors) if "views" in sequence]
     produced = {}
     for sequence in viewed:
         _, state, quizzes = replay_learner(vectors, sequence)
@@ -547,13 +763,13 @@ def learner_views(ctx):
     return held_to("learner-views", produced, {sequence["id"]: sequence["views"]["expected"] for sequence in viewed})
 
 
-# endregion 🔖️Replay
+# endregion 🔖️Handlers
 
 
 # region 🔖️Registration
 def adapter():
     """🧭️ Oracle role only."""
-    return Adapter("python").oracle("handles", handles).oracle("roster", roster).oracle("learner-decisions", learner_decisions).oracle("learner-views", learner_views)
+    return Adapter("python").oracle("registrations", registrations).oracle("learner-decisions", learner_decisions).oracle("learner-views", learner_views).oracle("site-catalog", site_catalog)
 
 
 # endregion 🔖️Registration

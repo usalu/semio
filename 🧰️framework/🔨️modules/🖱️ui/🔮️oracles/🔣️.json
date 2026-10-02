@@ -139,6 +139,35 @@
       "homepage": "https://d3js.org/d3-ease",
       "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
       "rationale": "Judges `easeInOutCubic` of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: the 500 ms reveal/open glide must ease exactly like d3-ease's `easeCubicInOut` at 257 samples of [0, 1], next to the fixture's exact samples."
+    },
+    {
+      "id": "three-damp",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "three",
+      "version": "0.182.0",
+      "source": {
+        "repository": "https://github.com/mrdoob/three.js",
+        "license": "MIT"
+      },
+      "engine": {
+        "family": "three",
+        "implementation": "three MathUtils.damp",
+        "version": "0.182.0"
+      },
+      "capabilities": [
+        "layered-follow-damping"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": true,
+      "networkDuringExecution": false,
+      "homepage": "https://threejs.org/docs/#api/en/math/MathUtils.damp",
+      "hostPath": "🧰️framework/🔨️modules/🖱️ui/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+      "rationale": "Judges the pointer follow of 🥞️layered-overview-geometry in `🧪️tests/🔬️unit`: `followFactor`, `followStep` and `followRect` must close the gap to their target exactly as three.js's frame-rate independent `MathUtils.damp` does with the decay of 12 % per 60 Hz frame, at 201 elapsed times up to half a second — so the pan takes the same time at 60 Hz, at 120 Hz and under a browser that paints slowly. three is a runtime dependency of this package for its 3D elements; the geometry module itself imports nothing from it."
     }
   ],
   "noOracleDecisions": [

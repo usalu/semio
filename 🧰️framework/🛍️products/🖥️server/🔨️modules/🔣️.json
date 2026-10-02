@@ -6,7 +6,7 @@
         "directory": "📡️gateway",
         "id": "framework.product.server.module.gateway",
         "kind": "module",
-        "responsibility": "Owns the transport layer and the ServerInstance seam: the module, query and document-authority ports, the instance-generic server state, lane fan-out, presence and colour leases, CORS, credential extraction, blob and static-app hosting, the replay-then-live event bridge and the command/query endpoints the server builder wires together.",
+        "responsibility": "Owns the transport layer and the ServerInstance seam: the module, query and document-authority ports, the instance-generic server state, lane fan-out, the presence rooms every socket reads by cursor (bounded per frame and in total) and colour leases, CORS, credential extraction, blob and static-app hosting, the replay-then-live event bridge, the command lane and the command/query endpoints, the route groups an instance mounts and the edge that applies the throttle (client address, request class, the body taken within its limit and its time, bounded sockets, the error bodies) — everything the server builder wires together.",
         "module": {
           "productionConsumers": ["framework.product.server", "hub"]
         }
@@ -18,6 +18,15 @@
         "responsibility": "Runs the actor turn protocol: fenced activation, the admit/dedupe/authorize/decide/commit pipeline, deterministic deciders shared with the optimistic replica, and the saga seam for cross-actor workflows.",
         "module": {
           "productionConsumers": ["framework.product.server", "hub"]
+        }
+      },
+      {
+        "directory": "🚦️throttle",
+        "id": "framework.product.server.module.throttle",
+        "kind": "module",
+        "responsibility": "Bounds what one client address may ask and what an instance carries at once: per-address token buckets for writes, reads and socket upgrades, caps on open sockets per address and in total and on requests in flight, over a bounded table of addresses with IPv6 keyed per /64.",
+        "module": {
+          "productionConsumers": ["framework.product.server", "teaching-proctor"]
         }
       },
       {

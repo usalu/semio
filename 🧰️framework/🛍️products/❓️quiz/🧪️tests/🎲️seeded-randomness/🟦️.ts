@@ -3,11 +3,6 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/🎲️randomness/🟦️.ts
  */
-/** 🎲️ Subject adapter of the seeded-randomness case: `@semio-tech/quiz` answers every committed vector.
- *
- * @see ./🥒️.feature
- * @see ../../🔨️modules/🎲️randomness/🟦️.ts
- */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { Mt19937, fnv1a32, runSeed, shuffle, uniformIndex } from "../../📦️packages/🟦️typescript/🟦️.ts";
 

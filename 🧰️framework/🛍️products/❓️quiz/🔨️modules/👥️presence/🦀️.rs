@@ -10,7 +10,7 @@
 //! @see ../👥️presence/🟦️.ts — the TypeScript twin
 
 use crate::schema::{ClassificationAnswer, Cursor, CursorState, Identity, Place, PresenceState, Screen, SortingAnswer, ThinkingAnswer, ThinkingMatchingAnswer, ThinkingState};
-use crate::validation::{is_slug, pointer, IssueCode, ValidationIssue};
+use crate::validation::{is_slug, normalize_handle, pointer, IssueCode, ValidationIssue};
 use std::collections::BTreeSet;
 
 /// 🏠️ The catalog-wide presence room: who is online and where.
@@ -32,16 +32,16 @@ pub fn room_scope(catalog: &str, place: &Place) -> Option<String> {
     Some(format!("{catalog}/{room}"))
 }
 
-/// 🛃️ Every issue of a presence state, sorted by path, then code: `tag-invalid` at `/tag`, `length-invalid`
-/// at `/identity/handle` (1…64 code points), `slug-invalid` at `/place/quiz` or `/place/task`, and at
+/// 🛃️ Every issue of a presence state, sorted by path, then code: `tag-invalid` at `/tag`, `handle-invalid`
+/// at `/identity/handle` (not a normalized display handle), `slug-invalid` at `/place/quiz` or `/place/task`, and at
 /// `/place/quiz` `required` for a quiz, run or results place without a quiz or `quiz-outside-run` for a quiz on
 /// any other screen, `task-without-run` at `/place/task` for a task outside a run.
 pub fn presence_issues(state: &PresenceState) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     tag(&mut issues, &state.tag);
     if let Identity::Pseudonym { handle } | Identity::Name { handle } = &state.identity {
-        if !(1..=64).contains(&handle.chars().count()) {
-            issues.push(issue("/identity/handle", IssueCode::LengthInvalid));
+        if normalize_handle(handle).is_none_or(|normalized| normalized.display != *handle) {
+            issues.push(issue("/identity/handle", IssueCode::HandleInvalid));
         }
     }
     let Place { screen, quiz, task } = &state.place;
@@ -96,12 +96,13 @@ pub fn thinking_scope(catalog: &str, quiz: &str) -> String {
 pub const THINKING_LIMIT: usize = 64;
 
 /// 🧠️ Every issue of a thinking state, sorted by path, then code: `tag-invalid` at `/tag`; `too-many` at
-/// `/answers`, `/answers/<task>/assignments`, `/answers/<task>/order`, `/answers/<task>/values` or
+/// `/answers`, `/answers/<task>/assignments`, `/answers/<task>/order`, `/answers/<task>/guesses`, `/answers/<task>/values` or
 /// `/answers/<task>/values/<dimension>` beyond [`THINKING_LIMIT`] entries; `slug-invalid` at `/answers/<task>`,
 /// `/answers/<task>/assignments/<item>` (item or category), `/answers/<task>/order/<index>`,
-/// `/answers/<task>/values/<dimension>` and `/answers/<task>/values/<dimension>/<item>`; `duplicate-id` at
-/// `/answers/<task>/order/<index>` for a repeated item; `type-invalid` at `/answers/<task>/values/<dimension>/<item>`
-/// for a value that is not a finite number.
+/// `/answers/<task>/guesses/<item>`, `/answers/<task>/values/<dimension>` and `/answers/<task>/values/<dimension>/<item>`;
+/// `duplicate-id` at `/answers/<task>/order/<index>` for a repeated item; `type-invalid` at
+/// `/answers/<task>/guesses/<item>` and `/answers/<task>/values/<dimension>/<item>` for a guess or value that is not
+/// a finite number. Guess order is not checked on drafts.
 pub fn thinking_issues(state: &ThinkingState) -> Vec<ValidationIssue> {
     let mut issues = Vec::new();
     tag(&mut issues, &state.tag);
@@ -119,7 +120,7 @@ pub fn thinking_issues(state: &ThinkingState) -> Vec<ValidationIssue> {
                     issues.push(ValidationIssue { path: pointer(&path, item), code: IssueCode::SlugInvalid });
                 }
             }
-            ThinkingAnswer::Sorting(SortingAnswer { order }) => {
+            ThinkingAnswer::Sorting(SortingAnswer { order, guesses }) => {
                 let path = format!("{base}/order");
                 limit(&mut issues, path.clone(), order.len());
                 let mut seen = BTreeSet::new();
@@ -129,6 +130,16 @@ pub fn thinking_issues(state: &ThinkingState) -> Vec<ValidationIssue> {
                     }
                     if !seen.insert(item) {
                         issues.push(ValidationIssue { path: format!("{path}/{index}"), code: IssueCode::DuplicateId });
+                    }
+                }
+                let path = format!("{base}/guesses");
+                limit(&mut issues, path.clone(), guesses.len());
+                for (item, guess) in guesses {
+                    if !is_slug(item) {
+                        issues.push(ValidationIssue { path: pointer(&path, item), code: IssueCode::SlugInvalid });
+                    }
+                    if !guess.is_finite() {
+                        issues.push(ValidationIssue { path: pointer(&path, item), code: IssueCode::TypeInvalid });
                     }
                 }
             }

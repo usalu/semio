@@ -20,6 +20,19 @@ function zoneElement(zone: string | undefined, root: ParentNode): HTMLElement | 
   return [...root.querySelectorAll<HTMLElement>("[data-quiz-drop]")].find((element) => element.dataset.quizDrop === zone);
 }
 
+/** 👻️ An inert copy of `source` that looks like it: cloning a node does not carry over what a select currently shows,
+ * so every select of the copy is given the value of the one it copies.
+ * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element — no cloning steps */
+function ghostOf(source: HTMLElement): HTMLElement {
+  const ghost = source.cloneNode(true) as HTMLElement;
+  const shown = source.querySelectorAll("select");
+  ghost.querySelectorAll("select").forEach((select, index) => (select.value = shown[index]!.value));
+  ghost.classList.add("quiz-drag-ghost");
+  ghost.setAttribute("aria-hidden", "true");
+  ghost.style.width = `${source.getBoundingClientRect().width}px`;
+  return ghost;
+}
+
 /** 🤏️ Starts a pointer drag of the element around `event.currentTarget` (its nearest `[data-quiz-drag]` ancestor);
  * `onDrop` receives the zone the pointer is released over. */
 export function startPointerDrag(event: { readonly button: number; readonly clientX: number; readonly clientY: number; readonly currentTarget: Element; preventDefault(): void }, onDrop: (zone: string) => void): void {
@@ -41,10 +54,7 @@ export function startPointerDrag(event: { readonly button: number; readonly clie
   const move = (moved: PointerEvent): void => {
     if (ghost === undefined) {
       if (Math.hypot(moved.clientX - origin.x, moved.clientY - origin.y) < DRAG_THRESHOLD_PX) return;
-      ghost = source.cloneNode(true) as HTMLElement;
-      ghost.classList.add("quiz-drag-ghost");
-      ghost.setAttribute("aria-hidden", "true");
-      ghost.style.width = `${bounds.width}px`;
+      ghost = ghostOf(source);
       host.append(ghost);
       source.classList.add("quiz-dragging");
     }

@@ -1,23 +1,28 @@
 /** 🃏️ Matching: per dimension, give each item one value card; every card can be used once.
  *
- * Each item has one select per dimension listing every card with who uses it; choosing a used card takes it over, so a
- * card is never used twice. A button unassigns. The card pool shows every card as available or used by whom, and
- * pointer users drag a card by its grip onto an item's row. Each item row shows which values the others give it, and
- * is a presence anchor.
+ * Each item has one select per dimension listing every card with who uses it. A card another item uses is a disabled
+ * option: a closed select commits every option the arrow keys pass, so browsing must never take a card away — the
+ * learner frees it with the other item's remove button first. A pointer drag of a card onto an item's row is one
+ * deliberate act and does take it over. The card pool shows every card as available or used by whom, each with the
+ * icon of its dimension; items show their own. Each row is a
+ * presence anchor. The table's columns are fixed shares of its width — the item, the card, the remove
+ * button — so it fits its card at every width and text size instead of growing with its longest option.
+ *
+ * @see https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element — keyboard steps fire `change`
  */
 
 import { useId, type ReactElement } from "react";
 import type { MatchingAnswer, SheetDimension, SheetMatchingTask, SheetItem, Slug } from "@semio-tech/quiz";
 import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
-import { DragGrip, ICON_BUTTON_CLASS, LiveRegion, SELECT_CLASS, elementId, useAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
-import { CrowdChoices, useCrowd } from "../🗳️crowd/🟦️.tsx";
+import { DragGrip, ICON_BUTTON_CLASS, LiveRegion, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, elementId, useAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
 import { PRESENCE_ANCHORS } from "../👥️presence/🟦️.tsx";
+import { IconLabel } from "../🪟️chrome/🟦️.tsx";
 
 const EDGE = "border-b border-normal px-single py-single text-left align-middle";
-const HEAD = `${EDGE} quiz-nowrap border-b-2 font-semibold`;
+const HEAD = `${EDGE} border-b-2 font-semibold`;
 const ROW_HEAD = `${EDGE} font-semibold`;
-const SLOT_SELECT = `${SELECT_CLASS} min-w-[10em] max-w-full`;
+const SLOT_SELECT = `${SELECT_CLASS} w-full min-w-0`;
 
 const SLOT_ZONE = "slot:";
 
@@ -31,11 +36,10 @@ export function assignCard(assignments: Readonly<Record<Slug, number>>, item: Sl
 export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, MatchingAnswer>): ReactElement {
   const { task, answer, onAnswer, text, locale } = props;
   const scope = useId();
-  const { announcement, announce } = useAnnouncement();
+  const { announcement, announce } = useAnnouncement(SELECT_ANNOUNCEMENT_DELAY_MS);
   const assignments = answer?.assignments ?? {};
   const itemLabel = (id: Slug): string => localized(task.items.find((item) => item.id === id)?.label ?? { en: id, de: id }, locale);
   const cardText = (dimension: SheetDimension, index: number): string => formatQuantity(dimension.cards[index] ?? 0, dimension.quantity, locale);
-  const { crowd } = useCrowd();
 
   const set = (dimension: SheetDimension, item: SheetItem, card: number | undefined): void => {
     const current = assignments[dimension.id] ?? {};
@@ -51,7 +55,6 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
         const current = assignments[dimension.id] ?? {};
         const holders = new Map(Object.entries(current).map(([item, index]) => [index, item]));
         const quantity = localized(dimension.quantity.label, locale);
-        const others = crowd?.items(task, dimension.id);
         const drop =
           (card: number) =>
           (zone: string): void => {
@@ -62,9 +65,9 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
         return (
           <section key={dimension.id} className="flex flex-col gap-single" aria-labelledby={elementId(scope, dimension.id)}>
             <h3 id={elementId(scope, dimension.id)} className="m-0 text-sm font-semibold">
-              {quantity}
+              <IconLabel icon={dimension.icon}>{quantity}</IconLabel>
             </h3>
-            <ul className="m-0 flex list-none flex-wrap gap-single p-0" aria-label={text("quiz.matching.cards", { quantity })}>
+            <ul role="list" className="m-0 flex list-none flex-wrap gap-single p-0" aria-label={text("quiz.matching.cards", { quantity })}>
               {dimension.cards.map((_, index) => {
                 const holder = holders.get(index);
                 return (
@@ -75,13 +78,22 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                     data-used={holder === undefined ? undefined : ""}
                   >
                     <DragGrip title={text("quiz.matching.drag", { value: cardText(dimension, index) })} onDrop={drop(index)} />
-                    <span className="text-sm font-semibold tabular-nums">{cardText(dimension, index)}</span>
+                    <span className="text-sm font-semibold tabular-nums">
+                      <IconLabel icon={dimension.icon} order={index}>
+                        {cardText(dimension, index)}
+                      </IconLabel>
+                    </span>
                     <span className="col-start-2 text-xs text-muted-foreground">{holder === undefined ? text("quiz.matching.free") : text("quiz.matching.used", { item: itemLabel(holder) })}</span>
                   </li>
                 );
               })}
             </ul>
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full table-fixed border-collapse text-sm" aria-labelledby={elementId(scope, dimension.id)}>
+              <colgroup>
+                <col className="w-[38%]" />
+                <col />
+                <col className="w-[3.25em]" />
+              </colgroup>
               <thead>
                 <tr>
                   <th scope="col" className={HEAD}>
@@ -91,18 +103,19 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                     {quantity}
                   </th>
                   <th scope="col" className={HEAD}>
-                    <span className="sr-only">{text("quiz.matching.none")}</span>
+                    <span className="sr-only">{text("quiz.matching.actions")}</span>
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {task.items.map((item) => {
+                {task.items.map((item, place) => {
                   const card = current[item.id];
                   return (
                     <tr key={item.id} data-quiz-drop={`${SLOT_ZONE}${dimension.id}:${item.id}`} data-presence-anchor={PRESENCE_ANCHORS.item(item.id)}>
                       <th scope="row" className={ROW_HEAD}>
-                        {itemLabel(item.id)}
-                        <CrowdChoices item={others?.get(item.id)} subject={itemLabel(item.id)} label={(key) => formatQuantity(Number(key), dimension.quantity, locale)} text={text} className="font-normal" />
+                        <IconLabel icon={item.icon} order={place}>
+                          {itemLabel(item.id)}
+                        </IconLabel>
                       </th>
                       <td className={EDGE}>
                         <select
@@ -114,9 +127,10 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                           <option value="">{text("quiz.matching.none")}</option>
                           {dimension.cards.map((_, index) => {
                             const holder = holders.get(index);
+                            const taken = holder !== undefined && holder !== item.id;
                             return (
-                              <option key={index} value={index}>
-                                {holder === undefined || holder === item.id ? cardText(dimension, index) : `${cardText(dimension, index)} – ${text("quiz.matching.used", { item: itemLabel(holder) })}`}
+                              <option key={index} value={index} disabled={taken}>
+                                {taken ? `${cardText(dimension, index)} – ${text("quiz.matching.used", { item: itemLabel(holder) })}` : cardText(dimension, index)}
                               </option>
                             );
                           })}
@@ -135,7 +149,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
           </section>
         );
       })}
-      <LiveRegion message={announcement} />
+      <LiveRegion announcement={announcement} />
     </div>
   );
 }

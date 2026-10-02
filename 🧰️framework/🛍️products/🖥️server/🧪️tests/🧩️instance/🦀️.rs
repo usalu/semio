@@ -84,7 +84,25 @@ impl ServerModule for CountingModule {
             None => Ok(()),
         }
     }
+
+    /// 🛃️ Refuses a target id carrying a space — the smallest rule that proves the gateway asks the
+    /// module before the bus places anything.
+    fn command_admission(&self, envelope: &CommandEnvelope) -> Result<(), Rejection> {
+        match envelope.target.id.contains(' ') {
+            true => Err(Rejection::Invalid { detail: "target-malformed".into() }),
+            false => Ok(()),
+        }
+    }
+
+    /// 🎟️ Counts a command addressed to an id starting with `new-` as the creation of a counter —
+    /// the smallest rule that proves the gateway asks the module and spends the named allowance.
+    fn command_allowance(&self, envelope: &CommandEnvelope) -> Option<&'static str> {
+        envelope.target.id.starts_with("new-").then_some(CREATION)
+    }
 }
+
+/// 💰️ The allowance [`CountingModule`] counts the creation of a counter against.
+pub const CREATION: &str = "creation";
 //#endregion 🔖️Module
 
 //#region 🔖️Decider

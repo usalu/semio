@@ -1,5 +1,9 @@
 # 📓️ Layered overview — shared element, geometry, play and demonstrator migration
 
+> Superseded in part on 2026-10-02: the grid rest of §00 (`rest`, `gridTracks`, `restRect`, `coverPlacement`, …) is
+> removed — the quiz home runs the same panorama as play and the demonstrator — and every follow is by elapsed time. See
+> `📓️overview-camera-report.md` and `📓️design.md` §19.
+
 ## 00. API change 2026-09-29 (night): grid rest (`📓️design.md` §17) — read first
 
 Additive; nothing existing changed, play and the demonstrator are untouched (`rest` defaults to `"panorama"`).

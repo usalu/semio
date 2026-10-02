@@ -9,22 +9,27 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { decodeCommandEnvelope, decodeQueryEnvelope, encodeCommandOutcome, encodeQueryResult, type CommandEnvelope, type CommandOutcome, type EventRecord, type HttpRequest, type HttpResponse, type HttpTransport } from "@semio-tech/framework-server";
 import {
+  DEFAULT_LIMITS,
   catalogView,
   crowdView,
+  decideHandle,
   decideLearner,
-  decideRoster,
+  emptyHandleState,
   emptyLearnerState,
-  emptyRosterState,
+  evolveHandle,
   evolveLearner,
-  evolveRoster,
+  handleActorId,
   leaderboard,
   learnerTag,
   learnerView,
+  normalizeHandle,
   runView,
+  transcript,
   type Answer,
   type Catalog,
   type Command,
   type Event,
+  type HandleState,
   type LearnerState,
   type LoadedQuiz,
   type Query,
@@ -33,10 +38,13 @@ import {
   type SheetTask,
 } from "@semio-tech/quiz";
 import {
+  DEFAULT_BOARD,
+  Deputy,
   ProctorClient,
   ProctorUnavailable,
   QuizApp,
   QuizSession,
+  commandTarget,
   formatQuantity,
   lastSubmittedRunOf,
   learnerName,
@@ -44,9 +52,12 @@ import {
   memoryStorageOrigin,
   newId,
   openRunOf,
+  overallLeaderboard,
   quizText,
+  shownLeaderboard,
   type PresenceConnect,
   type PresenceSocket,
+  type QuizMaterial,
   type StorageArea,
 } from "@semio-tech/quiz-react";
 import stylesheet from "../../🎯️targets/⚛️react/🎨️.css?raw";
@@ -129,24 +140,33 @@ function reply(status: number, body: unknown): HttpResponse {
 /** ⏳️ How many reads of a fresh learner or run view the double answers "not found", like a projection catching up. */
 const PROJECTION_LAG = 2;
 
-/** 🛂️ The proctor double: the core's deciders behind the framework wire, idempotent by command id, with views that
- * appear only after a short projection lag. */
+/** 🛂️ The proctor double: the core's deciders behind the framework wire — one handle state per handle key, one learner
+ * state per learner, a registration under a handle relayed to its learner at once — idempotent by command id, with
+ * views that appear only after a short projection lag and a recall that is the `handle` read. While it is `away` no
+ * request reaches it at all. */
 class FakeProctor {
   readonly envelopes: CommandEnvelope[] = [];
   readonly quizzes: Readonly<Record<string, LoadedQuiz>> = { household: { quiz: QUIZ, revision: "0".repeat(64) } };
   readonly view = catalogView(CATALOG, [QUIZ]);
   outage = false;
+  away = false;
   lagged = 0;
   runQueries = 0;
   submissions = 0;
   private held: Promise<void> | undefined;
   private releaseHeld: () => void = () => undefined;
   private readonly lagging = new Map<string, number>();
-  private roster = emptyRosterState();
+  private readonly handles = new Map<string, HandleState>();
   private readonly learners = new Map<string, LearnerState>();
   private readonly outcomes = new Map<string, CommandOutcome>();
   private seq = 0;
   private now = 1_760_000_000_000;
+  private readonly queries: Query[] = [];
+
+  /** 🔍️ Every query of one type the proctor was asked so far, in order. */
+  asked<T extends Query["type"]>(type: T): Extract<Query, { type: T }>[] {
+    return this.queries.filter((query): query is Extract<Query, { type: T }> => query.type === type);
+  }
 
   readonly transport: HttpTransport = { send: async (request) => this.handle(request) };
 
@@ -155,8 +175,11 @@ class FakeProctor {
     if (known !== undefined) return known;
     const command = JSON.parse(decoder.decode(envelope.payload)) as Command;
     this.now += 1000;
+    const key = command.type === "identify-learner" && command.identity.kind !== "anonymous" ? (normalizeHandle(command.identity.handle)?.key ?? "") : undefined;
     const decision =
-      command.type === "identify-learner" ? decideRoster(this.roster, command, this.now) : decideLearner(this.learners.get(command.learner) ?? emptyLearnerState(command.learner), command, { now: this.now, catalog: CATALOG, quizzes: this.quizzes });
+      command.type === "identify-learner" && key !== undefined
+        ? decideHandle(this.handles.get(key) ?? emptyHandleState(key), command, this.now)
+        : decideLearner(this.learners.get(command.learner) ?? emptyLearnerState(command.learner), command, { now: this.now, catalog: CATALOG, quizzes: this.quizzes, limits: DEFAULT_LIMITS });
     const receipt = { commandId: envelope.commandId, actor: envelope.target, revision: this.seq, acceptedAt: envelope.clientHlc };
     const outcome: CommandOutcome =
       "rejection" in decision
@@ -192,12 +215,11 @@ class FakeProctor {
   }
 
   private envelope(command: Command): CommandEnvelope {
-    const target = command.type === "identify-learner" ? { tenant: CATALOG.id, kind: "quiz-roster", id: "roster" } : { tenant: CATALOG.id, kind: "quiz-learner", id: command.learner };
     return {
       commandId: command.id,
       kind: `quiz.${command.type}`,
       version: 1,
-      target,
+      target: commandTarget(command, CATALOG.id),
       scope: CATALOG.id,
       principal: { kind: "anonymous" },
       session: null,
@@ -215,13 +237,17 @@ class FakeProctor {
   private append(envelope: CommandEnvelope, event: Event): EventRecord {
     if (event.type === "learner-registered") this.lagging.set(event.learner, PROJECTION_LAG);
     if (event.type === "run-started") this.lagging.set(event.run, PROJECTION_LAG);
-    this.roster = evolveRoster(this.roster, event);
+    if (event.type === "learner-registered" && event.identity.kind !== "anonymous") {
+      const key = normalizeHandle(event.identity.handle)!.key;
+      this.handles.set(key, evolveHandle(this.handles.get(key) ?? emptyHandleState(key), event));
+    }
     this.learners.set(event.learner, evolveLearner(this.learners.get(event.learner) ?? emptyLearnerState(event.learner), event));
     this.seq += 1;
     return { stream: envelope.target, seq: this.seq, hlc: { millis: event.at, counter: 0 }, kind: `quiz.${event.type}`, payload: encoder.encode(JSON.stringify(event)) };
   }
 
   private async handle(request: HttpRequest): Promise<HttpResponse> {
+    if (this.away) throw new ProctorUnavailable("the proctor is away");
     const body = JSON.parse(typeof request.body === "string" ? request.body : decoder.decode(request.body)) as unknown;
     if (request.method === "POST" && request.path === "/commands") {
       const envelope = decodeCommandEnvelope(body);
@@ -237,7 +263,9 @@ class FakeProctor {
     if (request.method === "POST" && request.path === "/queries") {
       const envelope = decodeQueryEnvelope(body);
       const query = JSON.parse(decoder.decode(envelope.arguments)) as Query;
+      this.queries.push(query);
       if (query.type === "run") this.runQueries += 1;
+      if (query.type === "handle" && normalizeHandle(query.handle) === undefined) return reply(400, { kind: "invalid", message: "handle-invalid: the handle is outside the policy" });
       const value = this.answer(query);
       if (value === undefined) return reply(404, { kind: "notFound", message: envelope.kind });
       return reply(200, encodeQueryResult({ kind: "snapshot", value: encoder.encode(JSON.stringify(value)), frontier: null }));
@@ -267,7 +295,19 @@ class FakeProctor {
         return state === undefined ? undefined : runView(state, query.run, this.quizzes);
       }
       case "leaderboard":
-        return leaderboard([...this.learners.values()], this.view);
+        return leaderboard(
+          [...this.learners.values()].flatMap((state) => transcript(state) ?? []),
+          this.view,
+          query,
+          this.now,
+          query.learner,
+        );
+      case "handle": {
+        const handle = normalizeHandle(query.handle)!;
+        const holder = this.handles.get(handle.key)?.holder;
+        const identity = holder === undefined ? undefined : this.learners.get(holder)?.identity;
+        return holder === undefined || identity === undefined ? { display: handle.display } : { display: handle.display, holder: { learner: holder, identity } };
+      }
       case "crowd":
         return crowdView(
           QUIZ,
@@ -288,9 +328,7 @@ function sloppyAnswer(task: SheetTask): Answer {
   }
 }
 
-function seedAnonymousRival(proctor: FakeProctor): string {
-  const learner = "c".repeat(32);
-  const run = "d".repeat(32);
+function seedAnonymousRival(proctor: FakeProctor, learner = "c".repeat(32), run = "d".repeat(32)): string {
   proctor.seed({ type: "identify-learner", id: newId(), learner, identity: { kind: "anonymous" } });
   proctor.seed({ type: "start-run", id: newId(), learner, run, quiz: QUIZ.id });
   const sheet = runView(proctor.runOf(run)!, run, proctor.quizzes)!.sheet;
@@ -309,10 +347,10 @@ function navbar(): HTMLElement {
   return screen.getByRole("navigation", { name: /^(?:Main navigation|Hauptnavigation)$/u });
 }
 
-function app(proctor: FakeProctor, storage: StorageArea) {
+function app(proctor: FakeProctor, storage: StorageArea, material?: QuizMaterial) {
   return (
     <StrictMode>
-      <QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={storage} languages={["de-CH", "fr"]} timing={TIMING} />
+      <QuizApp proctor="" tenant={CATALOG.id} material={material} presence={QUIET_PRESENCE} transport={() => proctor.transport} storage={storage} languages={["de-CH", "fr"]} timing={TIMING} />
     </StrictMode>
   );
 }
@@ -329,11 +367,7 @@ async function answerCurrentTask(user: ReturnType<typeof userEvent.setup>): Prom
     const order = (): string[] =>
       within(screen.getByRole("list", { name: "Order by Mass" }))
         .getAllByRole("listitem")
-        .map((item) => {
-          const label = item.cloneNode(true) as HTMLElement;
-          label.querySelector("[data-crowd-item]")?.remove();
-          return label.textContent?.replace(/[⠿↑↓\d]/gu, "") ?? "";
-        });
+        .map((item) => item.textContent?.replace(/[⠿↑↓\d]/gu, "") ?? "");
     for (const [position, label] of target.entries()) {
       while (order().indexOf(label) > position) {
         screen.getByRole("button", { name: `Move ${label} up` }).focus();
@@ -377,18 +411,18 @@ describe("🚶️ learner journey", () => {
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await screen.findByRole("heading", { level: 1, name: "How do you want to appear?" });
-    expect(screen.getByText(/No password is needed/u)).toBeTruthy();
+    expect(screen.getByText(/There are no passwords/u)).toBeTruthy();
     await user.click(screen.getByRole("radio", { name: "Pseudonym" }));
     await user.type(screen.getByRole("textbox", { name: "Your pseudonym" }), "  Ada   Lovelace ");
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     const learnerCard = await screen.findByRole("region", { name: "Ada Lovelace" });
-    expect(within(learnerCard).getByText("0 points")).toBeTruthy();
+    expect(within(learnerCard).getByText("Points: 0")).toBeTruthy();
     expect(within(learnerCard).getByText("0 of 1 quizzes played")).toBeTruthy();
     const identify = proctor.envelopes.find((envelope) => envelope.kind === "quiz.identify-learner")!;
     expect(identify.principal).toEqual({ kind: "anonymous" });
-    expect(identify.target).toEqual({ tenant: CATALOG.id, kind: "quiz-roster", id: "roster" });
-    expect(JSON.parse(decoder.decode(identify.payload)).identity).toEqual({ kind: "pseudonym", handle: "Ada Lovelace" });
+    expect(identify.target).toEqual({ tenant: CATALOG.id, kind: "quiz-handle", id: handleActorId("ada lovelace") });
+    expect(JSON.parse(decoder.decode(identify.payload)).identity).toEqual({ kind: "pseudonym", handle: "  Ada   Lovelace " });
     const quizCard = screen.getByRole("region", { name: "Household physics" });
     expect(within(quizCard).getByText("Not attempted yet")).toBeTruthy();
     expect(within(screen.getByRole("region", { name: "Badges" })).getByText("0 of 2 badges earned")).toBeTruthy();
@@ -399,7 +433,12 @@ describe("🚶️ learner journey", () => {
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.getByText("0 of 3 tasks complete")).toBeTruthy();
     const submit = screen.getByRole("button", { name: "Submit quiz" });
-    expect((submit as HTMLButtonElement).disabled).toBe(true);
+    expect((submit as HTMLButtonElement).disabled).toBe(false);
+    expect(submit.getAttribute("aria-disabled")).toBe("true");
+    expect(document.getElementById(submit.getAttribute("aria-describedby") ?? "")?.textContent).toBe("Complete every task to submit. Results are shown after submitting.");
+    await user.click(submit);
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(document.activeElement).toBe(submit);
 
     const taskButtons = within(screen.getByRole("navigation", { name: "Tasks" })).getAllByRole("button");
     expect(taskButtons).toHaveLength(3);
@@ -409,9 +448,11 @@ describe("🚶️ learner journey", () => {
       if (index === 2) proctor.outage = true;
       await answerCurrentTask(user);
     }
-    await screen.findByText(/Connection lost – retrying \(\d answers kept on this device\)/u);
+    const lost = await screen.findAllByText(/^Connection lost – retrying\. Answers kept on this device: \d$/u);
+    expect(lost.map((element) => element.closest("[role=status]") !== null)).toEqual([false, true]);
     proctor.outage = false;
     await screen.findByText("All answers saved", {}, { timeout: 5000 });
+    expect(document.querySelector("[data-connection-announcer]")?.textContent).toBe("Connection restored");
     expect(screen.getByText("3 of 3 tasks complete")).toBeTruthy();
 
     const answers = proctor.envelopes.filter((envelope) => envelope.kind === "quiz.record-answer");
@@ -424,29 +465,40 @@ describe("🚶️ learner journey", () => {
     for (const envelope of answers) attempts.set(envelope.commandId, (attempts.get(envelope.commandId) ?? 0) + 1);
     expect(Math.max(...attempts.values())).toBeGreaterThan(1);
 
-    expect((screen.getByRole("button", { name: "Submit quiz" }) as HTMLButtonElement).disabled).toBe(false);
+    expect(screen.getByRole("button", { name: "Submit quiz" }).getAttribute("aria-disabled")).toBe("false");
     await user.click(screen.getByRole("button", { name: "Submit quiz" }));
     const dialog = screen.getByRole("alertdialog", { name: "Submit this quiz?" });
     expect(document.activeElement).toBe(within(dialog).getByRole("button", { name: "Submit now" }));
-    await user.click(within(dialog).getByRole("button", { name: "Submit now" }));
+    expect(dialog.closest(".quiz-app")).not.toBeNull();
+    expect(document.querySelector("#quiz-main")?.hasAttribute("inert")).toBe(true);
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    expect(document.querySelector("#quiz-main")?.hasAttribute("inert")).toBe(false);
+    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Submit quiz" }));
+    await user.keyboard("{Enter}");
+    expect(document.activeElement).toBe(within(screen.getByRole("alertdialog", { name: "Submit this quiz?" })).getByRole("button", { name: "Submit now" }));
+    await user.click(within(screen.getByRole("alertdialog")).getByRole("button", { name: "Submit now" }));
 
     await screen.findByRole("heading", { level: 1, name: "Results: Household physics" });
+    expect(document.title).toBe("Results: Household physics · Test catalog");
     expect(screen.getByText("Your score: 100%").closest("p")?.textContent).toBe("Your score: 100%");
     const newBadges = screen.getByRole("region", { name: "New badges" });
     expect(within(newBadges).getByText("All done")).toBeTruthy();
     expect(within(newBadges).getByText("Flawless")).toBeTruthy();
     const climates = screen.getByRole("region", { name: /Climates/u });
-    const desertRow = within(climates).getByRole("rowheader", { name: "Desert" }).closest("tr")!;
+    const [answered, everyone] = within(climates).getAllByRole("table");
+    const desertRow = within(answered!).getByRole("rowheader", { name: "Desert" }).closest("tr")!;
     expect(
       within(desertRow)
         .getAllByRole("cell")
         .map((cell) => cell.textContent),
-    ).toEqual(["Hot and dry", "Hot and dry", "✓ Correct (100%)", "All runs on Desert: Hot and dry 2×👥Hot and dry 2×", "Little rain, much sun."]);
-    expect(
-      within(climates)
-        .getAllByRole("columnheader")
-        .map((head) => head.textContent),
-    ).toContain("Everyone");
+    ).toEqual(["Hot and dry", "Hot and dry", "✓ Correct (100%)", "Little rain, much sun."]);
+    expect(everyone!.getAttribute("aria-label")).toBe("What everyone answered: Climates");
+    await waitFor(() => expect(everyone!.querySelector('[data-crowd-item="desert"] > [data-key="hot-dry"] > .sr-only')?.textContent).toBe("100% (2 of 2), your answer, correct"));
+    const scored = screen.getByRole("list", { name: "How everyone scored: Household physics" });
+    expect(scored.closest("figure")?.getAttribute("data-runs")).toBe("2");
+    expect(within(scored).getAllByRole("listitem").at(-1)?.hasAttribute("data-own")).toBe(true);
+    expect(within(climates).getByRole("list", { name: "How everyone scored: Climates" })).toBeTruthy();
     const masses = screen.getByRole("region", { name: /Masses/u });
     expect(
       within(masses)
@@ -460,7 +512,7 @@ describe("🚶️ learner journey", () => {
     await user.click(screen.getByRole("button", { name: "Open the leaderboard" }));
     const table = await screen.findByRole("table", { name: "Leaderboard" });
     expect(window.location.hash).toBe("#board");
-    const description = screen.getByText(/^All learners with a submitted quiz/u);
+    const description = screen.getByText(/^Learners with a submitted quiz, ranked by total points/u);
     expect(table.parentElement?.contains(description)).toBe(false);
     expect(table.getAttribute("aria-describedby")).toBe(description.id);
     const rows = () => within(table).getAllByRole("row").slice(1);
@@ -482,6 +534,31 @@ describe("🚶️ learner journey", () => {
         .getAttribute("aria-sort"),
     ).toBe("descending");
     expect(within(rows()[0]!).getByRole("rowheader").textContent).toBe(`Anonymous #${learnerTag(rival)}`);
+
+    const page = table.closest<HTMLElement>("[data-card='leaderboard']")!;
+    const headings = () => within(screen.getByRole("table", { name: "Leaderboard" })).getAllByRole("columnheader").map((heading) => heading.textContent?.trim());
+    const pressed = (group: string) =>
+      within(within(page).getByRole("group", { name: group }))
+        .getAllByRole("button")
+        .map((button) => `${button.textContent}${button.getAttribute("aria-pressed") === "true" ? " ✓" : ""}`);
+    expect(pressed("Period")).toEqual(["Today", "This week", "This month", "All time ✓"]);
+    expect(pressed("Category")).toEqual(["All ✓", expect.stringMatching(/Household physics$/u)]);
+    expect(headings()).toEqual(["Rank", "Learner", "Total", "Household physics", "Badges", "Runs", "Last submission"]);
+    expect(within(page).queryByText(/^Counts the quizzes submitted from /u)).toBeNull();
+    await user.click(within(page).getByRole("button", { name: "Today" }));
+    await within(page).findByText(/^Counts the quizzes submitted from .+ until .+\.$/u);
+    expect(pressed("Period")).toEqual(["Today ✓", "This week", "This month", "All time"]);
+    const today = await screen.findByRole("table", { name: "Leaderboard" });
+    expect(within(today).getAllByRole("rowheader").map((name) => name.textContent)).toEqual([`Anonymous #${learnerTag(rival)}`, "Ada Lovelace (you)"]);
+    expect(within(today).getByRole("columnheader", { name: /Learner/u }).getAttribute("aria-sort")).toBe("descending");
+    await user.click(within(within(page).getByRole("group", { name: "Category" })).getByRole("button", { name: /Household physics$/u }));
+    await waitFor(() => expect(headings()).toEqual(["Rank", "Learner", "Points", "Badges", "Runs", "Last submission"]));
+    expect(pressed("Category")).toEqual(["All", expect.stringMatching(/Household physics ✓$/u)]);
+    expect(proctor.asked("leaderboard").slice(-1)).toEqual([{ type: "leaderboard", period: "daily", quiz: QUIZ.id, learner: expect.any(String) }]);
+    await user.click(within(page).getByRole("button", { name: "All time" }));
+    await user.click(within(page).getByRole("button", { name: "All" }));
+    await waitFor(() => expect(pressed("Period").concat(pressed("Category"))).toEqual(["Today", "This week", "This month", "All time ✓", "All ✓", expect.stringMatching(/Household physics$/u)]));
+    expect(headings()).toEqual(["Rank", "Learner", "Total", "Household physics", "Badges", "Runs", "Last submission"]);
     await user.click(screen.getByRole("button", { name: "Overview" }));
     await screen.findByRole("region", { name: "Household physics" });
     expect(window.location.hash).toBe("");
@@ -509,6 +586,57 @@ describe("🚶️ learner journey", () => {
     await waitFor(() => expect(session.getSnapshot().state.step).toEqual({ screen: "identity" }));
     expect(session.getSnapshot().state.notice).toEqual({ kind: "rejection", rejection: "unknown-learner" });
     expect(store.read("learner")).toBeUndefined();
+    session.stop();
+  });
+
+  it("asks for the leaderboard the learner chose, shows one it holds at once and keeps the overall one fresh while another is looked at", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    seedAnonymousRival(proctor);
+    const session = sessionOn(proctor, memoryStorageOrigin().tab());
+    expect(await session.identify({ kind: "pseudonym", handle: "Board Chooser" }, new AbortController().signal)).toBeUndefined();
+    await waitFor(() => expect(session.getSnapshot().state.catalog).toBeDefined());
+    const state = () => session.getSnapshot().state;
+    const boards = () => proctor.asked("leaderboard").map(({ period, quiz }) => (quiz === undefined ? period : `${period}/${quiz}`));
+    const today = { period: "daily", quiz: QUIZ.id } as const;
+    expect(state().board).toEqual(DEFAULT_BOARD);
+    expect(await session.refreshLeaderboard()).toEqual({ answered: true });
+    expect(boards()).toEqual(["all-time"]);
+    expect(shownLeaderboard(state())?.board).toMatchObject({ period: "all-time", learners: 1, submissions: 1 });
+    expect(state().submissions).toBe(1);
+
+    session.chooseBoard(today);
+    expect(state().board).toEqual(today);
+    expect(shownLeaderboard(state())).toBeUndefined();
+    await waitFor(() => expect(shownLeaderboard(state())?.board).toMatchObject({ ...today, learners: 1, submissions: 1 }));
+    expect(shownLeaderboard(state())?.board.window).toMatchObject({ from: expect.any(Number), until: expect.any(Number) });
+    await session.refreshLeaderboard();
+    expect(boards()).toEqual(["all-time", `daily/${QUIZ.id}`, `daily/${QUIZ.id}`]);
+
+    session.chooseBoard(today);
+    session.chooseBoard({ period: "weekly", quiz: "no-such-quiz" });
+    expect(state().board).toEqual({ period: "weekly" });
+    await waitFor(() => expect(shownLeaderboard(state())?.board.period).toBe("weekly"));
+    await session.refreshLeaderboard();
+    expect(boards().slice(3)).toEqual(["weekly", "weekly"]);
+
+    session.chooseBoard(DEFAULT_BOARD);
+    expect(shownLeaderboard(state())?.board.period).toBe("all-time");
+    session.chooseBoard(today);
+    expect(shownLeaderboard(state())?.board).toMatchObject(today);
+    await session.refreshLeaderboard();
+    await session.refreshLeaderboard();
+    expect(new Set(boards().slice(5))).toEqual(new Set(["all-time", `daily/${QUIZ.id}`]));
+
+    seedAnonymousRival(proctor, "a".repeat(32), "b".repeat(32));
+    const before = boards().length;
+    expect(await session.refreshLeaderboard()).toEqual({ answered: true });
+    expect(boards().slice(before)).toEqual([`daily/${QUIZ.id}`, "all-time"]);
+    expect(overallLeaderboard(state())?.board).toMatchObject({ period: "all-time", learners: 2, submissions: 2 });
+    expect(shownLeaderboard(state())?.board).toMatchObject({ ...today, learners: 2 });
+    expect(state().submissions).toBe(2);
+    const settled = boards().length;
+    expect(await session.refreshLeaderboard()).toEqual({ answered: true });
+    expect(boards().slice(settled)).toEqual([`daily/${QUIZ.id}`]);
     session.stop();
   });
 });
@@ -638,12 +766,26 @@ describe("🚶️ several tabs, cancellation and other devices", () => {
     render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => transport} storage={memoryStorageOrigin().tab()} languages={["en"]} timing={{ minMs: 60_000, maxMs: 60_000 }} />);
     await screen.findByText("The quiz server cannot be reached right now – trying again.");
     expect(screen.getByRole("heading", { level: 1, name: "Loading…" })).toBeTruthy();
-    expect(screen.getByText("Connection lost – retrying")).toBeTruthy();
+    expect(screen.getAllByText("Connection lost – retrying").map((element) => element.closest("[role=status]") !== null)).toEqual([false, true]);
     expect(screen.queryByText("All answers saved")).toBeNull();
     up = true;
     await user.click(screen.getByRole("button", { name: "Try again now" }));
     await screen.findByRole("heading", { level: 1, name: "Welcome to the test catalog" });
     expect(screen.getByText("All answers saved")).toBeTruthy();
+  });
+
+  it("offers the way to the overview while the catalog has not arrived yet and hides the logo from assistive technology", async () => {
+    const area = memoryStorageOrigin().tab();
+    const store = localStore(area, CATALOG.id);
+    store.write("introduced", true);
+    store.write("learner", { id: "f".repeat(32), identity: { kind: "anonymous" } });
+    const silent: HttpTransport = { send: () => new Promise<never>(() => undefined) };
+    render(<QuizApp proctor="" tenant={CATALOG.id} presence={QUIET_PRESENCE} transport={() => silent} storage={area} languages={["en"]} timing={TIMING} logo={'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1 1"><path d="M0 0h1v1z"/></svg>'} />);
+    expect(within(navbar()).getByRole("button", { name: "Overview" }).getAttribute("aria-disabled")).toBe("true");
+    const brand = navbar().querySelector<HTMLElement>("[data-quiz-brand]")!;
+    expect(brand.textContent).toBe("");
+    expect(brand.querySelector("svg")?.closest('[aria-hidden="true"]')).not.toBeNull();
+    expect(document.title).toBe("Loading…");
   });
 
   it("says it is connecting — never connected — until the proctor first answers", { timeout: 30_000 }, async () => {
@@ -805,7 +947,8 @@ describe("👥️ presence through the whole app", () => {
     expect(inBoard.textContent).toBe("Mira");
     expect(inBoard.closest("[aria-hidden]")).not.toBeNull();
     await deliver(home, { type: "watched", scope: `${CATALOG.id}/quiz/${QUIZ.id}/thinking`, entries: [{ session: "t-mira", colour: 4, surface: "thinking", state: { answers: {}, tag: learnerTag(mira) } }], left: [] });
-    await waitFor(() => expect(document.querySelector(`[data-layered-pane="${QUIZ.id}"] [data-crowd-source="live"]`)?.textContent).toBe("👥What others think now· Thinking along: 1"));
+    await waitFor(() => expect(document.querySelector(`[data-layered-pane="${QUIZ.id}"] [data-crowd-gate]`)?.getAttribute("data-crowd-gate")).toBe("locked"));
+    expect(document.querySelector(`[data-layered-pane="${QUIZ.id}"] [data-crowd-figure], [data-layered-pane="${QUIZ.id}"] [data-crowd-dot]`)).toBeNull();
     await deliver(home, { type: "watched", scope: `${CATALOG.id}/leaderboard`, entries: [], left: ["w-mira"] });
     expect(document.querySelector("[data-pane-peers]")).toBeNull();
     await deliver(home, { type: "batch", entries: [{ session: "r-mira", colour: 4, surface: "home", state: { cursor: { anchor: "home:learner", x: 0.5, y: 0.5 }, tag: learnerTag(mira) } }], left: [] });
@@ -861,9 +1004,278 @@ describe("👥️ presence through the whole app", () => {
     };
     await deliver(thinking, { type: "welcome", session: "t-me", colour: 0, roster: [{ session: "t-mira", colour: 4, surface: "thinking", state: miraThinks }] });
     await waitFor(() => expect(thinking.sent.at(-1)).toEqual({ type: "state", state: { answers: {}, tag: (roster.sent.at(-1) as { readonly state: { readonly tag: string } }).state.tag } }));
-    await waitFor(() => expect(within(task).getByText("What others think now").closest("[data-crowd-source]")?.getAttribute("data-crowd-source")).toBe("live"));
-    const sentences = [...task.querySelectorAll("[data-crowd-item] .sr-only")].map((sentence) => sentence.textContent);
+    expect(task.querySelector("[data-crowd-gate]")?.getAttribute("data-crowd-gate")).toBe("locked");
+    expect(task.querySelector("[data-crowd-figure], [data-crowd-dot]")).toBeNull();
+    await user.click(within(task).getByRole("button", { name: "Show it now" }));
+    await waitFor(() => expect(task.querySelector<HTMLElement>('[data-crowd-figure="answers"]')?.dataset.thinkers).toBe("1"));
+    expect(within(task).getByRole("button", { name: "Hide it again" })).toBeTruthy();
+    const sentences = [...task.querySelectorAll("[data-crowd-item] > [data-live] > .sr-only")].map((sentence) => sentence.textContent);
     expect(sentences.length).toBeGreaterThan(0);
-    for (const sentence of sentences) expect(sentence).toMatch(/^(The others on (Desert|Fjord): Hot and dry 1×|On average the others put (Mouse|Cat|Horse) at place [123] of 3|The others on (LED bulb|Floodlight): (8\sW|2\skW) 1×)$/u);
+    for (const sentence of sentences) expect(sentence).toMatch(/^0% \(0 of 0\), thinking this now: 1$/u);
+    expect(task.querySelectorAll("[data-crowd-dot]").length).toBe(sentences.length);
+    await user.click(within(task).getByRole("button", { name: "Hide it again" }));
+    await waitFor(() => expect(task.querySelector("[data-crowd-figure]")).toBeNull());
+  });
+});
+
+const MATERIAL: QuizMaterial = { catalog: CATALOG, quizzes: [QUIZ] };
+
+/** 🫡️ A started session that holds the site's material, so its deputy decides while the proctor is away. */
+function deputisedOn(proctor: FakeProctor, area: StorageArea): QuizSession {
+  const session = new QuizSession({ proctor: new ProctorClient(() => proctor.transport, CATALOG.id), store: localStore(area, CATALOG.id), deputy: new Deputy(MATERIAL), timing: TIMING });
+  session.start();
+  return session;
+}
+
+/** 💯️ The answer that scores `task` of a sheet of the household quiz 1, from the quiz's own solutions. */
+function perfectAnswer(task: SheetTask): Answer {
+  const source = QUIZ.tasks.find((candidate) => candidate.id === task.id);
+  if (task.kind === "classification" && source?.kind === "classification") return { kind: "classification", assignments: Object.fromEntries(task.items.map((item) => [item.id, source.items.find((known) => known.id === item.id)!.category])) };
+  if (task.kind === "sorting" && source?.kind === "sorting") {
+    const value = (id: string): number => source.items.find((known) => known.id === id)!.value;
+    return { kind: "sorting", order: task.items.map((item) => item.id).sort((left, right) => value(left) - value(right)) };
+  }
+  if (task.kind === "matching" && source?.kind === "matching") {
+    const card = (dimension: (typeof task.dimensions)[number], id: string): number => dimension.cards.indexOf(source.items.find((known) => known.id === id)!.values[dimension.id]!);
+    return { kind: "matching", assignments: Object.fromEntries(task.dimensions.map((dimension) => [dimension.id, Object.fromEntries(task.items.map((item) => [item.id, card(dimension, item.id)]))])) };
+  }
+  throw new Error(`the household quiz has no ${task.kind} task ${task.id}`);
+}
+
+/** ▶️ Starts a run of the household quiz in `session` and answers every task perfectly. */
+async function playedRun(session: QuizSession): Promise<string> {
+  expect(await session.startRun(QUIZ.id, new AbortController().signal)).toBeUndefined();
+  const { step, runs } = session.getSnapshot().state;
+  if (step.screen !== "run") throw new Error("the run did not open");
+  for (const task of runs[step.run]!.sheet.tasks) session.answer(step.run, task.id, perfectAnswer(task));
+  return step.run;
+}
+
+const WHOLE_RUN = ["start-run", "record-answer", "record-answer", "record-answer", "submit-run"];
+
+describe("🫡️ the deputy while the proctor is away", () => {
+  it("registers, plays and scores a first visit on the device, keeps it over a reload and hands it to the proctor once it answers", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.away = true;
+    const origin = memoryStorageOrigin();
+    const signal = new AbortController().signal;
+    const session = deputisedOn(proctor, origin.tab());
+    expect(session.getSnapshot().state.catalog).toEqual(proctor.view);
+    expect(session.getSnapshot().state.step).toEqual({ screen: "introduction" });
+    session.readIntroduction();
+
+    expect(await session.identify({ kind: "pseudonym", handle: " Grace   Hopper " }, signal)).toBeUndefined();
+    const learner = session.getSnapshot().state.learner!;
+    expect(learner.identity).toEqual({ kind: "pseudonym", handle: "Grace Hopper" });
+    expect(session.getSnapshot().state.learnerView).toMatchObject({ learner: learner.id, identity: learner.identity, runs: [], badges: [], total: 0 });
+
+    const run = await playedRun(session);
+    const phases: string[] = [];
+    expect(await session.submit(run, signal, (phase) => phases.push(phase.phase))).toBeUndefined();
+    expect(phases).toEqual(["submitting", "results"]);
+    const played = session.getSnapshot().state;
+    expect(played.step).toEqual({ screen: "results", run });
+    expect(played.runs[run]).toMatchObject({ learner: learner.id, status: "submitted", result: { quiz: QUIZ.id, score: 1 } });
+    expect(played.learnerView).toMatchObject({ total: 100, best: { household: 1 }, runs: [{ run, status: "submitted", score: 1 }] });
+    expect(played.learnerView?.badges.map((award) => award.badge)).toEqual(["all-done", "flawless"]);
+    expect(played.awards[run]).toEqual(["all-done", "flawless"]);
+    expect(played.notice).toBeUndefined();
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["identify-learner", ...WHOLE_RUN]);
+    expect(proctor.envelopes).toEqual([]);
+    await waitFor(() => expect(session.getSnapshot().connection).toMatchObject({ reachability: "unreachable", deputy: true, pending: 6 }));
+
+    await session.refreshLeaderboard();
+    expect(shownLeaderboard(session.getSnapshot().state)).toMatchObject({ local: true, board: { learners: 1, rows: [{ rank: 1, tag: learnerTag(learner.id), total: 100, badges: ["all-done", "flawless"] }] } });
+    expect(await session.startRun(QUIZ.id, signal)).toBeUndefined();
+    const again = session.getSnapshot().state.step;
+    expect(again.screen === "run" && again.run !== run).toBe(true);
+    session.stop();
+
+    const reloaded = deputisedOn(proctor, origin.tab());
+    expect(reloaded.getSnapshot().state.step).toEqual({ screen: "home" });
+    expect(reloaded.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(reloaded.outbox.queued().map((command) => command.type)).toEqual(["identify-learner", ...WHOLE_RUN, "start-run"]);
+    proctor.away = false;
+    reloaded.reconnect();
+    await waitFor(() => expect(reloaded.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    const known = proctor.runOf(run)!;
+    expect(known).toMatchObject({ learner: learner.id, identity: learner.identity });
+    expect(known.runs.map((candidate) => candidate.status)).toEqual(["submitted", "open"]);
+    expect(known.runs[0]?.result?.score).toBe(1);
+    expect(known.badges.map((award) => award.badge)).toEqual(["all-done", "flawless"]);
+    expect(new Set(proctor.envelopes.map((envelope) => envelope.commandId)).size).toBe(7);
+    await waitFor(() => expect(reloaded.getSnapshot().state.runs[run]?.submittedAt).toBe(known.runs[0]?.submittedAt));
+    await waitFor(() => expect(reloaded.getSnapshot().state.learnerView?.badges.map((award) => award.at)).toEqual(known.badges.map((award) => award.at)));
+    await reloaded.refreshLeaderboard();
+    expect(shownLeaderboard(reloaded.getSnapshot().state)?.local).toBeUndefined();
+    expect(shownLeaderboard(reloaded.getSnapshot().state)?.board.rows.map((row) => row.tag)).toEqual([learnerTag(learner.id)]);
+    expect(reloaded.getSnapshot().state.notice).toBeUndefined();
+    expect(reloaded.getSnapshot().connection).toMatchObject({ reachability: "reachable", pending: 0 });
+    reloaded.stop();
+  });
+
+  it("leaves every decision to the proctor while it answers", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await session.identify({ kind: "anonymous" }, new AbortController().signal)).toBeUndefined();
+    const run = await playedRun(session);
+    expect(session.outbox.queued().every((command) => command.type === "record-answer")).toBe(true);
+    const phases: string[] = [];
+    expect(await session.submit(run, new AbortController().signal, (phase) => phases.push(phase.phase))).toBeUndefined();
+    expect(phases[0]).toBe("saving");
+    expect(proctor.envelopes.map((envelope) => envelope.kind)).toEqual(["quiz.identify-learner", ...WHOLE_RUN.map((type) => `quiz.${type}`)]);
+    expect(session.outbox.queued()).toEqual([]);
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", submittedAt: proctor.runOf(run)?.runs[0]?.submittedAt });
+    session.stop();
+  });
+
+  it("decides a submission on the device when the proctor goes away in the middle of a run", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    const { run, tasks } = await startedRun(session);
+    session.answer(run, tasks[0]!.id, perfectAnswer(tasks[0]!));
+    await session.outbox.settled(run);
+    proctor.away = true;
+    for (const task of tasks.slice(1)) session.answer(run, task.id, perfectAnswer(task));
+    expect(await session.submit(run, new AbortController().signal, () => undefined)).toBeUndefined();
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["record-answer", "record-answer", "submit-run"]);
+    expect(proctor.runOf(run)?.runs[0]?.status).toBe("open");
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(proctor.runOf(run)?.runs[0]).toMatchObject({ status: "submitted", result: { score: 1 } }));
+    await waitFor(() => expect(session.getSnapshot().state.runs[run]?.submittedAt).toBe(proctor.runOf(run)?.runs[0]?.submittedAt));
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("does not keep a learner waiting for a proctor that says nothing: the deputy decides once the patience is spent", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    let silent = false;
+    const transport: HttpTransport = { send: (request) => (silent ? new Promise<never>((_, reject) => setTimeout(() => reject(new ProctorUnavailable("the request timed out")), 400)) : proctor.transport.send(request)) };
+    const session = new QuizSession({ proctor: new ProctorClient(() => transport, CATALOG.id), store: localStore(memoryStorageOrigin().tab(), CATALOG.id), deputy: new Deputy(MATERIAL), patienceMs: 40, timing: TIMING });
+    session.start();
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    silent = true;
+    const began = Date.now();
+    expect(await session.identify({ kind: "pseudonym", handle: "Patient Learner" }, new AbortController().signal)).toBeUndefined();
+    expect(Date.now() - began).toBeLessThan(350);
+    const run = await playedRun(session);
+    expect(await session.submit(run, new AbortController().signal, () => undefined)).toBeUndefined();
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ status: "submitted", result: { score: 1 } });
+    expect(session.outbox.queued().map((command) => command.type)).toEqual(["identify-learner", ...WHOLE_RUN]);
+    expect(proctor.envelopes).toEqual([]);
+    silent = false;
+    await waitFor(() => expect(proctor.runOf(run)?.runs[0]).toMatchObject({ status: "submitted", result: { score: 1 } }), { timeout: 10_000 });
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]));
+    expect(session.getSnapshot().state.notice).toBeUndefined();
+    session.stop();
+  });
+
+  it("continues as the holder when the proctor already knows the pseudonym the device registered by itself", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const holder = "e".repeat(32);
+    const earlier = "f".repeat(32);
+    proctor.seed({ type: "identify-learner", id: newId(), learner: holder, identity: { kind: "pseudonym", handle: "Grace Hopper" } });
+    proctor.seed({ type: "start-run", id: newId(), learner: holder, run: earlier, quiz: QUIZ.id });
+    for (const task of runView(proctor.runOf(earlier)!, earlier, proctor.quizzes)!.sheet.tasks) proctor.seed({ type: "record-answer", id: newId(), learner: holder, run: earlier, task: task.id, answer: sloppyAnswer(task) });
+    proctor.seed({ type: "submit-run", id: newId(), learner: holder, run: earlier });
+    proctor.away = true;
+    const area = memoryStorageOrigin().tab();
+    const session = deputisedOn(proctor, area);
+    expect(await session.identify({ kind: "pseudonym", handle: "grace hopper" }, new AbortController().signal)).toBeUndefined();
+    const provisional = session.getSnapshot().state.learner!.id;
+    expect(provisional).not.toBe(holder);
+    const run = await playedRun(session);
+    expect(await session.submit(run, new AbortController().signal, () => undefined)).toBeUndefined();
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    expect(session.getSnapshot().state.learner).toEqual({ id: holder, identity: { kind: "pseudonym", handle: "Grace Hopper" } });
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "recalled", handle: "Grace Hopper" });
+    expect(session.getSnapshot().state.step).toEqual({ screen: "results", run });
+    expect(localStore(area, CATALOG.id).read("learner")).toMatchObject({ id: holder });
+    expect(proctor.runOf(run)?.learner).toBe(holder);
+    expect(proctor.runOf(run)?.runs.map((candidate) => [candidate.run, candidate.status])).toEqual([
+      [earlier, "submitted"],
+      [run, "submitted"],
+    ]);
+    expect(proctor.envelopes.some((envelope) => envelope.target.id === provisional)).toBe(false);
+    await waitFor(() => expect(session.getSnapshot().state.learnerView?.runs.map((summary) => summary.run)).toEqual([run, earlier]));
+    expect(session.getSnapshot().state.runs[run]).toMatchObject({ learner: holder, status: "submitted", result: { score: 1 } });
+    session.stop();
+  });
+
+  it("voids a run of the device that the proctor would not start, and says so", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    const session = deputisedOn(proctor, memoryStorageOrigin().tab());
+    await waitFor(() => expect(session.getSnapshot().connection.reachability).toBe("reachable"));
+    expect(await session.identify({ kind: "anonymous" }, new AbortController().signal)).toBeUndefined();
+    const learner = session.getSnapshot().state.learner!.id;
+    await waitFor(() => expect(session.getSnapshot().state.learnerView?.learner).toBe(learner));
+    proctor.away = true;
+    const elsewhere = "9".repeat(32);
+    proctor.seed({ type: "start-run", id: newId(), learner, run: elsewhere, quiz: QUIZ.id });
+    const run = await playedRun(session);
+    expect(session.outbox.queued(run).map((command) => command.type)).toEqual(WHOLE_RUN.slice(0, 4));
+    proctor.away = false;
+    session.reconnect();
+    await waitFor(() => expect(session.outbox.queued()).toEqual([]), { timeout: 10_000 });
+    expect(session.getSnapshot().state.runs[run]?.status).toBe("voided");
+    expect(session.getSnapshot().state.notice).toEqual({ kind: "voided" });
+    expect(session.getSnapshot().state.step).toEqual({ screen: "home" });
+    expect(proctor.runOf(run)).toBeUndefined();
+    expect(proctor.envelopes.filter((envelope) => envelope.kind === "quiz.record-answer")).toEqual([]);
+    await waitFor(() => expect(openRunOf(session.getSnapshot().state, QUIZ.id)).toBe(elsewhere));
+    session.stop();
+  });
+
+  it("keeps the queue of a run the deputy submitted when another tab adopts it, and both tabs deliver it once", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.away = true;
+    const origin = memoryStorageOrigin();
+    const left = deputisedOn(proctor, origin.tab());
+    const right = deputisedOn(proctor, origin.tab());
+    expect(await left.identify({ kind: "anonymous" }, new AbortController().signal)).toBeUndefined();
+    const run = await playedRun(left);
+    expect(await left.submit(run, new AbortController().signal, () => undefined)).toBeUndefined();
+    await waitFor(() => expect(right.getSnapshot().state.runs[run]?.status).toBe("submitted"));
+    expect(right.getSnapshot().state.learner?.id).toBe(left.getSnapshot().state.learner?.id);
+    for (const tab of [left, right]) expect(tab.outbox.queued().map((command) => command.type)).toEqual(["identify-learner", ...WHOLE_RUN]);
+    proctor.away = false;
+    left.reconnect();
+    right.reconnect();
+    await waitFor(() => expect(proctor.runOf(run)?.runs[0]).toMatchObject({ status: "submitted", result: { score: 1 } }), { timeout: 10_000 });
+    await waitFor(() => {
+      for (const tab of [left, right]) expect(tab.outbox.queued()).toEqual([]);
+    });
+    expect(proctor.runOf(run)?.runs).toHaveLength(1);
+    for (const tab of [left, right]) expect(tab.getSnapshot().state.notice).toBeUndefined();
+    left.stop();
+    right.stop();
+  });
+
+  it("shows the catalog at once, says that everything is saved on the device and marks the leaderboard as this device's own", { timeout: 30_000 }, async () => {
+    const proctor = new FakeProctor();
+    proctor.away = true;
+    const user = userEvent.setup();
+    render(app(proctor, memoryStorageOrigin().tab(), MATERIAL));
+    await screen.findByRole("heading", { level: 1, name: "Willkommen im Testkatalog" });
+    expect((await screen.findAllByText("Quiz-Server nicht erreichbar – alles wird auf diesem Gerät gespeichert")).map((element) => element.closest("[role=status]") !== null)).toEqual([false, true]);
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
+    await screen.findByRole("heading", { level: 1, name: "Wie möchtest du erscheinen?" });
+    await user.click(screen.getByRole("button", { name: "Weiter" }));
+    const quizCard = await screen.findByRole("region", { name: "Haushaltsphysik" });
+    await screen.findByText("Quiz-Server nicht erreichbar – auf diesem Gerät gespeichert, noch zu senden: 1");
+    await waitFor(() => expect(document.querySelector("[data-board-local]")?.textContent).toBe("Nur dieses Gerät – die anderen erscheinen, sobald der Quiz-Server antwortet"));
+    await user.click(within(quizCard).getByRole("button", { name: "Quiz starten" }));
+    await screen.findByRole("heading", { level: 1, name: "Haushaltsphysik" });
+    expect(screen.queryByRole("alert")).toBeNull();
+    proctor.away = false;
+    await screen.findByText("Alle Antworten gespeichert", {}, { timeout: 10_000 });
+    expect(proctor.envelopes.map((envelope) => envelope.kind)).toEqual(["quiz.identify-learner", "quiz.start-run"]);
+    await waitFor(() => expect(document.querySelector("[data-board-local]")).toBeNull());
   });
 });

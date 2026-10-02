@@ -1,34 +1,23 @@
 //! 🧾️ The learner lifecycle as pure `decide`/`evolve` pairs (design §8), shared by both cores; the
-//! proctor wraps them in framework deciders. The roster actor owns the handle index and identifies
-//! learners; one learner actor per learner owns its runs, answers, submissions and badges. `at` is
-//! always the decision time.
+//! proctor wraps them in framework deciders. One handle actor per handle key registers a pseudonym or
+//! name exactly once; one learner actor per learner owns its registration (directly when anonymous),
+//! runs, answers, submissions and badges. `at` is always the decision time.
 //!
-//! @see ../../🧬️schema/🔣️.json — `Command`, `Event`, `Rejection`
+//! Every decision first holds the command to its id and slug shapes (`id-invalid`), so no malformed id
+//! reaches an event, and to the caps of [`Limits`], so no stream grows without bound. A claimed handle
+//! is recalled by a read, never by a command: recalling writes nothing.
+//!
+//! @see ../../🧬️schema/🔣️.json — `Command`, `Event`, `Rejection`, `Limits`
 //! @see ../🧾️lifecycle/🟦️.ts — the TypeScript twin
 
 use crate::badges::earned_badges;
 use crate::randomness::run_seed;
-use crate::schema::{Answer, BadgeAward, Catalog, Command, Event, Id, Identity, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
+use crate::schema::{Answer, BadgeAward, Catalog, Command, Event, Id, Identity, Limits, Quiz, Rejection, RunResult, RunStatus, Slug, Timestamp};
 use crate::scoring::score_run;
 use crate::sheet::sheet_of;
-use crate::validation::{answer_complete, answer_rejection};
+use crate::validation::{answer_complete, answer_rejection, command_rejection, normalize_handle};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
-
-/// 🪞️ A handle as displayed (trimmed, inner whitespace runs collapsed to one space) and as keyed
-/// (the display lowercased); pseudonyms and names share one key space.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
-pub struct NormalizedHandle {
-    pub display: String,
-    pub key: String,
-}
-
-/// 🧽️ Normalize a handle; `None` unless the display has 1…64 characters (code points). Whitespace is
-/// the Unicode `White_Space` property (`\p{White_Space}` in the TypeScript twin).
-pub fn normalize_handle(handle: &str) -> Option<NormalizedHandle> {
-    let display = handle.split(char::is_whitespace).filter(|part| !part.is_empty()).collect::<Vec<_>>().join(" ");
-    (1..=64).contains(&display.chars().count()).then(|| NormalizedHandle { key: display.to_lowercase(), display })
-}
 
 /// 🎬️ The outcome of one decision: the events to commit, or why the command is refused.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -38,56 +27,61 @@ pub enum Decision {
     Rejection(Rejection),
 }
 
-/// 📇️ The roster actor's state: the learner holding each handle key.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct RosterState {
-    pub handles: BTreeMap<String, Id>,
+/// 📇️ One handle key and the learner holding it, once claimed.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct HandleState {
+    pub key: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub holder: Option<Id>,
 }
 
-/// 🛂️ Identify a learner: anonymous learners are always registered anew, a free handle registers the
-/// command's learner under the display handle, a claimed handle recalls its learner. Any other command
-/// decides nothing.
-pub fn decide_roster(state: &RosterState, command: &Command, now: Timestamp) -> Decision {
-    let Command::IdentifyLearner { learner, identity, .. } = command else {
-        return Decision::Events(Vec::new());
-    };
-    let (Identity::Pseudonym { handle } | Identity::Name { handle }) = identity else {
-        return Decision::Events(vec![Event::LearnerRegistered { learner: learner.clone(), identity: Identity::Anonymous, at: now }]);
-    };
-    let Some(normalized) = normalize_handle(handle) else {
+/// 🌾️ A handle key nobody claimed yet.
+pub fn empty_handle_state(key: &str) -> HandleState {
+    HandleState { key: key.to_string(), holder: None }
+}
+
+/// 🚧️ `roster-full` once a proctor holds its cap of learners: the check a registration passes before
+/// it is decided.
+pub fn registration_rejection(learners: u64, limits: &Limits) -> Option<Rejection> {
+    (learners >= limits.learners).then_some(Rejection::RosterFull)
+}
+
+/// 🛂️ Register the command's learner under a free handle; refuse a handle outside the policy or of
+/// another key (`handle-invalid`), an anonymous identity (it has no handle), a claimed handle
+/// (`handle-claimed`) and any other command (`id-invalid` when malformed, else `handle-invalid`).
+pub fn decide_handle(state: &HandleState, command: &Command, now: Timestamp) -> Decision {
+    if let Some(malformed) = command_rejection(command) {
+        return Decision::Rejection(malformed);
+    }
+    let Command::IdentifyLearner { learner, identity: Identity::Pseudonym { handle } | Identity::Name { handle }, .. } = command else {
         return Decision::Rejection(Rejection::HandleInvalid);
     };
-    Decision::Events(vec![match state.handles.get(&normalized.key) {
-        Some(claimed) => Event::LearnerRecalled { learner: claimed.clone(), at: now },
-        None => Event::LearnerRegistered {
-            learner: learner.clone(),
-            identity: match identity {
-                Identity::Name { .. } => Identity::Name { handle: normalized.display },
-                _ => Identity::Pseudonym { handle: normalized.display },
-            },
-            at: now,
-        },
-    }])
+    let Some(normalized) = normalize_handle(handle).filter(|normalized| normalized.key == state.key) else {
+        return Decision::Rejection(Rejection::HandleInvalid);
+    };
+    if state.holder.is_some() {
+        return Decision::Rejection(Rejection::HandleClaimed);
+    }
+    let identity = match command {
+        Command::IdentifyLearner { identity: Identity::Name { .. }, .. } => Identity::Name { handle: normalized.display },
+        _ => Identity::Pseudonym { handle: normalized.display },
+    };
+    Decision::Events(vec![Event::LearnerRegistered { learner: learner.clone(), identity, at: now }])
 }
 
-/// 🌾️ The roster before any learner registered.
-pub fn empty_roster_state() -> RosterState {
-    RosterState::default()
-}
-
-/// 🗳️ Fold a roster event: a learner registered under a pseudonym or name claims its handle key.
-pub fn evolve_roster(state: &mut RosterState, event: &Event) {
-    if let Event::LearnerRegistered { learner, identity: Identity::Pseudonym { handle } | Identity::Name { handle }, .. } = event {
-        if let Some(normalized) = normalize_handle(handle) {
-            state.handles.insert(normalized.key, learner.clone());
-        }
+/// 🗳️ Fold a handle event: the learner registered under a pseudonym or name holds the handle from
+/// then on.
+pub fn evolve_handle(state: &mut HandleState, event: &Event) {
+    if let Event::LearnerRegistered { learner, identity: Identity::Pseudonym { .. } | Identity::Name { .. }, .. } = event {
+        state.holder = Some(learner.clone());
     }
 }
 
-/// 🏃️ One run of a learner as the learner actor remembers it.
+/// 🏃️ One run of a learner as the learner actor remembers it; `recorded` counts every answer
+/// recorded, also the replaced ones.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct RunState {
     pub run: Id,
     pub quiz: Slug,
@@ -95,6 +89,7 @@ pub struct RunState {
     pub seed: u32,
     pub status: RunStatus,
     pub answers: BTreeMap<Slug, Answer>,
+    pub recorded: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub result: Option<RunResult>,
     pub started_at: Timestamp,
@@ -102,18 +97,16 @@ pub struct RunState {
     pub submitted_at: Option<Timestamp>,
 }
 
-/// 🎒️ The learner actor's state: identity once registered, runs in start order, badges in award
-/// order and the time of the latest fact.
+/// 🎒️ The learner actor's state: identity once registered, runs in start order and badges in award
+/// order.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct LearnerState {
     pub learner: Id,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub identity: Option<Identity>,
     pub runs: Vec<RunState>,
     pub badges: Vec<BadgeAward>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub last_activity: Option<Timestamp>,
 }
 
 impl LearnerState {
@@ -129,7 +122,7 @@ impl LearnerState {
 
 /// 🫥️ The state of a learner nothing has happened to yet.
 pub fn empty_learner_state(learner: &str) -> LearnerState {
-    LearnerState { learner: learner.to_string(), identity: None, runs: Vec::new(), badges: Vec::new(), last_activity: None }
+    LearnerState { learner: learner.to_string(), identity: None, runs: Vec::new(), badges: Vec::new() }
 }
 
 /// 🚚️ A quiz as the proctor loaded it, with its revision (SHA-256 of the file bytes).
@@ -139,30 +132,48 @@ pub struct LoadedQuiz {
     pub revision: String,
 }
 
-/// 🌐️ What a learner decision may read besides the state: the decision time, the catalog and its
-/// quizzes by id.
+/// 🌐️ What a learner decision may read besides the state: the decision time, the catalog, its quizzes
+/// by id and the caps.
 #[derive(Clone, Copy, Debug)]
 pub struct LearnerContext<'a> {
     pub now: Timestamp,
     pub catalog: &'a Catalog,
     pub quizzes: &'a BTreeMap<Slug, LoadedQuiz>,
+    pub limits: &'a Limits,
 }
 
-/// 🧑‍⚖️ Decide `start-run`, `record-answer` and `submit-run` for the learner (design §8); any other
-/// command decides nothing. Starting a run under an id the learner already used is refused with
-/// `run-open` or `run-closed`. Events are addressed to `state.learner`.
+/// 🧑‍⚖️ Decide a command of this learner (design §8): the registration of an anonymous learner,
+/// `start-run`, `record-answer` or `submit-run`. A command of malformed ids is `id-invalid`, a command
+/// of another learner `unknown-learner`. Starting a run under an id the learner already used is
+/// refused with `run-open` or `run-closed`. Events are addressed to `state.learner`.
 pub fn decide_learner(state: &LearnerState, command: &Command, context: &LearnerContext<'_>) -> Decision {
+    if let Some(malformed) = command_rejection(command) {
+        return Decision::Rejection(malformed);
+    }
+    if *command.learner() != state.learner {
+        return Decision::Rejection(Rejection::UnknownLearner);
+    }
     let outcome = match command {
-        Command::IdentifyLearner { .. } => Ok(Vec::new()),
-        Command::StartRun { learner, run, quiz, .. } => start_run(state, learner, run, quiz, context),
+        Command::IdentifyLearner { identity, .. } => register(state, identity, context),
+        Command::StartRun { run, quiz, .. } => start_run(state, run, quiz, context),
         Command::RecordAnswer { run, task, answer, .. } => record_answer(state, run, task, answer, context),
         Command::SubmitRun { run, .. } => submit_run(state, run, context),
     };
     outcome.map_or_else(Decision::Rejection, Decision::Events)
 }
 
-fn start_run(state: &LearnerState, learner: &Id, run: &Id, quiz: &Slug, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
-    if state.identity.is_none() || *learner != state.learner {
+fn register(state: &LearnerState, identity: &Identity, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
+    if *identity != Identity::Anonymous {
+        return Err(Rejection::HandleInvalid);
+    }
+    if state.identity.is_some() {
+        return Err(Rejection::LearnerExists);
+    }
+    Ok(vec![Event::LearnerRegistered { learner: state.learner.clone(), identity: Identity::Anonymous, at: context.now }])
+}
+
+fn start_run(state: &LearnerState, run: &Id, quiz: &Slug, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
+    if state.identity.is_none() {
         return Err(Rejection::UnknownLearner);
     }
     let current = context.quizzes.get(quiz).ok_or(Rejection::UnknownQuiz)?;
@@ -172,6 +183,10 @@ fn start_run(state: &LearnerState, learner: &Id, run: &Id, quiz: &Slug, context:
     let open = state.runs.iter().find(|candidate| candidate.quiz == *quiz && candidate.status == RunStatus::Open);
     if open.is_some_and(|open| open.revision == current.revision) {
         return Err(Rejection::RunOpen);
+    }
+    let submitted = || state.runs.iter().filter(|candidate| candidate.status == RunStatus::Submitted);
+    if submitted().count() as u64 >= context.limits.runs || submitted().filter(|candidate| candidate.quiz == *quiz).count() as u64 >= context.limits.runs_per_quiz {
+        return Err(Rejection::RunsExhausted);
     }
     let started = Event::RunStarted { learner: state.learner.clone(), run: run.clone(), quiz: quiz.clone(), revision: current.revision.clone(), seed: run_seed(run), at: context.now };
     Ok(match open {
@@ -196,6 +211,9 @@ fn current_quiz<'a>(found: &RunState, context: &LearnerContext<'a>) -> Option<&'
 fn record_answer(state: &LearnerState, run: &Id, task: &Slug, answer: &Answer, context: &LearnerContext<'_>) -> Result<Vec<Event>, Rejection> {
     let found = open_run(state, run)?;
     let quiz = current_quiz(found, context).ok_or(Rejection::QuizRevised)?;
+    if found.recorded >= context.limits.answers_per_run {
+        return Err(Rejection::AnswersExhausted);
+    }
     let sheet = sheet_of(quiz, found.seed);
     let sheet_task = sheet.tasks.iter().find(|candidate| candidate.id() == task).ok_or(Rejection::UnknownTask)?;
     if let Some(rejection) = answer_rejection(sheet_task, answer) {
@@ -229,11 +247,9 @@ pub fn evolve_learner(state: &mut LearnerState, event: &Event) {
     if *event.learner() != state.learner {
         return;
     }
-    state.last_activity = Some(state.last_activity.map_or(event.at(), |last| last.max(event.at())));
     match event {
         Event::LearnerRegistered { identity, .. } => state.identity = Some(identity.clone()),
-        Event::LearnerRecalled { .. } => {}
-        Event::RunStarted { run, quiz, revision, seed, at, .. } => state.runs.push(RunState { run: run.clone(), quiz: quiz.clone(), revision: revision.clone(), seed: *seed, status: RunStatus::Open, answers: BTreeMap::new(), result: None, started_at: *at, submitted_at: None }),
+        Event::RunStarted { run, quiz, revision, seed, at, .. } => state.runs.push(RunState { run: run.clone(), quiz: quiz.clone(), revision: revision.clone(), seed: *seed, status: RunStatus::Open, answers: BTreeMap::new(), recorded: 0, result: None, started_at: *at, submitted_at: None }),
         Event::RunVoided { run, .. } => {
             if let Some(found) = state.run_mut(run) {
                 found.status = RunStatus::Voided;
@@ -242,6 +258,7 @@ pub fn evolve_learner(state: &mut LearnerState, event: &Event) {
         Event::AnswerRecorded { run, task, answer, .. } => {
             if let Some(found) = state.run_mut(run) {
                 found.answers.insert(task.clone(), answer.clone());
+                found.recorded += 1;
             }
         }
         Event::RunSubmitted { run, result, at, .. } => {

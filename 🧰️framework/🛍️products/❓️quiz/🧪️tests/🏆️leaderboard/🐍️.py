@@ -4,13 +4,20 @@
 The views are this product's own policy, so no third party can judge them; this reading of the
 contract is the reference the TypeScript and Rust twins are held to. The catalog view is the catalog
 without quiz paths and badge rules, its quizzes without solutions (emoji, title, description, and task
-id, kind and title only), in catalog order. Every learner stream is folded from its committed events; the leaderboard then lists
-every learner with a submitted run, by total descending, badge count descending, ``reachedAt``
-ascending and learner id ascending, ranked from 1 — and publishes the learner only as its ``tag``, the
-FNV-1a 32-bit hash of the learner id as 8 lowercase hex digits, never the id itself. The total is the
-sum of the best score per quiz in points (score × 100); ``reachedAt`` is the submission that last
-raised a best score (a first submission of a quiz raises it); ``lastActivity`` is the latest ``at`` of
-the learner's stream.
+id, kind and title only), in catalog order. Every learner stream is folded from its committed events
+into a transcript — the submitted runs and the badges beside the learner id. A leaderboard has a
+period and may name one quiz: it counts the runs submitted inside the period's window around the
+asked instant — the UTC day, the ISO week from Monday, the month, or every run for all-time; the
+windows are read off Python's ``datetime``, the third party the twins' calendar arithmetic is held to
+— and of that quiz only. A standing is the learner's unranked row over the runs that count; the
+leaderboard orders the standings by total descending, badge count descending, ``reachedAt`` ascending
+and learner id ascending, ranks them from 1, answers the top 100 rows, the number of ranked learners,
+the number of runs submitted in all and — when the caller is ranked — the caller's own row, and
+publishes a learner only as its ``tag``, the FNV-1a 32-bit hash of the learner id as 8 lowercase hex
+digits, never the id itself. The total is the sum of the best score per quiz in points (score × 100);
+``reachedAt`` is the submission that last raised a best score (a first submission of a quiz raises
+it); ``lastActivity`` is the last submission that counts; the badges are those the counted runs
+earned.
 
 @see ../../🧬️schema/🔣️.json
 @see ../../🧫️fixtures/🏆️leaderboard/🔣️.json
@@ -19,6 +26,7 @@ the learner's stream.
 # region 🔖️Imports
 import copy
 import json
+from datetime import datetime, timedelta, timezone
 
 from semio_repo_test import Adapter, Outcome
 
@@ -44,19 +52,19 @@ def tag(learner):
 
 
 def catalog_view(catalog, quizzes):
-    """📚️ The solution-free catalog: no quiz paths, no badge rules, quizzes reduced to their emoji, title, description and task ids, kinds and titles."""
+    """📚️ The solution-free catalog: no quiz paths, no badge rules, quizzes reduced to their emoji, title, description and the id, kind, title and icon of their tasks."""
     return {
         "id": catalog["id"],
         "title": catalog["title"],
         "introduction": catalog["introduction"],
-        "quizzes": [{"id": quiz["id"], "emoji": quiz["emoji"], "title": quiz["title"], "description": quiz["description"], "tasks": [{"id": task["id"], "kind": task["kind"], "title": task["title"]} for task in quiz["tasks"]]} for quiz in quizzes],
+        "quizzes": [{"id": quiz["id"], "emoji": quiz["emoji"], "title": quiz["title"], "description": quiz["description"], "tasks": [{"id": task["id"], "kind": task["kind"], "title": task["title"], **({"icon": task["icon"]} if "icon" in task else {})} for task in quiz["tasks"]]} for quiz in quizzes],
         "badges": [{"id": badge["id"], "emoji": badge["emoji"], "label": badge["label"], "description": badge["description"]} for badge in catalog["badges"]],
     }
 
 
 def empty_learner_state(learner):
     """🌱️ A learner nothing has happened to yet."""
-    return {"learner": learner, "identity": None, "runs": [], "badges": [], "best": {}, "reachedAt": None, "lastActivity": None}
+    return {"learner": learner, "identity": None, "runs": [], "badges": [], "best": {}, "reachedAt": None}
 
 
 def run_of(state, run):
@@ -67,7 +75,6 @@ def run_of(state, run):
 def evolve_learner(state, event):
     """🧵️ Folds one learner event into the state."""
     state = copy.deepcopy(state)
-    state["lastActivity"] = event["at"] if state["lastActivity"] is None else max(state["lastActivity"], event["at"])
     kind = event["type"]
     if kind == "learner-registered":
         state["identity"] = event["identity"]
@@ -106,26 +113,83 @@ def learner_view(state):
     return {"learner": state["learner"], "identity": state["identity"], "runs": runs, "badges": state["badges"], "best": state["best"], "total": total_of(state)}
 
 
-def leaderboard(states):
-    """🥇️ Every learner with a submitted run, ordered and ranked by the leaderboard's tie-break chain."""
-    submitted = [state for state in states if any(run["status"] == "submitted" for run in state["runs"])]
-    ordered = sorted(submitted, key=lambda state: (-total_of(state), -len(state["badges"]), state["reachedAt"], state["learner"]))
+TOP = 100
+PERIODS = ["daily", "weekly", "monthly", "all-time"]
+EPOCH = datetime(1970, 1, 1, tzinfo=timezone.utc)
+
+
+def transcript(state):
+    """📜️ What every standing of a learner is made of — the submitted runs in submission order and the badges with the quiz of the run that earned them — or ``None`` before registration or the first submission."""
+    runs = [{"quiz": run["quiz"], "score": run["result"]["score"], "at": run["submittedAt"]} for run in sorted((run for run in state["runs"] if run["status"] == "submitted"), key=lambda run: run["submittedAt"])]
+    if state["identity"] is None or not runs:
+        return None
+    badges = [{"badge": award["badge"], "quiz": run_of(state, award["run"])["quiz"], "at": award["at"]} for award in state["badges"] if run_of(state, award["run"]) is not None]
+    return {"learner": state["learner"], "tag": tag(state["learner"]), "identity": state["identity"], "runs": runs, "badges": badges}
+
+
+def milliseconds(moment):
+    """⏱️ A calendar moment as milliseconds since the Unix epoch, none before it."""
+    return max(0, (moment - EPOCH) // timedelta(milliseconds=1))
+
+
+def period_window(period, at):
+    """🪟️ The window of a period around an instant, read off Python's ``datetime`` calendar: the UTC day, the ISO week from its Monday, the month; ``None`` for all-time."""
+    if period == "all-time":
+        return None
+    day = (EPOCH + timedelta(milliseconds=at)).replace(hour=0, minute=0, second=0, microsecond=0)
+    if period == "daily":
+        start, end = day, day + timedelta(days=1)
+    elif period == "weekly":
+        start = day - timedelta(days=day.weekday())
+        end = start + timedelta(days=7)
+    else:
+        start = day.replace(day=1)
+        end = start.replace(year=start.year + 1, month=1) if start.month == 12 else start.replace(month=start.month + 1)
+    return {"from": milliseconds(start), "until": milliseconds(end)}
+
+
+def standing(record, window, quiz):
+    """🧍️ The unranked row of a transcript over its runs inside the window and of the quiz, beside the learner id; ``None`` when no run counts."""
+    counts = lambda entry: (quiz is None or entry["quiz"] == quiz) and (window is None or window["from"] <= entry["at"] < window["until"])
+    runs = [run for run in record["runs"] if counts(run)]
+    if not runs:
+        return None
+    best, reached = {}, None
+    for run in runs:
+        if run["quiz"] not in best or run["score"] > best[run["quiz"]]:
+            best[run["quiz"]], reached = run["score"], run["at"]
+    total = 0.0
+    for score in best.values():
+        total += score * 100
     return {
-        "rows": [
-            {
-                "rank": rank,
-                "tag": tag(state["learner"]),
-                "identity": state["identity"],
-                "total": total_of(state),
-                "reachedAt": state["reachedAt"],
-                "best": state["best"],
-                "badges": [award["badge"] for award in state["badges"]],
-                "runs": sum(1 for run in state["runs"] if run["status"] == "submitted"),
-                "lastActivity": state["lastActivity"],
-            }
-            for rank, state in enumerate(ordered, start=1)
-        ]
+        "learner": record["learner"],
+        "tag": record["tag"],
+        "identity": record["identity"],
+        "total": total,
+        "reachedAt": reached,
+        "best": best,
+        "badges": [award["badge"] for award in record["badges"] if counts(award)],
+        "runs": len(runs),
+        "lastActivity": max(run["at"] for run in runs),
     }
+
+
+def leaderboard(transcripts, period, quiz, at, caller):
+    """🥇️ One leaderboard at an instant: the top rows of the standings in scope in the tie-break order, how many learners are ranked, how many runs were submitted in all, and the caller's own row when the caller is ranked."""
+    window = period_window(period, at)
+    standings = [entry for entry in (standing(record, window, quiz) for record in transcripts) if entry is not None]
+    ordered = sorted(standings, key=lambda entry: (-entry["total"], -len(entry["badges"]), entry["reachedAt"], entry["learner"]))
+    ranked = [(entry["learner"], {"rank": rank, **{member: value for member, value in entry.items() if member != "learner"}}) for rank, entry in enumerate(ordered, start=1)]
+    board = {"period": period}
+    if quiz is not None:
+        board["quiz"] = quiz
+    if window is not None:
+        board["window"] = window
+    board.update({"rows": [row for _, row in ranked[:TOP]], "learners": len(ranked), "submissions": sum(len(record["runs"]) for record in transcripts)})
+    own = next((row for learner, row in ranked if learner == caller), None) if caller is not None else None
+    if own is not None:
+        board["own"] = own
+    return board
 
 
 # endregion 🔖️Reference
@@ -171,11 +235,56 @@ def learner_views(ctx):
     return held_to("learner-views", produced, {vector["id"]: vector["expected"]["learnerViews"] for vector in vectors})
 
 
+def transcripts(vector):
+    """📚️ The transcript of every ranked learner of a vector, in committed order."""
+    return [record for record in map(transcript, folded(vector)) if record is not None]
+
+
+def asked(records, board, callers):
+    """🙋️ One leaderboard as every committed caller is answered, keyed by the caller's label."""
+    return {caller["id"]: leaderboard(records, board["period"], board.get("quiz"), board["at"], caller.get("learner")) for caller in callers}
+
+
+def boards(records, vector):
+    """🗂️ Every committed board of a vector as every committed caller is answered, keyed by the board's label."""
+    return {board["id"]: asked(records, board, vector["callers"]) for board in vector["boards"]}
+
+
 def rankings(ctx):
-    """🗃️ The leaderboard of every committed set of learner streams."""
+    """🗃️ Every committed leaderboard of every committed set of learner streams, as every committed caller is answered."""
     vectors = json.loads(ctx.fixture_bytes(VECTORS))["vectors"]
-    produced = {vector["id"]: leaderboard(folded(vector)) for vector in vectors}
-    return held_to("rankings", produced, {vector["id"]: vector["expected"]["leaderboard"] for vector in vectors})
+    produced = {vector["id"]: boards(transcripts(vector), vector) for vector in vectors}
+    return held_to("rankings", produced, {vector["id"]: vector["expected"]["leaderboards"] for vector in vectors})
+
+
+def windows(ctx):
+    """🪟️ The window of every period around every committed instant; ``None`` for all-time."""
+    vectors = json.loads(ctx.fixture_bytes(VECTORS))["windows"]
+    produced = {vector["id"]: {period: period_window(period, vector["at"]) for period in PERIODS} for vector in vectors}
+    for identifier, answered in produced.items():
+        at = next(vector["at"] for vector in vectors if vector["id"] == identifier)
+        if answered["all-time"] is not None or any(not answered[period]["from"] <= at < answered[period]["until"] for period in PERIODS[:3]):
+            raise AssertionError("windows/%s: a window does not contain its instant" % identifier)
+    return held_to("windows", produced, {vector["id"]: vector["expected"] for vector in vectors})
+
+
+def outline(board):
+    """🪧️ A leaderboard reduced to what a cut decides: ``rank:tag`` of every row in order, the number of ranked learners and ``rank:tag`` of the caller's own row."""
+    place = lambda row: "%d:%s" % (row["rank"], row["tag"])
+    return {"rows": [place(row) for row in board["rows"]], "learners": board["learners"], "own": place(board["own"]) if "own" in board else None}
+
+
+def cuts(ctx):
+    """🪜️ The outline of the committed board over the first transcripts of the committed crowd, per committed cut and caller: the top 100, the count of ranked learners and the caller's own row."""
+    crowd = json.loads(ctx.fixture_bytes(VECTORS))["crowd"]
+    produced = {}
+    for vector in crowd["cuts"]:
+        records = crowd["transcripts"][: vector["learners"]]
+        produced[vector["id"]] = {caller: outline(board) for caller, board in asked(records, crowd["board"], vector["callers"]).items()}
+        for board in produced[vector["id"]].values():
+            if len(board["rows"]) != min(TOP, len(records)) or board["learners"] != len(records) or [row.split(":")[0] for row in board["rows"]] != [str(rank) for rank in range(1, len(board["rows"]) + 1)]:
+                raise AssertionError("cuts/%s: the top is not the first %d ranks of %d learners" % (vector["id"], TOP, len(records)))
+    return held_to("cuts", produced, {vector["id"]: vector["expected"] for vector in crowd["cuts"]})
 
 
 def catalog_views(ctx):
@@ -191,7 +300,7 @@ def catalog_views(ctx):
 # region 🔖️Registration
 def adapter():
     """🧭️ Oracle role only."""
-    return Adapter("python").oracle("catalog-views", catalog_views).oracle("learner-views", learner_views).oracle("rankings", rankings)
+    return Adapter("python").oracle("catalog-views", catalog_views).oracle("learner-views", learner_views).oracle("windows", windows).oracle("rankings", rankings).oracle("cuts", cuts)
 
 
 # endregion 🔖️Registration

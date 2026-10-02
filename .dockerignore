@@ -1,5 +1,6 @@
-# 🐳️ Build-context exclusions for every image built from the repository root: 🌎️hub/Dockerfile and
-# 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile (see their headers).
+# 🐳️ Build-context exclusions for every image built from the repository root that brings no ignore file of its own:
+# 🌎️hub/Dockerfile (see its header). 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile admits only what it reads
+# through `Dockerfile.dockerignore` beside it, which BuildKit prefers over this file.
 # Only host-local state and compiler output that the builder stage recreates. Committed `🤖️generated`
 # sources are NOT excluded — several crates and the plugin catalog are generated-then-committed, and
 # dropping them would break the build inside the image. `.🧬semio` is the repository's host-local state

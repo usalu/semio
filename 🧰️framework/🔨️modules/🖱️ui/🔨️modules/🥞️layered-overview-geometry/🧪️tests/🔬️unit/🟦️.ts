@@ -2,21 +2,17 @@
 import Ajv from "ajv";
 import { easeCubicInOut } from "d3-ease";
 import * as clippingModule from "polygon-clipping";
+import { MathUtils } from "three";
 import { describe, expect, it } from "vitest";
 import fixture from "../../../../🧫️fixtures/🥞️layered-overview/🔣️.json" with { type: "json" };
 import schema from "../../../../🧬️schema/🥞️layered-overview/🔣️.json" with { type: "json" };
 import {
-  LAYERED_VIEW,
+  LAYERED_FOLLOW_FRAME_MS,
+  LAYERED_FOLLOW_LERP,
+  followFactor,
   centeredLastRowCells,
   centeredRowSpan,
   clampOffset,
-  coverPlacement,
-  glideRect,
-  restRect,
-  trackTemplate,
-  veilForRect,
-  viewRect,
-  type LayeredRect,
   type LayeredVeil,
   easeInOutCubic,
   followStep,
@@ -92,16 +88,11 @@ function expectVeil(veil: LayeredVeil, scenario: VeilScenario): void {
   expect(oracleVeilArea(polygon)).toBeCloseTo(scenario.area, 6);
 }
 
-/** ▭️ A rectangle equals the expected one to twelve decimals. */
-function expectRect(rect: LayeredRect, expected: LayeredRect): void {
-  for (const key of ["x", "y", "width", "height"] as const) expect(rect[key]).toBeCloseTo(expected[key], 12);
-}
-
 const never = (value: number | null): number => value ?? Number.POSITIVE_INFINITY;
 const lifecycleOf = (given: Partial<Record<keyof LayeredLifecycle, number>>): LayeredLifecycle => resolveLifecycle(given);
 
 /** 🥞️ The layered overview's pure geometry and lifecycle policy, read from `🧫️fixtures/🥞️layered-overview/🔣️.json` and judged against
- * `polygon-clipping` (veil area) and `d3-ease` (easing). */
+ * `polygon-clipping` (veil area), `d3-ease` (easing) and three.js (the follow's damping). */
 describe("🥞️ layered overview geometry", () => {
   it("reads a fixture that satisfies its schema", () => {
     const validate = new Ajv({ strict: true, allErrors: true }).compile(schema);
@@ -172,76 +163,35 @@ describe("🥞️ layered overview geometry", () => {
 
   for (const scenario of fixture.follows) {
     it(`follow: ${scenario.name}`, () => {
-      const { offset, settled } = followStep(scenario.current, scenario.target);
+      const { offset, settled } = followStep(scenario.current, scenario.target, scenario.elapsedMs);
       expect(offset.x).toBeCloseTo(scenario.offset.x, 12);
       expect(offset.y).toBeCloseTo(scenario.offset.y, 12);
       expect(settled).toBe(scenario.settled);
     });
   }
 
+  for (const scenario of fixture.followFactors) it(`follow factor: ${scenario.name}`, () => expect(followFactor(scenario.elapsedMs)).toBeCloseTo(scenario.factor, 12));
+
+  it("follows by elapsed time: one 60 Hz frame by default, and the same gap closed however the time is cut into frames", () => {
+    expect(followFactor()).toBeCloseTo(LAYERED_FOLLOW_LERP, 15);
+    expect(LAYERED_FOLLOW_FRAME_MS).toBeCloseTo(1000 / 60, 12);
+    for (const frames of [[400], [16, 16, 16, 352], [100, 100, 100, 100], Array.from({ length: 48 }, () => 400 / 48)]) {
+      const left = frames.reduce((gap, elapsed) => gap * (1 - followFactor(elapsed)), 1);
+      expect(left).toBeCloseTo(1 - followFactor(400), 12);
+    }
+  });
+
+  it("damps exactly like three.js's MathUtils.damp", () => {
+    const lambda = -Math.log(1 - LAYERED_FOLLOW_LERP) / LAYERED_FOLLOW_FRAME_MS;
+    for (let elapsed = 0; elapsed <= 500; elapsed += 2.5) {
+      expect(followFactor(elapsed)).toBeCloseTo(MathUtils.damp(0, 1, lambda, elapsed), 12);
+      expect(followStep({ x: -3, y: 2 }, { x: 5, y: 2.5 }, elapsed).offset.x).toBeCloseTo(MathUtils.damp(-3, 5, lambda, elapsed), 12);
+    }
+  });
+
   for (const scenario of fixture.stripTransforms) it(`strip transform: ${scenario.name}`, () => expect(stripTransform(scenario.offset, scenario.grid)).toBe(scenario.transform));
 
   for (const scenario of fixture.veils) it(`veil: ${scenario.name}`, () => expectVeil(veilClip(scenario.cell, scenario.offset), scenario));
-
-  for (const scenario of fixture.rests) it(`grid rest: ${scenario.name}`, () => expectRect(restRect(scenario.cell, scenario.grid, scenario.tracks), scenario.rect));
-
-  it("tiles the view with the rest cells of every grid, whatever the tracks", () => {
-    for (const tracks of [{}, { columns: [1, 1.5, 1], rows: [1, 1.4, 1] }, { columns: [3], rows: [0.5, 2] }]) {
-      const rects = centeredLastRowCells(9).map((cell) => restRect(cell, { columns: 3, rows: 3 }, tracks));
-      expect(rects.reduce((sum, rect) => sum + rect.width * rect.height, 0)).toBeCloseTo(1, 12);
-      expect(Math.max(...rects.map((rect) => rect.x + rect.width))).toBeCloseTo(1, 12);
-      expect(Math.max(...rects.map((rect) => rect.y + rect.height))).toBeCloseTo(1, 12);
-    }
-  });
-
-  for (const scenario of fixture.invalidTracks) it(`grid rest refuses ${scenario.name}`, () => expect(() => restRect({ column: 0, row: 0 }, scenario.grid, scenario.tracks)).toThrow(/positive/));
-  for (const scenario of fixture.trackTemplates) it(`track template: ${scenario.name}`, () => expect(trackTemplate(scenario.weights ?? undefined, scenario.count)).toBe(scenario.template));
-  for (const scenario of fixture.views) it(`zoom view: ${scenario.name}`, () => expectRect(viewRect(scenario.rest, scenario.camera), scenario.view));
-
-  for (const scenario of fixture.zooms) {
-    it(`zoom: ${scenario.name}`, () => {
-      for (const sample of scenario.samples) {
-        const { rect, done } = glideRect(scenario.from, scenario.to, sample.elapsedMs, scenario.durationMs);
-        expectRect(rect, sample.rect);
-        expect(done).toBe(sample.done);
-        if (done) expect(rect).toBe(scenario.to);
-      }
-    });
-  }
-
-  for (const scenario of fixture.placements) {
-    it(`placement: ${scenario.name}`, () => {
-      const placement = coverPlacement(scenario.view);
-      expect(placement.transform).toBe(scenario.transform);
-      expect(placement.clipPath).toBe(scenario.clipPath);
-    });
-  }
-
-  it("keeps every placed page undistorted and exactly inside its view rectangle", () => {
-    for (const view of fixture.placements.map((scenario) => scenario.view)) {
-      const numbers = (text: string) => (text.match(/-?\d+(?:\.\d+)?/gu) ?? []).map(Number);
-      const [tx = 0, ty = 0, , scale = 1] = numbers(coverPlacement(view).transform.replace(/^translate3d/u, ""));
-      const [top = 0, right = 0, bottom = 0, left = 0] = numbers(coverPlacement(view).clipPath);
-      expect(tx / 100 + (left / 100) * scale).toBeCloseTo(view.x, 3);
-      expect(ty / 100 + (top / 100) * scale).toBeCloseTo(view.y, 3);
-      expect((1 - left / 100 - right / 100) * scale).toBeCloseTo(view.width, 3);
-      expect((1 - top / 100 - bottom / 100) * scale).toBeCloseTo(view.height, 3);
-    }
-  });
-
-  for (const scenario of fixture.rectVeils) it(`grid veil: ${scenario.name}`, () => expectVeil(veilForRect(scenario.rect), scenario));
-
-  it("cuts the hole of a zoom from the page's current view", () => {
-    const rest = restRect({ column: 1, row: 1 }, { columns: 3, rows: 3 });
-    for (const elapsed of [0, 100, 250, 400, 500]) {
-      const camera = glideRect(LAYERED_VIEW, rest, elapsed).rect;
-      const view = viewRect(rest, camera);
-      const veil = veilForRect(view);
-      if (elapsed >= 500) expect(veil.kind).toBe("clear");
-      else if (veil.kind === "hole") for (const [side, value] of [["left", view.x], ["top", view.y], ["right", view.x + view.width], ["bottom", view.y + view.height]] as const) expect(veil[side]).toBeCloseTo(value, 12);
-      else throw new Error(`expected a hole at ${elapsed} ms, got ${veil.kind}`);
-    }
-  });
 
   for (const scenario of fixture.windows) it(`window: ${scenario.name}`, () => expect(windowAround(scenario.offset, scenario.radius)).toEqual(scenario.window));
 

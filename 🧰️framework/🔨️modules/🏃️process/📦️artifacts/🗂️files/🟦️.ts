@@ -14,6 +14,16 @@ export function writeGeneratedFileIfChanged(path: string, content: string): bool
   return true;
 }
 
+/** 🌱️ Makes sure the generated file at `path` exists, empty when it is new, and says whether it was new: a native
+ * exporter whose own freshness test compiles its published mirror in (`include_str!`) builds on a checkout that has no
+ * mirror yet. */
+export function seedGeneratedFile(path: string): boolean {
+  if (existsSync(path)) return false;
+  mkdirSync(dirname(path), { recursive: true });
+  writeFileSync(path, "", "utf8");
+  return true;
+}
+
 /** 🗂️ Collects regular staged files without following links or retaining compiler directory state. */
 export async function collectArtifactFiles(root: string, signal?: AbortSignal): Promise<ReadonlyMap<string, string>> {
   signal?.throwIfAborted();

@@ -516,6 +516,150 @@
       "expected": false
     },
     {
+      "id": "handle-untrimmed",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "name",
+          "handle": " Ada"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-double-space",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "name",
+          "handle": "Ada  Lovelace"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-zero-width",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "pseudonym",
+          "handle": "A​da"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-bidi-override",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "pseudonym",
+          "handle": "‮adA"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-combining-mark",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "name",
+          "handle": "Adé"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-cyrillic-lookalike",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "name",
+          "handle": "Аda"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-emoji",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "pseudonym",
+          "handle": "Ada 🦊"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-punctuation-only",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "pseudonym",
+          "handle": "..."
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "handle-accents-and-apostrophe",
+      "state": {
+        "tag": "1097e4ce",
+        "identity": {
+          "kind": "name",
+          "handle": "Zoë O'Neill-Müller"
+        },
+        "place": {
+          "screen": "home"
+        },
+        "active": true
+      },
+      "rule": null,
+      "expected": true
+    },
+    {
       "id": "quiz-page",
       "state": {
         "tag": "1097e4ce",
@@ -2088,6 +2232,201 @@
         }
       },
       "rule": "duplicate-id",
+      "expected": false
+    },
+    {
+      "id": "sorting-guess-as-text",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "power-ratings": {
+            "kind": "sorting",
+            "order": [
+              "led-bulb",
+              "tea-light",
+              "kettle",
+              "wallbox",
+              "wind-turbine",
+              "nuclear-plant"
+            ],
+            "guesses": {
+              "kettle": "2000"
+            }
+          }
+        }
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "sorting-guess-null",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "power-ratings": {
+            "kind": "sorting",
+            "order": [
+              "led-bulb",
+              "tea-light",
+              "kettle",
+              "wallbox",
+              "wind-turbine",
+              "nuclear-plant"
+            ],
+            "guesses": {
+              "kettle": null
+            }
+          }
+        }
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "sorting-guesses-not-an-object",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "power-ratings": {
+            "kind": "sorting",
+            "order": [
+              "led-bulb",
+              "tea-light",
+              "kettle",
+              "wallbox",
+              "wind-turbine",
+              "nuclear-plant"
+            ],
+            "guesses": [
+              1,
+              2
+            ]
+          }
+        }
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "sorting-guess-item-not-a-slug",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "power-ratings": {
+            "kind": "sorting",
+            "order": [
+              "led-bulb",
+              "tea-light",
+              "kettle",
+              "wallbox",
+              "wind-turbine",
+              "nuclear-plant"
+            ],
+            "guesses": {
+              "Tea Light": 1
+            }
+          }
+        }
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "guesses-on-classification",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "heating-systems": {
+            "kind": "classification",
+            "assignments": {},
+            "guesses": {
+              "ground-source": 1
+            }
+          }
+        }
+      },
+      "rule": "oneOf",
+      "expected": false
+    },
+    {
+      "id": "guesses-of-sixty-five",
+      "state": {
+        "tag": "1097e4ce",
+        "answers": {
+          "power-ratings": {
+            "kind": "sorting",
+            "order": [],
+            "guesses": {
+              "item-00": 0.0,
+              "item-01": 1.5,
+              "item-02": 3.0,
+              "item-03": 4.5,
+              "item-04": 6.0,
+              "item-05": 7.5,
+              "item-06": 9.0,
+              "item-07": 10.5,
+              "item-08": 12.0,
+              "item-09": 13.5,
+              "item-10": 15.0,
+              "item-11": 16.5,
+              "item-12": 18.0,
+              "item-13": 19.5,
+              "item-14": 21.0,
+              "item-15": 22.5,
+              "item-16": 24.0,
+              "item-17": 25.5,
+              "item-18": 27.0,
+              "item-19": 28.5,
+              "item-20": 30.0,
+              "item-21": 31.5,
+              "item-22": 33.0,
+              "item-23": 34.5,
+              "item-24": 36.0,
+              "item-25": 37.5,
+              "item-26": 39.0,
+              "item-27": 40.5,
+              "item-28": 42.0,
+              "item-29": 43.5,
+              "item-30": 45.0,
+              "item-31": 46.5,
+              "item-32": 48.0,
+              "item-33": 49.5,
+              "item-34": 51.0,
+              "item-35": 52.5,
+              "item-36": 54.0,
+              "item-37": 55.5,
+              "item-38": 57.0,
+              "item-39": 58.5,
+              "item-40": 60.0,
+              "item-41": 61.5,
+              "item-42": 63.0,
+              "item-43": 64.5,
+              "item-44": 66.0,
+              "item-45": 67.5,
+              "item-46": 69.0,
+              "item-47": 70.5,
+              "item-48": 72.0,
+              "item-49": 73.5,
+              "item-50": 75.0,
+              "item-51": 76.5,
+              "item-52": 78.0,
+              "item-53": 79.5,
+              "item-54": 81.0,
+              "item-55": 82.5,
+              "item-56": 84.0,
+              "item-57": 85.5,
+              "item-58": 87.0,
+              "item-59": 88.5,
+              "item-60": 90.0,
+              "item-61": 91.5,
+              "item-62": 93.0,
+              "item-63": 94.5,
+              "item-64": 96.0
+            }
+          }
+        }
+      },
+      "rule": "too-many",
       "expected": false
     },
     {

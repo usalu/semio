@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pet layer harness (work package G)</title>
+    <style>
+      :root {
+        --foreground: #001117;
+        --ground: #f7f3e3;
+        --panel: #ffffff;
+        --line: #c9c8bd;
+      }
+      html[data-theme="dark"] {
+        --foreground: #f7f3e3;
+        --ground: #001117;
+        --panel: #1d2b2f;
+        --line: #3b4a4e;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body,
+      #root {
+        height: 100%;
+        margin: 0;
+      }
+      body {
+        background: var(--ground);
+        color: var(--foreground);
+        font: 15px/1.4 system-ui, sans-serif;
+        overflow: hidden;
+      }
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      header {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        padding: 10px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      header a {
+        color: inherit;
+      }
+      main {
+        position: relative;
+        flex: 1;
+        min-height: 0;
+      }
+      .card {
+        position: absolute;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        padding: 14px 16px;
+      }
+      .card h3 {
+        margin: 0 0 6px;
+        font-size: 16px;
+      }
+      .card p {
+        margin: 0 0 10px;
+      }
+      .card-a {
+        left: 60px;
+        top: 150px;
+        width: 330px;
+        height: 180px;
+      }
+      .card-b {
+        left: 450px;
+        top: 90px;
+        width: 300px;
+        height: 200px;
+      }
+      .card-c {
+        left: 810px;
+        top: 190px;
+        width: 380px;
+        height: 170px;
+      }
+      .card-d {
+        left: 260px;
+        top: 420px;
+        width: 420px;
+        height: 150px;
+      }
+      .note {
+        position: absolute;
+        left: 830px;
+        top: 148px;
+        width: 150px;
+        padding: 4px 8px;
+        border: 1px dashed var(--line);
+      }
+      .pane {
+        position: absolute;
+        left: 760px;
+        top: 420px;
+        width: 420px;
+        height: 190px;
+        overflow: auto;
+        border: 1px solid var(--line);
+      }
+      .pane .card {
+        position: static;
+        margin: 70px 20px 24px;
+        height: 110px;
+      }
+      footer {
+        display: flex;
+        gap: 16px;
+        justify-content: flex-end;
+        padding: 6px 16px;
+        border-top: 1px solid var(--line);
+      }
+      footer a {
+        color: inherit;
+      }
+      button {
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./main.tsx"></script>
+  </body>
+</html>

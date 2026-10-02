@@ -4,6 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createRequire } from "node:module";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+import * as loadedCommandInputs from "./⚡️caching/📥️inference/🟨️.mjs";
 
 const PROJECT_BASENAME = "📋️project.json";
 const SCRIPT_BASENAME = "📜️script.ts";
@@ -39,13 +40,14 @@ async function importRevision(source, revision) {
   return import(url.href);
 }
 
+/** 🧷️ Admits only the command input parser whose bytes are the current authority. */
+function currentCommandInputs(commandInputs) {
+  if (commandInputs.sourceHash !== commandInputHash) throw Error("Stale command input parser implementation");
+  return commandInputs.commandSourceImports;
+}
+
 const commandInputHash = createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, COMMAND_INPUT_MODULE))).digest("hex");
-const commandInputUrl = new URL(`./${COMMAND_INPUT_MODULE}`, import.meta.url);
-commandInputUrl.searchParams.set("revision", commandInputHash);
-let commandInputs = await import(commandInputUrl.href);
-if (commandInputs.sourceHash !== commandInputHash) commandInputs = await importRevision(commandInputUrl, commandInputHash);
-if (commandInputs.sourceHash !== commandInputHash) throw Error("Stale command input parser implementation");
-const { commandSourceImports } = commandInputs;
+let commandSourceImports = (path, source) => currentCommandInputs(loadedCommandInputs)(path, source);
 
 let declaredBrowserSessionEnginesV1;
 let admitPlaygroundNativeHostV1;
@@ -55,7 +57,10 @@ let runtimeInputAdmissionV1;
 let readSourceInputContract;
 let relativeSourceInputs;
 let componentDeploymentDirectoryV1;
-const libraryBootstrap = importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex")).then((runtime) => {
+const libraryBootstrap = (loadedCommandInputs.sourceHash === commandInputHash ? Promise.resolve(loadedCommandInputs) : importRevision(new URL(`./${COMMAND_INPUT_MODULE}`, import.meta.url), commandInputHash)).then((commandInputs) => {
+  commandSourceImports = currentCommandInputs(commandInputs);
+  return importRevision(new URL(`./${RUNTIME_COMPONENT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, RUNTIME_COMPONENT_MODULE))).digest("hex"));
+}).then((runtime) => {
   runtimeComponentClosure = runtime.runtimeComponentClosure;
   runtimeInputAdmissionV1 = runtime.runtimeInputAdmissionV1;
   return importRevision(new URL(`./${SOURCE_INPUT_MODULE}`, import.meta.url), createHash("sha256").update(readPhysicalSource(join(LIBRARY_ROOT, SOURCE_INPUT_MODULE))).digest("hex"));

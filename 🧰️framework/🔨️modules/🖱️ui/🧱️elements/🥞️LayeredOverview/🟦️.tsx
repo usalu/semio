@@ -9,36 +9,27 @@ import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
 import { loadingBorderClass } from "../../🔨️modules/🌀️status-border-presentation/🟦️.ts";
 import {
-  LAYERED_VIEW,
   cellOffset,
   clampOffset,
-  coverPlacement,
   followStep,
   glideOffset,
-  glideRect,
   inWindow,
   nextWarmBoot,
   panesOverBudget,
   panesToRelease,
   pointerOffset,
   resolveLifecycle,
-  restRect,
   scheduleIdle,
   stripGrid,
   stripTransform,
-  trackTemplate,
   veilClip,
   veilClipPath,
-  veilForRect,
-  viewRect,
   warmDelay,
   windowAround,
   type LayeredCell,
   type LayeredGrid,
   type LayeredLifecycle,
   type LayeredOffset,
-  type LayeredRect,
-  type LayeredTracks,
   type LayeredVeil,
   type LayeredWindow,
 } from "../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts";
@@ -48,11 +39,6 @@ import { Icon, type IconName } from "../🔣️Icons/🟦️.tsx";
 // #region 🧬️LayeredOverviewContracts
 /** 🧭️ `strip`: every pane on one panorama under one glass with the card grid above; `list`: one snap section per pane, each under its own glass (touch phones). */
 export type LayeredMode = "strip" | "list";
-
-/** 🔍️ What the strip shows at rest: `panorama` — one container-sized page, panned by the pointer (play, the demonstrator); `grid` — every page at
- * once, each scaled without distortion to cover its track cell (`gridTracks`) exactly behind its card, all live; a reveal zooms its page to full
- * size. */
-export type LayeredRest = "panorama" | "grid";
 
 /** 🥞️ One backdrop page, the real page its card opens: `id` is its hash route, `data-layered-pane` and key, `label` names the opened page and its
  * placeholder, `render` is called only while the pane is mounted, `poster` is shown while it is not, and `capturePoster` (for example
@@ -88,17 +74,19 @@ export interface LayeredChromeState {
   readonly opened: boolean;
 }
 
-/** 🌐️ The element's own words, always the app's (no default language): the card group, the Overview button, a waiting and a failed page. */
+/** 🌐️ The element's own words, always the app's (no default language): the card group, the Overview button, a waiting and a failed page. An app
+ * whose own chrome leads back to the overview names no `overview`, and the element shows no button of its own over the opened page. */
 export interface LayeredLabels {
   readonly grid: string;
-  readonly overview: string;
+  readonly overview?: string;
   readonly waiting: (pane: LayeredPane) => string;
   readonly failed: (pane: LayeredPane) => string;
 }
 
 /** 🥞️ Props of {@link LayeredOverview}. `cells` places every pane on the strip for the current breakpoint; the card grid is the app's CSS
- * (`overlayClassName`/`overlayStyle`, each card wrapped in a `display: contents` host; the overlay carries `--layered-columns`/`--layered-rows`,
- * the track lists of `gridTracks`); `openedId` makes the open page controlled. */
+ * (`overlayClassName`/`overlayStyle`, each card wrapped in a `display: contents` host); `pan` lets the mouse pan the strip under the glass while
+ * it is between the cards; `reducedMotion` says whether pan and glide give way to stillness — `"never"` (the default), `"auto"` (when the
+ * device asks for it) or `"always"`; `openedId` makes the open page controlled. */
 export interface LayeredOverviewProps {
   readonly panes: readonly LayeredPane[];
   readonly cells: Readonly<Record<string, LayeredCell>>;
@@ -107,8 +95,6 @@ export interface LayeredOverviewProps {
   readonly overlayStyle?: React.CSSProperties;
   readonly renderChrome?: (state: LayeredChromeState) => React.ReactNode;
   readonly mode?: LayeredMode;
-  readonly rest?: LayeredRest;
-  readonly gridTracks?: LayeredTracks;
   readonly pan?: "pointer" | "none";
   readonly routing?: "hash" | "none";
   readonly openedId?: string | null;
@@ -155,15 +141,8 @@ export function capturePosterFromCanvases(container: HTMLElement): string | null
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-type LayeredDrive =
-  | { readonly kind: "follow" }
-  | { readonly kind: "glide"; readonly from: LayeredOffset; readonly to: LayeredOffset; readonly startedAt: number }
-  | { readonly kind: "zoom"; readonly from: LayeredRect; readonly to: LayeredRect; readonly startedAt: number };
+type LayeredDrive = { readonly kind: "follow" } | { readonly kind: "glide"; readonly from: LayeredOffset; readonly to: LayeredOffset; readonly startedAt: number };
 const FOLLOW: LayeredDrive = { kind: "follow" };
-const GRID_PANE_STYLE: React.CSSProperties = { position: "absolute", inset: 0, transformOrigin: "0 0", willChange: "transform" };
-
-/** 🧮️ How panes start: a paced `warm` queue (panorama), `all` at once (the grid rest shows every page), or on `demand` only (list). */
-type LayeredStart = "warm" | "all" | "demand";
 
 /** 🐢️ Whether the user asks for reduced motion, unless the app forces it on or off. */
 function useReducedMotion(setting: "auto" | "always" | "never"): boolean {
@@ -229,11 +208,11 @@ function useStableByKey<T>(value: T, key: string): T {
   return kept.current.value;
 }
 
-/** 🧮️ Mounts, releases and posters of the panes: boots on reveal/open/list scroll, a warm queue in cell order, a live `budget` (least recently
- * touched pristine pane first), time-based release, posters from `capturePoster`. Dirty, opened and revealed panes are never released; the most
- * recently opened pane (initially the first) is never released by time while the overview shows. */
-function usePaneLifecycle(panes: readonly LayeredPane[], ids: readonly string[], opened: string | null, revealed: string | null, lifecycle: LayeredLifecycle, start: LayeredStart) {
-  const initial = start === "all" ? ids : opened ? [opened] : [];
+/** 🧮️ Mounts, releases and posters of the panes: boots on reveal/open/list scroll, a warm queue in cell order (while `warming`: the strip, never
+ * the list; a pace of zero boots at once instead of waiting for an idle moment), a live `budget` (least recently touched pristine pane first), time-based release, posters from `capturePoster`. Dirty, opened and
+ * revealed panes are never released; the most recently opened pane (initially the first) is never released by time while the overview shows. */
+function usePaneLifecycle(panes: readonly LayeredPane[], ids: readonly string[], opened: string | null, revealed: string | null, lifecycle: LayeredLifecycle, warming: boolean) {
+  const initial = opened ? [opened] : [];
   const [booted, setBooted] = React.useState<ReadonlySet<string>>(() => new Set(initial));
   const [suspended, setSuspended] = React.useState<ReadonlySet<string>>(() => new Set());
   const [dirty, setDirty] = React.useState<ReadonlySet<string>>(() => new Set());
@@ -307,15 +286,13 @@ function usePaneLifecycle(panes: readonly LayeredPane[], ids: readonly string[],
   }, [live, dirty, opened, revealed, lifecycle.budget, byRecency, keep, release]);
 
   React.useEffect(() => {
-    if (start === "all") for (const id of ids) if (!state.current.live.has(id)) boot(id);
-  }, [start, ids, boot]);
-
-  React.useEffect(() => {
-    if (start !== "warm") return;
+    if (!warming) return;
     const step = nextWarmBoot(ids, booted, live.size, opened, lifecycle.budget);
     if (step.kind !== "boot") return;
-    return scheduleIdle(() => warm(step.id), warmDelay(warmed.current, lifecycle), window);
-  }, [start, ids, booted, live.size, opened, lifecycle.budget, lifecycle.warmStartMs, lifecycle.warmIntervalMs, warm]);
+    const delay = warmDelay(warmed.current, lifecycle);
+    if (delay <= 0) return warm(step.id);
+    return scheduleIdle(() => warm(step.id), delay, window);
+  }, [warming, ids, booted, live.size, opened, lifecycle.budget, lifecycle.warmStartMs, lifecycle.warmIntervalMs, warm]);
 
   const timed = [lifecycle.suspendIdleMs, lifecycle.suspendOffscreenMs, lifecycle.suspendHiddenMs].some(Number.isFinite);
   React.useEffect(() => {
@@ -450,17 +427,20 @@ const LayeredCardHost = React.memo(function LayeredCardHost(props: {
 // #region 🥞️LayeredOverview
 /** 🥞️ A layered landing: every page on a strip of container-sized cells, ONE `ui-veil` glass above it whose `clip-path` punches a hole over the
  * revealed page, and the app's card grid above the glass. It fills its positioned parent. Hovering (mouse) or keyboard-focusing a card glides the
- * strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card restores the glass and the pointer pan (lerp 0.12). Opening a
- * card (or `#id`) shows its page full size as a focused region; Escape or the Overview button return focus to the card. With `rest="grid"` every
- * page is live and visible at rest, each covering its track cell behind its card, and a reveal zooms its page to full size instead of panning.
- * Transforms and veil are written imperatively in percent (no render per frame, no viewport reads), reduced motion snaps, and only pages near the
- * view keep placeholders.
+ * strip to that page (500 ms, cubic) and shows it clear; leaving or blurring the card restores the glass and the pointer pan (12 % of the gap
+ * per 60 Hz frame, by elapsed time). Opening a
+ * card (or `#id`) shows its page full size as a focused region; Escape or the Overview button — the element's own, or the app's chrome closing the
+ * controlled page — return focus to the card unless it lies in that chrome.
+ * Transforms and veil are written imperatively in percent (no render per frame, no viewport reads), and only pages near the view keep
+ * placeholders. The pan and the glide are how the landing is read, so they run whatever the device says about motion (`reducedMotion`
+ * `"never"`, the default): a Remote Desktop session reports reduced motion for everyone in it. An app that wants the device's request honoured
+ * passes `"auto"`, one that wants stillness `"always"` — then nothing pans and a page is simply there.
  *
  * @see ../../🔨️modules/🥞️layered-overview-geometry/🟦️.ts — the pure geometry and lifecycle policy
  * @see ../🃏️OverviewCard/🟦️.tsx — the card the apps render
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — the opened page is a labelled region */
 export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement {
-  const { panes, cells, renderCard, labels, mode = "strip", pan = "pointer", routing = "hash", reducedMotion = "auto" } = props;
+  const { panes, cells, renderCard, labels, mode = "strip", pan = "pointer", routing = "hash", reducedMotion = "never" } = props;
   const radius = props.windowing?.radius ?? 1;
   const lifecycle = resolveLifecycle(props.lifecycle);
   const freshIds = panes.map((pane) => pane.id);
@@ -468,18 +448,15 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const freshCells = ids.map((id) => requireCell(cells, id));
   const cellList = useStableByKey(freshCells, freshCells.map((cell) => `${cell.column}:${cell.row}`).join(" "));
   const grid = React.useMemo<LayeredGrid>(() => stripGrid(cellList), [cellList]);
-  const gridRest = mode === "strip" && props.rest === "grid";
-  const freshTracks = props.gridTracks ?? {};
-  const tracks = useStableByKey(freshTracks, JSON.stringify(freshTracks));
-  const rests = React.useMemo(() => cellList.map((cell) => restRect(cell, grid, tracks)), [cellList, grid, tracks]);
   const reduced = useReducedMotion(reducedMotion);
+  const panning = mode === "strip" && pan === "pointer" && !reduced;
   const controlled = props.openedId !== undefined;
   const [deepLink] = React.useState<string | null>(() => (routing === "hash" ? hashPaneId(ids) : null));
   const [ownOpened, setOwnOpened] = React.useState<string | null>(controlled ? null : deepLink);
   const wanted = controlled ? (props.openedId ?? null) : ownOpened;
   const opened = wanted !== null && ids.includes(wanted) ? wanted : null;
   const [revealedId, setRevealedId] = React.useState<string | null>(null);
-  const { booted, live, posters, touch, warm, markDirty, registerContainer, container } = usePaneLifecycle(panes, ids, opened, revealedId, lifecycle, mode === "list" ? "demand" : gridRest ? "all" : "warm");
+  const { booted, live, posters, touch, warm, markDirty, registerContainer, container } = usePaneLifecycle(panes, ids, opened, revealedId, lifecycle, mode === "strip");
 
   const initial = opened ? cellOffset(requireCell(cells, opened)) : cellList[0] ? cellOffset(cellList[0]) : { x: 0, y: 0 };
   const rootRef = React.useRef<HTMLDivElement | null>(null);
@@ -489,7 +466,6 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const cardElements = React.useRef(new Map<string, HTMLElement>());
   const offsetRef = React.useRef<LayeredOffset>(initial);
   const targetRef = React.useRef<LayeredOffset>(initial);
-  const cameraRef = React.useRef<LayeredRect>(opened && gridRest ? rests[ids.indexOf(opened)]! : LAYERED_VIEW);
   const driveRef = React.useRef<LayeredDrive>(FOLLOW);
   const frameRef = React.useRef(0);
   const epochRef = React.useRef(0);
@@ -501,8 +477,8 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   const [windowBox, setWindowBox] = React.useState<LayeredWindow>(() => windowAround(initial, radius));
   const windowRef = React.useRef(windowBox);
   const [listIndex, setListIndex] = React.useState(() => Math.max(0, opened ? ids.indexOf(opened) : 0));
-  const latest = React.useRef({ props, cells, cellList, grid, rests, gridRest, reduced, radius, mode, controlled, ids });
-  latest.current = { props, cells, cellList, grid, rests, gridRest, reduced, radius, mode, controlled, ids };
+  const latest = React.useRef({ props, cells, cellList, grid, reduced, radius, mode, controlled, ids });
+  latest.current = { props, cells, cellList, grid, reduced, radius, mode, controlled, ids };
 
   const paint = React.useCallback((offset: LayeredOffset) => {
     offsetRef.current = offset;
@@ -516,24 +492,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     }
   }, []);
 
-  const paintCamera = React.useCallback(
-    (camera: LayeredRect) => {
-      cameraRef.current = camera;
-      const { ids: all, rests: resting } = latest.current;
-      all.forEach((id, index) => {
-        const element = container(id);
-        if (!element) return;
-        const placement = coverPlacement(viewRect(resting[index]!, camera));
-        element.style.transform = placement.transform;
-        element.style.clipPath = placement.clipPath;
-      });
-      const shown = revealedRef.current === null ? -1 : all.indexOf(revealedRef.current);
-      if (veilRef.current) applyVeil(veilRef.current, veilForRect(shown < 0 ? null : viewRect(resting[shown]!, camera)));
-    },
-    [container],
-  );
-
-  const repaint = React.useCallback(() => (latest.current.gridRest ? paintCamera(cameraRef.current) : paint(offsetRef.current)), [paint, paintCamera]);
+  const repaint = React.useCallback(() => paint(offsetRef.current), [paint]);
 
   const stop = React.useCallback(() => {
     epochRef.current += 1;
@@ -545,18 +504,16 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     stop();
     runningRef.current = true;
     const epoch = epochRef.current;
+    let painted = performance.now();
     const advance = (drive: LayeredDrive, now: number): boolean => {
-      if (drive.kind === "zoom") {
-        const step = glideRect(drive.from, drive.to, now - drive.startedAt);
-        paintCamera(step.rect);
-        return step.done;
-      }
+      const elapsed = now - painted;
+      painted = now;
       if (drive.kind === "glide") {
         const step = glideOffset(drive.from, drive.to, now - drive.startedAt);
         paint(step.offset);
         return step.done;
       }
-      const step = followStep(offsetRef.current, targetRef.current);
+      const step = followStep(offsetRef.current, targetRef.current, elapsed);
       paint(step.offset);
       return step.settled;
     };
@@ -570,22 +527,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
-  }, [paint, paintCamera, stop]);
-
-  const zoomTo = React.useCallback(
-    (to: LayeredRect) => {
-      const from = cameraRef.current;
-      if (latest.current.reduced || (from.x === to.x && from.y === to.y && from.width === to.width && from.height === to.height)) {
-        stop();
-        driveRef.current = FOLLOW;
-        paintCamera(to);
-        return;
-      }
-      driveRef.current = { kind: "zoom", from, to, startedAt: performance.now() };
-      run();
-    },
-    [paintCamera, run, stop],
-  );
+  }, [paint, stop]);
 
   const glideTo = React.useCallback(
     (to: LayeredOffset) => {
@@ -613,14 +555,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     [run],
   );
 
-  const focusView = React.useCallback(
-    (id: string | null) => {
-      const { gridRest: zooming, rests: resting, ids: all, cells: placed } = latest.current;
-      if (zooming) zoomTo(id === null ? LAYERED_VIEW : resting[all.indexOf(id)]!);
-      else if (id !== null) glideTo(cellOffset(requireCell(placed, id)));
-    },
-    [glideTo, zoomTo],
-  );
+  const focusView = React.useCallback((id: string) => glideTo(cellOffset(requireCell(latest.current.cells, id))), [glideTo]);
 
   React.useEffect(() => stop, [stop]);
 
@@ -652,14 +587,10 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     const focus = openedRef.current ?? revealedRef.current;
     stop();
     driveRef.current = FOLLOW;
-    if (gridRest) {
-      paintCamera(focus === null ? LAYERED_VIEW : rests[latest.current.ids.indexOf(focus)]!);
-      return;
-    }
     const next = focus === null ? clampOffset(offsetRef.current, cellList) : cellOffset(requireCell(latest.current.cells, focus));
     targetRef.current = next;
     paint(next);
-  }, [cellList, rests, gridRest, paint, paintCamera, stop]);
+  }, [cellList, paint, stop]);
 
   const reveal = React.useCallback(
     (id: string) => {
@@ -682,9 +613,8 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
       setRevealedId(null);
       latest.current.props.onRevealedIdChange?.(null);
       repaint();
-      if (latest.current.gridRest && openedRef.current === null) focusView(null);
     },
-    [focusView, repaint],
+    [repaint],
   );
 
   const requestOpen = React.useCallback((id: string | null) => {
@@ -729,7 +659,6 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     }
     if (previous === null) return;
     if (mode === "list") scrollListTo(latest.current.ids.indexOf(previous));
-    else if (latest.current.gridRest) focusView(null);
     const active = document.activeElement;
     if (active && active !== document.body && rootRef.current && !rootRef.current.contains(active)) return;
     cardElements.current.get(previous)?.querySelector<HTMLElement>(FOCUSABLE)?.focus({ preventScroll: true });
@@ -756,9 +685,9 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   }, [opened, requestOpen]);
 
   React.useEffect(() => {
-    if (mode !== "strip" || gridRest || pan !== "pointer" || opened !== null || reduced) return;
+    if (!panning) return;
     const onMove = (event: PointerEvent) => {
-      if (event.pointerType !== "mouse" || revealedRef.current !== null) return;
+      if (event.pointerType !== "mouse" || openedRef.current !== null || revealedRef.current !== null) return;
       const box = rootRef.current?.getBoundingClientRect();
       if (!box || box.width <= 0 || box.height <= 0) return;
       const { grid: strip, cellList: placed } = latest.current;
@@ -766,7 +695,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     };
     window.addEventListener("pointermove", onMove, { passive: true });
     return () => window.removeEventListener("pointermove", onMove);
-  }, [mode, gridRest, pan, opened, reduced, follow]);
+  }, [panning, follow]);
 
   const onListScroll = React.useCallback(() => {
     if (openedRef.current !== null || listFrame.current !== null) return;
@@ -790,11 +719,11 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
     <LayeredPaneView
       key={pane.id}
       pane={pane}
-      style={gridRest ? GRID_PANE_STYLE : mode === "strip" ? paneStyles.get(pane.id) : undefined}
+      style={mode === "strip" ? paneStyles.get(pane.id) : undefined}
       opened={opened === pane.id}
       revealed={revealedId === pane.id}
       live={live.has(pane.id)}
-      shown={gridRest || (mode === "strip" ? inWindow(cellList[index]!, windowBox) : Math.abs(index - listIndex) <= radius)}
+      shown={mode === "strip" ? inWindow(cellList[index]!, windowBox) : Math.abs(index - listIndex) <= radius}
       busy={booted.has(pane.id)}
       poster={posters.get(pane.id) ?? pane.poster ?? null}
       waiting={labels.waiting(pane)}
@@ -808,11 +737,12 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   );
   const chrome = props.renderChrome?.({ revealed: revealedId !== null, opened: opened !== null });
   const overviewButton =
-    opened === null ? null : (
+    opened === null || labels.overview === undefined ? null : (
       <button
         type="button"
         data-layered-overview-button=""
         data-level="dialog"
+        aria-keyshortcuts="Escape"
         onClick={close}
         className="ui-glass absolute right-double top-double z-40 inline-flex items-center gap-single border border-border-normal px-single py-half text-sm font-medium text-foreground outline-none transition-colors hover:border-border-emphasized focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none"
       >
@@ -824,6 +754,7 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
   if (mode === "list") {
     return (
       <div ref={rootRef} data-layered-overview="" data-mode="list" className="relative h-full w-full overflow-hidden bg-background text-foreground">
+        {overviewButton}
         <div ref={listRef} data-layered-list="" role="group" aria-label={labels.grid} onScroll={onListScroll} className={cn("flex h-full w-full flex-col overscroll-y-contain", opened === null ? "snap-y snap-mandatory overflow-y-auto" : "overflow-hidden")}>
           {panes.map((pane, index) => (
             <section key={pane.id} data-layered-section={pane.id} className="relative h-full w-full shrink-0 snap-start overflow-hidden">
@@ -833,46 +764,37 @@ export function LayeredOverview(props: LayeredOverviewProps): React.ReactElement
                   {Math.abs(index - listIndex) <= radius ? (
                     <div data-layered-veil="" data-level="dialog" data-veil={revealedId === pane.id ? "clear" : "whole"} className="ui-veil pointer-events-none absolute inset-0 z-30" style={revealedId === pane.id ? { visibility: "hidden" } : undefined} />
                   ) : null}
-                  <div className="pointer-events-none absolute inset-0 z-[31] flex items-center justify-center px-double pb-[5.5rem]">{cardHost(pane)}</div>
+                  <div className="pointer-events-none absolute inset-0 z-[31] flex items-center-safe justify-center overflow-y-auto px-double pb-[88px]">{cardHost(pane)}</div>
                 </>
               ) : null}
             </section>
           ))}
         </div>
         {chrome}
-        {overviewButton}
       </div>
     );
   }
 
-  const overlayStyle = { "--layered-columns": trackTemplate(tracks.columns, grid.columns), "--layered-rows": trackTemplate(tracks.rows, grid.rows), ...props.overlayStyle } as React.CSSProperties;
   return (
-    <div ref={rootRef} data-layered-overview="" data-mode="strip" data-rest={gridRest ? "grid" : "panorama"} className="relative h-full w-full overflow-clip bg-background text-foreground">
-      {gridRest ? (
-        <div key="grid" ref={stripCallback} data-layered-strip="" className="relative h-full w-full" style={{ contain: "layout paint" }}>
-          {panes.map(paneView)}
-        </div>
-      ) : (
-        <div
-          key="panorama"
-          ref={stripCallback}
-          data-layered-strip=""
-          className="grid will-change-transform"
-          style={{ width: `${grid.columns * 100}%`, height: `${grid.rows * 100}%`, gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`, contain: "layout paint" }}
-        >
-          {panes.map(paneView)}
-        </div>
-      )}
+    <div ref={rootRef} data-layered-overview="" data-mode="strip" data-pan={panning ? "pointer" : "none"} className="relative h-full w-full overflow-clip bg-background text-foreground">
+      {overviewButton}
+      <div
+        ref={stripCallback}
+        data-layered-strip=""
+        className="grid will-change-transform"
+        style={{ width: `${grid.columns * 100}%`, height: `${grid.rows * 100}%`, gridTemplateColumns: `repeat(${grid.columns}, minmax(0, 1fr))`, gridTemplateRows: `repeat(${grid.rows}, minmax(0, 1fr))`, contain: "layout paint" }}
+      >
+        {panes.map(paneView)}
+      </div>
       {opened === null ? (
         <>
           <div ref={veilCallback} data-layered-veil="" data-level="dialog" className="ui-veil pointer-events-none absolute inset-0 z-30" />
-          <div data-layered-overlay="" role="group" aria-label={labels.grid} className={cn("pointer-events-none absolute inset-0 z-[31]", props.overlayClassName)} style={overlayStyle}>
+          <div data-layered-overlay="" role="group" aria-label={labels.grid} className={cn("pointer-events-none absolute inset-0 z-[31]", props.overlayClassName)} style={props.overlayStyle}>
             {panes.map(cardHost)}
           </div>
         </>
       ) : null}
       {chrome}
-      {overviewButton}
     </div>
   );
 }

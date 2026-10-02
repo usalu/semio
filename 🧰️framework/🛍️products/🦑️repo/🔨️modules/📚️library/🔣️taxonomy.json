@@ -8397,6 +8397,46 @@
       "parentKindIds": [
         "repo-rust-source-direction"
       ]
+    },
+    "teaching-pets": {
+      "emoji": "🐾️",
+      "slugPattern": "^pets$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-quiz-stack": {
+      "emoji": "🧱️",
+      "slugPattern": "^stack$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-quiz"
+      ]
+    },
+    "teaching-quiz-catalog": {
+      "emoji": "📚️",
+      "slugPattern": "^catalog$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-quiz"
+      ]
+    },
+    "teaching-quiz-e2e": {
+      "emoji": "🎭️",
+      "slugPattern": "^e2e$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-quiz"
+      ]
+    },
+    "teaching-quiz-e2e-learner": {
+      "emoji": "🚶️",
+      "slugPattern": "^learner$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-quiz-e2e"
+      ]
     }
   },
   "semanticDirectoryMemberKinds": {
@@ -11146,6 +11186,18 @@
         "🔀️matching-concordance",
         "🕸️profile-similarity",
         "🧬️schema-conformance",
+        "📐️turn-trigonometry",
+        "🎲️counter-randomness",
+        "🦴️rig-solving",
+        "👀️gaze-tracking",
+        "🎞️animation-sampling",
+        "🪀️spring-settling",
+        "🏞️terrain-walking",
+        "🦘️hop-ballistics",
+        "🧠️behavior-choice",
+        "🤝️bond-dynamics",
+        "🎪️stage-trace",
+        "📡️surface-survey",
         "🧾️learner-lifecycle",
         "⚡️power",
         "🏠️homes",
@@ -11153,11 +11205,19 @@
         "📐️quantity-formatting",
         "🕷️radar-geometry",
         "🏠️home-grid",
+        "🚏️navigation",
         "👥️shared-presence",
         "🔌️wire",
         "📡️presence-client",
         "💭️crowd-client",
         "📊️crowd-view",
+        "🪪️identity-shapes",
+        "🌍️language-choice",
+        "📢️live-regions",
+        "🌗️contrast-states",
+        "🚦️rate-limits",
+        "🎭️identity-step",
+        "🚦️throttle",
         "🎯️point-publication",
         "🎯️selection"
       ],
@@ -12400,16 +12460,20 @@
         "🌐️i18n",
         "🎛️preferences",
         "🏠️home",
+        "🚏️navigation",
         "👋️introduction",
         "💾️persistence",
         "📏️quantity",
         "📮️outbox",
+        "🫡️deputy",
         "🕸️radar",
         "🗂️classification",
         "🤏️drag",
         "🪟️chrome",
         "📖️quiz-page",
         "🗳️crowd",
+        "📊️plot",
+        "⚖️legal",
         "📇️profile",
         "🧩️task",
         "🧭️session",
@@ -12417,13 +12481,25 @@
         "✅️validation",
         "🃏️sheet",
         "🎲️randomness",
+        "📐️trigonometry",
+        "🦴️rig",
+        "🎞️animation",
+        "🏞️terrain",
+        "🧠️behavior",
+        "🎪️stage",
+        "🖌️depiction",
+        "📡️survey",
+        "⏲️pacing",
+        "🫧️layer",
+        "🐾️pets",
         "🏅️badges",
         "👁️views",
         "📏️scoring",
         "🧾️lifecycle",
         "▶️run",
         "🏁️results",
-        "🏆️leaderboard"
+        "🏆️leaderboard",
+        "🚦️throttle"
       ],
       "source": "registry"
     },
@@ -12559,7 +12635,8 @@
       "memberNames": [
         "📓️print",
         "🖥️server",
-        "❓️quiz"
+        "❓️quiz",
+        "🐾️pets"
       ],
       "source": "registry"
     },
@@ -14025,6 +14102,24 @@
         "🔀️matching-concordance",
         "🕸️profile-similarity",
         "🧬️schema-conformance",
+        "📐️turn-trigonometry",
+        "🎲️counter-randomness",
+        "🦴️rig-solving",
+        "👀️gaze-tracking",
+        "🎞️animation-sampling",
+        "🪀️spring-settling",
+        "🏞️terrain-walking",
+        "🦘️hop-ballistics",
+        "🧠️behavior-choice",
+        "🤝️bond-dynamics",
+        "🎪️stage-trace",
+        "🖌️pet-depiction",
+        "📡️surface-survey",
+        "⏲️frame-pacing",
+        "🫥️decorative-layer",
+        "🐾️pet-companions",
+        "🐾️pet-cast",
+        "🐕️pet-walk",
         "🧾️learner-lifecycle",
         "🩺️document-validation",
         "🔬️conformance",
@@ -14035,11 +14130,13 @@
         "⌨️task-keyboard",
         "📐️quantity-formatting",
         "📬️outbox-delivery",
+        "🫡️deputy-decisions",
         "🕷️radar-geometry",
         "🗃️shared-vectors",
         "🗣️translation-completeness",
         "🚶️learner-journey",
         "🏠️home-grid",
+        "🚏️navigation",
         "👥️shared-presence",
         "🫂️presence-roster",
         "🔒️closed-ports",
@@ -14048,7 +14145,28 @@
         "📡️presence-client",
         "💭️crowd-client",
         "📊️crowd-view",
-        "🗳️crowd-answers"
+        "🪪️identity-shapes",
+        "🗳️crowd-answers",
+        "🎯️quiz-runs",
+        "🏆️live-leaderboard",
+        "📱️phone",
+        "🔌️connection-shortage",
+        "📴️proctor-away",
+        "🗣️both-languages",
+        "🚀️site-boot",
+        "🥞️layered-home",
+        "🧱️local-stack",
+        "🪪️first-visit",
+        "🌍️language-choice",
+        "📢️live-regions",
+        "🌗️contrast-states",
+        "📇️learner-pages",
+        "🚦️rate-limits",
+        "🎭️identity-step",
+        "🔏️privacy-notice",
+        "📰️host-document",
+        "🏋️capacity",
+        "🖼️task-icons"
       ],
       "source": "registry"
     },
@@ -15717,6 +15835,34 @@
       ],
       "memberNames": [
         "🎛️retained-control-commit"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-pets": {
+      "ownerKindIds": [
+        "teaching-pets"
+      ],
+      "memberNames": [
+        "☀️sunny",
+        "☁️cloudy",
+        "🏠️housy",
+        "🔆️solary",
+        "♨️radiatory",
+        "🌀️pumpy",
+        "🪟️windowy",
+        "🧱️waly",
+        "🔋️battery",
+        "💨️windy",
+        "🔥️boily",
+        "🛖️roofy",
+        "🧶️insuly",
+        "😎️shady",
+        "🌬️venty",
+        "❄️chilly",
+        "🫖️kettly",
+        "🕯️flamy",
+        "🌡️thermy",
+        "🖥️servy"
       ],
       "source": "registry"
     }
@@ -22418,6 +22564,17 @@
       "pathPattern": "**/.dockerignore",
       "authority": "Docker",
       "reason": "Container context ignore discovery",
+      "configurability": "unconfigurable",
+      "scope": {
+        "kind": "path-pattern"
+      },
+      "verification": "docker build",
+      "expires": null
+    },
+    "dockerfile-dockerignore": {
+      "pathPattern": "**/Dockerfile.dockerignore",
+      "authority": "Docker",
+      "reason": "Dockerfile-specific context ignore discovery: BuildKit prefers <Dockerfile>.dockerignore beside the Dockerfile over the context root's .dockerignore",
       "configurability": "unconfigurable",
       "scope": {
         "kind": "path-pattern"

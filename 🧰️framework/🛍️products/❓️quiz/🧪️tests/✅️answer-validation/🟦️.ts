@@ -3,17 +3,13 @@
  * @see ./🥒️.feature
  * @see ../../🔨️modules/✅️validation/🟦️.ts
  */
-/** ✅️ Subject adapter of the answer-validation case: `answerRejection` and `answerComplete` of `@semio-tech/quiz`.
- *
- * @see ./🥒️.feature
- * @see ../../🔨️modules/✅️validation/🟦️.ts
- */
 import { type AdapterContext, defineTestAdapter } from "../../../../\uD83D\uDD28\uFE0Fmodules/\uD83E\uDDEA\uFE0Ftest/\uD83D\uDD0C\uFE0Fadapter/\uD83D\uDFE6\uFE0F.ts";
 import { type Answer, type SheetTask, answerComplete, answerRejection } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
 const VECTORS = "shared://✅️answer-validation/🔣️.json";
 
-type Vectors = { readonly sheetTasks: readonly SheetTask[]; readonly vectors: readonly { readonly id: string; readonly sheetTask: string; readonly answer?: Answer }[] };
+type Vector = { readonly id: string; readonly sheetTask: string; readonly answer?: Answer };
+type Vectors = { readonly sheetTasks: readonly SheetTask[]; readonly vectors: readonly Vector[]; readonly malformed: readonly Vector[] };
 
 /** ⚖️ The rejection, and completeness for an answer that is valid or absent. */
 function verdict(sheetTask: SheetTask, answer: Answer | undefined): { rejection: string | null; complete?: boolean } {
@@ -25,7 +21,7 @@ function verdict(sheetTask: SheetTask, answer: Answer | undefined): { rejection:
 function verdicts(ctx: AdapterContext): Record<string, unknown> {
   const committed = JSON.parse(new TextDecoder().decode(ctx.fixtureBytes(VECTORS))) as Vectors;
   const tasks = new Map(committed.sheetTasks.map((task) => [task.id, task]));
-  return Object.fromEntries(committed.vectors.map((vector) => [vector.id, verdict(tasks.get(vector.sheetTask)!, vector.answer)]));
+  return Object.fromEntries([...committed.vectors, ...committed.malformed].map((vector) => [vector.id, verdict(tasks.get(vector.sheetTask)!, vector.answer)]));
 }
 
 export default defineTestAdapter({

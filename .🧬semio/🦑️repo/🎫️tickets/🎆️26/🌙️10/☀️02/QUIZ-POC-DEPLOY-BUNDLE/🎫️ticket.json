@@ -1,0 +1,28 @@
+{
+  "title": "Quiz Proof of Concept Deploy Bundle",
+  "emoji": "🛫",
+  "status": "closed",
+  "description": "Give the owner the first page and server of architektur-und-technologie as a proof of concept to deploy. Reopened 2026-10-02 (split deployment): the frontend and the backend are deployed separately — the frontend as a static folder for the CDN at quizze.architektur-und-technologie.de, the backend as a Docker bundle for the Linux machine semio.iek.uni-hannover.de (130.75.188.198) — and the frontend works while the backend is offline: everything a learner does is decided and saved on the device and reaches the backend once it answers. The one-origin bundle of the first round (site and proctor behind one Caddy, sslip.io) is replaced.",
+  "goal": "🎯runningframework🎯runningproducts",
+  "client": "claude-code",
+  "llm": "opus-5-5",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP (CONNECTION_CLOSED) and semio MCP (CONNECT_TIMEOUT) failed to connect on 2026-10-02. Reopened manually on 2026-10-02 (split deployment and offline backend; repo MCP still down). Closed manually on 2026-10-02 (repo MCP still down).",
+  "summary": "First round: the poc and poc-check verbs (one directory, one origin), see 📓️poc-summary.md. Second round (split deployment): the frontend is a static folder for quizze.architektur-und-technologie.de, the backend a Docker bundle for semio.iek.uni-hannover.de (docker-stack-bundle, a certificate of the operator's own), and the site works while the proctor is away (the deputy decides on the device, the outbox delivers every command once the proctor answers); see 📓️split-deploy-design.md, 📓️split-deploy-summary.md and 📓️deploy-retarget-report.md. The point left open there — the whole end-to-end gate and with it deploy-check did not pass — was closed by ticket TEACHING-ARCHITECTURE-DEPLOY-READY on 2026-10-02: both gates pass, the Dockerfile builds the proctor from the 🎓️teaching cargo workspace, and both deliverables were staged again from the final tree in .🧬semio/🎓️teaching/architecture-quiz-poc (STAGED.txt).",
+  "files": [
+    "🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/🛫️poc/Caddyfile",
+    "🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/🛫️poc/compose.yaml",
+    "🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/🟦️.ts",
+    "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📜️script.ts",
+    "🎓️teaching/🏛️architecture/❓️quiz/📦️packages/🟦️typescript/📋️project.json",
+    "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🧪️deploy/🟦️.ts",
+    "🎓️teaching/🏛️architecture/❓️quiz/README.md",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    ".vscode/launch.json",
+    ".vscode/🧩️launch.seed.jsonc",
+    "package.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-POC-DEPLOY-BUNDLE/browse_poc.mjs",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-POC-DEPLOY-BUNDLE/📓️poc-summary.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-POC-DEPLOY-BUNDLE/🎫️ticket.json"
+  ]
+}

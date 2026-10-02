@@ -1,0 +1,18 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "noEmit": true,
+    "types": ["node"]
+  },
+  "include": [
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/📦️packages/🟦️typescript/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧬️schema/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🔨️modules/✅️validation/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🔨️modules/✅️validation/🧪️tests/🔬️unit/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧪️tests/🧬️schema-conformance/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧪️tests/🎚️config/🟦️.ts"
+  ],
+  "exclude": []
+}

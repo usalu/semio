@@ -1,55 +1,116 @@
-# 🐳️ The architecture quiz proctor stack (`proctor.quizzes.architektur-und-technologie.de`, see `🔣️.json`): the proctor
-# and Caddy, which terminates TLS with a certificate it obtains and renews itself. The whole host contract is DNS A/AAAA for
-# the proctor host, ports 80 and 443 (tcp and udp) open, and in this directory:
+# 🐳️ The architecture quiz proctor stack (`semio.iek.uni-hannover.de`, see `🔣️.json`): the proctor and Caddy, which
+# terminates TLS with a certificate it obtains and renews itself — or with the one the operator puts into `certificates`
+# beside this file (see the `Caddyfile`). The whole host contract is Docker with the compose plugin, DNS A/AAAA for the
+# proctor host, ports 80 and 443 (tcp and udp) open, and this file with the `Caddyfile` beside it — both travel inside
+# the proctor image (`/srv/quiz/deploy`), so the host needs no clone:
 #
-#   docker compose up -d        first start and every update (after `git pull`)
-#   docker compose stop proctor before a backup: the SQLite file is copied only while the proctor is stopped
+#   docker compose up --detach --wait                                 first start; it never updates a running stack
+#   docker compose exec -T proctor proctor backup - > proctor.sqlite  backup while serving, and before every update
+#   docker compose pull proctor && docker compose up --detach --wait  update; the volumes stay
+#   docker compose up --detach --force-recreate caddy                 after a certificate in `certificates` changed
+#   docker compose down --volumes                                     NEVER on a host: it deletes the database
 #
-# The proctor image is pulled from the registry when it is not on the host (`pull_policy: missing`); `build:` compiles it
-# from this clone instead (`docker compose build` or `up --build`), e.g. on an architecture the registry does not carry.
-# Every default is overridable from the environment or an `.env` file beside this file: PROCTOR_HOST, PROCTOR_TAG,
-# PROCTOR_ALLOWED_ORIGINS, QUIZ_HTTP_PORT, QUIZ_HTTPS_PORT.
+# The proctor image is pulled when the host does not have its tag (`pull_policy: missing`), so an image loaded from a
+# file (`docker load --input proctor-image.tar`, the bundle of `docker-stack-bundle`) or built on the host
+# (`docker build -f Dockerfile -t ghcr.io/usalu/architecture-quiz-proctor .` in a clone, e.g. on an architecture the
+# registry does not carry) is used as it is. Every default is overridable from an `.env` file beside this file (or, for
+# the first five, the environment): PROCTOR_HOST, PROCTOR_TAG, PROCTOR_ALLOWED_ORIGINS, QUIZ_HTTP_PORT, QUIZ_HTTPS_PORT,
+# and every other variable of the proctor (its limits per client address — requests, sockets and sign-ups:
+# PROCTOR_LIMIT_SIGNUPS_PER_HOUR, PROCTOR_LIMIT_SIGNUPS_BURST — and its caps, PROCTOR_MAX_LEARNERS; see the proctor's
+# README) — both services read that file as their environment, so a variable both need (PROCTOR_LIMIT_BODY_BYTES) is set
+# once.
+# @see ../README.md — the runbook
+# @see ../../../🛂️proctor/README.md — every variable of the proctor
 
 name: architecture-quiz
+
+# 🧻️ Both services log to Docker's json-file driver, rotated: at most 50 MB each.
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "5"
+
+# 🎚️ The optional `.env` beside this file, as the environment of both services.
+x-overrides: &overrides
+  - path: .env
+    required: false
 
 services:
   proctor:
     image: ghcr.io/usalu/architecture-quiz-proctor:${PROCTOR_TAG:-latest}
     pull_policy: missing
-    build:
-      context: ../../../..
-      dockerfile: 🎓️teaching/🏛️architecture/❓️quiz/🚀️deploy/Dockerfile
     # 🔒️ Reachable by Caddy on the compose network only, never published: `PROCTOR_TRUSTED_FORWARDING=proxy` (baked into
     # the image with the rest of the production configuration) is true by construction.
     expose:
       - "8791"
+    env_file: *overrides
     environment:
-      PROCTOR_ALLOWED_ORIGINS: ${PROCTOR_ALLOWED_ORIGINS:-https://quizzes.architektur-und-technologie.de}
+      PROCTOR_ALLOWED_ORIGINS: ${PROCTOR_ALLOWED_ORIGINS:-https://quizze.architektur-und-technologie.de}
     volumes:
-      # 🗄️ The whole durable state: proctor.sqlite with its WAL and SHM siblings. Backup unit = this volume, proctor stopped.
+      # 🗄️ The whole durable state: proctor.sqlite with its WAL and SHM siblings (volume `architecture-quiz_proctor-data`).
       - proctor-data:/srv/quiz/data
+    # 🧱️ The process writes the data volume and nothing else, as an unprivileged user without any capability.
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     # 🛑️ The proctor closes the database on SIGTERM; give in-flight submissions room before Docker escalates to SIGKILL.
-    stop_signal: SIGTERM
     stop_grace_period: 30s
     restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1G
+          pids: 512
 
   caddy:
-    image: caddy:2
+    image: caddy:2.11.4@sha256:0c994536bddb66445885237f1a5dcc1916bccea922661c76b4e9fc24061f9b52
     ports:
       - "${QUIZ_HTTP_PORT:-80}:80"
       - "${QUIZ_HTTPS_PORT:-443}:443"
       - "${QUIZ_HTTPS_PORT:-443}:443/udp"
+    env_file: *overrides
     environment:
-      PROCTOR_HOST: ${PROCTOR_HOST:-proctor.quizzes.architektur-und-technologie.de}
+      PROCTOR_HOST: ${PROCTOR_HOST:-semio.iek.uni-hannover.de}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # 🪪️ Certificates the operator supplies, one `*.pem` bundle each (chain, then key); empty when Caddy obtains its own.
+      # Docker creates the directory when it is missing.
+      - ./certificates:/certificates:ro
       # 🔐️ ACME account and certificates; losing it re-issues certificates and can hit the CA's rate limits.
       - caddy-data:/data
       - caddy-config:/config
     depends_on:
       proctor:
         condition: service_healthy
+    # 🩺️ Caddy's admin endpoint answers on the container's loopback once the configuration is loaded.
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:2019/config/"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      start_interval: 2s
+      retries: 3
+    # 🧱️ Caddy writes its two volumes only and keeps the one capability that binds ports 80 and 443.
+    read_only: true
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          cpus: "1"
+          memory: 256M
+          pids: 256
 
 volumes:
   proctor-data:

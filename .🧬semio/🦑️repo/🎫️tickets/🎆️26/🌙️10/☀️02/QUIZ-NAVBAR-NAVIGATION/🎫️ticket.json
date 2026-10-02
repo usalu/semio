@@ -1,0 +1,50 @@
+{
+  "title": "Quiz Navbar Navigation",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "Move the description of the quizzes (the catalog title with the site's logo) to the middle of the quiz client's navbar and put the navigation on its left: the overview button (so far floating over an opened page of the layered overview) and next to it backward, forward and upward buttons over a trail of the steps the learner went through.",
+  "goal": "🎯runningframework🎯runningproducts",
+  "client": "claude-code",
+  "llm": "opus-5-5",
+  "sessions": [],
+  "note": "Ticket bookkeeping manual on disk: repo MCP (CONNECTION_CLOSED) and semio MCP (CONNECT_TIMEOUT) failed to connect on 2026-10-02. Closed manually on 2026-10-02 (repo MCP still down).",
+  "summary": "The quiz navbar now carries four ways on its left — overview, back, forward, up, each named with the place it leads to and kept focusable where it leads nowhere — the catalog title with the site's logo in its middle, and connection, presence and language on its right. Back and forward walk a trail of steps kept in the session state (a closed run leaves it by itself), up leads from a page to the overview and from a run or its results to the quiz's page, and the client owns the address hash (a page named on arrival opens instead of the overview; no browser history entries). The layered overview no longer shows its floating Overview button for an app that names none, the run card lost its Overview action, and narrow navbars give way cleanly (language codes, title ellipsis, logo drops whole). See 📓️navbar-navigation-report.md for decisions, files and what was verified; the suite and end-to-end failures present at close belong to the concurrent rework of results, crowd, preferences and leaderboard.",
+  "files": {
+    "created": [
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🚏️navigation/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🧫️fixtures/🚏️navigation/🔣️.json",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚏️navigation/🟦️.tsx",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-NAVBAR-NAVIGATION/📓️navbar-navigation-report.md",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-NAVBAR-NAVIGATION/navbar_shots.ts",
+      ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/QUIZ-NAVBAR-NAVIGATION/navbar_probe.ts"
+    ],
+    "updated": [
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🎨️.css",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🧭️session/🟦️.ts",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🪟️chrome/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🎛️preferences/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/👥️presence/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🟦️.ts",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts",
+      "🧰️framework/🛍️products/❓️quiz/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🏠️home-grid/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/🚶️learner-journey/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/📡️presence-client/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/📇️learner-pages/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🧪️tests/💭️crowd-client/🟦️.tsx",
+      "🧰️framework/🛍️products/❓️quiz/🔮️oracles/🔣️.json",
+      "🧰️framework/🛍️products/❓️quiz/README.md",
+      "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🟦️.tsx",
+      "🧰️framework/🔨️modules/🖱️ui/🧱️elements/🥞️LayeredOverview/🧪️tests/🧩️component/🟦️.tsx",
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+      "🎓️teaching/🏛️architecture/❓️quiz/🎭️e2e/🚶️learner/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🥞️layered-home/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/🧪️tests/🐕️pet-walk/🟦️.ts",
+      "🎓️teaching/🏛️architecture/❓️quiz/README.md"
+    ],
+    "removed": []
+  }
+}

@@ -7,8 +7,8 @@ the proctor, and one site per subject; each site offers a catalog of quizzes who
 
 | Path | What lives there |
 |---|---|
-| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, nx `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://proctor.quizzes.architektur-und-technologie.de`. |
-| `🏛️architecture/` | The site `https://quizzes.architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
+| `🛂️proctor/` | The proctor: a Rust `ServerInstance` of the framework server product (crate `teaching-proctor`, binary `proctor`, nx `@teaching/proctor`). Identity without passwords, randomized runs, whole-run scoring, badges and the leaderboard as CQRS with event sourcing over one SQLite file; an API only, deployed on Docker behind Caddy at `https://semio.iek.uni-hannover.de`. |
+| `🏛️architecture/` | The site `https://quizze.architektur-und-technologie.de` (see [its README](🏛️architecture/README.md)). |
 | `🏛️architecture/❓️quiz/` | The site's catalog `🔣️.json`, its web package `@teaching/architecture-quiz` (a static build published to a CDN) and its deployment files. |
 | `🏛️architecture/<domain>/<topic>/❓️quiz/🔣️.json` | One quiz per topic leaf. |
 
@@ -16,8 +16,8 @@ the proctor, and one site per subject; each site offers a catalog of quizzes who
 
 ```
 🎓️teaching/
-  🛂️proctor/                         API for every site (proctor.quizzes.architektur-und-technologie.de)
-  🏛️architecture/                    site quizzes.architektur-und-technologie.de
+  🛂️proctor/                         API for every site (semio.iek.uni-hannover.de)
+  🏛️architecture/                    site quizze.architektur-und-technologie.de
     ❓️quiz/🔣️.json                   catalog "architecture": introduction, quiz paths, badges
     ⚡️energy/                         domain
       🧲️physics/   ❓️quiz  🎬️clip    Physical Understanding / Physikalisches Verständnis
@@ -37,9 +37,9 @@ structure, materials) slot in beside `⚡️energy` without touching existing pa
   it twin for twin.
 - The proctor reads a catalog (`PROCTOR_CATALOG`), resolves its quiz paths relative to the catalog file and hashes every
   quiz file into its revision; a run is always scored against the revision it started with.
-- The site is a static build on a CDN (`https://quizzes.architektur-und-technologie.de`) that mounts the React renderer
+- The site is a static build on a CDN (`https://quizze.architektur-und-technologie.de`) that mounts the React renderer
   `@semio-tech/quiz-react` against the proctor origin baked in at build time
-  (`https://proctor.quizzes.architektur-und-technologie.de`); the proctor admits exactly the site origin (CORS). In
+  (`https://semio.iek.uni-hannover.de`); the proctor admits exactly the site origin (CORS). In
   development the Vite dev server proxies the gateway routes to the local proctor, so the client talks to one origin.
 
 ## Adding a quiz

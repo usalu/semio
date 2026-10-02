@@ -2,11 +2,17 @@
  *
  * Domain-neutral: it renders whatever catalog the proctor serves for `tenant`. {@link mountQuiz} is the whole seam a
  * site needs; {@link QuizApp} is the same as a React component. The steps are introduction (first visit), identity,
- * home, run, results, leaderboard and badges; every string is English or German, the theme and text size are the
- * learner's, and answers survive short connection shortages on the device. Learners see who else is online and where,
- * and the cursors of the learners on the same page. The look is the semio card language of
- * `🎡️play` and the `🧺️demonstrator`: the design system's navbar and window chrome from `@semio-tech/ui-react/chrome`,
- * its tokens, glass and fonts, light and dark through its surface chrome.
+ * home, run, results, leaderboard and badges; every string is English or German and none of the two is assumed — the
+ * document's language, its title and every text follow the language the learner chose or the browser preselected, and
+ * a browser that names neither is asked first. The theme and text size are the learner's, and answers survive short
+ * connection shortages on the device; with the site's material in hand the device even decides by itself while the
+ * proctor is away, and the proctor hears of everything once it answers again. The navbar leads the way — to the overview, back and forward along the steps the
+ * learner went through and up to the place above — and names what the quizzes are about in its middle; the address
+ * names the page of the overview that shows. Learners see who else is online and where, and the cursors of the learners
+ * on the same page. A site may hand in pets: small animated companions that fit the quiz on screen, as lively as the learner
+ * likes. Every screen ends with the footer that says what is stored and links the site's legal pages. The look is
+ * the semio card language of `🎡️play` and the `🧺️demonstrator`: the design system's navbar and window chrome from
+ * `@semio-tech/ui-react/chrome`, its tokens, glass and fonts, light and dark through its surface chrome.
  *
  * @see ../../🧬️schema/🔣️.json — the contract every view, command and event follows
  * @see ../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🪟️chrome/🟦️.ts — the design system's slim chrome
@@ -28,80 +34,105 @@ import {
   useMediaQuery,
   type NavbarItem,
 } from "@semio-tech/ui-react/chrome";
-import { REJECTION_LABELS, applyLocale, localized, preferredLocale, quizText, type QuizLocale, type QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
-import { browserStorageArea, localStore, type StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
+import { applyLocale, localized, preferredLocale, quizText, type QuizLabelKey, type QuizLocale, type QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
+import { browserStorageArea, localStore, type LocalStore, type StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
 import { ProctorClient, proctorTransport, type ProctorConnect, type RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
+import { Deputy, type QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
 import { QuizSession, type QuizConnection, type QuizNotice, type QuizState, type QuizStep } from "./🔨️modules/🧭️session/🟦️.ts";
-import { LanguageSwitch, PreferencesPanelCard, readPreferences, textScale, writePreferences, type QuizPreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+import { LanguageChoice, LanguageSwitch, PreferencesPanelCard, everyLanguage, readPreferences, textScale, withPets, writePreferences, type QuizPreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 import { IntroductionScreen } from "./🔨️modules/👋️introduction/🟦️.tsx";
-import { IdentityScreen } from "./🔨️modules/🪪️identity/🟦️.tsx";
-import { HomeScreen } from "./🔨️modules/🏠️home/🟦️.tsx";
+import { IdentityScreen, noticeProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
+import { HomeScreen, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
+import { NavigationControls, placeName, useAddress } from "./🔨️modules/🚏️navigation/🟦️.tsx";
 import { RunScreen } from "./🔨️modules/▶️run/🟦️.tsx";
 import { ResultsScreen } from "./🔨️modules/🏁️results/🟦️.tsx";
-import { BodyButton, CardIcon, QuizCard, cn } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+import { LegalFooter, type QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
+import { BodyButton, CardIcon, ProblemNote, QuizCard, cn } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 import { PresenceOverlay, PresenceProvider, PresenceStatus, QuizPresence, presencePlace, presenceSelf, presenceView, presenceDrafts, sheetItemLabels, useDocumentVisible, usePresencePointer, type PresenceConnect } from "./🔨️modules/👥️presence/🟦️.tsx";
+import { PetsSwitch, QuizPets, QuizPetsProvider, effectivePetMode, switchedPets, usePetsReduced, type QuizPetsSource } from "./🔨️modules/🐾️pets/🟦️.tsx";
 import "./🎨️.css";
 
 //#region 🔁️Reexports
 export { QUIZ_BUNDLE_DE, QUIZ_BUNDLE_EN, QUIZ_LOCALES, REJECTION_LABELS, TASK_KIND_LABELS, applyLocale, isQuizLocale, localized, preferredLocale, quizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
 export type { QuizLabelKey, QuizLocale, QuizText } from "./🔨️modules/🌐️i18n/🟦️.ts";
-export { SIGNIFICANT_DIGITS, SI_PREFIXES, engineering, formatClock, formatDate, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, oneDecimal, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
+export { SIGNIFICANT_DIGITS, SI_PREFIXES, engineering, formatClock, formatDate, formatInstant, formatNumber, formatPoints, formatQuantity, formatScore, oneDecimal, parseQuantity, withUnit } from "./🔨️modules/📏️quantity/🟦️.ts";
 export { RADAR_LABEL_EM, RADAR_METRICS, RadarChart, estimateTextWidth, radarAngle, radarFraction, radarLayout, radarPoint, radarPolygon, textMeasure, wrapLabel } from "./🔨️modules/🕸️radar/🟦️.tsx";
 export type { RadarAxis, RadarBox, RadarFrame, RadarLabel, RadarLayout, RadarLegendEntry, RadarPoint, TextMeasure } from "./🔨️modules/🕸️radar/🟦️.tsx";
 export { browserStorageArea, isRecord, localChange, localStore, memoryStorageOrigin } from "./🔨️modules/💾️persistence/🟦️.ts";
 export type { LocalChange, LocalCollection, LocalSlice, LocalStore, StorageArea } from "./🔨️modules/💾️persistence/🟦️.ts";
 export {
   ProctorClient,
+  ProctorThrottled,
   ProctorUnavailable,
   QUIZ_WIRE_VERSION,
+  RETRY_AFTER_MAX_MS,
   RETRY_TIMING,
+  SIGN_UP_ALLOWANCE,
   abortable,
   commandEnvelope,
   commandTarget,
   commandVerdict,
+  errorRejection,
   isNotFound,
+  isThrottled,
   isTransient,
   learnerPrincipal,
   newId,
+  pause,
   proctorTransport,
   queryEnvelope,
   quizRejection,
+  retryAfterMs,
   retryTransient,
+  retryWait,
+  signUpsSpent,
 } from "./🔨️modules/🛂️proctor/🟦️.ts";
 export type { CommandVerdict, HttpRequest, HttpResponse, HttpTransport, ProctorConnect, ProctorReachability, RetryTiming } from "./🔨️modules/🛂️proctor/🟦️.ts";
-export { Outbox, coalesce, coalescingKey } from "./🔨️modules/📮️outbox/🟦️.ts";
+export { Outbox, coalesce, coalescingKey, commandRun } from "./🔨️modules/📮️outbox/🟦️.ts";
 export type { OutboxActivity, OutboxEntry, OutboxOptions, OutboxStatus } from "./🔨️modules/📮️outbox/🟦️.ts";
-export { PROJECTION_GRACE_MS, QuizSession, evolveQuizState, initialQuizState, lastSubmittedRunOf, mergeRunViews, openRunOf, restoreQuizState, runAwards } from "./🔨️modules/🧭️session/🟦️.ts";
-export type { QuizClientEvent, QuizConnection, QuizLearner, QuizNotice, QuizSessionOptions, QuizSnapshot, QuizState, QuizStep, SessionFailure, SubmissionPhase } from "./🔨️modules/🧭️session/🟦️.ts";
-export { LOCALE_NAMES, LanguageSwitch, PreferencesCard, PreferencesPage, PreferencesPanel, PreferencesPanelCard, TEXT_SIZES, THEME_CHOICES, readPreferences, textScale, writePreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+export { Deputy, REVISED, materialRevision } from "./🔨️modules/🫡️deputy/🟦️.ts";
+export type { HeldLearner, QuizMaterial } from "./🔨️modules/🫡️deputy/🟦️.ts";
+export { DEFAULT_BOARD, DEPUTY_PATIENCE_MS, EMPTY_TRAIL, HOME_PAGES, PROJECTION_GRACE_MS, QuizSession, TRAIL_LIMIT, boardKey, evolveQuizState, initialQuizState, lastSubmittedRunOf, mergeRunViews, openRunOf, overallLeaderboard, restoreQuizState, runAwards, sameStep, shownLeaderboard, stepAbove, stepAfter, stepBefore } from "./🔨️modules/🧭️session/🟦️.ts";
+export type { BoardChoice, HeldLeaderboard, QuizClientEvent, QuizConnection, QuizLearner, QuizNotice, QuizSessionOptions, QuizSnapshot, QuizState, QuizStep, QuizTrail, RefreshOutcome, SessionFailure, SubmissionPhase } from "./🔨️modules/🧭️session/🟦️.ts";
+export { NAVIGATION_WAYS, NavigationControls, addressPage, navigationWays, placeName, stepAddress, useAddress } from "./🔨️modules/🚏️navigation/🟦️.tsx";
+export type { NavigationWay } from "./🔨️modules/🚏️navigation/🟦️.tsx";
+export { EveryLanguage, LOCALE_NAMES, LanguageChoice, LanguageSwitch, PreferencesCard, PreferencesPage, PreferencesPanel, PreferencesPanelCard, TEXT_SIZES, THEME_CHOICES, everyLanguage, readPreferences, textScale, writePreferences } from "./🔨️modules/🎛️preferences/🟦️.tsx";
 export type { QuizPreferences, TextSize, ThemeChoice } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+export { OTHERS_CHOICE_LABELS, PET_CHOICE_LABELS, withPets } from "./🔨️modules/🎛️preferences/🟦️.tsx";
+export { PET_CHOICES, PET_HOME_SCENE, PetsSwitch, QUIZ_PETS_TEMPO, QUIZ_PET_KEEPOUTS, QUIZ_PET_SURFACES, QuizPets, QuizPetsProvider, effectivePetMode, peerGlances, petNames, petScene, petsTempo, switchedPets, usePetCast, usePetsForced, usePetsReduced } from "./🔨️modules/🐾️pets/🟦️.tsx";
+export type { PetChoice, PetLiveliness, QuizPetsSource, QuizPetsStage } from "./🔨️modules/🐾️pets/🟦️.tsx";
 export { DRAG_THRESHOLD_PX, dropZoneAt, startPointerDrag } from "./🔨️modules/🤏️drag/🟦️.ts";
-export { DROP_ZONE_CLASS, DragGrip, ICON_BUTTON_CLASS, LiveRegion, SELECT_CLASS, elementId, useAnnouncement, useFocusAfterRender } from "./🔨️modules/🧩️task/🟦️.tsx";
-export type { TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
-export { BodyButton, CardAction, CardIcon, Facts, Glyph, QuizCard, Segments, textPresentation } from "./🔨️modules/🪟️chrome/🟦️.tsx";
-export type { Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export { DROP_ZONE_CLASS, DragGrip, ICON_BUTTON_CLASS, LiveRegion, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, elementId, useAnnouncement, useFocusAfterRender } from "./🔨️modules/🧩️task/🟦️.tsx";
+export type { Announcement, TaskViewProps } from "./🔨️modules/🧩️task/🟦️.tsx";
+export { BodyButton, CardAction, CardIcon, Dialog, Facts, Glyph, Mark, Missing, ProblemNote, QuizCard, Segments, textPresentation } from "./🔨️modules/🪟️chrome/🟦️.tsx";
+export type { Problem, Segment } from "./🔨️modules/🪟️chrome/🟦️.tsx";
 export { ClassificationTaskView } from "./🔨️modules/🗂️classification/🟦️.tsx";
-export { SortingTaskView, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
+export { SortingTaskView, ordered, reordered } from "./🔨️modules/↕️sorting/🟦️.tsx";
 export { MatchingTaskView, assignCard } from "./🔨️modules/🃏️matching/🟦️.tsx";
 export { IntroductionCard, IntroductionPage, IntroductionScreen } from "./🔨️modules/👋️introduction/🟦️.tsx";
-export { LearnerCard, LearnerPage } from "./🔨️modules/📇️profile/🟦️.tsx";
+export { LearnerCard, LearnerPage, SwitchIdentity } from "./🔨️modules/📇️profile/🟦️.tsx";
 export { QuizCardView, QuizPage } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
 export type { Act } from "./🔨️modules/📖️quiz-page/🟦️.tsx";
-export { IdentityScreen, failureMessage, learnerName, thrownMessage } from "./🔨️modules/🪪️identity/🟦️.tsx";
-export { HOME_GRID_TRACKS, HomeScreen, homeCells, homePages } from "./🔨️modules/🏠️home/🟦️.tsx";
+export { IdentityScreen, failureProblem, handleFault, handleFaultMessage, learnerName, noticeProblem, thrownProblem } from "./🔨️modules/🪪️identity/🟦️.tsx";
+export type { HandleFault } from "./🔨️modules/🪪️identity/🟦️.tsx";
+export { HOME_CHROME_HEIGHT_PX, HOME_GRID_ROW_HEIGHT_PX, HOME_GRID_TRACKS, HomeScreen, homeCells, homeGridMinHeight, homeLayoutQueries, homePages, homeTrackTemplate, pageLabel } from "./🔨️modules/🏠️home/🟦️.tsx";
 export type { HomeLayout } from "./🔨️modules/🏠️home/🟦️.tsx";
-export { RunScreen, TASK_KIND_ICONS, TaskView } from "./🔨️modules/▶️run/🟦️.tsx";
+export { RunScreen, TASK_KIND_ICONS, TaskGlyph, TaskView } from "./🔨️modules/▶️run/🟦️.tsx";
 export { ResultsScreen, TaskResultView } from "./🔨️modules/🏁️results/🟦️.tsx";
-export { BOARD_EXCERPT_SIZE, LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, boardExcerpt, sortLeaderboard, usePolling } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
-export type { LeaderboardKey, LeaderboardSort } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
+export { BOARD_EXCERPT_SIZE, LEADERBOARD_POLL_MS, LeaderboardCard, LeaderboardPage, POLL_BACKOFF_MAX_MS, RANK_ORDER, boardExcerpt, leaderboardColumns, nextSort, ownRow, pollDelay, sortLeaderboard, usePolling } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
+export type { LeaderboardColumn, LeaderboardKey, LeaderboardSort } from "./🔨️modules/🏆️leaderboard/🟦️.tsx";
 export { BadgesCard, BadgesPage, awardOf, badgesEarnedIn } from "./🔨️modules/🏅️badges/🟦️.tsx";
+export { LegalFooter, PrivacyNotice, legalLink } from "./🔨️modules/⚖️legal/🟦️.tsx";
+export type { QuizLegal } from "./🔨️modules/⚖️legal/🟦️.tsx";
 export {
   EMPTY_PRESENCE_VIEW,
   MAX_WATCHED_ROOMS,
   OnlineMark,
+  PEER_LABEL_CLEARANCE_PX,
   PRESENCE_ANCHORS,
   PRESENCE_FRAME_HZ,
   PRESENCE_FRAME_INTERVAL_MS,
+  PRESENCE_STABLE_MS,
   PanePeers,
   PresenceList,
   PresenceOverlay,
@@ -115,12 +146,14 @@ export {
   cursorAt,
   homeWatchScopes,
   paintStyle,
+  peerInk,
   placePeers,
   placeText,
   presenceDrafts,
   presencePlace,
   presenceSelf,
   presenceView,
+  rejoinDelay,
   sheetItemLabels,
   useDocumentVisible,
   usePresencePointer,
@@ -144,18 +177,24 @@ export type {
   RoomStatus,
   WatchedState,
 } from "./🔨️modules/👥️presence/🟦️.tsx";
-export { CrowdChoices, CrowdPosition, CrowdProvider, CrowdSource, chooseCrowd, crowdPlace, liveItems, meanPosition, submittedItems, useCrowd } from "./🔨️modules/🗳️crowd/🟦️.tsx";
-export type { Crowd, CrowdChoice, ItemCrowd } from "./🔨️modules/🗳️crowd/🟦️.tsx";
+export { AnswerFigure, CROWD_DOTS, CrowdDoor, OTHERS_CHOICES, ScoreFigure, TaskFigures, answerFigure, crowdGate, crowdPlace, crowdShown, livePlace, scoreFigure } from "./🔨️modules/🗳️crowd/🟦️.tsx";
+export type { AnswerCell, AnswerColumn, AnswerFigureInput, AnswerFigureModel, AnswerRow, CrowdGate, CrowdPlace, OthersChoice, ScoreFigureModel } from "./🔨️modules/🗳️crowd/🟦️.tsx";
+export { Column, columnShare, formatShare, peakOf } from "./🔨️modules/📊️plot/🟦️.tsx";
 //#endregion 🔁️Reexports
 
 //#region ❓️App
-/** ⚙️ What a quiz site passes in: the proctor base URL (`""` is the site's own origin), the catalog id as tenant and
- * the site's logo (inline SVG markup) for the navbar. The optional seams replace the network, the presence sockets,
- * the storage, the browser's language list and the retry timing. */
+/** ⚙️ What a quiz site passes in: the proctor base URL (`""` is the site's own origin), the catalog id as tenant, the
+ * site's material (the catalog and its quizzes: with it the catalog shows at once and the device decides by itself
+ * while the proctor is away), the site's logo (inline SVG markup) for the navbar, the site's legal pages for the footer
+ * and the site's pets (where its menagerie comes from; fetched only for a learner who wants pets). The optional seams
+ * replace the network, the presence sockets, the storage, the browser's language list and the retry timing. */
 export interface QuizOptions {
   readonly proctor: string;
   readonly tenant: string;
+  readonly material?: QuizMaterial;
   readonly logo?: string;
+  readonly legal?: QuizLegal;
+  readonly pets?: QuizPetsSource;
   readonly transport?: ProctorConnect;
   readonly presence?: PresenceConnect;
   readonly storage?: StorageArea;
@@ -168,21 +207,40 @@ function browserLanguages(): readonly string[] {
   return navigator.languages !== undefined && navigator.languages.length > 0 ? navigator.languages : [navigator.language];
 }
 
-/** 📶️ What the connection indicator says and how urgently: connecting until the proctor first answers, then saved,
- * saving, or answers held on the device. */
-export function connectionMessage(connection: QuizConnection, text: QuizText): { readonly message: string; readonly tone: "calm" | "busy" | "alert" } {
-  if (!connection.online) return { message: text("quiz.connection.offline"), tone: "alert" };
-  if (connection.reachability === "unreachable")
-    return connection.pending > 0 ? { message: text("quiz.connection.reconnectingWaiting", { waiting: connection.pending }), tone: "alert" } : { message: text("quiz.connection.reconnecting"), tone: "alert" };
-  if (connection.pending > 0) return { message: text("quiz.connection.saving", { waiting: connection.pending }), tone: "busy" };
-  if (connection.reachability === "unknown") return { message: text("quiz.connection.connecting"), tone: "busy" };
-  return { message: text("quiz.connection.saved"), tone: "calm" };
+/** 🚥️ How urgent the state of the connection is: all saved, something under way, or answers cannot leave the device. */
+export type ConnectionTone = "calm" | "busy" | "alert";
+
+/** 📶️ One sentence about the connection before it is put into a language: its key and the values it carries. */
+interface ConnectionSentence {
+  readonly key: QuizLabelKey;
+  readonly values?: Readonly<Record<string, number>>;
 }
 
-/** ⏳️ What a screen whose data has not arrived yet says: connecting, unreachable (with a retry), refused, or loading. */
+/** 📶️ The state of the connection as the indicator shows it: connecting until the proctor first answers, then saved,
+ * saving, a busy proctor (it answers, but asks to slow down), or answers held on the device — where a deputy decides
+ * meanwhile, everything is saved there. */
+export function connectionState(connection: QuizConnection): ConnectionSentence & { readonly tone: ConnectionTone } {
+  if (!connection.online) return { key: "quiz.connection.offline", tone: "alert" };
+  if (connection.reachability === "unreachable" && connection.deputy) return connection.pending > 0 ? { key: "quiz.connection.localWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.local", tone: "alert" };
+  if (connection.reachability === "unreachable") return connection.pending > 0 ? { key: "quiz.connection.reconnectingWaiting", values: { waiting: connection.pending }, tone: "alert" } : { key: "quiz.connection.reconnecting", tone: "alert" };
+  if (connection.reachability === "throttled") return { key: "quiz.connection.throttled", tone: "busy" };
+  if (connection.pending > 0) return { key: "quiz.connection.saving", values: { waiting: connection.pending }, tone: "busy" };
+  if (connection.reachability === "unknown") return { key: "quiz.connection.connecting", tone: "busy" };
+  return { key: "quiz.connection.saved", tone: "calm" };
+}
+
+/** 📶️ What the connection indicator says and how urgently. */
+export function connectionMessage(connection: QuizConnection, text: QuizText): { readonly message: string; readonly tone: ConnectionTone } {
+  const state = connectionState(connection);
+  return { message: text(state.key, state.values), tone: state.tone };
+}
+
+/** ⏳️ What a screen whose data has not arrived yet says: connecting, unreachable (with a retry), busy (the client
+ * retries by itself and offers no button to ask a busy proctor even more often), refused, or loading. */
 export function waitingMessage(connection: QuizConnection, notice: QuizNotice | undefined, text: QuizText): { readonly message: string; readonly retry: boolean } {
   if (!connection.online) return { message: text("quiz.connection.offline"), retry: true };
   if (connection.reachability === "unreachable") return { message: text("quiz.app.unreachable"), retry: true };
+  if (connection.reachability === "throttled") return { message: text("quiz.app.busy"), retry: false };
   if (connection.reachability === "unknown") return { message: text("quiz.connection.connecting"), retry: false };
   if (notice?.kind === "refused") return { message: text("quiz.app.failed"), retry: true };
   return { message: text("quiz.app.fetching"), retry: false };
@@ -203,26 +261,33 @@ function Waiting(props: { readonly connection: QuizConnection; readonly notice: 
   );
 }
 
-function noticeMessage(notice: QuizNotice, text: QuizText): string {
-  switch (notice.kind) {
-    case "rejection":
-      return text(REJECTION_LABELS[notice.rejection]);
-    case "refused":
-      return text("quiz.rejection.refused", { detail: notice.detail });
-    case "voided":
-      return text("quiz.run.voided");
-  }
-}
-
 function stepKey(step: QuizStep): string {
   return step.screen === "run" || step.screen === "results" ? `${step.screen}:${step.run}` : step.screen;
+}
+
+function screenTitle(state: QuizState, locale: QuizLocale, text: QuizText): string {
+  const { step, catalog, learner } = state;
+  if (step.screen === "introduction") return catalog === undefined ? text("quiz.app.loading") : localized(catalog.introduction.title, locale);
+  if (step.screen === "identity" || learner === undefined) return text("quiz.identity.title");
+  if (step.screen !== "home") return placeName(step, state, locale, text) ?? text("quiz.app.loading");
+  if (catalog === undefined) return text("quiz.app.loading");
+  return (step.page === undefined ? undefined : pageLabel(step.page, state, locale, text)) ?? text("quiz.home.title");
+}
+
+/** 🏷️ The title of the document: what the screen shows, then the catalog's title, in `locale` — the loading text
+ * until the catalog arrived; without a locale the word for language in every offered language, as the chooser shows. */
+export function documentTitle(state: QuizState, locale: QuizLocale | undefined): string {
+  if (locale === undefined) return everyLanguage("quiz.preferences.language");
+  const screen = screenTitle(state, locale, quizText(locale));
+  const site = state.catalog === undefined ? undefined : localized(state.catalog.title, locale);
+  return site === undefined || site === screen ? screen : `${screen} · ${site}`;
 }
 
 /** 🖼️ A screen other than home: it scrolls on its own, centred at a comfortable reading width; the first visit shows
  * the preferences beside. */
 function Page(props: { readonly aside?: ReactNode; readonly children: ReactNode }): ReactElement {
   return (
-    <div className="min-h-0 flex-1 overflow-auto p-double">
+    <div className="relative min-h-0 flex-1 overflow-auto p-double">
       <div className={cn("quiz-page mx-auto w-full", props.aside === undefined ? "max-w-6xl" : "quiz-pair max-w-6xl")}>
         {props.children}
         {props.aside}
@@ -271,7 +336,7 @@ function Screen(props: {
         waiting
       ) : (
         <Page>
-          <RunScreen key={step.run} session={session} state={state} run={step.run} text={text} locale={locale} showAnswers={preferences.showAnswers} />
+          <RunScreen key={step.run} session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
         </Page>
       );
     case "results":
@@ -279,7 +344,7 @@ function Screen(props: {
         waiting
       ) : (
         <Page>
-          <ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} showAnswers={preferences.showAnswers} />
+          <ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
         </Page>
       );
   }
@@ -295,37 +360,51 @@ function useRootTextScale(scale: number): void {
   }, [scale]);
 }
 
-function ConnectionStatus(props: { readonly connection: QuizConnection; readonly text: QuizText }): ReactElement {
-  const status = connectionMessage(props.connection, props.text);
+const TONE_GLYPHS: { readonly [T in ConnectionTone]: string } = { alert: "⚠", busy: "↻", calm: "✓" };
+
+/** 📶️ The connection indicator: text to see — never a live region, because saving and saved alternate with every
+ * answer — and beside it one polite status that speaks only when the connection enters an alert state (once, however
+ * the waiting count or the kind of outage changes meanwhile) and when it has recovered. */
+export function ConnectionStatus(props: { readonly connection: QuizConnection; readonly text: QuizText }): ReactElement {
+  const { text } = props;
+  const shown = connectionState(props.connection);
+  const alert = shown.tone === "alert";
+  const [spoken, setSpoken] = useState<{ readonly alert: boolean; readonly said?: ConnectionSentence }>({ alert: false });
+  if (alert !== spoken.alert) setSpoken({ alert, said: alert ? { key: shown.key, values: shown.values } : { key: "quiz.connection.restored" } });
   return (
-    <p role="status" aria-live="polite" data-tone={status.tone} className="quiz-connection m-0 flex min-w-0 items-center gap-single px-single text-xs text-muted-foreground">
-      <span aria-hidden="true">{status.tone === "alert" ? "⚠" : status.tone === "busy" ? "↻" : "✓"}</span>
-      <span className="sr-only">{props.text("quiz.connection.label")}: </span>
-      <span className="truncate max-md:sr-only">{status.message}</span>
-    </p>
+    <>
+      <p data-tone={shown.tone} className="quiz-connection m-0 flex min-w-0 items-center gap-single text-xs text-muted-foreground md:px-single">
+        <span aria-hidden="true">{TONE_GLYPHS[shown.tone]}</span>
+        <span className="sr-only">{text("quiz.connection.label")}: </span>
+        <span className="truncate max-md:sr-only">{text(shown.key, shown.values)}</span>
+      </p>
+      <p role="status" data-connection-announcer="" className="sr-only">
+        {spoken.said === undefined ? "" : text(spoken.said.key, spoken.said.values)}
+      </p>
+    </>
   );
 }
 
-/** ❓️ The whole quiz client for one proctor tenant. */
-export function QuizApp(options: QuizOptions): ReactElement {
-  const [setup] = useState(() => {
-    const store = localStore(options.storage ?? browserStorageArea(), options.tenant);
-    const proctor = new ProctorClient(options.transport ?? proctorTransport(options.proctor), options.tenant);
-    const presence = new QuizPresence({ proctor: options.proctor, connect: options.presence, timing: options.timing });
-    return { store, presence, session: new QuizSession({ proctor, store, timing: options.timing }) };
-  });
-  const { session, store, presence } = setup;
-  useLayoutEffect(() => {
-    session.start();
-    return () => session.stop();
-  }, [session]);
-  useEffect(() => () => presence.stop(), [presence]);
-  const { state, connection } = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
-  const [preferences, setPreferences] = useState<QuizPreferences>(() => readPreferences(store));
-  const locale = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+interface ClientProps {
+  readonly options: QuizOptions;
+  readonly session: QuizSession;
+  readonly presence: QuizPresence;
+  readonly state: QuizState;
+  readonly connection: QuizConnection;
+  readonly locale: QuizLocale;
+  readonly preferences: QuizPreferences;
+  readonly onPreferences: (preferences: QuizPreferences) => void;
+}
+
+/** 🖥️ The client once a language is known: the navbar — the ways of an identified learner on its left (overview, back,
+ * forward, up), what the quizzes are about with the site's logo in its middle, the connection, who is online and the
+ * language on its right — the screen of the step, the footer, the others' cursors and the pets. */
+function Client(props: ClientProps): ReactElement {
+  const { options, session, presence, state, connection, locale, preferences, onPreferences } = props;
   const text = useMemo(() => quizText(locale), [locale]);
   const [task, setTask] = useState<string | undefined>(undefined);
   const visible = useDocumentVisible();
+  const pets = effectivePetMode(preferences.pets, preferences.petsChosen, usePetsReduced());
   const identified = state.introduced && state.learner !== undefined;
   const self = useMemo(() => presenceSelf(identified ? state.learner : undefined), [identified, state.learner]);
   const at = presencePlace(state.step, state, task);
@@ -335,55 +414,43 @@ export function QuizApp(options: QuizOptions): ReactElement {
   const quizzes = useMemo(() => state.catalog?.quizzes.map((quiz) => quiz.id) ?? [], [state.catalog]);
   useEffect(() => presence.update({ catalog: state.catalog?.id, quizzes, self, at, home: state.step.screen === "home", drafts, active: visible }));
   usePresencePointer(presence);
+  useAddress(session, state);
   const shared = useSyncExternalStore(presence.subscribe, presence.getSnapshot, presence.getSnapshot);
   const view = useMemo(() => presenceView(shared, text), [shared, text]);
-  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
-  const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
-  useElementsSurfaceChrome({ appearance: preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile, tablet }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
-  useRootTextScale(textScale(preferences.textSize));
   const main = useRef<HTMLElement>(null);
   const shown = useRef<string | undefined>(undefined);
   const key = stepKey(state.step);
-  useEffect(() => {
-    void applyLocale(locale);
-  }, [locale]);
-  useEffect(() => store.watch((change) => (change.kind === "cleared" || (change.kind === "slice" && change.slice === "preferences")) && setPreferences(readPreferences(store))), [store]);
   useEffect(() => {
     if (shown.current !== undefined && shown.current !== key) main.current?.querySelector<HTMLElement>("h1")?.focus();
     shown.current = key;
   }, [key]);
 
-  const change = (next: QuizPreferences): void => {
-    setPreferences(next);
-    writePreferences(store, next);
-  };
   const title = state.catalog === undefined ? "" : localized(state.catalog.title, locale);
   const brand = (
-    <>
-      {options.logo === undefined ? null : <ShellBrandLogo svg={options.logo} className="size-workbench shrink-0" />}
-      <span className="truncate px-single text-sm font-semibold text-foreground">{title}</span>
-    </>
+    <span data-quiz-brand="" className="quiz-brand">
+      {options.logo === undefined ? null : (
+        <span aria-hidden="true" className="quiz-brand-logo inline-flex">
+          <ShellBrandLogo svg={options.logo} className="size-workbench shrink-0" />
+        </span>
+      )}
+      {title === "" ? null : (
+        <span title={title} className="quiz-brand-title truncate px-single text-sm font-semibold text-foreground">
+          {title}
+        </span>
+      )}
+    </span>
   );
   const items: NavbarItem[] = [
-    {
-      key: "brand",
-      className: "min-w-0 shrink",
-      content: identified ? (
-        <button type="button" onClick={() => session.open({ screen: "home" })} className="flex min-w-0 cursor-pointer items-center gap-single border-0 bg-transparent p-0 text-left">
-          {brand}
-        </button>
-      ) : (
-        <span className="flex min-w-0 items-center gap-single">{brand}</span>
-      ),
-    },
+    ...(identified ? [{ key: "ways", content: <NavigationControls session={session} state={state} locale={locale} text={text} /> }] : []),
     navbarFillItem("fill"),
     { key: "connection", className: "min-w-0 shrink", content: <ConnectionStatus connection={connection} text={text} /> },
     ...(view.roster === undefined ? [] : [{ key: "presence", className: "shrink-0", content: <PresenceStatus text={text} /> }]),
-    { key: "language", content: <LanguageSwitch locale={locale} text={text} onChange={(chosen) => change({ ...preferences, locale: chosen })} /> },
+    { key: "language", content: <LanguageSwitch compact locale={locale} text={text} onChange={(chosen) => onPreferences({ ...preferences, locale: chosen })} /> },
+    { key: "brand", centered: true, className: "min-w-0 px-single", content: brand },
   ];
   return (
     <PresenceProvider view={view} showCursors={preferences.showCursors} setTask={setTask}>
-      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale}>
+      <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }} lang={locale} data-icon-motion={preferences.animateIcons ? "on" : "off"} data-pets={pets}>
         <a
           href="#quiz-main"
           className="sr-only focus:not-sr-only focus:absolute focus:start-double focus:top-double focus:z-50 focus:bg-background focus:p-double focus:text-sm focus:text-foreground"
@@ -399,23 +466,86 @@ export function QuizApp(options: QuizOptions): ReactElement {
         </header>
         <main id="quiz-main" ref={main} tabIndex={-1} className="flex min-h-0 flex-1 flex-col outline-none">
           {state.notice === undefined ? null : (
-            <div role="alert" className="quiz-alert m-double mb-0 flex flex-wrap items-center gap-double border border-normal px-double py-single text-sm">
-              <p className="m-0 flex-1">{noticeMessage(state.notice, text)}</p>
+            <ProblemNote problem={noticeProblem(state.notice, text)} text={text} className="m-double mb-0">
               <BodyButton onClick={() => session.dismissNotice()}>{text("quiz.app.dismiss")}</BodyButton>
-            </div>
+            </ProblemNote>
           )}
-          <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={change} />
+          <Screen session={session} state={state} connection={connection} text={text} locale={locale} preferences={preferences} onPreferences={onPreferences} />
         </main>
+        <LegalFooter legal={options.legal} locale={locale} text={text}>
+          <PetsSwitch shown={preferences.pets !== "off"} label={text("quiz.preferences.petsShown")} onChange={(shown) => onPreferences(withPets(preferences, switchedPets(shown, preferences.petsLiveliness)))} />
+        </LegalFooter>
         <PresenceOverlay view={view} show={preferences.showCursors} itemLabel={itemLabel} />
+        <QuizPets />
       </div>
     </PresenceProvider>
   );
 }
 
-/** 🚀️ Mounts the quiz client into `root` — with the stored theme applied to the document before the first paint — and
- * returns the function that unmounts it again. */
+function useSetup(options: QuizOptions): { readonly store: LocalStore; readonly presence: QuizPresence; readonly session: QuizSession } {
+  const [setup] = useState(() => {
+    const store = localStore(options.storage ?? browserStorageArea(), options.tenant);
+    const proctor = new ProctorClient(options.transport ?? proctorTransport(options.proctor), options.tenant);
+    const presence = new QuizPresence({ proctor: options.proctor, connect: options.presence, timing: options.timing });
+    const deputy = options.material === undefined ? undefined : new Deputy(options.material);
+    return { store, presence, session: new QuizSession({ proctor, store, deputy, timing: options.timing }) };
+  });
+  return setup;
+}
+
+/** ❓️ The whole quiz client for one proctor tenant. It speaks the language the learner stored, else the one the
+ * browser's list preselects among the offered ones; while neither exists it shows only the language chooser. */
+export function QuizApp(options: QuizOptions): ReactElement {
+  const { session, store, presence } = useSetup(options);
+  useLayoutEffect(() => {
+    session.start();
+    return () => session.stop();
+  }, [session]);
+  useEffect(() => () => presence.stop(), [presence]);
+  const { state, connection } = useSyncExternalStore(session.subscribe, session.getSnapshot, session.getSnapshot);
+  const [preferences, setPreferences] = useState<QuizPreferences>(() => readPreferences(store));
+  const locale = preferences.locale ?? preferredLocale(options.languages ?? browserLanguages());
+  const mobile = useMediaQuery(UI_MOBILE_MEDIA_QUERY);
+  const tablet = useMediaQuery(UI_TABLET_MEDIA_QUERY);
+  useElementsSurfaceChrome({ appearance: preferences.theme, device: elementsSurfaceDeviceForMatches({ mobile, tablet }), driver: DEFAULT_UI_DRIVER, browserDefaults: "native" });
+  useRootTextScale(textScale(preferences.textSize));
+  useLayoutEffect(() => {
+    void applyLocale(locale);
+  }, [locale]);
+  const title = documentTitle(state, locale);
+  useEffect(() => {
+    document.title = title;
+  }, [title]);
+  useEffect(() => store.watch((change) => (change.kind === "cleared" || (change.kind === "slice" && change.slice === "preferences")) && setPreferences(readPreferences(store))), [store]);
+
+  const change = (next: QuizPreferences): void => {
+    setPreferences(next);
+    writePreferences(store, next);
+  };
+  if (locale !== undefined)
+    return (
+      <QuizPetsProvider source={options.pets} choice={preferences.pets} chosen={preferences.petsChosen} state={state} locale={locale}>
+        <Client options={options} session={session} presence={presence} state={state} connection={connection} locale={locale} preferences={preferences} onPreferences={change} />
+      </QuizPetsProvider>
+    );
+  return (
+    <div className="quiz-app flex min-h-0 flex-col overflow-hidden bg-background text-foreground" style={{ height: UI_AVAILABLE_HEIGHT }}>
+      <main id="quiz-main" className="relative flex min-h-0 flex-1 flex-col overflow-auto p-double">
+        <div className="mx-auto w-full max-w-xl">
+          <LanguageChoice onChoose={(chosen) => change({ ...preferences, locale: chosen })} />
+        </div>
+      </main>
+      <LegalFooter legal={options.legal} locale={undefined} text={undefined} />
+    </div>
+  );
+}
+
+/** 🚀️ Mounts the quiz client into `root` — with the stored theme and the known language applied to the document
+ * before the first paint — and returns the function that unmounts it again. */
 export function mountQuiz(root: HTMLElement, options: QuizOptions): () => void {
-  bootstrapElementsSurfaceChromeDocument(readPreferences(localStore(options.storage ?? browserStorageArea(), options.tenant)).theme);
+  const preferences = readPreferences(localStore(options.storage ?? browserStorageArea(), options.tenant));
+  bootstrapElementsSurfaceChromeDocument(preferences.theme);
+  void applyLocale(preferences.locale ?? preferredLocale(options.languages ?? browserLanguages()));
   const reactRoot = createRoot(root);
   reactRoot.render(
     <StrictMode>

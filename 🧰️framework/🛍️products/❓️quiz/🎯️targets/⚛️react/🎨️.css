@@ -36,16 +36,189 @@
   line-height: 1;
 }
 
+/* 🏷️ The icon before the label it belongs to (an item, a category, a value card, a task): one glyph, a small gap. */
+.quiz-label-icon {
+  display: inline-block;
+  margin-inline-end: 0.4em;
+}
+
+/* 🎞️ Icons play their motion as a slow loop with long rests, only where the learner neither prefers reduced motion nor
+   switched the animation off in the preferences (`data-icon-motion="off"`); everywhere else they stand still. Icons
+   in a list carry their place (`--quiz-icon-order`) and start that many steps into the loop, so neighbours never move
+   in step. */
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion] {
+    display: inline-block;
+    animation-duration: 3.2s;
+    animation-delay: calc(var(--quiz-icon-order, 0) * -0.7s);
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="bounce"] {
+    animation-name: quiz-icon-bounce;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="pulse"] {
+    animation-name: quiz-icon-pulse;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="spin"] {
+    animation-name: quiz-icon-spin;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="sway"] {
+    animation-name: quiz-icon-sway;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="float"] {
+    animation-name: quiz-icon-float;
+  }
+
+  .quiz-app:not([data-icon-motion="off"]) .quiz-glyph[data-motion="flip"] {
+    animation-name: quiz-icon-flip;
+  }
+}
+
+@keyframes quiz-icon-bounce {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0);
+  }
+
+  15% {
+    transform: translateY(-0.3em);
+  }
+
+  30% {
+    transform: translateY(0);
+  }
+
+  38% {
+    transform: translateY(-0.1em);
+  }
+}
+
+@keyframes quiz-icon-pulse {
+  0%,
+  60%,
+  100% {
+    transform: scale(1);
+  }
+
+  30% {
+    transform: scale(1.25);
+  }
+}
+
+@keyframes quiz-icon-spin {
+  0%,
+  40% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes quiz-icon-sway {
+  0%,
+  50%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  15% {
+    transform: rotate(-12deg);
+  }
+
+  35% {
+    transform: rotate(12deg);
+  }
+}
+
+@keyframes quiz-icon-float {
+  0%,
+  100% {
+    transform: translateY(0.08em);
+  }
+
+  50% {
+    transform: translateY(-0.12em);
+  }
+}
+
+@keyframes quiz-icon-flip {
+  0%,
+  45% {
+    transform: rotateY(0deg);
+  }
+
+  100% {
+    transform: rotateY(360deg);
+  }
+}
+
+/* 🏷️ The title of a card is read in full: it wraps inside its chip instead of ending in an ellipsis when the card is
+   narrower than its title — a narrow window, a strongly zoomed page, large text. */
+.quiz-app [data-slot="quiz-card-title-chip"] {
+  height: auto;
+  max-height: none;
+  white-space: normal;
+}
+
+.quiz-app [data-slot="quiz-card-title-chip"] > :is(h1, h2, h3) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.25;
+}
+
 /* 🎯️ Every control of the quiz is at least 24 px tall (WCAG 2.2 SC 2.5.8); touch spacing makes it taller. */
 .quiz-target {
   min-height: max(1.5rem, calc(7 * var(--ui-spacing)));
 }
 
-/* 🏠️ The overview's cards over the glass, each in the cell of its page on the live grid behind: the card layer takes
-   the overview's own track variables with no gaps (the spacing lies inside the cells), and each card is compact and
-   centred in its cell so its page shows around it; a card taller than a short cell starts at its top (never above
-   it, under the navbar) and spills only into the spacing of the cell below. Below 768 px the overview is a list of
-   sections and places the cards itself. DOM order is reading order at every width. */
+/* 🏷️ What the quizzes are about, in the middle of the navbar: the logo and the title on one line, as wide as the band
+   the navbar leaves between its ways and its right side. Where the band is narrower, the title gives way first — it
+   ends in an ellipsis, and leaves the line once fewer than three of its letters would show — and then the logo, which
+   is never cut: whatever does not fit beside the zero-wide strut that holds the line wraps below it and is clipped, so
+   nothing ever lies over a control of the navbar. The line is as tall as the logo. */
+.quiz-brand {
+  display: flex;
+  flex: none;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: center;
+  height: var(--size-workbench);
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.quiz-brand::before {
+  content: "";
+  width: 0;
+  height: 100%;
+}
+
+.quiz-brand-logo {
+  flex: none;
+}
+
+.quiz-brand-title {
+  flex: 1 1 0;
+  min-width: 3em;
+}
+
+/* 🏠️ The overview's cards over the glass, fixed on a grid while the pages pan behind it: the card layer takes its
+   track lists from home (`--quiz-home-columns`, `--quiz-home-rows`) with no gaps (the spacing lies inside the cells),
+   and each card is compact and centred in its cell. The grid is only laid out where every card fits its cell; a card
+   that is taller after all starts at the top of its cell (never above it, under the navbar) and scrolls inside it,
+   so it never lies over the card below. Below 768 px the overview is a list of sections and places the cards itself.
+   DOM order is reading order at every width. */
 .quiz-home-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -53,8 +226,8 @@
 
 @media (min-width: 768px) {
   .quiz-home-grid {
-    grid-template-columns: var(--layered-columns);
-    grid-template-rows: var(--layered-rows);
+    grid-template-columns: var(--quiz-home-columns);
+    grid-template-rows: var(--quiz-home-rows);
   }
 }
 
@@ -65,6 +238,7 @@
   align-items: safe center;
   justify-content: safe center;
   padding: var(--spacing-double);
+  overflow-y: auto;
 }
 
 .quiz-home-cell > * {
@@ -216,22 +390,29 @@
 
 .quiz-peer-arrow {
   display: block;
+  overflow: visible;
   fill: var(--quiz-peer);
   stroke: var(--base);
-  stroke-width: 1;
-  stroke-linejoin: round;
+  stroke-width: 0.5;
+  stroke-miterlimit: 5;
 }
 
+/* 🖋️ A learner's name on its palette colour: the ink is the one that reads on that colour (black or white, computed per
+   slot for either appearance — WCAG 2.2 SC 1.4.3), and the stylesheet takes the one of the appearance it shows. */
 .quiz-peer-label {
   position: absolute;
-  top: 1rem;
-  left: 0.75rem;
+  top: 1.5rem;
+  left: 1rem;
   padding: 0 var(--spacing-single);
   background: var(--quiz-peer);
-  color: var(--base);
+  color: var(--quiz-peer-ink-light);
   font-size: 0.75rem;
   line-height: 1.5;
   white-space: nowrap;
+}
+
+.dark .quiz-peer-label {
+  color: var(--quiz-peer-ink-dark);
 }
 
 .quiz-peer-focus > .quiz-peer-label {
@@ -239,24 +420,159 @@
   left: -2px;
 }
 
-/* 🗳️ Where the others place an item of a sorting: their markers (live in their colours) on a short track. */
-.quiz-crowd-track {
-  position: relative;
-  display: inline-block;
-  flex: none;
-  width: 4em;
-  height: 0.5em;
-  border: var(--stroke-hairline) solid var(--border-normal-color);
+/* 🫣️ A name label that would cover the control with keyboard focus steps aside; the pointer or frame stays. */
+[data-shy] > .quiz-peer-label {
+  visibility: hidden;
 }
 
-.quiz-crowd-marker {
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  left: calc(var(--quiz-crowd-at) * 100%);
-  width: 0.3em;
-  transform: translateX(-50%);
-  background: var(--quiz-peer, var(--active-base));
+/* 📊️ The column every figure is drawn with: it rises from its baseline by its share of the plot above it — the line
+   of its cap stays free —, in the quiet tone of the others or, for the learner's own, in the active colour; a column
+   with a value never sinks below a sliver. The plot has one height whatever stands in it, so a figure is as large
+   before the crowd is known as after and nothing around it moves. */
+.quiz-column {
+  display: flex;
+  block-size: 3.5em;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  border-block-end: var(--stroke-hairline) solid var(--border-normal-color);
+}
+
+.quiz-column-cap {
+  line-height: 1.25;
+}
+
+.quiz-column-bar {
+  flex: none;
+  inline-size: min(1.5rem, 72%);
+  block-size: calc(var(--quiz-column) * (100% - 1.25em));
+  background: color-mix(in srgb, var(--foreground) 50%, var(--base));
+}
+
+.quiz-column[data-filled] > .quiz-column-bar {
+  min-block-size: 2px;
+}
+
+.quiz-column[data-emphasis] > .quiz-column-bar {
+  background: var(--active-base);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .quiz-column-bar {
+    animation: quiz-column-rise 240ms ease-out;
+    transition: block-size 240ms ease-out;
+  }
+}
+
+@keyframes quiz-column-rise {
+  from {
+    block-size: 0;
+  }
+}
+
+/* 🧩️ The figures of one task lie side by side where the card is wide enough — the answers take the room, the scores
+   keep their width — and below each other where it is not. */
+.quiz-figures {
+  display: flex;
+  min-inline-size: 0;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--spacing-double);
+}
+
+.quiz-figures > .quiz-figure {
+  flex: 1 1 24em;
+}
+
+.quiz-figures > .quiz-scores {
+  flex: 0 1 17em;
+}
+
+/* 🗳️ What everyone answered in a task: a row per item, a column per category, place or value, every column as wide as
+   the next. A cell is the plot of one share with its marks under the baseline: ● the learner's own answer, ✓ the
+   correct one, a dot per learner thinking it right now. The items take a share of the figure's own width (it is their
+   container, so a phone gives them less than a desktop card) and the columns share the rest, up to a width that keeps
+   a column near its item — a figure of two categories does not stretch across the card —, and the table scrolls in
+   its card when it has more columns than fit. */
+.quiz-figure {
+  container-type: inline-size;
+}
+
+.quiz-plot {
+  inline-size: min(100%, calc(20em + var(--quiz-plot-columns, 1) * 9em));
+  min-inline-size: calc(9em + var(--quiz-plot-columns, 1) * 3.5em);
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 0.75rem;
+}
+
+.quiz-plot th,
+.quiz-plot td {
+  padding: var(--spacing-single);
+  font-weight: 400;
+  text-align: center;
+  vertical-align: bottom;
+}
+
+.quiz-plot thead th {
+  border-block-end: var(--stroke-default) solid var(--border-normal-color);
+  color: var(--muted-foreground);
+}
+
+.quiz-plot .quiz-plot-item {
+  inline-size: clamp(9em, 36cqi, 20em);
+  text-align: start;
+}
+
+.quiz-plot tbody th,
+.quiz-plot .quiz-plot-mean {
+  vertical-align: middle;
+}
+
+.quiz-plot tbody th {
+  font-weight: 600;
+}
+
+.quiz-plot-marks {
+  display: flex;
+  min-block-size: 1.25em;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  line-height: 1.25;
+}
+
+.quiz-plot-own {
+  color: var(--active-base);
+}
+
+/* 📉️ How all runs scored: the score bins side by side with a hairline of the surface between them, over a percent
+   axis whose ends are the ends of the plot. */
+.quiz-scores {
+  max-inline-size: 17em;
+}
+
+.quiz-histogram {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  column-gap: 2px;
+  font-size: 0.75rem;
+}
+
+.quiz-histogram .quiz-column-bar {
+  inline-size: 100%;
+}
+
+.quiz-histogram-axis {
+  display: flex;
+  justify-content: space-between;
+}
+
+/* 👆️ The cell or bin under the pointer answers it: a wash of the ink behind its column. */
+.quiz-plot td:hover,
+.quiz-histogram > li:hover {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
 }
 
 .quiz-online {
@@ -269,10 +585,79 @@
   vertical-align: middle;
 }
 
+/* 🔗️ The heading link of an overview card: keyboard focus draws a ring inside the chip, not only an underline. */
+.quiz-card-link:focus-visible {
+  outline: var(--stroke-default) solid var(--active-base);
+  outline-offset: -2px;
+}
+
+/* ⚖️ The footer: one quiet row under every screen. */
+.quiz-footer {
+  background: var(--base);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .quiz-app *,
   .quiz-app *::before,
   .quiz-app *::after {
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* 🔲️ Forced colours (Windows high contrast): backgrounds, shadows and custom colours are replaced by system colours,
+   so every state that is shown through one of them gets a shape or a system colour pair of its own here. */
+@media (forced-colors: active) {
+  .quiz-app [aria-pressed="true"],
+  .quiz-app [aria-current="step"] {
+    forced-color-adjust: none;
+    background-color: Highlight;
+    color: HighlightText;
+  }
+
+  .quiz-me {
+    outline: 2px solid Highlight;
+    outline-offset: -2px;
+  }
+
+  .quiz-drop-active {
+    outline: 2px dashed Highlight;
+  }
+
+  .quiz-online,
+  .quiz-column-bar {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+  }
+
+  .quiz-column[data-emphasis] > .quiz-column-bar {
+    background-color: Highlight;
+  }
+
+  .quiz-plot-own {
+    color: Highlight;
+  }
+
+  .quiz-peer-label,
+  .dark .quiz-peer-label {
+    forced-color-adjust: none;
+    background-color: CanvasText;
+    color: Canvas;
+  }
+
+  .quiz-radar-area {
+    fill: none;
+    stroke: Highlight;
+    stroke-width: 3;
+  }
+
+  .quiz-app [aria-disabled="true"],
+  .quiz-app :disabled {
+    color: GrayText;
+    border-color: GrayText;
+  }
+
+  .quiz-app :focus-visible {
+    outline: 2px solid Highlight;
+    outline-offset: 2px;
   }
 }

@@ -1,17 +1,17 @@
-# 🏛️ Architecture — quizzes.architektur-und-technologie.de
+# 🏛️ Architecture — quizze.architektur-und-technologie.de
 
 The quiz site for architecture and technology students: it trains the feeling for the numbers behind energy-efficient
-buildings. The site `https://quizzes.architektur-und-technologie.de` offers the catalog [`❓️quiz/🔣️.json`](❓️quiz/🔣️.json)
-(id `architecture`, title "Architecture and Technology Quizzes" / "Quizze Architektur und Technologie") through the
-[proctor](../🛂️proctor) at `https://proctor.quizzes.architektur-und-technologie.de`, which records runs, scores, badges
-and the leaderboard.
+buildings. The site `https://quizze.architektur-und-technologie.de` offers the catalog [`❓️quiz/🔣️.json`](❓️quiz/🔣️.json)
+(id `architecture`, title "Architecture and Technology Quizzes" / "Quizze zu Architektur und Technologie") through the
+[proctor](../🛂️proctor) at `https://semio.iek.uni-hannover.de`, which records runs, scores, badges and the leaderboard.
 
 | Part | Where |
 |---|---|
 | Catalog: introduction, quiz paths, badges | `❓️quiz/🔣️.json` |
 | Web package `@teaching/architecture-quiz`: static build for the CDN with the proctor origin baked in; in development vite on port 6061 proxies the gateway routes to the proctor on 8791 (develop, check, test and publish via the launch rows in [its README](❓️quiz/README.md)) | `❓️quiz/📦️packages/🟦️typescript` |
-| Deployment: the site as a static artifact on a CDN; the proctor as an API-only Docker image with Caddy (automatic TLS) for `proctor.quizzes.architektur-und-technologie.de` | see the site and [proctor](../🛂️proctor/README.md) READMEs |
+| Deployment: the site as a static artifact on a CDN; the proctor as an API-only Docker image with Caddy (TLS with a certificate it obtains itself or one the operator supplies) for `semio.iek.uni-hannover.de` | see the site and [proctor](../🛂️proctor/README.md) READMEs |
 | Quizzes | `⚡️energy/<topic>/❓️quiz/🔣️.json` |
+| Pets: twenty animated companions, each the likeness of a thing the quiz items are about (sunny, cloudy, housy, solary, radiatory, pumpy, windowy, waly, battery, windy, boily, roofy, insuly, shady, venty, chilly, kettly, flamy, thermy, servy), with their bonds and one cast for the home screen and one per quiz; the site loads them lazily and only for a learner who wants pets (roster, casts, bonds and how to add one in [its README](🐾️pets/README.md)) | `🐾️pets/🔣️.json`, `🐾️pets/<species>/🔣️.json`, `🐾️pets/🟦️.ts` |
 
 ## Quizzes
 

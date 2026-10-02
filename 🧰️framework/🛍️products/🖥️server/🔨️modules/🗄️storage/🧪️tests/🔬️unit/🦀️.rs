@@ -50,6 +50,11 @@ async fn outbox_delivers_each_entry_exactly_once() {
 }
 
 #[semio_framework_async_macros::async_test]
+async fn a_committed_batch_lands_every_turn_whole_and_a_refused_turn_not_at_all() {
+    conformance::a_committed_batch_lands_every_turn_whole_and_a_refused_turn_not_at_all(&mut stores().await.authority).await;
+}
+
+#[semio_framework_async_macros::async_test]
 async fn lease_epoch_bump_fences_out_the_previous_holder() {
     conformance::lease_epoch_bump_fences_out_the_previous_holder(&mut stores().await.authority).await;
 }

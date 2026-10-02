@@ -1,5 +1,5 @@
 /** 🖥️ `@semio-tech/framework-server` — the TypeScript twin of the server product's wire contract:
- * every type the gateway's twelve routes and two websockets carry, a codec that converts each one
+ * every type the gateway's routes and websockets carry, a codec that converts each one
  * between its wire JSON and an owned TypeScript value, and a typed client over an owned transport
  * interface.
  *
@@ -211,14 +211,22 @@ export interface PresenceEntry {
 }
 
 /** 👥️ One text frame of the presence socket (`semio.presence.v1`). `welcome` (the joining session, its colour and the
- * whole roster, itself included) and a per-tick `batch` (sessions whose state changed, sessions that left) travel
- * server → client — a second `welcome` replaces the roster wholesale; `state` (latest wins) travels client → server;
- * `refused` answers a frame the server dropped while the socket stays open.
+ * roster, led by the session itself) and a `batch` at most once per tick (sessions whose state changed since the
+ * socket's last frame, sessions that left) travel server → client — a second `welcome` replaces the roster wholesale;
+ * `state` (latest wins) travels client → server; `refused` answers a frame the server dropped while the socket stays
+ * open.
+ *
+ * Server frames are bounded: a roster larger than one frame may carry begins in the `welcome` and continues in the
+ * `batch` frames that follow, and a burst of changes larger than a frame is spread over the next ticks, every changed
+ * session once before any twice. Apply every frame as it comes — `welcome` replaces, `batch` removes `left` and upserts
+ * `entries` — and the whole room is held once the frames have caught up.
  *
  * Watching is read-only presence in other rooms: `watch` (client → server) replaces the watched scopes (≤ 16; an empty
  * list stops watching) and the interval the client wants their changes at (clamped to the server's tick at least);
- * `watched` (server → client) carries one scope's changes since the last interval, or — flagged `snapshot` — its whole
- * roster, sent when the scope becomes watched or the watcher fell behind, replacing what the client held for it. */
+ * `watched` (server → client) carries changes of one scope since the socket was last sent that scope, or — flagged
+ * `snapshot` — the beginning of its roster, sent when the scope becomes watched or the watcher fell too far behind,
+ * replacing what the client held for it. `watched` frames are bounded the same way, over all watched scopes per
+ * interval. */
 export type PresenceFrame =
   | { readonly type: "welcome"; readonly session: string; readonly colour: number; readonly roster: readonly PresenceEntry[] }
   | { readonly type: "state"; readonly state: unknown }
@@ -285,10 +293,16 @@ export interface ServerInstanceDefinition {
 //#endregion 🔖️Module
 
 //#region 🔖️Transport
-/** 🧾️ The JSON body every gateway error renders as, so a client never parses a status line. */
+/** 🧾️ The JSON body every gateway error renders as, so a client never parses a status line. A refusal that passes
+ * (`throttled`, `overloaded`) names the wait in milliseconds after which the request is worth repeating. A `throttled`
+ * refusal names an `allowance` when what is spent is not the address's allowance of requests but a named one the
+ * instance counts a class of commands against — those that make it keep something, like a registration: the request
+ * was not too fast, the address has made its share for now, and a client says so instead of only slowing down. */
 export interface ErrorBody {
   readonly kind: string;
   readonly message: string;
+  readonly retryAfterMs?: number;
+  readonly allowance?: string;
 }
 
 /** 🧾️ What a successful blob upload answers with. */
@@ -314,16 +328,31 @@ export class WireError extends Error {
   }
 }
 
-/** 🚫️ A gateway answer that was not a success, carrying the tag a client branches on. */
+/** 🚫️ A gateway answer that was not a success, carrying the tag a client branches on and, for a refusal that passes,
+ * the wait the gateway named and the named allowance that is spent, when it is one. An answer that is no gateway error
+ * body at all — a proxy's own page, an empty reply — carries the kind `unexpected`. */
 export class ServerCallError extends Error {
   readonly status: number;
   readonly kind: string;
+  readonly retryAfterMs: number | undefined;
+  readonly allowance: string | undefined;
 
   constructor(status: number, body: ErrorBody) {
     super(`${body.kind}: ${body.message}`);
     this.name = "ServerCallError";
     this.status = status;
     this.kind = body.kind;
+    this.retryAfterMs = body.retryAfterMs;
+    this.allowance = body.allowance;
+  }
+}
+
+/** 🧯️ The error of one unsuccessful answer: the gateway's own error body when the text is one. */
+export function serverCallError(status: number, text: string): ServerCallError {
+  try {
+    return new ServerCallError(status, decodeErrorBody(JSON.parse(text)));
+  } catch {
+    return new ServerCallError(status, { kind: "unexpected", message: text.slice(0, 256) });
   }
 }
 
@@ -352,7 +381,9 @@ export interface HttpTransport {
   send(request: HttpRequest): Promise<HttpResponse>;
 }
 
-/** 🌐️ Adapt the platform's `fetch` to [`HttpTransport`], rooted at one server's base URL. */
+/** 🌐️ Adapt the platform's `fetch` to [`HttpTransport`], rooted at one server's base URL. A request carries what the
+ * client put into it and nothing the browser holds for the server's origin (`credentials: "omit"`): the gateway's
+ * cross-origin grant never allows credentials. */
 export function fetchTransport(baseUrl: string): HttpTransport {
   const root = baseUrl.replace(/\/+$/u, "");
   return {
@@ -361,6 +392,7 @@ export function fetchTransport(baseUrl: string): HttpTransport {
       const response = await fetch(`${root}${request.path}${query === "" ? "" : `?${query}`}`, {
         method: request.method,
         headers: { ...request.headers },
+        credentials: "omit",
         body: request.body === undefined ? undefined : typeof request.body === "string" ? request.body : new Uint8Array(request.body),
       });
       return {
@@ -839,7 +871,14 @@ export function encodeServerInstanceDefinition(value: ServerInstanceDefinition):
 /** 🧾️ Decode one [`ErrorBody`]. */
 export function decodeErrorBody(value: unknown, path = "error"): ErrorBody {
   const row = asObject(value, path);
-  return { kind: asString(row.kind, `${path}.kind`), message: asString(row.message, `${path}.message`) };
+  const body = { kind: asString(row.kind, `${path}.kind`), message: asString(row.message, `${path}.message`) };
+  const waiting = row.retryAfterMs === undefined || row.retryAfterMs === null ? body : { ...body, retryAfterMs: asInterval(row.retryAfterMs, `${path}.retryAfterMs`) };
+  return row.allowance === undefined || row.allowance === null ? waiting : { ...waiting, allowance: asString(row.allowance, `${path}.allowance`) };
+}
+
+/** 🧾️ Encode one [`ErrorBody`]. */
+export function encodeErrorBody(value: ErrorBody): unknown {
+  return { kind: value.kind, message: value.message, ...(value.retryAfterMs === undefined ? {} : { retryAfterMs: value.retryAfterMs }), ...(value.allowance === undefined ? {} : { allowance: value.allowance }) };
 }
 
 /** 🧾️ Decode one [`BlobReceipt`]. */
@@ -951,34 +990,63 @@ export interface DocumentJoin {
 //#endregion 🔖️Sockets
 
 //#region 🔖️Routes
+/** 🗂️ The group a gateway route is mounted with: `core` on every instance, `ephemeral`, `blobs` and `apps` only on
+ * an instance that asks for them, `documents` only on an instance that hosts a document authority. A route of a group
+ * an instance does not mount answers `404`. */
+export type ServerRouteGroup = "core" | "ephemeral" | "blobs" | "apps" | "documents";
+
 /** 🛣️ One route of the gateway's own router, before any module adds its own. */
 export interface ServerRoute {
   readonly method: string;
   readonly path: string;
+  readonly group: ServerRouteGroup;
 }
 
-/** 🛣️ The twelve routes `base_router` mounts, in its own order.
+/** 🛣️ The routes `base_router` mounts, in its own order, each with its group.
  *
  * Held against the Rust source itself by this module's suite rather than trusted: the fixture
  * document carries the same table, and the test reads `base_router` out of `📡️gateway/🦀️.rs` and
  * fails if either drifts. A typed client whose route table is a copy of a route table is a client
  * that silently 404s one release later. */
 export const SERVER_ROUTES: readonly ServerRoute[] = [
-  { method: "GET", path: "/instance" },
-  { method: "POST", path: "/commands" },
-  { method: "POST", path: "/queries" },
-  { method: "POST", path: "/scopes/{scope}/ephemeral" },
-  { method: "GET", path: "/scopes/{scope}/presence/ws" },
-  { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events" },
-  { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events/ws" },
-  { method: "GET", path: "/blobs/{hash}" },
-  { method: "HEAD", path: "/blobs/{hash}" },
-  { method: "PUT", path: "/blobs/{hash}" },
-  { method: "GET", path: "/apps" },
-  { method: "GET", path: "/apps/{app}/installs" },
-  { method: "GET", path: "/apps/{app}" },
-  { method: "GET", path: "/apps/{app}/{*rest}" },
-  { method: "GET", path: "/scopes/{scope}/document/ws" },
+  { method: "GET", path: "/instance", group: "core" },
+  { method: "POST", path: "/commands", group: "core" },
+  { method: "POST", path: "/queries", group: "core" },
+  { method: "GET", path: "/scopes/{scope}/presence/ws", group: "core" },
+  { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events", group: "core" },
+  { method: "GET", path: "/actors/{tenant}/{kind}/{id}/events/ws", group: "core" },
+  { method: "POST", path: "/scopes/{scope}/ephemeral", group: "ephemeral" },
+  { method: "GET", path: "/blobs/{hash}", group: "blobs" },
+  { method: "HEAD", path: "/blobs/{hash}", group: "blobs" },
+  { method: "PUT", path: "/blobs/{hash}", group: "blobs" },
+  { method: "GET", path: "/apps", group: "apps" },
+  { method: "GET", path: "/apps/{app}/installs", group: "apps" },
+  { method: "GET", path: "/apps/{app}", group: "apps" },
+  { method: "GET", path: "/apps/{app}/{*rest}", group: "apps" },
+  { method: "GET", path: "/scopes/{scope}/document/ws", group: "documents" },
+];
+
+/** 🚫️ One error the gateway answers with: its status and the `kind` of its [`ErrorBody`]. */
+export interface ServerErrorKind {
+  readonly status: number;
+  readonly kind: string;
+}
+
+/** 🚨️ Every error the gateway answers with. `throttled` (this client address spent an allowance: its allowance of
+ * requests, or the named one its body's `allowance` states) and `overloaded` (the instance is at a cap) pass: their
+ * body names `retryAfterMs` and the response carries `Retry-After`. `stalled` (the request body did not arrive in
+ * time) is worth sending again as well. */
+export const SERVER_ERRORS: readonly ServerErrorKind[] = [
+  { status: 401, kind: "unauthorized" },
+  { status: 403, kind: "forbidden" },
+  { status: 404, kind: "notFound" },
+  { status: 409, kind: "conflict" },
+  { status: 400, kind: "badRequest" },
+  { status: 500, kind: "internal" },
+  { status: 413, kind: "payloadTooLarge" },
+  { status: 408, kind: "stalled" },
+  { status: 429, kind: "throttled" },
+  { status: 503, kind: "overloaded" },
 ];
 
 /** 🎟️ The header a caller presents a capability proof in. */
@@ -1067,7 +1135,7 @@ export class ServerClient {
   /** 📦️ `GET /blobs/{hash}` — content-addressed bytes. */
   async blob(hash: string): Promise<Uint8Array> {
     const response = await this.transport.send({ method: "GET", path: `/blobs/${encodePathSegment(hash)}`, query: {}, headers: this.headers() });
-    if (response.status >= 400) throw new ServerCallError(response.status, decodeErrorBody(JSON.parse(await response.text())));
+    if (response.status >= 400) throw serverCallError(response.status, await response.text());
     return response.bytes();
   }
 
@@ -1089,7 +1157,7 @@ export class ServerClient {
       body: bytes,
     });
     const text = await response.text();
-    if (response.status >= 400) throw new ServerCallError(response.status, decodeErrorBody(JSON.parse(text)));
+    if (response.status >= 400) throw serverCallError(response.status, text);
     return decodeBlobReceipt(JSON.parse(text));
   }
 
@@ -1139,9 +1207,8 @@ export class ServerClient {
     const headers = body === undefined ? this.headers() : { ...this.headers(), "content-type": "application/json" };
     const response = await this.transport.send({ method, path, query, headers, body });
     const text = await response.text();
-    const parsed: unknown = text === "" ? null : JSON.parse(text);
-    if (response.status >= 400) throw new ServerCallError(response.status, decodeErrorBody(parsed));
-    return parsed;
+    if (response.status >= 400) throw serverCallError(response.status, text);
+    return text === "" ? null : JSON.parse(text);
   }
 }
 
@@ -1154,6 +1221,6 @@ export function socketRoot(baseUrl: string): string {
 //#region 🔖️Tests
 if (import.meta.vitest) {
   const { registerServerWireTests } = await import("./🧪️tests/🔬️wire/🟦️.ts");
-  await registerServerWireTests(import.meta.vitest, { PRESENCE_PROTOCOL, SERVER_ROUTES, ServerClient, WireError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane }, { directory: import.meta.dir, url: import.meta.url });
+  await registerServerWireTests(import.meta.vitest, { PRESENCE_PROTOCOL, SERVER_ERRORS, SERVER_ROUTES, ServerCallError, ServerClient, WireError, decodeErrorBody, encodeErrorBody, serverCallError, decodeActorKey, decodeCommandEnvelope, decodeCommandOutcome, decodeCommandReceipt, decodeDocumentFrame, decodeEphemeralFrame, decodeEventRecord, decodeEventStreamFrame, decodeFrontierSummary, decodeHybridLogicalClock, decodePresenceFrame, decodePrincipal, decodeQueryConsistency, decodeQueryEnvelope, decodeQueryResult, decodeRejection, decodeServerInstanceDefinition, decodeTraceContext, documentLane, encodeActorKey, encodeCommandEnvelope, encodeCommandOutcome, encodeCommandReceipt, encodeEphemeralFrame, encodeEventRecord, encodeFrontierSummary, encodeHybridLogicalClock, encodePresenceFrame, encodePrincipal, encodeQueryConsistency, encodeQueryEnvelope, encodeQueryResult, encodeRejection, encodeServerInstanceDefinition, encodeTraceContext, ephemeralLane, fetchTransport, presenceLane, presenceSocketUrl, socketRoot, streamLane }, { directory: import.meta.dir, url: import.meta.url });
 }
 //#endregion 🔖️Tests

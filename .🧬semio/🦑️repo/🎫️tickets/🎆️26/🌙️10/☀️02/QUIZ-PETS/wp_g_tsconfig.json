@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "../../../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "tsBuildInfoFile": null,
+    "paths": {
+      "@semio-tech/pets-react": ["./wp_g_barrel.ts"],
+      "@semio-tech/pets": ["./wp_g_pets_barrel.ts"]
+    }
+  },
+  "include": [
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/📡️survey/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/⏲️pacing/🟦️.ts",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🎯️targets/⚛️react/🔨️modules/🫧️layer/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧪️tests/📡️surface-survey/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧪️tests/⏲️frame-pacing/🟦️.tsx",
+    "../../../../../../../🧰️framework/🛍️products/🐾️pets/🧪️tests/🫥️decorative-layer/🟦️.tsx"
+  ],
+  "exclude": ["**/node_modules/**"]
+}
